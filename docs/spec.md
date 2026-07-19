@@ -974,7 +974,9 @@ LLM MUST NOT
 
 ### 20.4 免費層額度與產線韌性（MUST）
 
-- 使用 **Gemini 免費層（Flash 系）**，`GEMINI_API_KEY` 只出現在手動觸發的內容產線（本機或 `workflow_dispatch`），MUST NOT 出現在 `daily.yml`。
+- 使用 **Gemini 免費層**，模型 MUST 為 **`gemini-3.1-flash-lite`**（經實測，目前僅此型號符合免費層資格；
+  其餘 Flash 系型號實測不符免費層條件，MUST NOT 使用）。`GEMINI_API_KEY` 只出現在手動觸發的內容產線
+  （本機或 `workflow_dispatch`），MUST NOT 出現在 `daily.yml`。
 - **額度評估**（以官方當時公告為準；量級如下）：免費層約 10–15 RPM、每日 250–1,500 次請求。
   - Stage 1（課綱 + 156 份 Skeleton 起草）：可多 Concept 併批，約 50–200 次呼叫。
   - Stage 2（150+ 篇全文，每篇展開 + self-check + 重生成緩衝 2–4 次）：約 450–600 次呼叫。
@@ -1132,6 +1134,7 @@ MUST 有單元測試：
 - **HTTP**：Node 內建 `fetch`（undici）。
 - **測試**：`vitest`；Python 程式碼實測用 `python` / `pytest`（僅 CI Gate）。
 - **LLM SDK**：`@google/genai`——**只允許出現在 `scripts/` 的依賴路徑**，`src/` MUST NOT import。
+  模型 MUST 為 `gemini-3.1-flash-lite`（見 §20.4，經實測為唯一符合免費層資格的型號）。
 - **執行環境**：GitHub Actions（Node 24）；狀態 `state` 分支的 `state.json`。
 
 ### 22.4 專案規模評估
