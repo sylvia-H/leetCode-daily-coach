@@ -338,6 +338,10 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
 - 每日 MUST 由**同一個 workflow、單一 job** 依固定順序（`foundation → interviewReady → interviewMastery`）逐一處理啟用的 Track：各自做日期 guard → 編譯 → 渲染 → 推播至各自頻道 → 推進各自 state。
 - MUST NOT 以 Actions matrix 開多個平行 job 處理多 Track（多 job 同時 push `state` 分支會互相衝突；單一 job 依序執行、單次 commit 寫入全部 Track state）。
 - **失敗隔離（MUST）**：單一 Track 的編譯 / 推播失敗，MUST 記錄錯誤並繼續處理其餘 Track；全部處理完後若有任一失敗，MUST 發告警並以非零 exit code 結束（已成功的 Track 其 state 照常推進與保存）。
+- **告警的責任歸屬（MUST，F1 定案）**：告警版面的實作 MUST 唯一——單一 Track 失敗與全域性失敗（無任何 Webhook 設定、`STATE_FILE` 缺失、`state.json` 解析失敗）皆 MUST 由**推播程式**以同一顆告警渲染函式（`src/renderer/alert.ts`）發出，全域性失敗發至**第一個已設定的頻道**。**MUST NOT** 由 `daily.yml` 另行拼組 Embed 告警——同一責任兩套實作會使版面隨時間漂移，與 §4-9 的「單一 Compiler、不得雙軌」同理。
+  - workflow 層 MAY 保留一道 `if: failure()` 的**最後防線通知**，用於程式根本沒能啟動的情境（`npm ci` / `tsc` / checkout 失敗）。此通知 MUST 為**極簡純文字**（`{"content": "..."}`），MUST NOT 使用 `embeds`、MUST NOT 重述失敗原因細節。與程式告警重疊時使用者會多收一則純文字提示，屬可接受的取捨（優於靜默）。
+  - 三個 Webhook 皆未設定時**無處可發**，MUST 僅留下錯誤紀錄並以非零 exit code 結束；此情況不構成「無聲失敗」。
+- **告警本身送不出去時（MUST）**：MUST 另記一筆錯誤紀錄、仍計為該次失敗，且 **MUST NOT 因告警失敗而中斷其餘 Track 的處理**——告警發送 MUST 包在自身的 try/catch 內且不重新拋出。
 - 至少一個 Track 的 Webhook Secret MUST 已設定，否則每日 job MUST 直接失敗（fail loud，屬設定錯誤）。
 - **Track 生命週期語意（MUST）**：
   - **啟用（何時開始推）**：加上 Secret 後**不需其他設定**——下一次排程執行時，StateStore 對 state 中不存在的啟用 Track 自動補建初始進度（`currentSessionIndex: 1`、`lastPushAt` 為空），日期 guard 因而放行，當次即推 Session 1。想立即開始 MAY 手動觸發 `workflow_dispatch`。
@@ -381,6 +385,8 @@ module: array # 所屬 Module id
 topic: two-pointer # 所屬 Topic id
 difficulty: easy # easy | medium（Concept 本身的認知難度）
 estimated_minutes: 10 # 預估閱讀時間
+pattern_label: Two Pointer # 主 Embed 的 `Pattern` field（§16.4 Lesson.patternLabel）
+complexity_label: O(n) / O(1) # 主 Embed 的 `複雜度` field（§16.4 Lesson.complexityLabel）
 prerequisite: [array-traversal] # 前置 Concept id（DAG）
 next: [fast-slow-pointer] # 後繼 Concept id（DAG）
 learning_goal:
@@ -397,6 +403,11 @@ leetcode: [26, 27, 167] # 對應題號（詳細 metadata 在 problem-bank）
 tags: [array, in-place, sorted]
 ---
 ```
+
+> **`pattern_label` / `complexity_label` 為 frontmatter 欄位（MUST，非從正文推導）**：§16.4 的 `Lesson`
+> 需要這兩個短標籤填入主 Embed 的 inline fields，而 `Pattern Recognition` / `Complexity` 區塊是給人讀的
+> 散文——若由正文以啟發式規則抽取，將違反 §4「Deterministic & Reproducible Delivery」。故一律由
+> frontmatter 明確提供，Compiler 原樣帶入、MUST NOT 改寫。
 
 ### 10.2 Exit Criteria（MUST）
 
@@ -474,6 +485,7 @@ Skeleton（`concepts/**`）是內容的來源真相，MUST 只含兩部分：
 - `patterns` MUST 對應到 Curriculum 內的 Topic / Concept key，讓「Concept → Problem」可逆向查找。
 - `url` 的 slug MUST 與 `slug` 欄位一致（Gate 檢查，避免死鏈；§20.3）。
 - 題庫 MUST 涵蓋三個 Track 難度帶所需的 Easy / Medium / Hard 題目（三軌全量交付）。
+- **題數合法性的唯一權威守門點（MUST，F1 定案）**：每個 Concept 對應的題數 MUST 為 1～3 題；查無對應、對應題號在題庫中不存在、題數為 0 或超過 3，一律 MUST 在**題目查找階段**（`src/compiler/problem.ts`）拋出可辨識且訊息指名成因的錯誤（fail loud），MUST NOT 靜默截斷題數或略過缺漏題目。渲染後的字元預算檢查雖亦含題數上限，但僅為 defense-in-depth，MUST NOT 被當作主要判準，也 MUST NOT 在查找階段之外另行定義題數的錯誤型態與訊息——避免兩處各說各話。
 
 ### 12.2 教材依源（借鑑知識架構，不轉載內容）
 
@@ -591,6 +603,14 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 - 單一 embed：`title` ≤ 256、`description` ≤ 4,096、`fields` ≤ 25（name ≤ 256 / value ≤ 1,024）。
 - 單則訊息 ≤ 10 embeds。
 - **單則訊息內所有 embeds 的文字總和 ≤ 6,000 字元**（title + description + field name/value + footer 合計；這是最容易踩到的限制）。
+
+**計算口徑（MUST，唯一判準）**——Gate 與每日 runtime MUST 採用同一套口徑，否則「Gate 通過 ⇒ runtime 不失敗」不成立：
+
+- **計入**：每個 embed 的 `title`、`description`、每個 field 的 `name` 與 `value`、`footer.text`、`author.name`。
+- **不計入**：`url`、`color`、`image`、`thumbnail`、`timestamp` 等非文字欄位。
+- **長度單位**：Unicode **code point**（如 JS 的 `Array.from(str).length`），**不是** UTF-16 code unit（`str.length`）。版面含 emoji（📚🎯🧭✅💡）時兩者會有差異，統一以 code point 為準。
+- **超限一律視為失敗**，MUST NOT 自動截斷內容以求通過（靜默裁切等同無聲失敗，違反 §4-15）。
+- **結構性上限與字元預算 MUST 在同一次檢查中完成（F1 定案）**：本節開頭列出的平台**結構性上限**（單一 embed 的 `title` / `description` / `fields` 數 / field `name` / field `value`，以及單則訊息的 embeds 數）MUST 與逐區塊預算、總量上限由**同一顆預算檢查函式**（`src/renderer/budget.ts` 的 `checkBudget`）在同一次呼叫中檢查，並以相同的明細項形式回報。**理由**：這些是平台會直接拒絕請求的硬限制，若只檢查文字總量，超限會延後到送出時才由平台回報，等同把可在送出前攔下的錯誤推遲到推播階段，違反 §4-9「能在 CI 驗的，不留到早上六點」。Gate（§20.3）與每日 runtime MUST 共用此同一顆函式。
 
 因此推播內容 MUST 依以下**字元預算**設計（Gate 檢查生成物；超限 ⇒ 生成不通過，回產線重生）：
 
@@ -857,7 +877,7 @@ leetcode-daily-coach/
 3. StateStore.load()：讀 state.json（state 分支 checkout；per-track 進度）
 4. for track of enabledTracks：
    a. Idempotency guard：若該 Track 的 lastPushAt 換算 Asia/Taipei 日期 == 今天 → 跳過該 Track
-      （雙 cron 去重；FORCE=true 可繞過，供測試；見 §21.1）
+      （雙 cron 去重；FORCE=true 或 DRY_RUN=true 皆可繞過，供補推 / 測試；見 §21.1）
    b. LessonCompiler.compile(track, state.tracks[track].currentSessionIndex) → Lesson
       （與 CI Gate 同一顆 Compiler；Gate 已保證此步對凍結內容必然成功）
    c. DiscordRenderer.render(Lesson) → embeds（純函式）
@@ -914,7 +934,7 @@ leetcode-daily-coach/
 - 各 Track 的 `history` MUST 滾動保留（上限 30 筆）。
 - 未在 state 中出現的啟用 Track（例：日後新啟用），StateStore MUST 以初始值（`currentSessionIndex: 1`、`lastPushAt` 為空）自動補建；`lastPushAt` 為空 ⇒ 日期 guard 放行，下一次執行即推播 Session 1（Track 生命週期語意見 §9.2）。
 - **調整進度的官方方式**：人工編輯 `state` 分支的 `state.json`（改該 Track 的 `currentSessionIndex`）並 commit。MUST NOT 另設「起始課數」等設定項——state 即唯一權威。
-- workflow 對 `state` 分支的 push 衝突 MUST 以 `git pull --rebase --autostash` + 重試處理。
+- workflow 對 `state` 分支的 push 衝突 MUST 以 `git pull --rebase --autostash` + 重試處理，**重試上限固定為 3 次**（F1 定案：衝突來源僅有相隔 30 分鐘的雙 cron 極罕見重疊，3 次已足夠）；耗盡即以非零狀態結束該 step，MUST NOT 無限重試，亦 MUST NOT 以 `--force` push 覆蓋他人變更（會毀掉唯一權威狀態）。
 - 任一分支的每日 commit 均可維持 repo 活動（避免 scheduled workflow 60 天無活動被停用）。
 
 ---
@@ -1011,6 +1031,8 @@ free-tier infra：
 - **`workflow_dispatch` inputs（MUST）**：
   - `dry_run`（boolean，預設 false）：走完 compile + render（全部啟用 Track），輸出結果至 log；**不推播、不寫 state**。供測試版面與流程。
   - `force`（boolean，預設 false）：繞過 idempotency guard 強制推播（仍會寫 state）。供補推 / 除錯，日常勿用。
+- **`dry_run` 與 idempotency guard 的關係（MUST）**：`dry_run=true` 時 **MUST 略過 guard**——即使該 Track 今天已推播過，仍照常 compile + render 並輸出至 log。guard 防的是「重複打擾使用者」，而 dry run 不推播亦不寫 state，該風險不存在；若讓 guard 擋下 dry run，會使版面調校工具在當天失效。
+- **`dry_run` 與 `force` 同時為 true（MUST）**：以 `dry_run` 為準——不推播、不寫 state，行為與單獨 `dry_run=true` 完全相同。MUST NOT 視為設定衝突而失敗。
 
 ### 21.2 Workflow（骨架）
 
