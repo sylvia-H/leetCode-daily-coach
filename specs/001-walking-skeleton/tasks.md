@@ -48,19 +48,19 @@ Renderer 純函式性與 Discord 限制（含 6,000 總長）。
 
 **⚠️ CRITICAL**: 本階段完成前，任何 User Story 都無法開始。
 
-- [ ] T006 建立 `src/types/lesson.ts`：`Track` / `SessionType` / `Problem` / `PathLabels` / `LessonConcept` / `Lesson` 型別。**此檔 MUST 不含任何 import**（純型別），使 Renderer 的相依集合在編譯期受限（憲章 XI）。契約見 [contracts/lesson-contract.md](./contracts/lesson-contract.md) §1
-- [ ] T007 [P] 撰寫 `tests/unit/config.test.ts`：`parseBool` 對 `"true"` / `"TRUE"` / `"false"` / `""` / `undefined` 的解析（**只有 `"true"` 為真**）；三個 webhook 皆空 → 拋設定錯誤；`STATE_FILE` 未設定 → 拋錯；已啟用 Track 的順序恆為 `foundation` → `interviewReady` → `interviewMastery`
-- [ ] T008 實作 `src/config.ts`：讀取六個環境變數 → `Config`；`parseBool` 採嚴格字串比對（research R6，避免 GitHub Actions 傳入字串 `"false"` 被判為真）；缺項 fail-fast 並指名缺少項目（FR-023）。契約見 [contracts/cli-contract.md](./contracts/cli-contract.md) §1
-- [ ] T009 [P] 撰寫 `tests/unit/alert.test.ts`：`renderAlert` 為純函式、`color` 為紅色 `15158332`、`description` 含失敗原因、輸出**不含** webhook URL；`track` 為 `null`（全域性失敗）→ `title` 為 `⚠️ 推播失敗 · 全域` 且其餘結構與 Track 版本一致（FR-010a）
-- [ ] T010 [P] 實作 `src/renderer/alert.ts`：`renderAlert(track: Track | null, reason)` → 紅色告警 embeds（純函式）。**此為本 Feature 唯一的告警版面實作**——單一 Track 失敗與全域性失敗共用同一顆，`daily.yml` MUST NOT 另行拼組 embed 告警（FR-010a）。契約見 [contracts/discord-embed-contract.md](./contracts/discord-embed-contract.md) §3
-- [ ] T011 [P] 撰寫 `tests/unit/state-load.test.ts`：檔案不存在 → 回傳空 `{ tracks: {} }` 不報錯；缺少已啟用 Track → 自動補建 `currentSessionIndex: 1` / `lastPushAt: null`（FR-015）；含未啟用 Track 的資料 → 原樣保留；JSON 損毀 → 拋錯且**原檔未被改動**
-- [ ] T012 實作 `src/state/state-store.ts` 的 `load()` 與 Track 自動補建（`advance` / `save` 留待 US2）。契約見 [contracts/state-schema.md](./contracts/state-schema.md) §2
-- [ ] T013 實作 `src/main.ts` composition root 骨架：手動組裝元件 → 決定已啟用 Track → **固定順序逐一處理（MUST NOT 平行）** → 每個 Track 以 try/catch 隔離 → 彙總 exit code（任一失敗 → 1）。全域性失敗（無 webhook / 無 `STATE_FILE` / state 解析失敗）在迴圈**之前**中止且不寫 state（research R8）。此時逐 Track 內部先呼叫 stub
-- [ ] T013a 於 `src/main.ts` 實作**全域性失敗告警**（FR-010a）：中止前呼叫 `renderAlert(null, reason)` 並 POST 至**第一個已設定的 webhook**（順序 `foundation` → `interviewReady` → `interviewMastery`），再 exit 1。**例外**：三個 webhook 皆未設定時無處可發，MUST 僅 log + exit 1（不構成無聲失敗）。行為表見 [contracts/cli-contract.md](./contracts/cli-contract.md) §4
-- [ ] T013b 於 `src/main.ts` 將**告警發送本身**包在獨立 `try/catch`（FR-010c）：告警送出失敗 MUST 記錄 `alert-failed: {track}: {reason}` 日誌、仍計為失敗，且該 `catch` **MUST NOT 重新拋出**——否則會中斷後續 Track 的處理
-- [ ] T014 撰寫 `tests/unit/run-tracks.test.ts`：以 mock 注入「第 1 個 Track 拋錯、第 2 個成功」→ 斷言**第 2 個仍被處理**、整體 exit code 為 1、失敗 Track 有發出告警（多 Track 失敗隔離，憲章 XV / FR-009）
-- [ ] T014a 於 `tests/unit/run-tracks.test.ts` 補**告警送不出去**的案例（FR-010c）：mock 成「第 1 個 Track 推播失敗**且其告警 POST 亦失敗**、第 2 個 Track 正常」→ 斷言第 2 個 Track **仍被處理並成功**、整體 exit code 為 1、log 中同時出現推播失敗與 `alert-failed` 兩筆錯誤紀錄、且**未拋出未捕捉例外**
-- [ ] T014b 於 `tests/unit/run-tracks.test.ts` 補**全域性失敗告警**的案例（FR-010a）：`STATE_FILE` 未設定 / state 解析失敗 → 斷言以 `null` 呼叫 `renderAlert` 並 POST 至第一個已設定 webhook、exit code 1、**未寫入 state**；三個 webhook 皆空 → 斷言**完全未呼叫 `fetch`**、僅 log + exit 1
+- [X] T006 建立 `src/types/lesson.ts`：`Track` / `SessionType` / `Problem` / `PathLabels` / `LessonConcept` / `Lesson` 型別。**此檔 MUST 不含任何 import**（純型別），使 Renderer 的相依集合在編譯期受限（憲章 XI）。契約見 [contracts/lesson-contract.md](./contracts/lesson-contract.md) §1
+- [X] T007 [P] 撰寫 `tests/unit/config.test.ts`：`parseBool` 對 `"true"` / `"TRUE"` / `"false"` / `""` / `undefined` 的解析（**只有 `"true"` 為真**）；三個 webhook 皆空 → 拋設定錯誤；`STATE_FILE` 未設定 → 拋錯；已啟用 Track 的順序恆為 `foundation` → `interviewReady` → `interviewMastery`
+- [X] T008 實作 `src/config.ts`：讀取六個環境變數 → `Config`；`parseBool` 採嚴格字串比對（research R6，避免 GitHub Actions 傳入字串 `"false"` 被判為真）；缺項 fail-fast 並指名缺少項目（FR-023）。契約見 [contracts/cli-contract.md](./contracts/cli-contract.md) §1
+- [X] T009 [P] 撰寫 `tests/unit/alert.test.ts`：`renderAlert` 為純函式、`color` 為紅色 `15158332`、`description` 含失敗原因、輸出**不含** webhook URL；`track` 為 `null`（全域性失敗）→ `title` 為 `⚠️ 推播失敗 · 全域` 且其餘結構與 Track 版本一致（FR-010a）
+- [X] T010 [P] 實作 `src/renderer/alert.ts`：`renderAlert(track: Track | null, reason)` → 紅色告警 embeds（純函式）。**此為本 Feature 唯一的告警版面實作**——單一 Track 失敗與全域性失敗共用同一顆，`daily.yml` MUST NOT 另行拼組 embed 告警（FR-010a）。契約見 [contracts/discord-embed-contract.md](./contracts/discord-embed-contract.md) §3
+- [X] T011 [P] 撰寫 `tests/unit/state-load.test.ts`：檔案不存在 → 回傳空 `{ tracks: {} }` 不報錯；缺少已啟用 Track → 自動補建 `currentSessionIndex: 1` / `lastPushAt: null`（FR-015）；含未啟用 Track 的資料 → 原樣保留；JSON 損毀 → 拋錯且**原檔未被改動**
+- [X] T012 實作 `src/state/state-store.ts` 的 `load()` 與 Track 自動補建（`advance` / `save` 留待 US2）。契約見 [contracts/state-schema.md](./contracts/state-schema.md) §2
+- [X] T013 實作 `src/main.ts` composition root 骨架：手動組裝元件 → 決定已啟用 Track → **固定順序逐一處理（MUST NOT 平行）** → 每個 Track 以 try/catch 隔離 → 彙總 exit code（任一失敗 → 1）。全域性失敗（無 webhook / 無 `STATE_FILE` / state 解析失敗）在迴圈**之前**中止且不寫 state（research R8）。此時逐 Track 內部先呼叫 stub
+- [X] T013a 於 `src/main.ts` 實作**全域性失敗告警**（FR-010a）：中止前呼叫 `renderAlert(null, reason)` 並 POST 至**第一個已設定的 webhook**（順序 `foundation` → `interviewReady` → `interviewMastery`），再 exit 1。**例外**：三個 webhook 皆未設定時無處可發，MUST 僅 log + exit 1（不構成無聲失敗）。行為表見 [contracts/cli-contract.md](./contracts/cli-contract.md) §4
+- [X] T013b 於 `src/main.ts` 將**告警發送本身**包在獨立 `try/catch`（FR-010c）：告警送出失敗 MUST 記錄 `alert-failed: {track}: {reason}` 日誌、仍計為失敗，且該 `catch` **MUST NOT 重新拋出**——否則會中斷後續 Track 的處理
+- [X] T014 撰寫 `tests/unit/run-tracks.test.ts`：以 mock 注入「第 1 個 Track 拋錯、第 2 個成功」→ 斷言**第 2 個仍被處理**、整體 exit code 為 1、失敗 Track 有發出告警（多 Track 失敗隔離，憲章 XV / FR-009）
+- [X] T014a 於 `tests/unit/run-tracks.test.ts` 補**告警送不出去**的案例（FR-010c）：mock 成「第 1 個 Track 推播失敗**且其告警 POST 亦失敗**、第 2 個 Track 正常」→ 斷言第 2 個 Track **仍被處理並成功**、整體 exit code 為 1、log 中同時出現推播失敗與 `alert-failed` 兩筆錯誤紀錄、且**未拋出未捕捉例外**
+- [X] T014b 於 `tests/unit/run-tracks.test.ts` 補**全域性失敗告警**的案例（FR-010a）：`STATE_FILE` 未設定 / state 解析失敗 → 斷言以 `null` 呼叫 `renderAlert` 並 POST 至第一個已設定 webhook、exit code 1、**未寫入 state**；三個 webhook 皆空 → 斷言**完全未呼叫 `fetch`**、僅 log + exit 1
 
 **Checkpoint**: 骨架就緒——設定、失敗隔離、告警（含全域告警與告警自身失敗的處置）、狀態讀取皆可運作，
 User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處**，後續 workflow 層 MUST NOT 另建一套。
@@ -100,8 +100,8 @@ User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處*
 
 ### 推播與接線（US1）
 
-- [ ] T030 [US1] 撰寫 `tests/unit/webhook-client.test.ts`：以 `vi.stubGlobal('fetch', ...)` 驗證 POST 的 URL、`Content-Type` 與 body `{ embeds }`；非 2xx → 拋錯且**錯誤訊息含 HTTP 狀態碼與 Track 名稱、不含 URL**（憲章 XIV）
-- [ ] T031 [US1] 實作 `src/discord/webhook-client.ts`：以 Node 內建 `fetch` POST embeds；依 Track 路由至對應 webhook；**本 Feature 不實作重試**（歸 F6，見 spec Out of Scope）
+- [X] T030 [US1] 撰寫 `tests/unit/webhook-client.test.ts`：以 `vi.stubGlobal('fetch', ...)` 驗證 POST 的 URL、`Content-Type` 與 body `{ embeds }`；非 2xx → 拋錯且**錯誤訊息含 HTTP 狀態碼與 Track 名稱、不含 URL**（憲章 XIV）
+- [X] T031 [US1] 實作 `src/discord/webhook-client.ts`：以 Node 內建 `fetch` POST embeds；依 Track 路由至對應 webhook；**本 Feature 不實作重試**（歸 F6，見 spec Out of Scope）
 - [ ] T032 [US1] 接線 `src/main.ts`：把 T013 的 stub 換成實際流程 `compile → render → checkBudget → post`；預算超限 MUST 在 `post` **之前**擋下並視為該 Track 失敗（FR-006）；課表用盡 / 教材缺區塊 / 題目資料不一致皆為**該 Track 失敗**（隔離後續行，spec Edge Cases）
 - [ ] T033 [US1] 在 `src/main.ts` 補上日誌：每個 Track 輸出結果行（`pushed` / `failed: {reason}`），**MUST NOT 印出 webhook URL**（[contracts/cli-contract.md](./contracts/cli-contract.md) §2）
 
