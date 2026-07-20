@@ -152,10 +152,10 @@ User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處*
 
 **Independent Test**: 以預覽模式觸發 → 日誌可見完整渲染結果，頻道無新訊息、進度未變（quickstart 步驟 B）。
 
-- [ ] T049 [US4] 撰寫 `tests/unit/dry-run.test.ts`：`DRY_RUN=true` → `fetch` **完全未被呼叫**、`save` **完全未被呼叫**（SC-007）；今天已推播過仍完整輸出渲染結果（**不被跳過**，FR-021a）；`DRY_RUN` 與 `FORCE` 同時為真 → 行為與單獨 `DRY_RUN` 相同且不因衝突失敗（FR-021b）
-- [ ] T050 [US4] 於 `src/main.ts` 加入預覽模式分支：置於 `checkBudget` **之後**、`post` **之前** `continue`（research R9 的流程順序）
-- [ ] T051 [US4] 於 `src/main.ts` 實作預覽輸出：以格式化 JSON 印出完整 embeds，並印出 `BudgetReport` 的**逐項明細**（項目名稱 / 實際字元數 / 上限 / 是否超限），粒度為 §14.5 的每一個預算項目（US4 Scenario 2）
-- [ ] T052 [US4] 於 `daily.yml` 新增 `workflow_dispatch` 的 `dry_run` boolean input（default false）→ 以 env `DRY_RUN` 傳入；並為 state 提交 step 加上 `if: inputs.dry_run != true`（SC-007：狀態分支新增提交數為 0）
+- [X] T049 [US4] 撰寫 `tests/unit/dry-run.test.ts`：`DRY_RUN=true` → `fetch` **完全未被呼叫**、`save` **完全未被呼叫**（SC-007）；今天已推播過仍完整輸出渲染結果（**不被跳過**，FR-021a）；`DRY_RUN` 與 `FORCE` 同時為真 → 行為與單獨 `DRY_RUN` 相同且不因衝突失敗（FR-021b）
+- [X] T050 [US4] 於 `src/main.ts` 加入預覽模式分支：置於 `checkBudget` **之後**、`post` **之前** `continue`（research R9 的流程順序）
+- [X] T051 [US4] 於 `src/main.ts` 實作預覽輸出：以格式化 JSON 印出完整 embeds，並印出 `BudgetReport` 的**逐項明細**（項目名稱 / 實際字元數 / 上限 / 是否超限），粒度為 §14.5 的每一個預算項目（US4 Scenario 2）
+- [X] T052 [US4] 於 `daily.yml` 新增 `workflow_dispatch` 的 `dry_run` boolean input（default false）→ 以 env `DRY_RUN` 傳入；並為 state 提交 step 加上 `if: inputs.dry_run != true`（SC-007：狀態分支新增提交數為 0）
 
 **Checkpoint**: 全部 User Story 完成——四種模式組合皆符合 [contracts/cli-contract.md](./contracts/cli-contract.md) §3 的行為矩陣。
 
