@@ -1,0 +1,14 @@
+{
+  "problems": [
+    { "id": 1, "title": "Fixture One", "url": "https://leetcode.com/problems/fixture-one/", "difficulty": "Easy", "whyThisPattern": "why 1", "hint": "hint 1" },
+    { "id": 2, "title": "Fixture Two", "url": "https://leetcode.com/problems/fixture-two/", "difficulty": "Medium", "whyThisPattern": "why 2" },
+    { "id": 3, "title": "Fixture Three", "url": "https://leetcode.com/problems/fixture-three/", "difficulty": "Hard", "whyThisPattern": "why 3", "hint": "hint 3" },
+    { "id": 4, "title": "Fixture Four", "url": "https://leetcode.com/problems/fixture-four/", "difficulty": "Easy", "whyThisPattern": "why 4" }
+  ],
+  "conceptProblems": {
+    "fixture-concept": [1, 2, 3],
+    "too-many-concept": [1, 2, 3, 4],
+    "empty-concept": [],
+    "unknown-id-concept": [999]
+  }
+}

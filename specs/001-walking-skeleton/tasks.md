@@ -75,35 +75,35 @@ User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處*
 
 ### 內容素材（US1）
 
-- [ ] T015 [P] [US1] 撰寫手寫教材 `articles/two-pointer/002-left-right-pointer.md`：含 `docs/spec.md` §10 **全部**固定區塊，frontmatter 提供 `id` / `title` / `module` / `pattern_label` / `complexity_label` / `estimated_minutes` / `exit_criteria`（snake_case）。正文繁體中文、技術術語保留英文（FR-001a）。推播用區塊 MUST 落在 §14.5 預算內。檔頂加註臨時性標示與接手 Feature（**F7**，FR-001）。格式契約見 [contracts/article-format.md](./contracts/article-format.md)
-- [ ] T016 [P] [US1] 建立 `data/problem-bank.json`：3 題（`problems` 陣列 + `conceptProblems` 對照），欄位為題號 / 官方標題 / 連結 / 難度 / `whyThisPattern` / `hint`。**MUST 人工核對每個連結可正確開啟**（FR-003c）。標示僅涵蓋本 Feature 所需題目、F3 擴充（FR-003a）
-- [ ] T017 [P] [US1] 建立測試 fixtures：`tests/fixtures/article-valid.md`（完整）、`article-missing-digest.md`（缺必要區塊）、`article-unknown-section.md`（含未知區塊）、`problem-bank.json`（含正常 / 查無對應 / 超過 3 題三種情境）
+- [X] T015 [P] [US1] 撰寫手寫教材 `articles/two-pointer/002-left-right-pointer.md`：含 `docs/spec.md` §10 **全部**固定區塊，frontmatter 提供 `id` / `title` / `module` / `pattern_label` / `complexity_label` / `estimated_minutes` / `exit_criteria`（snake_case）。正文繁體中文、技術術語保留英文（FR-001a）。推播用區塊 MUST 落在 §14.5 預算內。檔頂加註臨時性標示與接手 Feature（**F7**，FR-001）。格式契約見 [contracts/article-format.md](./contracts/article-format.md)
+- [X] T016 [P] [US1] 建立 `data/problem-bank.json`：3 題（`problems` 陣列 + `conceptProblems` 對照），欄位為題號 / 官方標題 / 連結 / 難度 / `whyThisPattern` / `hint`。**MUST 人工核對每個連結可正確開啟**（FR-003c）。標示僅涵蓋本 Feature 所需題目、F3 擴充（FR-003a）
+- [X] T017 [P] [US1] 建立測試 fixtures：`tests/fixtures/article-valid.md`（完整）、`article-missing-digest.md`（缺必要區塊）、`article-unknown-section.md`（含未知區塊）、`problem-bank.json`（含正常 / 查無對應 / 超過 3 題三種情境）
 
 ### 教材解析與組裝（US1）
 
-- [ ] T018 [US1] 撰寫 `tests/unit/content.test.ts`：正確解析四個必要正文區塊（Digest / TypeScript Tip / Python Tip / Takeaway）與 frontmatter metadata（**含 Exit Criteria，取自 frontmatter 而非正文**）；**程式碼區塊內含 `## ` 字樣時不得誤判區塊邊界**（research R1 的核心風險）；缺任一必要區塊或 metadata → 拋出**指名該項目**的錯誤（FR-004b）；出現未知區塊 → 忽略且不失敗（FR-004c）；**`moduleColor` 對照（FR-007c）**：同一 module 連續查詢恆得同一色（確定性）、**未知 module → 回傳明確定義的預設色且不拋錯**
-- [ ] T019 [US1] 實作 `src/compiler/content.ts`：`gray-matter` 剝離 frontmatter → `marked.lexer` 掃描 `depth === 2` heading 切分區塊，以 token 的 `raw` 重組保留 markdown 原文；snake_case frontmatter → camelCase `ArticleMeta` 轉換；Module → `moduleColor` 常數對照表（含預設色，FR-007c）**置於此處而非 renderer**（憲章 XI，見 [contracts/lesson-contract.md](./contracts/lesson-contract.md) §3 R-5）
-- [ ] T020 [P] [US1] 撰寫 `tests/unit/problem.test.ts`：依 conceptId 取回 1～3 題；查無對應 / 題號不存在 / 題數 0 或 >3 → 拋**可辨識且訊息指名成因**的錯誤（FR-003b）
-- [ ] T021 [P] [US1] 實作 `src/compiler/problem.ts`：讀 `data/problem-bank.json`（路徑可注入以利測試）→ `getProblemsForConcept(conceptId)`；**只讀不做 schema 驗證**（FR-003a）。**此處為題數 1～3 的唯一權威守門點**（FR-003b）——錯誤型態與訊息只在此定義，`budget.ts` 的 `problems.count` 僅為 defense-in-depth，MUST NOT 另立一套題數錯誤
-- [ ] T022 [P] [US1] 實作 `src/compiler/schedule.ts`：硬編 3-Session 課表與「課程序號 → 前 / 今 / 後觀念名稱」對照表；對外 `getSessionPlan(track, sessionIndex)` / `getPathLabels(sessionIndex)`；序號超出範圍 → 拋**可辨識的「課表用盡」錯誤**。檔頂加註臨時性與接手 Feature（課表 → **F4**、路徑表 → **F2**）。資料見 [data-model.md](./data-model.md) §2 / §3
-- [ ] T023 [P] [US1] 撰寫 `tests/unit/schedule.test.ts`：三筆 `PathLabels` 的 `current` **互不相同**（FR-007a）；第 1 課無 `prev`、第 3 課有 `next`；`sessionIndex = 4` → 拋「課表用盡」錯誤
-- [ ] T024 [US1] 撰寫 `tests/unit/lesson.test.ts`：`compile(track, n)` **determinism**——同一 `(track, n)` 連續呼叫產出逐欄位相同的 `Lesson`；任一上游失敗時拋錯而**不回傳半成品**（FR-004b）
-- [ ] T025 [US1] 實作 `src/compiler/lesson.ts`：`compile(track, sessionIndex)` 串接 schedule → content → problem → pathLabels → 組出 `Lesson`。契約見 [contracts/lesson-contract.md](./contracts/lesson-contract.md) §2
+- [X] T018 [US1] 撰寫 `tests/unit/content.test.ts`：正確解析四個必要正文區塊（Digest / TypeScript Tip / Python Tip / Takeaway）與 frontmatter metadata（**含 Exit Criteria，取自 frontmatter 而非正文**）；**程式碼區塊內含 `## ` 字樣時不得誤判區塊邊界**（research R1 的核心風險）；缺任一必要區塊或 metadata → 拋出**指名該項目**的錯誤（FR-004b）；出現未知區塊 → 忽略且不失敗（FR-004c）；**`moduleColor` 對照（FR-007c）**：同一 module 連續查詢恆得同一色（確定性）、**未知 module → 回傳明確定義的預設色且不拋錯**
+- [X] T019 [US1] 實作 `src/compiler/content.ts`：`gray-matter` 剝離 frontmatter → `marked.lexer` 掃描 `depth === 2` heading 切分區塊，以 token 的 `raw` 重組保留 markdown 原文；snake_case frontmatter → camelCase `ArticleMeta` 轉換；Module → `moduleColor` 常數對照表（含預設色，FR-007c）**置於此處而非 renderer**（憲章 XI，見 [contracts/lesson-contract.md](./contracts/lesson-contract.md) §3 R-5）
+- [X] T020 [P] [US1] 撰寫 `tests/unit/problem.test.ts`：依 conceptId 取回 1～3 題；查無對應 / 題號不存在 / 題數 0 或 >3 → 拋**可辨識且訊息指名成因**的錯誤（FR-003b）
+- [X] T021 [P] [US1] 實作 `src/compiler/problem.ts`：讀 `data/problem-bank.json`（路徑可注入以利測試）→ `getProblemsForConcept(conceptId)`；**只讀不做 schema 驗證**（FR-003a）。**此處為題數 1～3 的唯一權威守門點**（FR-003b）——錯誤型態與訊息只在此定義，`budget.ts` 的 `problems.count` 僅為 defense-in-depth，MUST NOT 另立一套題數錯誤
+- [X] T022 [P] [US1] 實作 `src/compiler/schedule.ts`：硬編 3-Session 課表與「課程序號 → 前 / 今 / 後觀念名稱」對照表；對外 `getSessionPlan(track, sessionIndex)` / `getPathLabels(sessionIndex)`；序號超出範圍 → 拋**可辨識的「課表用盡」錯誤**。檔頂加註臨時性與接手 Feature（課表 → **F4**、路徑表 → **F2**）。資料見 [data-model.md](./data-model.md) §2 / §3
+- [X] T023 [P] [US1] 撰寫 `tests/unit/schedule.test.ts`：三筆 `PathLabels` 的 `current` **互不相同**（FR-007a）；第 1 課無 `prev`、第 3 課有 `next`；`sessionIndex = 4` → 拋「課表用盡」錯誤
+- [X] T024 [US1] 撰寫 `tests/unit/lesson.test.ts`：`compile(track, n)` **determinism**——同一 `(track, n)` 連續呼叫產出逐欄位相同的 `Lesson`；任一上游失敗時拋錯而**不回傳半成品**（FR-004b）
+- [X] T025 [US1] 實作 `src/compiler/lesson.ts`：`compile(track, sessionIndex)` 串接 schedule → content → problem → pathLabels → 組出 `Lesson`。契約見 [contracts/lesson-contract.md](./contracts/lesson-contract.md) §2
 
 ### 渲染與字元預算（US1）
 
-- [ ] T026 [US1] 撰寫 `tests/unit/budget.test.ts`：計入欄位為 title + description + field name/value + footer/author（`url` / `color` 不計）；長度以 **Unicode code point** 計（含 emoji 的字串驗證）；逐區塊上限（Digest 900 / Tips 各 450 / 每題 350 / Exit Criteria 400 / Takeaway 120 / 學習路徑 200）；總量 5,500 與平台硬限 6,000；回傳**逐項明細**而非布林
-- [ ] T026a [US1] 於 `tests/unit/budget.test.ts` 補**平台結構性上限**測試（FR-006b，C2）：單 embed `title` >256、`description` >4,096、`fields` 數 >25、field `name` >256、field `value` >1,024、訊息 embed 數 >10 —— 每項各一則超限案例，斷言對應的 `BudgetItem` 出現在 `report.items` 中且 `over === true`、`report.ok === false`。**這些是平台會直接拒絕請求的硬限制，MUST 在同一次 `checkBudget` 呼叫中檢查**。另補 `problems.count > 3` 一則（defense-in-depth，主要守門在 T021）
-- [ ] T027 [US1] 實作 `src/renderer/budget.ts`：`checkBudget(embeds)` → `BudgetReport`（純函式），**同時涵蓋逐區塊預算、總量上限與平台結構性上限三類**，全部以同樣的 `BudgetItem` 形式進入 `report.items`（使 DRY_RUN 明細一併涵蓋，T051）。**MUST 為獨立純函式供 F5 的 Gate 共用同一顆實作**（憲章 IX）。契約見 [contracts/discord-embed-contract.md](./contracts/discord-embed-contract.md) §2
-- [ ] T028 [US1] 撰寫 `tests/unit/renderer.test.ts`：**同一 `Lesson` 渲染 100 次逐字元相同**（SC-010）；只有 `track` 欄位不同的兩個 `Lesson` → embeds 完全相同（Track 不決定版面，憲章 XI）；不修改輸入物件；缺 `hint` 時省略該段與其分隔符（FR-007b）；`path.prev` 缺席時省略「昨天」整行（FR-007a）；**斷言 `src/renderer/**` 的 import 集合只含 `src/types/lesson.ts`**（憲章 XI 的編譯期約束）
-- [ ] T029 [US1] 實作 `src/renderer/discord.ts`：`render(lesson)` → 固定 3 個 embeds（主 Embed / 題目 Embed / 收尾 Embed），順序寫死且**觀念先於題目**（FR-007、憲章 I）。版面規格見 [contracts/discord-embed-contract.md](./contracts/discord-embed-contract.md) §1
+- [X] T026 [US1] 撰寫 `tests/unit/budget.test.ts`：計入欄位為 title + description + field name/value + footer/author（`url` / `color` 不計）；長度以 **Unicode code point** 計（含 emoji 的字串驗證）；逐區塊上限（Digest 900 / Tips 各 450 / 每題 350 / Exit Criteria 400 / Takeaway 120 / 學習路徑 200）；總量 5,500 與平台硬限 6,000；回傳**逐項明細**而非布林
+- [X] T026a [US1] 於 `tests/unit/budget.test.ts` 補**平台結構性上限**測試（FR-006b，C2）：單 embed `title` >256、`description` >4,096、`fields` 數 >25、field `name` >256、field `value` >1,024、訊息 embed 數 >10 —— 每項各一則超限案例，斷言對應的 `BudgetItem` 出現在 `report.items` 中且 `over === true`、`report.ok === false`。**這些是平台會直接拒絕請求的硬限制，MUST 在同一次 `checkBudget` 呼叫中檢查**。另補 `problems.count > 3` 一則（defense-in-depth，主要守門在 T021）
+- [X] T027 [US1] 實作 `src/renderer/budget.ts`：`checkBudget(embeds)` → `BudgetReport`（純函式），**同時涵蓋逐區塊預算、總量上限與平台結構性上限三類**，全部以同樣的 `BudgetItem` 形式進入 `report.items`（使 DRY_RUN 明細一併涵蓋，T051）。**MUST 為獨立純函式供 F5 的 Gate 共用同一顆實作**（憲章 IX）。契約見 [contracts/discord-embed-contract.md](./contracts/discord-embed-contract.md) §2
+- [X] T028 [US1] 撰寫 `tests/unit/renderer.test.ts`：**同一 `Lesson` 渲染 100 次逐字元相同**（SC-010）；只有 `track` 欄位不同的兩個 `Lesson` → embeds 完全相同（Track 不決定版面，憲章 XI）；不修改輸入物件；缺 `hint` 時省略該段與其分隔符（FR-007b）；`path.prev` 缺席時省略「昨天」整行（FR-007a）；**斷言 `src/renderer/**` 的 import 集合只含 `src/types/lesson.ts`**（憲章 XI 的編譯期約束）
+- [X] T029 [US1] 實作 `src/renderer/discord.ts`：`render(lesson)` → 固定 3 個 embeds（主 Embed / 題目 Embed / 收尾 Embed），順序寫死且**觀念先於題目**（FR-007、憲章 I）。版面規格見 [contracts/discord-embed-contract.md](./contracts/discord-embed-contract.md) §1
 
 ### 推播與接線（US1）
 
 - [X] T030 [US1] 撰寫 `tests/unit/webhook-client.test.ts`：以 `vi.stubGlobal('fetch', ...)` 驗證 POST 的 URL、`Content-Type` 與 body `{ embeds }`；非 2xx → 拋錯且**錯誤訊息含 HTTP 狀態碼與 Track 名稱、不含 URL**（憲章 XIV）
 - [X] T031 [US1] 實作 `src/discord/webhook-client.ts`：以 Node 內建 `fetch` POST embeds；依 Track 路由至對應 webhook；**本 Feature 不實作重試**（歸 F6，見 spec Out of Scope）
-- [ ] T032 [US1] 接線 `src/main.ts`：把 T013 的 stub 換成實際流程 `compile → render → checkBudget → post`；預算超限 MUST 在 `post` **之前**擋下並視為該 Track 失敗（FR-006）；課表用盡 / 教材缺區塊 / 題目資料不一致皆為**該 Track 失敗**（隔離後續行，spec Edge Cases）
-- [ ] T033 [US1] 在 `src/main.ts` 補上日誌：每個 Track 輸出結果行（`pushed` / `failed: {reason}`），**MUST NOT 印出 webhook URL**（[contracts/cli-contract.md](./contracts/cli-contract.md) §2）
+- [X] T032 [US1] 接線 `src/main.ts`：把 T013 的 stub 換成實際流程 `compile → render → checkBudget → post`；預算超限 MUST 在 `post` **之前**擋下並視為該 Track 失敗（FR-006）；課表用盡 / 教材缺區塊 / 題目資料不一致皆為**該 Track 失敗**（隔離後續行，spec Edge Cases）
+- [X] T033 [US1] 在 `src/main.ts` 補上日誌：每個 Track 輸出結果行（`pushed` / `failed: {reason}`），**MUST NOT 印出 webhook URL**（[contracts/cli-contract.md](./contracts/cli-contract.md) §2）
 
 **Checkpoint**: US1 完成——可手動觸發並在 Discord 收到一堂完整的課（quickstart A、C）。**此即 MVP**。
 
