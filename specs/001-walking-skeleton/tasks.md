@@ -163,10 +163,10 @@ User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處*
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T053 [P] 撰寫 `docs/setup-guide.md`（FR-024）：`state` 分支的 orphan 初始化步驟、Discord 頻道與 Webhook 取得、GitHub Actions Secrets 登錄、如何手動調整進度（FR-018）。步驟由使用者**手動執行一次**；**MUST NOT** 提供自動建立分支或頻道的程式。文件內只放佔位示意，**MUST NOT** 出現任何真實 webhook URL（憲章 XIV）
-- [ ] T054 [P] 撰寫 `README.md`：專案定位、本機 dry run 指令（PowerShell）、指向 `docs/spec.md` 與 `docs/setup-guide.md`
-- [ ] T055 [P] 新增 `tests/unit/zero-llm.test.ts`：斷言 `src/**` 的原始碼**不含** `@google/genai` import，且 `.github/workflows/daily.yml` **不含** `GEMINI_API_KEY` 字串（憲章 VIII、SC-008）
-- [ ] T056 執行 `npm test` 確認全數通過，並確認憲章「測試優先」列舉的本 Feature 適用項目皆有對應測試
+- [X] T053 [P] 撰寫 `docs/setup-guide.md`（FR-024）：`state` 分支的 orphan 初始化步驟、Discord 頻道與 Webhook 取得、GitHub Actions Secrets 登錄、如何手動調整進度（FR-018）。步驟由使用者**手動執行一次**；**MUST NOT** 提供自動建立分支或頻道的程式。文件內只放佔位示意，**MUST NOT** 出現任何真實 webhook URL（憲章 XIV）
+- [X] T054 [P] 撰寫 `README.md`：專案定位、本機 dry run 指令（PowerShell）、指向 `docs/spec.md` 與 `docs/setup-guide.md`
+- [X] T055 [P] 新增 `tests/unit/zero-llm.test.ts`：斷言 `src/**` 的原始碼**不含** `@google/genai` import，且 `.github/workflows/daily.yml` **不含** `GEMINI_API_KEY` 字串（憲章 VIII、SC-008）
+- [X] T056 執行 `npm test` 確認全數通過，並確認憲章「測試優先」列舉的本 Feature 適用項目皆有對應測試
 - [ ] T057 依 [quickstart.md](./quickstart.md) 步驟 A–I 實跑驗收（**含子步驟 B-2/B-3、G-2/G-3、I-2/I-3**）；步驟 C 的手機版面確認（SC-003）須明確回答「這讀起來像一堂課」；I-3 驗完 MUST 還原 `package.json`
 - [ ] T058 依 [quickstart.md](./quickstart.md) 步驟 J 完成 SC-011 人工驗收：請一位未參與開發者只依 `docs/setup-guide.md` 操作，30 分鐘內完成環境建置並收到第一則訊息
 
