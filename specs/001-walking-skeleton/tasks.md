@@ -135,12 +135,12 @@ User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處*
 
 **Independent Test**: 同一天內連續觸發兩次 → 第二次被跳過且進度未變；再以強制模式觸發 → 會推播（quickstart 步驟 D、E）。
 
-- [ ] T043 [P] [US3] 撰寫 `tests/unit/taipei-date.test.ts`：UTC `2026-07-19T15:59:59Z` → `2026-07-19`；UTC `2026-07-19T16:00:00Z` → `2026-07-20`（**跨日翻轉點**）；每日 cron 的 `22:07Z` 對應台北**次日**；涵蓋 research R2 列舉的全部邊界
-- [ ] T044 [P] [US3] 實作 `src/util/taipei-date.ts`：`toTaipeiDateString(date)` 以 `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' })` 取得 `YYYY-MM-DD`（純函式，不讀系統時鐘）
-- [ ] T045 [US3] 撰寫 `tests/unit/idempotency-guard.test.ts`：`lastPushAt` 的台北日 == 今天 → 跳過該 Track 且**不視為失敗**（exit 0，FR-020）；台北日為昨天 → 正常推播；`lastPushAt` 為 `null`（新 Track）→ 放行；`FORCE=true` → 繞過 guard 但**照常寫入狀態**（FR-021）
-- [ ] T046 [US3] 於 `src/main.ts` 加入 per-track idempotency guard：置於逐 Track 流程的**最前**，略過條件為 `dryRun || force`（research R9——此單一條件式同時滿足 FR-021a 與 FR-021b）
-- [ ] T047 [US3] 於 `daily.yml` 補上雙 cron：`7 22 * * *`（台北 06:07 主推）與 `37 22 * * *`（台北 06:37 補跑），並新增 `workflow_dispatch` 的 `force` boolean input（default false）→ 以 env `FORCE` 傳入（FR-019）
-- [ ] T048 [US3] 於 `src/main.ts` 補上跳過時的日誌行 `skipped (already pushed today)`（[contracts/cli-contract.md](./contracts/cli-contract.md) §2）
+- [X] T043 [P] [US3] 撰寫 `tests/unit/taipei-date.test.ts`：UTC `2026-07-19T15:59:59Z` → `2026-07-19`；UTC `2026-07-19T16:00:00Z` → `2026-07-20`（**跨日翻轉點**）；每日 cron 的 `22:07Z` 對應台北**次日**；涵蓋 research R2 列舉的全部邊界
+- [X] T044 [P] [US3] 實作 `src/util/taipei-date.ts`：`toTaipeiDateString(date)` 以 `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' })` 取得 `YYYY-MM-DD`（純函式，不讀系統時鐘）
+- [X] T045 [US3] 撰寫 `tests/unit/idempotency-guard.test.ts`：`lastPushAt` 的台北日 == 今天 → 跳過該 Track 且**不視為失敗**（exit 0，FR-020）；台北日為昨天 → 正常推播；`lastPushAt` 為 `null`（新 Track）→ 放行；`FORCE=true` → 繞過 guard 但**照常寫入狀態**（FR-021）
+- [X] T046 [US3] 於 `src/main.ts` 加入 per-track idempotency guard：置於逐 Track 流程的**最前**，略過條件為 `dryRun || force`（research R9——此單一條件式同時滿足 FR-021a 與 FR-021b）
+- [X] T047 [US3] 於 `daily.yml` 補上雙 cron：`7 22 * * *`（台北 06:07 主推）與 `37 22 * * *`（台北 06:37 補跑），並新增 `workflow_dispatch` 的 `force` boolean input（default false）→ 以 env `FORCE` 傳入（FR-019）
+- [X] T048 [US3] 於 `src/main.ts` 補上跳過時的日誌行 `skipped (already pushed today)`（[contracts/cli-contract.md](./contracts/cli-contract.md) §2）
 
 **Checkpoint**: US1–US3 完成——雙排程去重與強制補推皆可運作。
 

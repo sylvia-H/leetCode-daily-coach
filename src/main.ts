@@ -6,6 +6,7 @@ import { render } from "./renderer/discord.js";
 import { renderAlert } from "./renderer/alert.js";
 import { advance, type AppState, load as loadState, save as saveState } from "./state/state-store.js";
 import type { Lesson, Track } from "./types/lesson.js";
+import { toTaipeiDateString } from "./util/taipei-date.js";
 
 export type PushTrack = (track: Track, config: Config, state: AppState) => Promise<Lesson>;
 
@@ -74,6 +75,19 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   let anyFailed = false;
 
   for (const track of config.enabledTracks) {
+    const trackState = state.tracks[track];
+    const alreadyPushedToday =
+      trackState?.lastPushAt !== null &&
+      trackState?.lastPushAt !== undefined &&
+      toTaipeiDateString(new Date(trackState.lastPushAt)) === toTaipeiDateString(new Date());
+
+    // per-track idempotency guard（FR-020）：置於逐 Track 流程最前。
+    // 略過條件為 dryRun || force（research R9）——DRY_RUN 與 FORCE 同時開啟時以 DRY_RUN 為準。
+    if (alreadyPushedToday && !config.dryRun && !config.force) {
+      console.log(`${track}: skipped (already pushed today)`);
+      continue;
+    }
+
     try {
       const lesson = await pushTrack(track, config, state);
       advance(state, track, lesson, new Date());
