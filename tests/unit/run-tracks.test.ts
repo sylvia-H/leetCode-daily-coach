@@ -3,6 +3,31 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { run } from "../../src/main.js";
+import type { Lesson } from "../../src/types/lesson.js";
+
+function makeLesson(): Lesson {
+  return {
+    sessionIndex: 1,
+    type: "concept",
+    track: "foundation",
+    concept: {
+      id: "left-right-pointer",
+      title: "Left-Right Pointer",
+      moduleColor: 1,
+      digest: "d",
+      tsTip: "t",
+      pyTip: "p",
+      takeaway: "tk",
+      exitCriteria: ["c1"],
+      patternLabel: "Two Pointer",
+      complexityLabel: "O(n)",
+      estimatedMinutes: 15,
+      articlePath: "articles/x.md",
+    },
+    problems: [],
+    path: { current: "Left-Right Pointer" },
+  };
+}
 
 describe("run — 多 Track 失敗隔離", () => {
   let dir: string;
@@ -38,6 +63,7 @@ describe("run — 多 Track 失敗隔離", () => {
           throw new Error("推播失敗：HTTP 500");
         }
         secondCalled = true;
+        return makeLesson();
       },
     });
 
@@ -61,6 +87,7 @@ describe("run — 多 Track 失敗隔離", () => {
           throw new Error("推播失敗：HTTP 500");
         }
         secondCalled = true;
+        return makeLesson();
       },
     });
 

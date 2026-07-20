@@ -4,12 +4,12 @@ import { createWebhookClient, type WebhookClient } from "./discord/webhook-clien
 import { checkBudget } from "./renderer/budget.js";
 import { render } from "./renderer/discord.js";
 import { renderAlert } from "./renderer/alert.js";
-import { type AppState, load as loadState } from "./state/state-store.js";
-import type { Track } from "./types/lesson.js";
+import { advance, type AppState, load as loadState, save as saveState } from "./state/state-store.js";
+import type { Lesson, Track } from "./types/lesson.js";
 
-export type PushTrack = (track: Track, config: Config, state: AppState) => Promise<void>;
+export type PushTrack = (track: Track, config: Config, state: AppState) => Promise<Lesson>;
 
-async function defaultPushTrack(track: Track, config: Config, state: AppState): Promise<void> {
+async function defaultPushTrack(track: Track, config: Config, state: AppState): Promise<Lesson> {
   const sessionIndex = state.tracks[track]?.currentSessionIndex ?? 1;
   const lesson = compile(track, sessionIndex);
   const embeds = render(lesson);
@@ -25,6 +25,7 @@ async function defaultPushTrack(track: Track, config: Config, state: AppState): 
 
   const client = createWebhookClient(config.webhooks);
   await client.post(track, embeds);
+  return lesson;
 }
 
 async function sendGlobalAlert(client: WebhookClient, track: Track, reason: string): Promise<void> {
@@ -74,7 +75,8 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
 
   for (const track of config.enabledTracks) {
     try {
-      await pushTrack(track, config, state);
+      const lesson = await pushTrack(track, config, state);
+      advance(state, track, lesson, new Date());
       console.log(`${track}: pushed`);
     } catch (err) {
       anyFailed = true;
@@ -87,6 +89,8 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       }
     }
   }
+
+  saveState(config.stateFile, state);
 
   return anyFailed ? 1 : 0;
 }

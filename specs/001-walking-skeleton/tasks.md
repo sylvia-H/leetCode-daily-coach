@@ -115,15 +115,15 @@ User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處*
 
 **Independent Test**: 連續觸發兩次（第二次繞過同日去重）→ 收到第 1、2 課；再模擬一次推播失敗 → 進度停在原地（quickstart 步驟 E、F）。
 
-- [ ] T034 [P] [US2] 建立 `docs/state.template.json`：三個 Track 的初始進度樣板（FR-024）。結構見 [contracts/state-schema.md](./contracts/state-schema.md) §1
-- [ ] T035 [US2] 撰寫 `tests/unit/state-advance.test.ts`：推播成功 → `currentSessionIndex` 恰好 +1、`lastPushAt` 更新、`history` append；推播失敗 / 跳過 → 三欄位皆不變（FR-013，漏跑不跳課）；同一 `conceptId` 連推三次 → `completedConceptIds` 長度恆為 1（**去重**，spec Edge Cases）；累積 35 筆 → `history` 長度為 30 且保留最新（FR-014）
-- [ ] T036 [US2] 實作 `src/state/state-store.ts` 的 `advance(track, lesson, pushedAt)`：依 [contracts/state-schema.md](./contracts/state-schema.md) §3 的轉移規則
-- [ ] T037 [US2] 撰寫 `tests/unit/state-save.test.ts`：全部 Track 處理完**只呼叫一次** `save`（FR-016）；序列化為 2 空格縮排 + 結尾換行、Track 鍵順序固定；部分 Track 失敗時**已成功 Track 的變更仍被保存**（憲章 XV）
-- [ ] T038 [US2] 實作 `src/state/state-store.ts` 的 `save(stateFile, state)`：只寫檔，**不含任何 git 操作**（research R5）
-- [ ] T039 [US2] 接線 `src/main.ts`：推播成功後呼叫 `advance`；全部 Track 處理完畢後**單次** `save`
-- [ ] T040 [US2] 建立 `.github/workflows/daily.yml`：`workflow_dispatch` 觸發、`permissions: contents: write`、`concurrency` 群組固定且 `cancel-in-progress: false`、checkout 兩個 ref（主分支 + `state` 分支至 `.state`）、`setup-node@v4` Node 24 + npm cache、`npm ci` → `npm run build` → `node dist/main.js`，env 傳入三個 webhook secrets 與 `STATE_FILE: .state/state.json`。**MUST NOT 含 `GEMINI_API_KEY`**（憲章 VIII）
-- [ ] T041 [US2] 於 `daily.yml` 新增 state 提交 step：於 `.state` 目錄 `git add / commit`，push 衝突以 `git pull --rebase --autostash origin state` + `git push` 重試，**重試上限固定 3 次**（FR-017），耗盡即以非零狀態結束該 step；**MUST NOT** 無限重試或 `--force` push。提交 MUST 只進 **`state` 分支**（FR-016、SC-009）。契約見 [contracts/state-schema.md](./contracts/state-schema.md) §4
-- [ ] T042 [US2] 於 `daily.yml` 新增 `if: failure()` 的**最後防線通知** step（FR-010b）：發至第一個已設定的 webhook secret（Foundation 優先，spec Assumptions），body **MUST 為極簡純文字** `{"content": "⚠️ daily workflow 失敗，詳見 Actions log：{run_url}"}`。**MUST NOT 使用 `embeds`、MUST NOT 重述失敗原因細節**——告警版面的唯一實作是 `renderer/alert.ts`（T010、FR-010a）。此 step 只涵蓋 `main.ts` **根本未執行**的情境（`npm ci` / `tsc` / checkout / setup-node 失敗）；與 `main.ts` 告警重疊時使用者會多收一則純文字提示，屬**可接受**的取捨。契約見 [contracts/cli-contract.md](./contracts/cli-contract.md) §6
+- [X] T034 [P] [US2] 建立 `docs/state.template.json`：三個 Track 的初始進度樣板（FR-024）。結構見 [contracts/state-schema.md](./contracts/state-schema.md) §1
+- [X] T035 [US2] 撰寫 `tests/unit/state-advance.test.ts`：推播成功 → `currentSessionIndex` 恰好 +1、`lastPushAt` 更新、`history` append；推播失敗 / 跳過 → 三欄位皆不變（FR-013，漏跑不跳課）；同一 `conceptId` 連推三次 → `completedConceptIds` 長度恆為 1（**去重**，spec Edge Cases）；累積 35 筆 → `history` 長度為 30 且保留最新（FR-014）
+- [X] T036 [US2] 實作 `src/state/state-store.ts` 的 `advance(track, lesson, pushedAt)`：依 [contracts/state-schema.md](./contracts/state-schema.md) §3 的轉移規則
+- [X] T037 [US2] 撰寫 `tests/unit/state-save.test.ts`：全部 Track 處理完**只呼叫一次** `save`（FR-016）；序列化為 2 空格縮排 + 結尾換行、Track 鍵順序固定；部分 Track 失敗時**已成功 Track 的變更仍被保存**（憲章 XV）
+- [X] T038 [US2] 實作 `src/state/state-store.ts` 的 `save(stateFile, state)`：只寫檔，**不含任何 git 操作**（research R5）
+- [X] T039 [US2] 接線 `src/main.ts`：推播成功後呼叫 `advance`；全部 Track 處理完畢後**單次** `save`
+- [X] T040 [US2] 建立 `.github/workflows/daily.yml`：`workflow_dispatch` 觸發、`permissions: contents: write`、`concurrency` 群組固定且 `cancel-in-progress: false`、checkout 兩個 ref（主分支 + `state` 分支至 `.state`）、`setup-node@v4` Node 24 + npm cache、`npm ci` → `npm run build` → `node dist/main.js`，env 傳入三個 webhook secrets 與 `STATE_FILE: .state/state.json`。**MUST NOT 含 `GEMINI_API_KEY`**（憲章 VIII）
+- [X] T041 [US2] 於 `daily.yml` 新增 state 提交 step：於 `.state` 目錄 `git add / commit`，push 衝突以 `git pull --rebase --autostash origin state` + `git push` 重試，**重試上限固定 3 次**（FR-017），耗盡即以非零狀態結束該 step；**MUST NOT** 無限重試或 `--force` push。提交 MUST 只進 **`state` 分支**（FR-016、SC-009）。契約見 [contracts/state-schema.md](./contracts/state-schema.md) §4
+- [X] T042 [US2] 於 `daily.yml` 新增 `if: failure()` 的**最後防線通知** step（FR-010b）：發至第一個已設定的 webhook secret（Foundation 優先，spec Assumptions），body **MUST 為極簡純文字** `{"content": "⚠️ daily workflow 失敗，詳見 Actions log：{run_url}"}`。**MUST NOT 使用 `embeds`、MUST NOT 重述失敗原因細節**——告警版面的唯一實作是 `renderer/alert.ts`（T010、FR-010a）。此 step 只涵蓋 `main.ts` **根本未執行**的情境（`npm ci` / `tsc` / checkout / setup-node 失敗）；與 `main.ts` 告警重疊時使用者會多收一則純文字提示，屬**可接受**的取捨。契約見 [contracts/cli-contract.md](./contracts/cli-contract.md) §6
 
 **Checkpoint**: US1 + US2 完成——課程會推播、進度會前進且保存於 `state` 分支，失敗時進度不動。
 
