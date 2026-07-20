@@ -1,2 +1,12 @@
 # codegraph
 .codegraph
+
+# node
+node_modules/
+dist/
+*.log
+
+# 本機 dry run 的 state checkout 目錄；MUST 排除以免誤入主分支
+.state/
+
+# package-lock.json MUST NOT 被忽略（npm ci 相依，見 T001）

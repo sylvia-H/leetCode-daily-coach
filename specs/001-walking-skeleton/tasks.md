@@ -34,11 +34,11 @@ Renderer 純函式性與 Discord 限制（含 6,000 總長）。
 
 **Purpose**: 建立整個專案的建置與測試基礎。本階段產物為**永久資產**，後續 Feature 在其上擴充。
 
-- [ ] T001 建立 `package.json`：`type: module`、npm scripts（`build` = `tsc`、`test` = `vitest run`、`test:watch` = `vitest`、`start` = `node dist/main.js`）、dependencies（`gray-matter`、`marked`）、devDependencies（`typescript`、`vitest`、`@types/node`）；**MUST NOT** 加入 `@google/genai` 或 `zod`（見 plan.md § Primary Dependencies）。接著執行 `npm install` 產生 `package-lock.json` 並**一併 commit**——`daily.yml`（T040）以 `npm ci` 安裝，缺 lockfile 會在 CI 第一步直接失敗
-- [ ] T002 [P] 建立 `tsconfig.json`：strict、`noUncheckedIndexedAccess`、target ES2022、module NodeNext、`outDir: dist`、`rootDir: src`
-- [ ] T003 [P] 建立 `vitest.config.ts`：include `tests/**/*.test.ts`、環境 node
-- [ ] T004 [P] 建立 `.gitignore`：`node_modules/`、`dist/`、`.state/`（本機 dry run 的 state checkout 目錄，MUST 排除以免誤入主分支）。**`package-lock.json` MUST NOT 被忽略**（T001、`npm ci` 相依）
-- [ ] T005 建立目錄骨架：`src/types/`、`src/compiler/`、`src/renderer/`、`src/discord/`、`src/state/`、`src/util/`、`tests/unit/`、`tests/fixtures/`、`articles/two-pointer/`、`data/`
+- [X] T001 建立 `package.json`：`type: module`、npm scripts（`build` = `tsc`、`test` = `vitest run`、`test:watch` = `vitest`、`start` = `node dist/main.js`）、dependencies（`gray-matter`、`marked`）、devDependencies（`typescript`、`vitest`、`@types/node`）；**MUST NOT** 加入 `@google/genai` 或 `zod`（見 plan.md § Primary Dependencies）。接著執行 `npm install` 產生 `package-lock.json` 並**一併 commit**——`daily.yml`（T040）以 `npm ci` 安裝，缺 lockfile 會在 CI 第一步直接失敗
+- [X] T002 [P] 建立 `tsconfig.json`：strict、`noUncheckedIndexedAccess`、target ES2022、module NodeNext、`outDir: dist`、`rootDir: src`
+- [X] T003 [P] 建立 `vitest.config.ts`：include `tests/**/*.test.ts`、環境 node
+- [X] T004 [P] 建立 `.gitignore`：`node_modules/`、`dist/`、`.state/`（本機 dry run 的 state checkout 目錄，MUST 排除以免誤入主分支）。**`package-lock.json` MUST NOT 被忽略**（T001、`npm ci` 相依）
+- [X] T005 建立目錄骨架：`src/types/`、`src/compiler/`、`src/renderer/`、`src/discord/`、`src/state/`、`src/util/`、`tests/unit/`、`tests/fixtures/`、`articles/two-pointer/`、`data/`
 
 ---
 
