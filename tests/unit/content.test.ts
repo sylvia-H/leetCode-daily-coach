@@ -41,6 +41,14 @@ describe("loadArticle", () => {
     expect(article.digest).toContain("Digest 內容");
   });
 
+  it("exit_criteria 誤寫為純量字串時，於解析階段拋出指名該欄位的錯誤", () => {
+    // 少了結構性檢查，錯誤會延遲到 renderer 的 .map() 才以 TypeError 爆開，
+    // 告警訊息會變成 "exitCriteria.map is not a function"，無法指向真正的成因。
+    expect(() => loadArticle(join(FIXTURES, "article-scalar-exit-criteria.md"), "fixture-concept")).toThrow(
+      /exit_criteria/,
+    );
+  });
+
   it("frontmatter 的 id 與請求的 conceptId 不符時拋錯", () => {
     expect(() => loadArticle(join(FIXTURES, "article-valid.md"), "other-concept")).toThrow(/id/);
   });

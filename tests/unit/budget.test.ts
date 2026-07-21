@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkBudget } from "../../src/renderer/budget.js";
+import { PROBLEM_BULLET } from "../../src/renderer/discord.js";
 import type { DiscordEmbed } from "../../src/types/lesson.js";
 
 function makeLessonEmbeds(overrides: Partial<{ digest: string; tsTip: string; pyTip: string }> = {}): DiscordEmbed[] {
@@ -123,5 +124,49 @@ describe("checkBudget — 平台結構性上限（FR-006b）", () => {
     const item = report.items.find((i) => i.name === "problems.count");
     expect(item?.over).toBe(true);
     expect(report.ok).toBe(false);
+  });
+});
+
+describe("checkBudget — 逐題切分不得靜默失效", () => {
+  it("逐題切分使用與 renderer 同一顆 bullet 常數（版面調整無法單邊漂移）", () => {
+    const embeds = makeLessonEmbeds();
+    embeds[1]!.description = `${PROBLEM_BULLET}[167. Two Sum II](https://leetcode.com/problems/x/)\n  Medium · why`;
+
+    const report = checkBudget(embeds);
+    expect(report.items.find((i) => i.name === "problem[167]")).toBeDefined();
+    expect(report.items.find((i) => i.name === "problems.parse")).toBeUndefined();
+  });
+
+  it("description 非空卻切不出任何一題 → problems.parse 標為 over 且 ok 為 false（fail loud）", () => {
+    const embeds = makeLessonEmbeds();
+    // 模擬未來把題目版面整段換成非 bullet 結構：舊行為會靜默略過逐題 350 與題數上限。
+    embeds[1]!.description = "1. [167. Two Sum II](https://leetcode.com/problems/x/) — Medium · why";
+
+    const report = checkBudget(embeds);
+    const item = report.items.find((i) => i.name === "problems.parse");
+    expect(item?.over).toBe(true);
+    expect(report.ok).toBe(false);
+  });
+
+  it("題目 embed description 為空時不觸發 problems.parse", () => {
+    const embeds = makeLessonEmbeds();
+    embeds[1]!.description = "";
+    const report = checkBudget(embeds);
+    expect(report.items.find((i) => i.name === "problems.parse")).toBeUndefined();
+  });
+});
+
+describe("checkBudget — 平台硬限 6,000", () => {
+  it("total.hard 以實際 BudgetItem 存在，上限為 hardLimit", () => {
+    const report = checkBudget(makeLessonEmbeds());
+    const item = report.items.find((i) => i.name === "total.hard");
+    expect(item).toBeDefined();
+    expect(item?.limit).toBe(report.hardLimit);
+    expect(item?.length).toBe(report.total);
+  });
+
+  it("總長超過 6,000 時 total.hard 亦為 over", () => {
+    const report = checkBudget([{ description: "字".repeat(6001) }]);
+    expect(report.items.find((i) => i.name === "total.hard")?.over).toBe(true);
   });
 });

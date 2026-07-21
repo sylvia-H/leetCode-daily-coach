@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,7 +37,6 @@ describe("DRY_RUN 模式", () => {
   });
 
   it("今天已推播過仍完整輸出渲染結果，不被跳過（FR-021a）", async () => {
-    const { writeFileSync } = await import("node:fs");
     writeFileSync(
       stateFile,
       JSON.stringify({
@@ -67,6 +66,29 @@ describe("DRY_RUN 模式", () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(existsSync(stateFile)).toBe(false);
     expect(exitCode).toBe(0);
+  });
+
+  it("組裝失敗時仍完全不推播（告警亦是推播），僅記錄日誌並以 exit 1 結束", async () => {
+    // 課表用盡（sessionIndex 超出硬編範圍）→ compile 拋錯。舊行為會走進共用 catch，
+    // 對真實 webhook POST 一則紅色告警，違反 cli-contract.md §3「不推播」。
+    const raw = JSON.stringify({
+      tracks: {
+        foundation: { currentSessionIndex: 99, lastPushAt: null, completedConceptIds: [], history: [] },
+      },
+    });
+    writeFileSync(stateFile, raw);
+
+    const exitCode = await run(env({ DRY_RUN: "true" }));
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(exitCode).toBe(1);
+    // 預覽模式 MUST NOT 寫 state：原檔須逐字節不變
+    expect(readFileSync(stateFile, "utf-8")).toBe(raw);
+
+    const errorCalls = (console.error as unknown as { mock: { calls: unknown[][] } }).mock.calls.map((args) =>
+      String(args[0]),
+    );
+    expect(errorCalls.some((line) => line.includes("foundation") && line.includes("failed"))).toBe(true);
   });
 
   it("log 印出完整 embeds（格式化 JSON）與逐項預算明細", async () => {

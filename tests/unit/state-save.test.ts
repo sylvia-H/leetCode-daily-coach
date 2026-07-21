@@ -112,4 +112,32 @@ describe("save — 全部 Track 處理完只呼叫一次（FR-016）與部分成
     expect(saved.tracks.foundation?.currentSessionIndex).toBe(1);
     expect(saved.tracks.interviewReady?.currentSessionIndex).toBe(2);
   });
+
+  it("存檔失敗時發出全域紅色告警並以 exit 1 結束，MUST NOT 讓例外逸出 run()（憲章 XV）", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+    vi.stubGlobal("fetch", fetchMock);
+
+    // STATE_FILE 指向不存在的目錄 → writeFileSync 拋 ENOENT。
+    // 舊行為：例外逸出 run() → unhandled rejection → process.exit 走不到、無任何告警。
+    const unwritable = join(dir, "missing-dir", "state.json");
+
+    const exitCode = await run(
+      {
+        DISCORD_WEBHOOK_URL_FOUNDATION: "https://discord.com/api/webhooks/1/aaa",
+        STATE_FILE: unwritable,
+      },
+      { pushTrack: async () => makeLesson() },
+    );
+
+    expect(exitCode).toBe(1);
+
+    // 最後一次 POST 應為全域告警 embed（renderAlert(null, ...) → 標題含「全域」、紅色）
+    const lastCall = fetchMock.mock.calls.at(-1);
+    const body = JSON.parse((lastCall?.[1] as { body: string }).body) as {
+      embeds: { title: string; description: string; color: number }[];
+    };
+    expect(body.embeds[0]?.title).toContain("全域");
+    expect(body.embeds[0]?.color).toBe(15158332);
+    expect(body.embeds[0]?.description).toContain("狀態存檔失敗");
+  });
 });
