@@ -80,10 +80,29 @@ interface BudgetReport { items: BudgetItem[]; total: number; totalLimit: 5500; h
 | `pyTip` | Embed 1 `Python Tip` field value | 450 |
 | `problem[{id}]` | Embed 2 中該題的兩行 | 350（每題） |
 | `problems.count` | 題數 | 3（**筆數**上限，非字元；**defense-in-depth**，見下方責任歸屬） |
+| `problems.parse` | 逐題切分是否成功（見下方「切分不得靜默失效」） | 0（出現即代表切分失敗） |
 | `exitCriteria` | Embed 3 checklist field value | 400 |
 | `takeaway` | Embed 3 Takeaway field value | 120 |
 | `pathFooter` | Embed 3 學習路徑 field value | 200 |
-| **`total`** | 全部 embeds 計入欄位總和 | **5500**（自訂）／ 6000（平台硬限） |
+| **`total`** | 全部 embeds 計入欄位總和 | **5500**（自訂上限） |
+| **`total.hard`** | 同上，對平台硬限 | **6000**（平台硬限） |
+
+> `total.hard` MUST 以實際 `BudgetItem` 存在，MUST NOT 只讓 `hardLimit` 出現在 `BudgetReport`
+> 的欄位上。目前它恆被更嚴格的 `total`（5500）涵蓋，但日後放寬自訂上限時，它是唯一真正對應
+> 平台拒絕請求的那道後盾——只存在於報表欄位而不參與 `ok` 判定的限制形同裝飾。
+
+### 逐題切分不得靜默失效（MUST）
+
+`checkBudget` 是 **post-render validator**：它量測「實際會送出去的 payload」，故逐題預算 MUST 從已
+渲染的 Embed 2 `description` 切分，而非從 `Lesson` 平行重算（重算物可能與實際送出的字串不一致）。
+
+代價是它與版面格式耦合，因此：
+
+- 切分用的 bullet 前綴 MUST 取自 **`renderer/discord.ts` 匯出的 `PROBLEM_BULLET` 常數**；
+  `budget.ts` MUST NOT 自行寫死 `"• "`。兩邊各自寫死時，調整版面只改其中一處會讓逐題 350 上限與
+  題數上限**靜默失效**（超長 lesson 仍以 `ok === true` 通過 Gate）。
+- `description` 非空卻切不出任何一題 → MUST 推入 `problems.parse` 且標為 `over`（`ok === false`）。
+  這代表版面已與切分假設脫鉤，MUST NOT 靜默放行（憲章 XV「Fail Loud」）。
 
 ### 題數的責任歸屬（FR-003b，MUST）
 

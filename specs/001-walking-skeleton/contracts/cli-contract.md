@@ -83,6 +83,13 @@ parseBool(v) := v?.trim().toLowerCase() === "true"
 - 三個 webhook 皆未設定 → 訊息須明確指出「未設定任何 Track 的 webhook」
 - `STATE_FILE` 未設定
 - `state.json` 讀取或 JSON 解析失敗 → **MUST NOT 覆寫**原檔
+- `state.json` **欄位語意損毀**（JSON 合法但欄位不合法）→ 同上，見 state-schema.md「欄位語意驗證」
+
+### 全域性失敗（在逐 Track 迴圈**之後**）
+
+- **狀態存檔失敗**（`STATE_FILE` 路徑不可寫等）：MUST 發全域告警 + exit 1。
+  MUST NOT 讓例外逸出 `run()`——否則會成為無告警的 unhandled rejection，且 `process.exit` 走不到
+  （違反憲章 XV「Fail loud」）。
 
 **全域性失敗的告警責任（FR-010a，MUST）**：`main.ts` 在中止前 MUST 呼叫 **`renderAlert`（同一顆）**
 並 POST 至**第一個已設定的 webhook**（順序 `foundation` → `interviewReady` → `interviewMastery`），
@@ -149,8 +156,16 @@ npm run build; if ($?) { npm start }
 | **MUST NOT** | 使用 matrix 平行跑多 Track（會搶 `state` 分支）；傳入 `GEMINI_API_KEY` |
 
 **state 提交責任**（research R5）：CLI **只寫檔**；`git add / commit / pull --rebase --autostash / push`
-與重試迴圈由 workflow step 執行，且 `if: dry_run != true`。**重試上限固定 3 次**（FR-017），
-耗盡即以非零狀態結束該 step。
+與重試迴圈由 workflow step 執行。**重試上限固定 3 次**（FR-017），耗盡即以非零狀態結束該 step。
+
+**提交 step 的 `if:` 條件（MUST）**：`if: ${{ !cancelled() && inputs.dry_run != true }}`。
+`!cancelled()` MUST 保留——`if:` 運算式若不含任何 status function，GitHub 會**隱式補上 `success()`**，
+使「單一 Track 失敗 → `main.ts` exit 1」連帶跳過提交，讓已成功 Track 的進度無法寫入 `state` 分支
+（違反 state-schema.md §4「部分成功仍存檔」與憲章 XV 的失敗隔離）。
+
+**重試迴圈的 shell 語意（MUST）**：於 `set -e` 下，重試迴圈**本體**內的 `git pull --rebase --autostash`
+失敗會直接中止整個 step，使剩餘重試預算失效、本地 commit 隨 runner 消失。故同步失敗 MUST 被容錯
+（例如 `if ! git pull …; then git rebase --abort || true; fi`），讓迴圈跑滿 3 次重試。
 
 **最後防線通知（FR-010b）**：`if: failure()` 的 step MUST 只發**極簡純文字**訊息
 （body 為 `{"content": "..."}`，內容為一行「daily workflow 失敗，詳見 Actions log」＋ run 連結），

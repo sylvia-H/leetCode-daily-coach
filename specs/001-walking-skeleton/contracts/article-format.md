@@ -69,6 +69,11 @@ exit_criteria:
 **驗證規則（FR-004b）**：
 - 上述欄位缺失或為空 → 拋出**指名該欄位**的錯誤，該 Track 失敗
 - **MUST NOT** 做型別 / 值域 schema 驗證（zod 屬 F2）——只檢查「存在且非空」
+- **例外：宣告為陣列的欄位（`exit_criteria`）MUST 檢查其為陣列**，不合法時拋出指名該欄位的錯誤。
+  這屬**結構性檢查**而非型別 / 值域驗證：少了它，YAML 純量（`exit_criteria: 條件一`）會通過
+  「存在且非空」一路穿過組裝，直到 renderer 對字串呼叫 `.map()` 才以
+  `exitCriteria.map is not a function` 爆開——告警訊息無法指向真正的成因，違反本節「指名該欄位」的
+  錯誤契約。值域規則（≤ 6 條、每條 ≤ 60 字元）仍屬 F2 的 zod 範圍，此處 MUST NOT 檢查。
 - 檔案中 MAY 含 §10.1 的其他欄位（`difficulty` / `prerequisite` / `next` / `leetcode` / `tags` …），
   本 Feature **忽略**它們，MUST NOT 因其存在或缺失而失敗
 

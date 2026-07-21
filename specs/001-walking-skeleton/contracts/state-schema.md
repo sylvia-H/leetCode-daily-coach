@@ -43,10 +43,29 @@ load(stateFile: string): AppState
 | 檔案存在且 JSON 合法 | 正常載入 |
 | 檔案**不存在** | 回傳空的 `{ tracks: {} }`，不報錯（後續由自動補建處理） |
 | JSON **解析失敗** | **全域失敗**：拋錯 → exit≠0，且 **MUST NOT 覆寫原檔**（避免毀掉唯一權威狀態） |
+| JSON 合法但**欄位語意損毀** | **同上，比照解析失敗處理**（見下方「欄位語意驗證」） |
 | 缺少某個已啟用 Track | 以初始值自動補建（FR-015）：`currentSessionIndex: 1`、`lastPushAt: null` |
 | 含未啟用 Track 的資料 | **原樣保留**，MUST NOT 刪除（該 Track 可能只是暫時停用） |
 
 > `lastPushAt: null` ⇒ 日期 guard 放行 ⇒ 下一次執行即推播 Session 1。
+
+### 欄位語意驗證（MUST，`docs/spec.md` §19）
+
+「調整進度的官方方式」就是人工編輯這份檔案（FR-018），手誤屬**可預期的常態輸入**。故 `load` MUST
+在回傳前驗證每一個出現在檔案中的**已知 Track**（含未啟用者——它仍會被 `save` 重新序列化）：
+
+| 欄位 | 規則 | 少了驗證會發生什麼 |
+|---|---|---|
+| `currentSessionIndex` | MUST 為 **≥ 1 的整數** | 字串值在 `advance` 會被 `+= 1` **字串串接**（`"3"` → `"31"`）並靜默寫回，毀掉唯一權威狀態 |
+| `lastPushAt` | MUST 為 `null` **或可解析的日期字串** | 不可解析值會讓日期 guard 的 `Intl` 換算丟 `RangeError`，且該處在 try 之外 → **整輪中止、失敗隔離失效** |
+| `completedConceptIds` | MUST 為陣列 | `.includes` / `.push` 於推進時丟 TypeError |
+| `history` | MUST 為陣列 | 同上 |
+
+- 任一項不合法 → **全域失敗**，錯誤訊息 MUST **指名該 Track 與該欄位**。因中止點在逐 Track 迴圈之前，
+  `save` 不會被呼叫，原檔自然得以保全。
+- 此為**結構性驗證**，非 zod 的型別 / 值域 schema 驗證（後者屬 F2）。
+- 日期 MUST 以執行環境的解析能力為準（`Date.parse` 不為 `NaN` 即放行），**MUST NOT** 僅因非嚴格
+  ISO 8601 就判定損毀——例如 `"2026-07-20 06:07"` 於 V8 可解析，MUST 視為合法。
 
 ---
 
@@ -116,4 +135,8 @@ save(stateFile: string, state: AppState): void
 - state 中缺少某已啟用 Track → 自動補建為初始值
 - state 中含未啟用 Track → 原樣保留
 - JSON 損毀 → 拋錯且原檔未被改動
+- **欄位語意損毀（JSON 合法）→ 拋出指名該 Track 與該欄位的錯誤，且原檔未被改動**
+  （`currentSessionIndex` 為字串 / 0 / 非整數、`lastPushAt` 不可解析、`completedConceptIds` 或
+  `history` 非陣列；另含**反向案例**：V8 可解析的寬鬆日期格式 MUST 放行）
+- **存檔失敗（路徑不可寫）→ 發出全域紅色告警且以 exit 1 結束，例外 MUST NOT 逸出**
 - `DRY_RUN` 流程 → `save` 完全未被呼叫
