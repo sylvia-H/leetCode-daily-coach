@@ -1,0 +1,32 @@
+{
+  "_comment": "F1 最小題庫（3 題、docs/spec.md §12.1 最小子集）；F3 起擴充為完整題庫，本檔延續使用、不需移除",
+  "problems": [
+    {
+      "id": 167,
+      "title": "Two Sum II - Input Array Is Sorted",
+      "url": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+      "difficulty": "Medium",
+      "whyThisPattern": "陣列已排序，兩數之和的經典應用——直接用左右指標，不需要額外的雜湊表。",
+      "hint": "想想總和與 target 的大小關係，該移動哪一個指標？"
+    },
+    {
+      "id": 125,
+      "title": "Valid Palindrome",
+      "url": "https://leetcode.com/problems/valid-palindrome/",
+      "difficulty": "Easy",
+      "whyThisPattern": "字串視為字元陣列，左右指標同時往中間夾，檢查兩端字元是否對稱。",
+      "hint": "先想清楚哪些字元要忽略（非英數字），大小寫要怎麼處理？"
+    },
+    {
+      "id": 11,
+      "title": "Container With Most Water",
+      "url": "https://leetcode.com/problems/container-with-most-water/",
+      "difficulty": "Medium",
+      "whyThisPattern": "左右指標往中間移動時，每次移動較短的那一側，才能保證不漏掉更大的面積。",
+      "hint": "面積 = 較短邊 × 寬度，怎麼移動指標才不會漏掉更大的解？"
+    }
+  ],
+  "conceptProblems": {
+    "left-right-pointer": [167, 125, 11]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "tracks": {
+    "foundation": {
+      "currentSessionIndex": 1,
+      "lastPushAt": null,
+      "completedConceptIds": [],
+      "history": []
+    },
+    "interviewReady": {
+      "currentSessionIndex": 1,
+      "lastPushAt": null,
+      "completedConceptIds": [],
+      "history": []
+    },
+    "interviewMastery": {
+      "currentSessionIndex": 1,
+      "lastPushAt": null,
+      "completedConceptIds": [],
+      "history": []
+    }
+  }
+}
