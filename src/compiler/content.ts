@@ -99,6 +99,14 @@ export function loadArticle(articlePath: string, conceptId: string): ArticleCont
     throw new Error(`教材 frontmatter 的 id（${id}）與請求的 conceptId（${conceptId}）不符`);
   }
 
+  const exitCriteria = requireMetaField(data, "exit_criteria");
+  // 結構性檢查（非 zod 的型別／值域 schema 驗證，後者仍屬 F2）：宣告為陣列的欄位 MUST 是陣列。
+  // 少了這一道，YAML 純量會一路穿過組裝，直到 renderer 的 `.map()` 才以 TypeError 爆開，
+  // 違反 article-format.md §2「拋出指名該欄位的錯誤」的錯誤契約。
+  if (!Array.isArray(exitCriteria)) {
+    throw new Error("教材 frontmatter 欄位 exit_criteria 必須是陣列（每條 Exit Criteria 各一個項目）");
+  }
+
   const meta: ArticleMeta = {
     id,
     title: requireMetaField(data, "title") as string,
@@ -106,7 +114,7 @@ export function loadArticle(articlePath: string, conceptId: string): ArticleCont
     patternLabel: requireMetaField(data, "pattern_label") as string,
     complexityLabel: requireMetaField(data, "complexity_label") as string,
     estimatedMinutes: requireMetaField(data, "estimated_minutes") as number,
-    exitCriteria: requireMetaField(data, "exit_criteria") as string[],
+    exitCriteria: exitCriteria as string[],
   };
 
   const sections = parseSections(content);

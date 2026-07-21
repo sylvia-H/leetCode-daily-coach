@@ -100,6 +100,8 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
 
   for (const track of config.enabledTracks) {
     const trackState = state.tracks[track];
+    // `lastPushAt` 為 null 或可解析的 ISO 字串，此不變式由 loadState() 的欄位驗證保證（違反者為全域
+    // 失敗，已在迴圈之前中止）；故此處的 Intl 格式化不會因 Invalid Date 丟出 RangeError。
     const alreadyPushedToday =
       trackState?.lastPushAt !== null &&
       trackState?.lastPushAt !== undefined &&
@@ -128,16 +130,28 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       anyFailed = true;
       const reason = (err as Error).message;
       console.error(`${track}: failed: ${reason}`);
-      try {
-        await client.post(track, renderAlert(track, reason));
-      } catch (alertErr) {
-        console.error(`alert-failed: ${track}: ${(alertErr as Error).message}`);
+      // 預覽模式 MUST 完全不推播（cli-contract.md §3）——告警也是一次推播，故 DRY_RUN 下只留日誌。
+      if (!config.dryRun) {
+        try {
+          await client.post(track, renderAlert(track, reason));
+        } catch (alertErr) {
+          console.error(`alert-failed: ${track}: ${(alertErr as Error).message}`);
+        }
       }
     }
   }
 
   if (!config.dryRun) {
-    saveState(config.stateFile, state);
+    // 存檔失敗屬核心步驟失敗：MUST 發紅色告警並以非零 exit code 結束（憲章 XV「Fail loud」），
+    // MUST NOT 讓例外逸出 run() 變成無告警的 unhandled rejection。
+    try {
+      saveState(config.stateFile, state);
+    } catch (err) {
+      const reason = `狀態存檔失敗（${config.stateFile}）：${(err as Error).message}`;
+      console.error(reason);
+      await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+      return 1;
+    }
   }
 
   return anyFailed ? 1 : 0;

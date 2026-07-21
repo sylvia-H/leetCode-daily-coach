@@ -1,10 +1,18 @@
 import type { DiscordEmbed, Lesson } from "../types/lesson.js";
 
+// 題目 Embed 中每一則的 bullet 前綴（contracts/discord-embed-contract.md §1）。
+//
+// `budget.ts` MUST import 這一顆常數來切分逐題內容，MUST NOT 自行寫死 "• "。checkBudget 是
+// post-render validator——它量測的是「實際會送出去的 payload」，逐題預算因此必須從已渲染的
+// description 切分。兩邊各自寫死時，調整版面只改其中一處會讓逐題 350 上限與題數上限**靜默失效**
+// （超長 lesson 仍以 ok === true 通過 Gate）。常數由產生者匯出、量測者引用，使其無法單邊漂移。
+export const PROBLEM_BULLET = "• ";
+
 function renderProblemsDescription(lesson: Lesson): string {
   return lesson.problems
     .map((problem) => {
       const hintPart = problem.hint ? ` · Hint: ${problem.hint}` : "";
-      return `• [${problem.id}. ${problem.title}](${problem.url})\n  ${problem.difficulty} · ${problem.whyThisPattern}${hintPart}`;
+      return `${PROBLEM_BULLET}[${problem.id}. ${problem.title}](${problem.url})\n  ${problem.difficulty} · ${problem.whyThisPattern}${hintPart}`;
     })
     .join("\n");
 }

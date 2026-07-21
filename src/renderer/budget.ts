@@ -1,4 +1,5 @@
 import type { DiscordEmbed } from "../types/lesson.js";
+import { PROBLEM_BULLET } from "./discord.js";
 
 export interface BudgetItem {
   name: string;
@@ -45,7 +46,8 @@ interface ProblemEntry {
   text: string;
 }
 
-// 題目 Embed 的每一則以 "• " 開頭（見 contracts/discord-embed-contract.md §1），依此切分逐題內容。
+// 題目 Embed 的每一則以 `PROBLEM_BULLET` 開頭（contracts/discord-embed-contract.md §1），依此切分
+// 逐題內容。前綴取自 renderer 共用的同一顆常數，避免版面調整後單邊漂移使檢查靜默失效。
 function parseProblemEntries(description: string | undefined): ProblemEntry[] {
   if (!description) return [];
   const lines = description.split("\n");
@@ -53,9 +55,9 @@ function parseProblemEntries(description: string | undefined): ProblemEntry[] {
   let current: ProblemEntry | null = null;
 
   for (const line of lines) {
-    if (line.startsWith("• ")) {
+    if (line.startsWith(PROBLEM_BULLET)) {
       if (current) entries.push(current);
-      const match = line.match(/^•\s*\[(\d+)\./);
+      const match = line.slice(PROBLEM_BULLET.length).match(/^\s*\[(\d+)\./);
       current = { id: match?.[1] ?? String(entries.length + 1), text: line };
     } else if (current) {
       current.text += `\n${line}`;
@@ -82,6 +84,11 @@ export function checkBudget(embeds: DiscordEmbed[]): BudgetReport {
 
   if (problemEmbed) {
     const entries = parseProblemEntries(problemEmbed.description);
+    // Fail loud（憲章 XV）：description 非空卻切不出任何一題，代表題目版面已與此處的切分假設脫鉤。
+    // 此時 MUST NOT 靜默放行——否則逐題 350 與題數上限會無聲消失，超長 lesson 反而以 ok === true 通過。
+    if ((problemEmbed.description ?? "").trim() !== "" && entries.length === 0) {
+      items.push(makeItem("problems.parse", 1, 0));
+    }
     for (const entry of entries) {
       items.push(makeItem(`problem[${entry.id}]`, codePointLength(entry.text), 350));
     }
@@ -108,6 +115,9 @@ export function checkBudget(embeds: DiscordEmbed[]): BudgetReport {
 
   const total = embeds.reduce((sum, embed) => sum + countedTextLength(embed), 0);
   items.push(makeItem("total", total, TOTAL_LIMIT));
+  // 平台硬限（6,000）：目前恆被更嚴格的自訂上限（5,500）涵蓋，但 MUST 以實際 BudgetItem 存在，
+  // 否則 `hardLimit` 只是報表上的裝飾——日後放寬 TOTAL_LIMIT 時會失去這道真正的平台級後盾。
+  items.push(makeItem("total.hard", total, HARD_LIMIT));
 
   const ok = items.every((item) => !item.over);
 
