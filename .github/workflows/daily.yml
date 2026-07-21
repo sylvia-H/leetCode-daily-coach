@@ -57,8 +57,11 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run }}
           FORCE: ${{ inputs.force }}
 
+      # `!cancelled()` MUST 保留：`if:` 運算式若不含任何 status function，GitHub 會隱式補上
+      # `success()`，使「單一 Track 失敗 → main.ts exit 1」連帶跳過本步驟，讓已成功 Track 的進度
+      # 無法提交（違反 state-schema.md §4「部分成功仍存檔」與憲章 XV 的失敗隔離）。
       - name: Commit state changes
-        if: inputs.dry_run != true
+        if: ${{ !cancelled() && inputs.dry_run != true }}
         working-directory: .state
         run: |
           set -e
@@ -82,7 +85,12 @@ jobs:
               exit 1
             fi
             echo "push 衝突，重新同步後重試（第 ${attempt} 次）"
-            git pull --rebase --autostash origin state
+            # `set -e` 下，until 迴圈「本體」內的失敗會直接中止整個 step——同步失敗將使剩餘的重試
+            # 預算失效，且本地 commit 隨 runner 一併消失。故此處容錯，讓迴圈跑完 3 次重試。
+            if ! git pull --rebase --autostash origin state; then
+              echo "重新同步失敗（可能為 rebase 衝突），清理後直接重試 push"
+              git rebase --abort || true
+            fi
           done
 
       - name: 最後防線通知（main.ts 根本未能執行時）
