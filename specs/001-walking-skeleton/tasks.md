@@ -167,7 +167,7 @@ User Story 可開始。**告警版面此時已定於 `renderer/alert.ts` 一處*
 - [X] T054 [P] 撰寫 `README.md`：專案定位、本機 dry run 指令（PowerShell）、指向 `docs/spec.md` 與 `docs/setup-guide.md`
 - [X] T055 [P] 新增 `tests/unit/zero-llm.test.ts`：斷言 `src/**` 的原始碼**不含** `@google/genai` import，且 `.github/workflows/daily.yml` **不含** `GEMINI_API_KEY` 字串（憲章 VIII、SC-008）
 - [X] T056 執行 `npm test` 確認全數通過，並確認憲章「測試優先」列舉的本 Feature 適用項目皆有對應測試
-- [ ] T057 依 [quickstart.md](./quickstart.md) 步驟 A–I 實跑驗收（**含子步驟 B-2/B-3、G-2/G-3、I-2/I-3**）；步驟 C 的手機版面確認（SC-003）須明確回答「這讀起來像一堂課」；I-3 驗完 MUST 還原 `package.json`
+- [X] T057 依 [quickstart.md](./quickstart.md) 步驟 A–I 實跑驗收（**含子步驟 B-2/B-3、G-2/G-3**，皆已實跑並逐項比對預期，含 state.json / Discord 訊息內容交叉驗證）；步驟 C 的手機版面確認（SC-003）已確認「這讀起來像一堂課」。**I-2、I-3 未逐步實跑**（會產生額外的 repo/Actions 副作用，經使用者決定不做），改以程式碼檢視 `daily.yml` 確認：重試迴圈 `max_attempts=3` 符合 FR-017、最後防線通知 body 為純文字 `{"content": ...}` 不含 `embeds` 且指向 Actions log 符合 FR-010b
 - [ ] T058 依 [quickstart.md](./quickstart.md) 步驟 J 完成 SC-011 人工驗收：請一位未參與開發者只依 `docs/setup-guide.md` 操作，30 分鐘內完成環境建置並收到第一則訊息
 
 ---
