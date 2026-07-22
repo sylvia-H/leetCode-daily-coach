@@ -224,8 +224,17 @@ LeetCode Daily Coach 是一套**演算法課程引擎（Learning Pipeline）**�
 
 Curriculum MUST 為 `Module → Topic → Concept` 三層，且整體 MUST 是 DAG。
 
-- 每個 **Topic** SHOULD 含 5～12 個 Concept。
-- 每個 **Module** SHOULD 含 10～30 個 Concept。
+- 每個 **Topic** MUST 含 5～12 個 Concept。
+- 每個 **Module** MUST 含 10～30 個 Concept。
+- 上述數量範圍作為機器 Gate 時 MUST 視為**閉區間**（恰好 5 / 12 / 10 / 30 皆合法，僅超出端點才報錯），
+  違規 MUST 為 **`error` 級**（使驗證失敗，非僅提示）；結構 Gate 另以模式區分強制層級——**下限類**
+  （Topic ≥5、Module ≥10、總數 ≥150）僅於完整課程模式強制，**上限與唯一性類**任何課程一律強制
+  （F2 定案 2026-07-21；數量範圍由 SHOULD 升為 MUST 為 F2 `/speckit-analyze` 後定案 2026-07-22，
+  與憲章 III「Curriculum MUST 維持細顆粒度」一致）。
+- **Topic 命名慣例（MUST）**：每個 Module 的**第一個（主）Topic id 沿用該 Module 的 id**
+  （如 Module `two-pointer` 的主 Topic 即 `two-pointer`，對應 `concepts/two-pointer/`，見 §8.4 / §10.1）；
+  需再細分時才增列其他 Topic id。`topic.id` MUST **跨全部 Module 全域唯一**（它同時是 Concept 資料夾名，
+  §26.1）；`module.id` 與其主 `topic.id` 同名屬不同識別空間，MUST NOT 被判為重複（F2 定案 2026-07-21）。
 - 全課程 **Concept 總數 MUST ≥ 150**（目標 156+），且 MUST 於上線前全數產出並通過 Gate（三軌全量交付，§9）。
 - Curriculum MUST NOT 在此 spec 內窮舉全部 Concept；此處只定義**骨架與規範**，Concept 清單由產線起草、經課綱大綱定稿後凍結（§20.3 Stage 1）。
 
@@ -255,9 +264,22 @@ Level 15  Dynamic Programming（入門）
 ### 8.3 DAG 依賴
 
 - 每個 Concept MUST 宣告 `prerequisite: string[]`（前置 Concept id）與 `next: string[]`（後繼 Concept id）。
-- Curriculum MUST NOT 有環；MUST NOT 有前向依賴（依賴晚於自己的 Concept）。
+  兩者 MUST **雙向一致**（`A.next` 含 B ⇔ `B.prerequisite` 含 A）；系統 MUST 校驗一致性、MUST NOT 自動補齊
+  缺漏的一向（F2 定案 2026-07-21）。內容產線（F7）產出的 Concept frontmatter MUST 滿足此雙向一致。
+- Curriculum MUST NOT 有環；MUST NOT 有前向依賴（依賴晚於自己的 Concept）。前向 / 後向所依據的順序為
+  **宣告序**：`modules.json` 的 Module 宣告序 → Module 內 Topic 宣告序 → Topic 內 Concept 檔名 `NNN`
+  （F2 定案 2026-07-21）。
 - 依賴可跨 Module（例：`Sliding Window` 的某 Concept 可以 `HashMap` 為 prerequisite）。
-- 建置時 MUST 有驗證：拓樸排序成功、無孤兒（除 Level 0 起點外每個 Concept 至少被一個 next 提及或有前人）、所有 `prerequisite` / `next` / `leetcode` 參照存在。
+- 建置時 MUST 有驗證：拓樸排序成功、無孤兒、所有 `prerequisite` / `next` / `leetcode` 參照存在、
+  `prerequisite`/`next` 雙向一致、Concept 集合非空。
+  （驗證的單一實作為 F2 的 `src/compiler/curriculum.ts`；F7 Stage 1 結構 Gate 重用之。）
+- **孤兒與合法起點（MUST，F2 定案 2026-07-21）**：除**合法起點**外，每個 Concept MUST 至少被一個
+  `next` 提及、或自身宣告至少一個 `prerequisite`。**合法起點的定義**：該 Concept 所屬 Module 為
+  **Level 0**，**且**它是**該 Topic 內檔名 `NNN` 最小**者——即 **Level 0 的每個 Topic 各允許恰一個起點**。
+  Level 0 同一 Topic 的第 2 個以後 Concept、以及 Level 1～15 的全部 Concept，一律適用孤兒規則。
+  內容產線（F7）產出的 Concept MUST 滿足此約束。
+- **空課程**：Concept 集合為空時 MUST 報錯，MUST NOT 視為「零違規、通過」（與「數量未達下限」是不同情形，
+  後者於 stub 階段可豁免，前者任何模式皆不豁免）。
 
 範例 DAG（片段）：
 
@@ -381,8 +403,8 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
 ---
 id: left-right-pointer # 全域唯一 slug（MUST 穩定不變）
 title: Left-Right Pointer # 顯示標題
-module: array # 所屬 Module id
-topic: two-pointer # 所屬 Topic id
+module: two-pointer # 所屬 Module id（= §8.2 的一個 Level；Two Pointer 自成一個 Module，F2 clarify 2026-07-21 定案）
+topic: two-pointer # 所屬 Topic id（Module 下的次層分組；完整 Module→Topic 切分見 curriculum/modules.json）
 difficulty: easy # easy | medium（Concept 本身的認知難度）
 estimated_minutes: 10 # 預估閱讀時間
 pattern_label: Two Pointer # 主 Embed 的 `Pattern` field（§16.4 Lesson.patternLabel）
@@ -861,7 +883,8 @@ leetcode-daily-coach/
 │   └── state.json               # ※ 只存在於專用 `state` 分支（§19）；main 上只有初始樣板
 └── .github/workflows/
     ├── daily.yml                # 每日推播排程（零 LLM；單一 job 逐 Track）
-    └── content-gate.yml         # PR Gate：validate.ts + TS/Python 程式碼實測
+    ├── ci.yml                   # push / PR：npm ci → build → test → validate:curriculum（工程 Gate，F2 建立）
+    └── content-gate.yml         # PR Gate：validate.ts + TS/Python 程式碼實測（內容 Gate，F5 建立）
 ```
 
 ---
@@ -1105,7 +1128,18 @@ jobs:
 
 > `state` 分支初始化（一次性）：`git checkout --orphan state && git rm -rf . && echo '{...初始 state...}' > state.json && git add state.json && git commit && git push origin state`。
 
-### 21.3 CI Gate workflow（content-gate.yml）
+### 21.3 CI Gate workflows
+
+專案有**兩道 CI Gate，職責分離**（F2 定案 2026-07-22）：
+
+**（a）`ci.yml` — 工程 Gate（F2 建立）**
+
+- 觸發：所有 push / pull request。
+- 內容：`npm ci` → `npm run build`（`tsc`）→ `npm test`（vitest）→ `npm run validate:curriculum`
+  （課程骨架 + Concept 的 DAG / schema / 顆粒度驗證，§8.3）。
+- 任一步失敗 MUST 使 CI 失敗（fail loud）。
+
+**（b）`content-gate.yml` — 內容 Gate（F5 建立）**
 
 - 觸發：對 `concepts/** articles/** data/** schedules/** overlays/** curriculum/** src/**` 的 PR / push。
 - 內容：`scripts/validate.ts`（DAG 驗證 + 全 Track × 全 Session 完整編譯 + Discord 限制檢查）+ TS/Python 程式碼實測（§20.3 Stage 2-1）+ 單元測試。
@@ -1201,7 +1235,7 @@ MUST 有單元測試：
 
 **F2 `002-curriculum-schema` — Curriculum 骨架與 DAG 驗證**
 
-- 範圍：`curriculum/modules.json`（Module / Topic 順序定稿）、Concept frontmatter schema（zod）、curriculum 載入 + in-memory DAG、驗證（拓樸排序、無環、無前向依賴、參照完整性、**顆粒度規則**——供 Stage 1 結構 Gate 重用），以 Level 0 + Level 1 少量 Concept stub 驗證。
+- 範圍：`curriculum/modules.json`（Module / Topic 順序定稿）、Concept frontmatter schema（zod）、curriculum 載入 + in-memory DAG、驗證（拓樸排序、無環、無前向依賴、參照完整性、**顆粒度規則**——供 Stage 1 結構 Gate 重用），以 Level 0 + Level 1 少量 Concept stub 驗證。**另建立 `ci.yml` 工程 Gate**（push / PR：`npm ci` → build → test → `validate:curriculum`；F2 定案 2026-07-22——此前單元測試從未在 CI 執行，`daily.yml` 只跑 build）。
 - **本 Feature 待定（clarify 定案）**：Module / Topic 命名、Concept 顆粒度的機器可驗規則、`difficulty` 判定基準（實際 Concept 清單由 F7 Stage 1 產出、大綱定稿決定）。
 - 驗收（= M1 部分）：DAG 驗證通過（對應 AC1）。
 
@@ -1219,6 +1253,7 @@ MUST 有單元測試：
 **F5 `005-lesson-compiler` — Compiler、Renderer 與 CI Gate**
 
 - 範圍：Lesson Compiler 單一模組（content 解析 §10 固定區塊 → 組 `Lesson`）、DiscordRenderer（全 Session 類型版面、依 Module 配色、字元預算與拆訊息 fallback）、`scripts/validate.ts` + `content-gate.yml`（全 Track × 全 Session 完整編譯 + render 限制檢查）。
+- **消費 F2 的 Curriculum DAG 推導 learning path（F2 clarify 2026-07-21 定案）**：`Lesson.path` 的 prev / current / next MUST 取自 DAG 的 `prerequisite` / `next`（F2 只建立並驗證 DAG，本身不做 path 推導）；同時 MUST 移除 F1 的硬編學習路徑對照表（`src/compiler/schedule.ts` 的 `getPathLabels`）。
 - 驗收（= M2 部分）：給定同一 `(track, sessionIndex)` → 產出相同 Lesson 與 embeds（對應 AC7）；Gate 對全部 Session 編譯通過（對應 AC8）。
 
 **F6 `006-pipeline-mvp` — 每日 pipeline 端到端（MVP 完成點）**
