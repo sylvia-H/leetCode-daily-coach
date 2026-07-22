@@ -1,0 +1,10 @@
+{
+  "1": {
+    "id": 1,
+    "slug": "some-slug",
+    "title": "Non Leetcode Url One",
+    "url": "https://example.com/problems/some-slug/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  }
+}

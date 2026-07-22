@@ -30,6 +30,8 @@ const ProblemMetaSchema = z
   })
   .strict();
 
+const SLUG_URL_RE = /^https?:\/\/leetcode\.com\/problems\/([^/]+)\/?$/;
+
 function bankLoadViolation(path: string, message: string): ProblemViolation {
   return { rule: "bank-load", severity: "error", subject: path, message };
 }
@@ -91,6 +93,21 @@ function validateEntry(key: string, raw: unknown): { meta?: ProblemMeta; violati
       field: "id",
       target: String(meta.id),
       message: `題庫 key「${key}」與條目 id（${meta.id}）不一致`,
+    });
+  }
+
+  // US4（FR-005）：url 所含 slug 與 slug 欄位一致，避免死鏈；無法擷取（非 LeetCode 網域或缺
+  // /problems/{slug}/ 結構）亦視為不一致。
+  const match = SLUG_URL_RE.exec(meta.url);
+  const extractedSlug = match?.[1];
+  if (!extractedSlug || extractedSlug !== meta.slug) {
+    violations.push({
+      rule: "slug-url-mismatch",
+      severity: "error",
+      subject: key,
+      field: "url",
+      target: meta.slug,
+      message: `題號 ${key} 的 url（${meta.url}）與 slug（${meta.slug}）不一致`,
     });
   }
 

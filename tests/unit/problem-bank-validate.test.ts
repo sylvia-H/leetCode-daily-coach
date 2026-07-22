@@ -96,3 +96,24 @@ describe("validateProblemBank：patterns 參照完整性（US3）", () => {
     ]);
   });
 });
+
+describe("loadProblemBank：url 與 slug 一致性（US4）", () => {
+  it("url 與 slug 一致 → 通過，無 slug-url-mismatch violation", () => {
+    const { loadViolations } = loadProblemBank(LEGAL_BANK);
+    expect(loadViolations.some((v) => v.rule === "slug-url-mismatch")).toBe(false);
+  });
+
+  it("url 與 slug 不一致 → slug-url-mismatch，指名題號與兩值", () => {
+    const { loadViolations } = loadFixture("slug-mismatch");
+    expect(loadViolations).toEqual([
+      expect.objectContaining({ rule: "slug-url-mismatch", subject: "1", target: "expected-slug" }),
+    ]);
+  });
+
+  it("url 非 LeetCode 網域（無法擷取 slug）→ slug-url-mismatch", () => {
+    const { loadViolations } = loadFixture("non-leetcode-url");
+    expect(loadViolations).toEqual([
+      expect.objectContaining({ rule: "slug-url-mismatch", subject: "1" }),
+    ]);
+  });
+});

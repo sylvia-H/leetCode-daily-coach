@@ -95,8 +95,8 @@ runtime 線）為原子性 green-build 單元，置於 Foundational（Phase 2）
 
 **Independent Test**: 一致者通過；注入 `url` 與 `slug` 不符（或非 LeetCode 網域）的題目，確認產生指名的 slug 不一致 violation。
 
-- [ ] T016 [US4] 在 `loadProblemBank` 的 per-entry 驗證加入 `slug-url-mismatch`：以 `^https?://leetcode\.com/problems/([^/]+)/?$` 擷取 slug 與 `slug` 欄位比對，無法擷取或不相等→指名 `error`（FR-005、data-model §1、[contracts/problem-bank-schema.md](./contracts/problem-bank-schema.md) §3）
-- [ ] T017 [P] [US4] 在 `tests/unit/problem-bank-validate.test.ts` 加 slug 案例：一致者通過；mismatch 與非 LeetCode url 皆產生指名 `slug-url-mismatch`（US4 Acceptance 1–2、SC-003/004）
+- [X] T016 [US4] 在 `loadProblemBank` 的 per-entry 驗證加入 `slug-url-mismatch`：以 `^https?://leetcode\.com/problems/([^/]+)/?$` 擷取 slug 與 `slug` 欄位比對，無法擷取或不相等→指名 `error`（FR-005、data-model §1、[contracts/problem-bank-schema.md](./contracts/problem-bank-schema.md) §3）
+- [X] T017 [P] [US4] 在 `tests/unit/problem-bank-validate.test.ts` 加 slug 案例：一致者通過；mismatch 與非 LeetCode url 皆產生指名 `slug-url-mismatch`（US4 Acceptance 1–2、SC-003/004）
 
 **Checkpoint**: US1–US4 全部可獨立驗收。
 
