@@ -66,4 +66,29 @@ describe("loadCurriculum（載入 + 建圖，R5 / FR-013）", () => {
     const empty = result.violations.find((v) => v.rule === "empty-curriculum");
     expect(empty?.message).toMatch(/目錄不存在/);
   });
+
+  it("目錄有檔但 Concept 全部未通過 schema → empty-curriculum 訊息指「未通過 schema 驗證」而非「目錄為空」", () => {
+    const { graph, loadViolations } = loadCurriculum({
+      modulesPath: join(FIX, "valid", "modules.json"),
+      conceptsDir: join(FIX, "all-invalid", "concepts"),
+    });
+    expect(graph.concepts.size).toBe(0);
+    expect(graph.conceptFileCount).toBeGreaterThan(0);
+    expect(loadViolations.some((v) => v.rule.startsWith("schema"))).toBe(true);
+    const result = validateCurriculum(graph);
+    const empty = result.violations.find((v) => v.rule === "empty-curriculum");
+    expect(empty?.message).toMatch(/schema/);
+    expect(empty?.message).not.toMatch(/目錄為空/);
+  });
+
+  it("檔首含 BOM + 連續兩段前導註解 + 空行 → frontmatter 仍被擷取，無 schema 違規（stripLeadingComment）", () => {
+    const { graph, loadViolations } = loadCurriculum({
+      modulesPath: join(FIX, "valid", "modules.json"),
+      conceptsDir: join(FIX, "robust-header", "concepts"),
+    });
+    expect(loadViolations).toHaveLength(0);
+    const alpha = graph.concepts.get("alpha");
+    expect(alpha).toBeDefined();
+    expect(alpha?.title).toBe("Alpha");
+  });
 });

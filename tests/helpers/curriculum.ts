@@ -1,5 +1,6 @@
 // 測試輔助：建構驗證用的「資料」（骨架物件與 in-memory 圖），供圖層規則測試在記憶體中組情境。
 // 這裡只組資料、不重寫任何驗證規則（規則僅存在於 src/compiler/**，SC-007 / T025）。
+import { computeOrdinal } from "../../src/compiler/curriculum.js";
 import type {
   ConceptNode,
   CurriculumGraph,
@@ -110,11 +111,10 @@ function toNode(spec: ConceptSpec): ConceptNode {
   };
 }
 
-const SENTINEL = Number.MAX_SAFE_INTEGER;
-
 /**
  * 由骨架 + Concept 規格建 in-memory 圖，**不做任何驗證**（模擬 loadCurriculum 的建圖產物）。
- * 懸空 module/topic 以 sentinel ordinal 排在最後，交由 validateCurriculum 判 dangling-ref。
+ * ordinal 一律沿用 src/compiler 的 computeOrdinal，避免此處手抄 sentinel 規則而與正式建圖分歧
+ * （SC-007）；懸空 module/topic 交由 computeOrdinal 以 SENTINEL 排在最後、validateCurriculum 判 dangling-ref。
  */
 export function buildGraph(
   specs: ConceptSpec[],
@@ -136,14 +136,7 @@ export function buildGraph(
   for (const spec of specs) {
     const node = toNode(spec);
     concepts.set(node.id, node);
-    const moduleIndex = modules.findIndex((m) => m.id === node.module);
-    const topicNode = topics.get(node.topic);
-    ordinalOf.set(node.id, {
-      moduleIndex: moduleIndex >= 0 ? moduleIndex : SENTINEL,
-      topicIndex: topicNode ? topicNode.topicIndex : SENTINEL,
-      localOrder: node.localOrder,
-      id: node.id,
-    });
+    ordinalOf.set(node.id, computeOrdinal(node, modules, topics));
   }
 
   return { modules, topics, concepts, ordinalOf };
