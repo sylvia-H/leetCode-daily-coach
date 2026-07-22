@@ -88,6 +88,11 @@ export interface CurriculumGraph {
   concepts: Map<string, ConceptNode>;
   /** conceptId → 全序（前向依賴與孤兒起點共用，R7）。 */
   ordinalOf: Map<string, Ordinal>;
+  /**
+   * 載入來源標記：concepts 目錄是否不存在（U2）。供 validateCurriculum 的 empty-curriculum
+   * 守衛區分「目錄不存在」與「目錄為空」的訊息；由 loadCurriculum 設定，buildGraph 不設（視為空目錄）。
+   */
+  conceptsDirMissing?: boolean;
 }
 
 // ── 驗證結果 ────────────────────────────────────────────────────────────────
