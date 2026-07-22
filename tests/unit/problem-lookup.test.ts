@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { getProblemsForConcept, loadProblemBank } from "../../src/compiler/problem.js";
+import { getProblemsByPattern, getProblemsForConcept, loadProblemBank } from "../../src/compiler/problem.js";
 
 const LEGAL_BANK = join(process.cwd(), "tests", "fixtures", "problem-bank.json");
 const TOO_MANY_BANK = join(process.cwd(), "tests", "fixtures", "problem-bank", "too-many.json");
@@ -33,5 +33,18 @@ describe("getProblemsForConcept（US2：前向查找 + 題數守門）", () => {
     const { bank } = loadProblemBank(UNKNOWN_ID_BANK);
     expect(() => getProblemsForConcept("unknown-id-concept", [999], bank)).toThrow(/unknown-leetcode/);
     expect(() => getProblemsForConcept("unknown-id-concept", [999], bank)).toThrow(/999/);
+  });
+});
+
+describe("getProblemsByPattern（US3：反查 + 確定性）", () => {
+  it("回傳所有標記該 pattern 的題目，題號升冪排序（determinism，R5）", () => {
+    const { bank } = loadProblemBank(LEGAL_BANK);
+    expect(getProblemsByPattern("two-pointer", bank).map((p) => p.id)).toEqual([2, 3]);
+    expect(getProblemsByPattern("array", bank).map((p) => p.id)).toEqual([1, 2]);
+  });
+
+  it("無對應題目時回傳 []（合法）", () => {
+    const { bank } = loadProblemBank(LEGAL_BANK);
+    expect(getProblemsByPattern("no-such-pattern", bank)).toEqual([]);
   });
 });

@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadProblemBank } from "../../src/compiler/problem.js";
+import { loadProblemBank, validateProblemBank } from "../../src/compiler/problem.js";
+import { buildGraph } from "../helpers/curriculum.js";
 
 const FIXTURES_DIR = join(process.cwd(), "tests", "fixtures", "problem-bank");
 const LEGAL_BANK = join(process.cwd(), "tests", "fixtures", "problem-bank.json");
@@ -73,5 +74,25 @@ describe("loadProblemBank：逐題 schema 驗證（US1）", () => {
   it("未知欄位（內容欄位混入，如 description）被 .strict() 拒絕 → schema-type（FR-004）", () => {
     const { loadViolations } = loadFixture("unknown-field");
     expect(loadViolations).toEqual([expect.objectContaining({ rule: "schema-type", subject: "1" })]);
+  });
+});
+
+describe("validateProblemBank：patterns 參照完整性（US3）", () => {
+  it("patterns 皆指向存在的 Topic/Concept id → 零 violation", () => {
+    const { bank } = loadProblemBank(LEGAL_BANK);
+    const violations = validateProblemBank(bank, buildGraph([]));
+    expect(violations).toHaveLength(0);
+  });
+
+  it("patterns 指向不存在的 id → dangling-pattern，指名題號與無效 pattern id", () => {
+    const { bank } = loadFixture("dangling-pattern");
+    const violations = validateProblemBank(bank, buildGraph([]));
+    expect(violations).toEqual([
+      expect.objectContaining({
+        rule: "dangling-pattern",
+        subject: "1",
+        target: "nonexistent-topic-xyz",
+      }),
+    ]);
   });
 });

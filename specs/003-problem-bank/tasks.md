@@ -82,8 +82,8 @@ runtime 線）為原子性 green-build 單元，置於 Foundational（Phase 2）
 
 **Independent Test**: 以某 pattern 反查列出全部標記該 pattern 的題目（升冪 id）；注入 `patterns` 指向不存在 id 的題目，確認產生指名的懸空參照 violation。
 
-- [ ] T014 [US3] 在 `src/compiler/problem.ts` 實作 `getProblemsByPattern(patternId, bank)`（題號升冪）與 `validateProblemBank(bank, graph)` 的 `dangling-pattern` 檢查（`patterns` 每項 ∈ `graph.topics.keys() ∪ graph.concepts.keys()`）＋難度覆蓋缺口 `warning`（FR-006/010/011、[research.md](./research.md) R5/R6、data-model §1/§4）
-- [ ] T015 [P] [US3] 在 `tests/unit/problem-lookup.test.ts` 加反查案例（升冪 determinism、無對應回 `[]`）並在 `tests/unit/problem-bank-validate.test.ts` 加 `dangling-pattern` 案例（US3 Acceptance 1–2、SC-002/004/007）
+- [X] T014 [US3] 在 `src/compiler/problem.ts` 實作 `getProblemsByPattern(patternId, bank)`（題號升冪）與 `validateProblemBank(bank, graph)` 的 `dangling-pattern` 檢查（`patterns` 每項 ∈ `graph.topics.keys() ∪ graph.concepts.keys()`）＋難度覆蓋缺口 `warning`（FR-006/010/011、[research.md](./research.md) R5/R6、data-model §1/§4）
+- [X] T015 [P] [US3] 在 `tests/unit/problem-lookup.test.ts` 加反查案例（升冪 determinism、無對應回 `[]`）並在 `tests/unit/problem-bank-validate.test.ts` 加 `dangling-pattern` 案例（US3 Acceptance 1–2、SC-002/004/007）
 
 **Checkpoint**: US1–US3 皆可獨立驗收。
 

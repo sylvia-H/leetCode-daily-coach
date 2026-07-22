@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
+import type { CurriculumGraph } from "../types/curriculum.js";
 import type {
   ProblemBank,
   ProblemBankFile,
@@ -177,4 +178,35 @@ export function getProblemsForConcept(
 // 供注入 validateCurriculum(graph, { problemExists })，使 leetcode 存在性檢查由 skipped 轉為實際執行。
 export function makeProblemExists(bank: ProblemBank): (leetcodeId: number) => boolean {
   return (leetcodeId: number) => bank.byId.has(leetcodeId);
+}
+
+// US3（R5）：由 Topic/Concept id 反查題目，byPattern 已於載入時以題號升冪建好（確定性）。
+export function getProblemsByPattern(patternId: string, bank: ProblemBank): ProblemMeta[] {
+  return bank.byPattern.get(patternId) ?? [];
+}
+
+// US3（FR-006、R6）：patterns 每項 MUST 屬於 {Topic id} ∪ {Concept id}，否則 dangling-pattern。
+// 需要 F2 的圖，以可插拔方式接受（單一真實來源，不重建課程結構）。
+export function validateProblemBank(bank: ProblemBank, graph: CurriculumGraph): ProblemViolation[] {
+  const validPatternIds = new Set<string>([...graph.topics.keys(), ...graph.concepts.keys()]);
+  const violations: ProblemViolation[] = [];
+
+  const sorted = [...bank.byId.values()].sort((a, b) => a.id - b.id);
+  for (const meta of sorted) {
+    for (const pattern of meta.patterns) {
+      if (!validPatternIds.has(pattern)) {
+        violations.push({
+          rule: "dangling-pattern",
+          severity: "error",
+          subject: String(meta.id),
+          field: "patterns",
+          target: pattern,
+          message: `題號 ${meta.id} 的 pattern「${pattern}」不存在於 Curriculum（非 Topic 亦非 Concept id）`,
+        });
+      }
+    }
+  }
+
+  violations.sort(cmpProblemViolation);
+  return violations;
 }
