@@ -106,10 +106,10 @@ runtime 線）為原子性 green-build 單元，置於 Foundational（Phase 2）
 
 **Purpose**: 交付 CI 可呼叫的驗證入口並併入既有工程 Gate。
 
-- [ ] T018 新增 `scripts/validate-problem-bank.ts`（比照 `scripts/validate-curriculum.ts`）：`loadCurriculum` 取圖 + `loadProblemBank` 載庫 + `validateProblemBank(bank, graph)` + 走訪 `graph.concepts` 跑前向守門 + `validateCurriculum(graph, { problemExists: makeProblemExists(bank) })` → 人可讀輸出 → 有 `error` 則 `process.exit(1)`（`process.exit` 只在此入口；FR-013/015、[contracts/problem-module-api.md](./contracts/problem-module-api.md) CI 節、R7/R8）
-- [ ] T019 [P] 在 `package.json` `scripts` 加 `"validate:problem-bank": "tsx scripts/validate-problem-bank.ts"`
-- [ ] T020 在 `.github/workflows/ci.yml` 於 `Validate curriculum` 步驟後新增 `- name: Validate problem bank` / `run: npm run validate:problem-bank`
-- [ ] T021 依 [quickstart.md](./quickstart.md) 執行驗收：`npm run build`、`npm test`、`npm run validate:problem-bank`（確認 leetcode 存在性不再 `skipped`）、連跑兩次確認輸出一致（SC-005/007）
+- [X] T018 新增 `scripts/validate-problem-bank.ts`（比照 `scripts/validate-curriculum.ts`）：`loadCurriculum` 取圖 + `loadProblemBank` 載庫 + `validateProblemBank(bank, graph)` + 走訪 `graph.concepts` 跑前向守門 + `validateCurriculum(graph, { problemExists: makeProblemExists(bank) })` → 人可讀輸出 → 有 `error` 則 `process.exit(1)`（`process.exit` 只在此入口；FR-013/015、[contracts/problem-module-api.md](./contracts/problem-module-api.md) CI 節、R7/R8）
+- [X] T019 [P] 在 `package.json` `scripts` 加 `"validate:problem-bank": "tsx scripts/validate-problem-bank.ts"`
+- [X] T020 在 `.github/workflows/ci.yml` 於 `Validate curriculum` 步驟後新增 `- name: Validate problem bank` / `run: npm run validate:problem-bank`
+- [X] T021 依 [quickstart.md](./quickstart.md) 執行驗收：`npm run build`、`npm test`、`npm run validate:problem-bank`（確認 leetcode 存在性不再 `skipped`）、連跑兩次確認輸出一致（SC-005/007）
 
 ---
 

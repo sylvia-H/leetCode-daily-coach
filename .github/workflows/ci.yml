@@ -1,4 +1,4 @@
-# 工程 Gate（F2，FR-028a / SC-008）：所有 push / PR 執行 build → test → 課程驗證。
+# 工程 Gate（F2/F3，FR-028a / SC-008 / FR-015）：所有 push / PR 執行 build → test → 課程驗證 → 題庫驗證。
 # 與 daily.yml（每日推播）、content-gate.yml（F5 內容 Gate）職責分離；MUST NOT 加入任何 secrets。
 name: CI
 
@@ -29,3 +29,6 @@ jobs:
 
       - name: Validate curriculum
         run: npm run validate:curriculum
+
+      - name: Validate problem bank
+        run: npm run validate:problem-bank
