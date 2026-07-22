@@ -363,11 +363,71 @@ export function validateCurriculum(
     }
   }
 
+  // 9. 顆粒度 Gate（依 mode，閉區間，FR-019 / FR-021）——僅 Concept 數量語意
+  const mode = options.mode ?? "stub";
+  checkGranularity(ordered, mode, violations);
+
+  // 10. leetcode 可插拔存在性（FR-023）
+  if (options.problemExists) {
+    for (const c of ordered) {
+      for (const id of c.leetcode) {
+        if (!options.problemExists(id)) {
+          violations.push({
+            rule: "dangling-leetcode",
+            severity: "error",
+            subject: c.id,
+            field: "leetcode",
+            target: String(id),
+            message: `Concept ${c.id} 的 leetcode 題號不存在於 Problem Bank：${id}`,
+          });
+        }
+      }
+    }
+  } else {
+    skipped.push({
+      check: "leetcode-existence",
+      reason: "無 Problem Bank，leetcode 題號存在性檢查延後至 F3（deferred-to-F3）",
+    });
+  }
+
   violations.sort(cmpViolation);
   const ok = !violations.some((v) => v.severity === "error");
   const result: ValidationResult = { ok, violations, skipped };
   if (ok) result.topoOrder = topoSort(ordered, prereqOf, graph.ordinalOf);
   return result;
+}
+
+// 顆粒度範圍（閉區間；下限類僅 full 強制，上限任何模式強制，FR-019 / FR-021）
+const TOPIC_MIN = 5;
+const TOPIC_MAX = 12;
+const MODULE_MIN = 10;
+const MODULE_MAX = 30;
+const TOTAL_MIN = 150;
+
+function checkGranularity(ordered: ConceptNode[], mode: "stub" | "full", violations: Violation[]): void {
+  const perTopic = new Map<string, number>();
+  const perModule = new Map<string, number>();
+  for (const c of ordered) {
+    perTopic.set(c.topic, (perTopic.get(c.topic) ?? 0) + 1);
+    perModule.set(c.module, (perModule.get(c.module) ?? 0) + 1);
+  }
+  const range = (subject: string, field: string, n: number, min: number, max: number): void => {
+    if (n > max) {
+      violations.push(rangeViolation(subject, field, `${field} ${subject} 的 Concept 數（${n}）超過上限 ${max}`));
+    } else if (mode === "full" && n < min) {
+      violations.push(rangeViolation(subject, field, `${field} ${subject} 的 Concept 數（${n}）低於下限 ${min}`));
+    }
+  };
+  // 只檢查有 Concept 的 Topic / Module（stub 階段空 Module/Topic 不觸發下限，FR-021）
+  for (const [topic, n] of perTopic) range(topic, "topic", n, TOPIC_MIN, TOPIC_MAX);
+  for (const [module, n] of perModule) range(module, "module", n, MODULE_MIN, MODULE_MAX);
+  if (mode === "full" && ordered.length < TOTAL_MIN) {
+    violations.push(rangeViolation("curriculum", "total", `Concept 總數（${ordered.length}）低於下限 ${TOTAL_MIN}`));
+  }
+}
+
+function rangeViolation(subject: string, field: string, message: string): Violation {
+  return { rule: "granularity-range", severity: "error", subject, field, message };
 }
 
 function ref(subject: string, field: string, target: string, message: string): Violation {

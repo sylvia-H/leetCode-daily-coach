@@ -99,11 +99,11 @@ description: "Task list for 002-curriculum-schema"
 
 **Dependency**: 依賴 US2（`validateCurriculum` 骨架）。
 
-- [ ] T013 [P] [US3] 建立顆粒度測試素材於 `tests/fixtures/curriculum/granularity/`：Topic Concept 數超上限（13）、Module Concept 數超上限（31）、`topic.id` 跨 Module 重複，以及**閉區間邊界素材**——Topic 恰 5 / 恰 12、Module 恰 10 / 恰 30
-- [ ] T014 [P] [US3] 撰寫 `tests/unit/granularity-gate.test.ts`：上限（Topic ≤12 / Module ≤30）與唯一性**兩模式皆強制**；下限（總數 ≥150 / Module ≥10 / Topic ≥5）**僅 `full` 強制**；`stub` 模式下空 Module / Topic 不觸發下限錯誤（FR-019/020/021、SC-004）。
+- [X] T013 [P] [US3] 建立顆粒度測試素材於 `tests/fixtures/curriculum/granularity/`：Topic Concept 數超上限（13）、Module Concept 數超上限（31）、`topic.id` 跨 Module 重複，以及**閉區間邊界素材**——Topic 恰 5 / 恰 12、Module 恰 10 / 恰 30
+- [X] T014 [P] [US3] 撰寫 `tests/unit/granularity-gate.test.ts`：上限（Topic ≤12 / Module ≤30）與唯一性**兩模式皆強制**；下限（總數 ≥150 / Module ≥10 / Topic ≥5）**僅 `full` 強制**；`stub` 模式下空 Module / Topic 不觸發下限錯誤（FR-019/020/021、SC-004）。
       **並補閉區間邊界斷言**（FR-019）：Topic 恰 5、恰 12、Module 恰 10、恰 30 → **通過（0 個 `granularity-range`）**；Topic 4 / 13、Module 9 / 31 → 報錯。下限邊界於 `full` 模式驗、上限邊界兩模式皆驗
-- [ ] T015 [P] [US3] 撰寫 `tests/unit/leetcode-pluggable.test.ts`：未提供 `problemExists` → `leetcode` 存在性列 `skipped`（deferred-to-F3）、`ok` 不受影響、格式仍驗；提供 `problemExists` 且題號缺失 → `dangling-leetcode` 報錯（FR-023、SC-006）
-- [ ] T016 [US3] 擴充 `src/compiler/curriculum.ts` 的 `validateCurriculum`：新增顆粒度 Gate（依 `options.mode` 套上/下限與唯一性，**比較一律用閉區間** `n < min` / `n > max`，R8 / FR-019）與可插拔 `leetcode` 存在性（有 `problemExists` → 檢查，缺失記 `dangling-leetcode`（error）；無 → 記入 `ValidationResult.skipped`）；更新 `ValidateOptions`（`mode` 預設 `'stub'`）。契約見 [contracts/curriculum-validation-contract.md](./contracts/curriculum-validation-contract.md)
+- [X] T015 [P] [US3] 撰寫 `tests/unit/leetcode-pluggable.test.ts`：未提供 `problemExists` → `leetcode` 存在性列 `skipped`（deferred-to-F3）、`ok` 不受影響、格式仍驗；提供 `problemExists` 且題號缺失 → `dangling-leetcode` 報錯（FR-023、SC-006）
+- [X] T016 [US3] 擴充 `src/compiler/curriculum.ts` 的 `validateCurriculum`：新增顆粒度 Gate（依 `options.mode` 套上/下限與唯一性，**比較一律用閉區間** `n < min` / `n > max`，R8 / FR-019）與可插拔 `leetcode` 存在性（有 `problemExists` → 檢查，缺失記 `dangling-leetcode`（error）；無 → 記入 `ValidationResult.skipped`）；更新 `ValidateOptions`（`mode` 預設 `'stub'`）。契約見 [contracts/curriculum-validation-contract.md](./contracts/curriculum-validation-contract.md)
 
 **Checkpoint**: 結構 Gate 完備且為單一實作，F7 Stage 1 只需傳 `{ mode:'full', problemExists }` 重用（FR-022）。
 

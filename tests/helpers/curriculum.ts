@@ -43,6 +43,34 @@ export function validModules(): CurriculumSkeleton {
   };
 }
 
+/** 由「module → topics」規格建自訂骨架（供顆粒度邊界測試組多 Topic 的 Module）。 */
+export function skeletonOf(mods: { id: string; topics: string[] }[]): CurriculumSkeleton {
+  return {
+    version: 1,
+    modules: mods.map(({ id, topics }, level) => ({
+      id,
+      title: id,
+      level,
+      topics: topics.map((t) => ({ id: t, title: t })),
+    })),
+  };
+}
+
+/** 產生 count 個掛在同一 module/topic 的 Concept 規格（localOrder 連號，無連結）。 */
+export function repeatConcepts(
+  module: string,
+  topic: string,
+  count: number,
+  startOrder = 1,
+): ConceptSpec[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `${topic}-${startOrder + i}`,
+    module,
+    topic,
+    localOrder: startOrder + i,
+  }));
+}
+
 /** 測試用 Concept 規格（只列必要欄位，其餘以合理預設補齊）。 */
 export interface ConceptSpec {
   id: string;
