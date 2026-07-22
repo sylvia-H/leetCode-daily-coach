@@ -93,6 +93,11 @@ export interface CurriculumGraph {
    * 守衛區分「目錄不存在」與「目錄為空」的訊息；由 loadCurriculum 設定，buildGraph 不設（視為空目錄）。
    */
   conceptsDirMissing?: boolean;
+  /**
+   * 載入時實際掃到的 Concept `.md` 檔數（不論是否通過 schema）。供 empty-curriculum 守衛區分
+   * 「目錄真的沒有檔」與「有檔但全部未通過 schema 驗證」；由 loadCurriculum 設定，buildGraph 不設。
+   */
+  conceptFileCount?: number;
 }
 
 // ── 驗證結果 ────────────────────────────────────────────────────────────────

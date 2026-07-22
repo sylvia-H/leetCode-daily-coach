@@ -8,6 +8,7 @@ import { parseConceptFrontmatter, parseModules } from "./schema.js";
 import type {
   ConceptNode,
   CurriculumGraph,
+  CurriculumSkeleton,
   ModuleNode,
   Ordinal,
   TopicNode,
@@ -17,6 +18,26 @@ import type {
 } from "../types/curriculum.js";
 
 const SENTINEL = Number.MAX_SAFE_INTEGER;
+
+/**
+ * 由骨架推導單一 Concept 的確定性全序 ordinal（R7）。載入建圖與測試輔助共用唯一實作，
+ * 避免兩處手抄同一套 moduleIndex/topicIndex/sentinel 規則而悄悄分歧（SC-007）。
+ * 懸空 module / topic 以 SENTINEL 排在最後，交由 validateCurriculum 判 dangling-ref。
+ */
+export function computeOrdinal(
+  node: { id: string; module: string; topic: string; localOrder: number },
+  modules: ModuleNode[],
+  topics: Map<string, TopicNode>,
+): Ordinal {
+  const moduleIndex = modules.findIndex((m) => m.id === node.module);
+  const topicNode = topics.get(node.topic);
+  return {
+    moduleIndex: moduleIndex >= 0 ? moduleIndex : SENTINEL,
+    topicIndex: topicNode ? topicNode.topicIndex : SENTINEL,
+    localOrder: node.localOrder,
+    id: node.id,
+  };
+}
 
 // ── 共用比較器（確定性，R5） ────────────────────────────────────────────────
 
@@ -63,8 +84,19 @@ export interface LoadResult {
   loadViolations: Violation[];
 }
 
+/**
+ * 去除檔首雜訊，讓 frontmatter 的 `---` 落在字串開頭供 gray-matter 解析：
+ * BOM、任意數量的前導 HTML 註解、以及其間 / 其後的空白。單一 regex 只能吃掉一個註解，
+ * 遇到 BOM、前導空行或連續兩個註解時 frontmatter 會被漏讀而誤報整批 missing-field，故在此正規化。
+ */
 function stripLeadingComment(raw: string): string {
-  return raw.replace(/^\s*<!--[\s\S]*?-->\s*\n/, "");
+  let s = raw.replace(/^\uFEFF/, "");
+  for (;;) {
+    const stripped = s.replace(/^\s*<!--[\s\S]*?-->/, "");
+    if (stripped === s) break;
+    s = stripped;
+  }
+  return s.replace(/^\s+/, "");
 }
 
 function listMarkdown(dir: string): string[] {
@@ -106,10 +138,14 @@ export function loadCurriculum(input: LoadInput): LoadResult {
       message: `modules.json 不存在：${input.modulesPath}`,
     });
   }
-  const { skeleton, violations: moduleViolations } = parseModules(modulesRaw ?? {});
-  // 缺檔 / 壞 JSON 時 modulesRaw 為 undefined，parseModules 會另報結構違規；避免重覆噪音，
-  // 僅在確有解析輸入時併入其 schema 違規。
-  if (modulesRaw !== undefined) loadViolations.push(...moduleViolations);
+  // 缺檔 / 壞 JSON 時 modulesRaw 為 undefined：已於上方報 skeleton-shape，無需再對 `{}` 跑一次
+  // schema（其產出的 missing-field 違規只會被丟棄）。僅在確有解析輸入時才驗證並併入 schema 違規。
+  let skeleton: CurriculumSkeleton | undefined;
+  if (modulesRaw !== undefined) {
+    const parsed = parseModules(modulesRaw);
+    skeleton = parsed.skeleton;
+    loadViolations.push(...parsed.violations);
+  }
 
   const modules: ModuleNode[] = (skeleton?.modules ?? []).map((m, i) => ({ ...m, moduleIndex: i }));
   const topics = new Map<string, TopicNode>();
@@ -170,19 +206,19 @@ export function loadCurriculum(input: LoadInput): LoadResult {
 
   const ordinalOf = new Map<string, Ordinal>();
   for (const node of concepts.values()) {
-    const moduleIndex = modules.findIndex((m) => m.id === node.module);
-    const topicNode = topics.get(node.topic);
-    ordinalOf.set(node.id, {
-      moduleIndex: moduleIndex >= 0 ? moduleIndex : SENTINEL,
-      topicIndex: topicNode ? topicNode.topicIndex : SENTINEL,
-      localOrder: node.localOrder,
-      id: node.id,
-    });
+    ordinalOf.set(node.id, computeOrdinal(node, modules, topics));
   }
 
   loadViolations.sort(cmpViolation);
   return {
-    graph: { modules, topics, concepts, ordinalOf, conceptsDirMissing },
+    graph: {
+      modules,
+      topics,
+      concepts,
+      ordinalOf,
+      conceptsDirMissing,
+      conceptFileCount: files.length,
+    },
     loadViolations,
   };
 }
@@ -199,13 +235,16 @@ export function validateCurriculum(
 
   // 0. 空課程守衛（error，兩模式皆強制，命中即回傳，FR-010a / U2）
   if (concepts.size === 0) {
+    const message = graph.conceptsDirMissing
+      ? "concepts 目錄不存在，無法建立課程圖"
+      : (graph.conceptFileCount ?? 0) > 0
+        ? "concepts 目錄下的 Concept 檔全部未通過 schema 驗證，無有效 Concept（詳見上方 schema 違規）"
+        : "concepts 目錄下無任何 Concept（目錄為空）";
     violations.push({
       rule: "empty-curriculum",
       severity: "error",
       subject: "curriculum",
-      message: graph.conceptsDirMissing
-        ? "concepts 目錄不存在，無法建立課程圖"
-        : "concepts 目錄下無任何 Concept（目錄為空）",
+      message,
     });
     return { ok: false, violations, skipped };
   }
@@ -393,7 +432,7 @@ export function validateCurriculum(
   violations.sort(cmpViolation);
   const ok = !violations.some((v) => v.severity === "error");
   const result: ValidationResult = { ok, violations, skipped };
-  if (ok) result.topoOrder = topoSort(ordered, prereqOf, graph.ordinalOf);
+  if (ok) result.topoOrder = topoSort(ordered, prereqOf);
   return result;
 }
 
@@ -434,6 +473,13 @@ function ref(subject: string, field: string, target: string, message: string): V
   return { rule: "dangling-ref", severity: "error", subject, field, target, message };
 }
 
+/** 附加一條鄰接邊，就地 push 至既有陣列（避免每筆入邊都 spread 重建陣列，O(deg²) → O(deg)）。 */
+function addEdge(adj: Map<string, string[]>, from: string, to: string): void {
+  const list = adj.get(from);
+  if (list) list.push(to);
+  else adj.set(from, [to]);
+}
+
 /** 以 Kahn 偵測無法線性化的節點（構成環者）。忽略自我依賴（已單獨回報）與懸空前置。 */
 function detectCycle(
   ordered: ConceptNode[],
@@ -447,7 +493,7 @@ function detectCycle(
     indegree.set(c.id, indegree.get(c.id) ?? 0);
     for (const p of prereqOf.get(c.id)!) {
       if (p === c.id || !concepts.has(p)) continue; // 跳過自環與懸空
-      adj.set(p, [...(adj.get(p) ?? []), c.id]);
+      addEdge(adj, p, c.id);
       indegree.set(c.id, (indegree.get(c.id) ?? 0) + 1);
     }
   }
@@ -465,12 +511,16 @@ function detectCycle(
   return ordered.filter((c) => !removed.has(c.id) && !selfDep.has(c.id)).map((c) => c.id);
 }
 
-/** canonical 拓樸序：Kahn，候選以 ordinal tie-break（FR-011）。 */
-function topoSort(
-  ordered: ConceptNode[],
-  prereqOf: Map<string, string[]>,
-  ordinalOf: Map<string, Ordinal>,
-): string[] {
+/**
+ * canonical 拓樸序：Kahn，候選以 ordinal tie-break（FR-011）。
+ *
+ * 前置條件：僅在 forward-dependency 與 cycle 檢查皆通過後呼叫（validateCurriculum 於 ok 時才呼叫），
+ * 故每條邊必由較小 ordinal 指向較大 ordinal。`ordered` 已按 ordinal 排序，因此每個節點被解鎖
+ * （indegree 歸零）的時機恰好是走訪指標抵達它時——單向前進的 `cursor` 即可挑出「ordinal 最小的可用節點」，
+ * 與原本每步 `ordered.find` 全表掃描的結果逐字元相同，但複雜度由 O(V²) 降為 O(V+E)。
+ * `cursor >= length` 的 break 為安全網：僅在前置條件被破壞（非清 DAG）時才可能觸發並回傳部分序。
+ */
+function topoSort(ordered: ConceptNode[], prereqOf: Map<string, string[]>): string[] {
   const indegree = new Map<string, number>();
   const adj = new Map<string, string[]>();
   const idSet = new Set(ordered.map((c) => c.id));
@@ -478,20 +528,21 @@ function topoSort(
     indegree.set(c.id, indegree.get(c.id) ?? 0);
     for (const p of prereqOf.get(c.id)!) {
       if (p === c.id || !idSet.has(p)) continue;
-      adj.set(p, [...(adj.get(p) ?? []), c.id]);
+      addEdge(adj, p, c.id);
       indegree.set(c.id, (indegree.get(c.id) ?? 0) + 1);
     }
   }
   const order: string[] = [];
-  const available = new Set(ordered.filter((c) => (indegree.get(c.id) ?? 0) === 0).map((c) => c.id));
-  while (available.size > 0) {
-    // 取 ordinal 最小者（ordered 已按 ordinal 排序）
-    const nextId = ordered.find((c) => available.has(c.id))!.id;
-    available.delete(nextId);
+  let cursor = 0;
+  while (order.length < ordered.length) {
+    // 前進至下一個 indegree 為 0 的節點（清 DAG 上此指標永不回頭，見函式說明）。
+    while (cursor < ordered.length && (indegree.get(ordered[cursor]!.id) ?? 0) !== 0) cursor++;
+    if (cursor >= ordered.length) break; // 安全網：非清 DAG 才可能發生
+    const nextId = ordered[cursor]!.id;
+    cursor++;
     order.push(nextId);
     for (const nb of adj.get(nextId) ?? []) {
       indegree.set(nb, (indegree.get(nb) ?? 0) - 1);
-      if ((indegree.get(nb) ?? 0) === 0) available.add(nb);
     }
   }
   return order;
