@@ -1,36 +1,36 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { getProblemsForConcept } from "../../src/compiler/problem.js";
+import { getProblemsForConcept, loadProblemBank } from "../../src/compiler/problem.js";
 
 const FIXTURE_BANK = join(process.cwd(), "tests", "fixtures", "problem-bank.json");
 
-describe("getProblemsForConcept", () => {
-  it("依 conceptId 取回 1～3 題，原樣帶入題號 / 標題 / 連結 / 難度", () => {
-    const problems = getProblemsForConcept("fixture-concept", FIXTURE_BANK);
-    expect(problems).toHaveLength(3);
-    expect(problems[0]).toEqual({
-      id: 1,
-      title: "Fixture One",
-      url: "https://leetcode.com/problems/fixture-one/",
-      difficulty: "Easy",
-      whyThisPattern: "why 1",
-      hint: "hint 1",
-    });
+describe("loadProblemBank（baseline）", () => {
+  it("載入合法題庫，無 loadViolations，byId 索引齊備", () => {
+    const { bank, loadViolations } = loadProblemBank(FIXTURE_BANK);
+    expect(loadViolations).toHaveLength(0);
+    expect(bank.byId.get(1)).toMatchObject({ id: 1, slug: "fixture-one", difficulty: "Easy" });
+    expect(bank.byId.get(2)).toMatchObject({ id: 2, slug: "fixture-two" });
+    expect(bank.byId.get(3)).toMatchObject({ id: 3, slug: "fixture-three" });
   });
 
-  it("查無對應 conceptId 時拋出指名成因的錯誤（FR-003b）", () => {
-    expect(() => getProblemsForConcept("no-such-concept", FIXTURE_BANK)).toThrow(/no-such-concept/);
+  it("題庫檔不存在時回傳空 bank + bank-load violation（不 throw）", () => {
+    const { bank, loadViolations } = loadProblemBank(join(process.cwd(), "tests", "fixtures", "no-such-bank.json"));
+    expect(bank.byId.size).toBe(0);
+    expect(loadViolations).toHaveLength(1);
+    expect(loadViolations[0]).toMatchObject({ rule: "bank-load", severity: "error" });
+  });
+});
+
+describe("getProblemsForConcept（baseline，前向查找）", () => {
+  it("依 conceptId 與宣告題號取回同序 ProblemMeta[]", () => {
+    const { bank } = loadProblemBank(FIXTURE_BANK);
+    const problems = getProblemsForConcept("demo-concept", [2, 1], bank);
+    expect(problems.map((p) => p.id)).toEqual([2, 1]);
+    expect(problems[0]).toMatchObject({ id: 2, title: "Fixture Two" });
   });
 
-  it("對應題號在資料檔中不存在時拋錯", () => {
-    expect(() => getProblemsForConcept("unknown-id-concept", FIXTURE_BANK)).toThrow(/999/);
-  });
-
-  it("題數為 0 時拋錯", () => {
-    expect(() => getProblemsForConcept("empty-concept", FIXTURE_BANK)).toThrow(/empty-concept/);
-  });
-
-  it("題數超過 3 時拋錯", () => {
-    expect(() => getProblemsForConcept("too-many-concept", FIXTURE_BANK)).toThrow(/too-many-concept/);
+  it("leetcode: [] 回傳空清單、不報錯（合法無題觀念課）", () => {
+    const { bank } = loadProblemBank(FIXTURE_BANK);
+    expect(getProblemsForConcept("empty-concept", [], bank)).toEqual([]);
   });
 });

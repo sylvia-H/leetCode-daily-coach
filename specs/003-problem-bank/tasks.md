@@ -28,7 +28,7 @@ runtime 線）為原子性 green-build 單元，置於 Foundational（Phase 2）
 
 **Purpose**: 建立 F3 型別地基（所有 Story 共用）。
 
-- [ ] T001 [P] 在 `src/types/problem.ts` 定義 F3 型別：`Difficulty`、`ReviewPriority`、`ProblemMeta`、`ProblemBankFile`、`ProblemBank`（`byId` / `byPattern`）、`ProblemViolationRule`、`ProblemViolation`（依 [data-model.md](./data-model.md) §1/§2/§4/§5；`ProblemMeta` MUST NOT 含任何內容欄位）
+- [X] T001 [P] 在 `src/types/problem.ts` 定義 F3 型別：`Difficulty`、`ReviewPriority`、`ProblemMeta`、`ProblemBankFile`、`ProblemBank`（`byId` / `byPattern`）、`ProblemViolationRule`、`ProblemViolation`（依 [data-model.md](./data-model.md) §1/§2/§4/§5；`ProblemMeta` MUST NOT 含任何內容欄位）
 
 ---
 
@@ -37,12 +37,12 @@ runtime 線）為原子性 green-build 單元，置於 Foundational（Phase 2）
 **Purpose**: R1 遷移的原子單元——把 F1 舊題庫形態換成 spec §12.1 單一形態，並讓 build 與既有測試套件維持綠燈。
 **⚠️ CRITICAL**: 完成前任何 User Story 都不能開始；本階段結束時整個測試套件 MUST 全綠。
 
-- [ ] T002 [P] 遷移 `data/problem-bank.json` 為 §12.1 題號 key 物件 seed：9 題 {1,26,27,283,303,560,11,125,167}，每題含 `id/slug/title/url/difficulty/patterns`（`patterns` 指向既有 Topic/Concept id），**移除** `conceptProblems` 與 `whyThisPattern`/`hint` 等內容欄位（[contracts/problem-bank-schema.md](./contracts/problem-bank-schema.md) §4；FR-004）
-- [ ] T003 [P] 遷移 `tests/fixtures/problem-bank.json` 為新 schema（合法 bank），並新增非法 fixtures 目錄 `tests/fixtures/problem-bank/`（missing-field、bad-difficulty、bad-review-priority、key-id-mismatch、patterns-empty、slug-mismatch、too-many、unknown-id、dangling-pattern、bad-json）
-- [ ] T004 重寫 `src/compiler/problem.ts` 模組骨架：`loadProblemBank(path)` 解析 JSON、忽略底線前綴 key、建 `byId` 與 `byPattern`（題號升冪）索引、檔缺失/非法 JSON 回 `bank-load` violation（不 throw）；**實作 `getProblemsForConcept` 的 happy-path**（`leetcodeIds=[]`→`[]`、全部命中→與宣告**同序**的 `ProblemMeta[]`）以維持 Phase 2 綠燈（F1 demo `[167,125,11]` 需能解析成 `ProblemMeta[]`；守門分支 `>3` / `unknown-leetcode` throw **延到 T011**），並匯出 `getProblemsByPattern` / `makeProblemExists` 之簽章（[contracts/problem-module-api.md](./contracts/problem-module-api.md)；純函式、無 `process.exit`）
-- [ ] T005 在 `src/compiler/lesson.ts` 置入 F1-local `whyThisPattern`/`hint` 常數表（demo 三題 167/125/11，標註「F1 seed，F5/F7 Overlay 取代」）與 demo `leetcodeIds = [167,125,11]`；`compile()` **先 `loadProblemBank(problemBankPath)` 取得 `bank`** 再呼叫 `getProblemsForConcept(conceptId, leetcodeIds, bank)` 取 `ProblemMeta[]`，配上述常數表組成 `Lesson.problems`（**`loadViolations` 在 runtime 路徑的處置**：F1 demo bank 恆合法，若出現 `error` 級 violation 則 fail loud throw、MUST NOT 靜默；[research.md](./research.md) R1；不改 `articles/two-pointer/002-left-right-pointer.md`）
-- [ ] T006 重寫 `tests/unit/problem.test.ts` 對齊新模組契約（baseline：load + 基本前/反查），並確認 `tests/unit/lesson.test.ts`、`tests/unit/dry-run.test.ts` 仍綠（僅在 compile 產出形狀改變時才調整期望值）
-- [ ] T007 [P] 在既有 `tests/unit/zero-llm.test.ts` 補一條斷言，確認 `src/compiler/problem.ts` **落在全樹掃描清單內**（防未來重構把 `src/compiler/` 漏掉），沿用既有全域 `@google/genai` 掃描涵蓋 F3 模組（FR-012）；**不新增第二份全樹掃描檔**（避免與既有測試重複）
+- [X] T002 [P] 遷移 `data/problem-bank.json` 為 §12.1 題號 key 物件 seed：9 題 {1,26,27,283,303,560,11,125,167}，每題含 `id/slug/title/url/difficulty/patterns`（`patterns` 指向既有 Topic/Concept id），**移除** `conceptProblems` 與 `whyThisPattern`/`hint` 等內容欄位（[contracts/problem-bank-schema.md](./contracts/problem-bank-schema.md) §4；FR-004）
+- [X] T003 [P] 遷移 `tests/fixtures/problem-bank.json` 為新 schema（合法 bank），並新增非法 fixtures 目錄 `tests/fixtures/problem-bank/`（missing-field、bad-difficulty、bad-review-priority、key-id-mismatch、patterns-empty、slug-mismatch、too-many、unknown-id、dangling-pattern、bad-json）
+- [X] T004 重寫 `src/compiler/problem.ts` 模組骨架：`loadProblemBank(path)` 解析 JSON、忽略底線前綴 key、建 `byId` 與 `byPattern`（題號升冪）索引、檔缺失/非法 JSON 回 `bank-load` violation（不 throw）；**實作 `getProblemsForConcept` 的 happy-path**（`leetcodeIds=[]`→`[]`、全部命中→與宣告**同序**的 `ProblemMeta[]`）以維持 Phase 2 綠燈（F1 demo `[167,125,11]` 需能解析成 `ProblemMeta[]`；守門分支 `>3` / `unknown-leetcode` throw **延到 T011**），並匯出 `getProblemsByPattern` / `makeProblemExists` 之簽章（[contracts/problem-module-api.md](./contracts/problem-module-api.md)；純函式、無 `process.exit`）
+- [X] T005 在 `src/compiler/lesson.ts` 置入 F1-local `whyThisPattern`/`hint` 常數表（demo 三題 167/125/11，標註「F1 seed，F5/F7 Overlay 取代」）與 demo `leetcodeIds = [167,125,11]`；`compile()` **先 `loadProblemBank(problemBankPath)` 取得 `bank`** 再呼叫 `getProblemsForConcept(conceptId, leetcodeIds, bank)` 取 `ProblemMeta[]`，配上述常數表組成 `Lesson.problems`（**`loadViolations` 在 runtime 路徑的處置**：F1 demo bank 恆合法，若出現 `error` 級 violation 則 fail loud throw、MUST NOT 靜默；[research.md](./research.md) R1；不改 `articles/two-pointer/002-left-right-pointer.md`）
+- [X] T006 重寫 `tests/unit/problem.test.ts` 對齊新模組契約（baseline：load + 基本前/反查），並確認 `tests/unit/lesson.test.ts`、`tests/unit/dry-run.test.ts` 仍綠（僅在 compile 產出形狀改變時才調整期望值）
+- [X] T007 [P] 在既有 `tests/unit/zero-llm.test.ts` 補一條斷言，確認 `src/compiler/problem.ts` **落在全樹掃描清單內**（防未來重構把 `src/compiler/` 漏掉），沿用既有全域 `@google/genai` 掃描涵蓋 F3 模組（FR-012）；**不新增第二份全樹掃描檔**（避免與既有測試重複）
 
 **Checkpoint**: `npm run build` 通過、`npm test` 全綠、F1 walking-skeleton 的 compile/render 行為不變。
 

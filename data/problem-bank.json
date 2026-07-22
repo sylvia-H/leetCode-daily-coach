@@ -1,32 +1,75 @@
 {
-  "_comment": "F1 最小題庫（3 題、docs/spec.md §12.1 最小子集）；F3 起擴充為完整題庫，本檔延續使用、不需移除",
-  "problems": [
-    {
-      "id": 167,
-      "title": "Two Sum II - Input Array Is Sorted",
-      "url": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
-      "difficulty": "Medium",
-      "whyThisPattern": "陣列已排序，兩數之和的經典應用——直接用左右指標，不需要額外的雜湊表。",
-      "hint": "想想總和與 target 的大小關係，該移動哪一個指標？"
-    },
-    {
-      "id": 125,
-      "title": "Valid Palindrome",
-      "url": "https://leetcode.com/problems/valid-palindrome/",
-      "difficulty": "Easy",
-      "whyThisPattern": "字串視為字元陣列，左右指標同時往中間夾，檢查兩端字元是否對稱。",
-      "hint": "先想清楚哪些字元要忽略（非英數字），大小寫要怎麼處理？"
-    },
-    {
-      "id": 11,
-      "title": "Container With Most Water",
-      "url": "https://leetcode.com/problems/container-with-most-water/",
-      "difficulty": "Medium",
-      "whyThisPattern": "左右指標往中間移動時，每次移動較短的那一側，才能保證不漏掉更大的面積。",
-      "hint": "面積 = 較短邊 × 寬度，怎麼移動指標才不會漏掉更大的解？"
-    }
-  ],
-  "conceptProblems": {
-    "left-right-pointer": [167, 125, 11]
+  "_comment": "F3 seed 題庫（§12.1 形態）：涵蓋 F2 stub Concept 引用題號 {1,26,27,283,303,560} + F1 walking-skeleton demo {11,125,167}。難度僅 Easy/Medium，Hard 覆蓋延到 F7 課綱凍結後補齊（見 spec.md Assumptions）。",
+  "1": {
+    "id": 1,
+    "slug": "two-sum",
+    "title": "Two Sum",
+    "url": "https://leetcode.com/problems/two-sum/",
+    "difficulty": "Easy",
+    "patterns": ["array", "hash-table"]
+  },
+  "26": {
+    "id": 26,
+    "slug": "remove-duplicates-from-sorted-array",
+    "title": "Remove Duplicates from Sorted Array",
+    "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-array/",
+    "difficulty": "Easy",
+    "patterns": ["array", "in-place-operations"]
+  },
+  "27": {
+    "id": 27,
+    "slug": "remove-element",
+    "title": "Remove Element",
+    "url": "https://leetcode.com/problems/remove-element/",
+    "difficulty": "Easy",
+    "patterns": ["array", "in-place-operations"]
+  },
+  "283": {
+    "id": 283,
+    "slug": "move-zeroes",
+    "title": "Move Zeroes",
+    "url": "https://leetcode.com/problems/move-zeroes/",
+    "difficulty": "Easy",
+    "patterns": ["array", "in-place-operations"]
+  },
+  "303": {
+    "id": 303,
+    "slug": "range-sum-query-immutable",
+    "title": "Range Sum Query - Immutable",
+    "url": "https://leetcode.com/problems/range-sum-query-immutable/",
+    "difficulty": "Easy",
+    "patterns": ["array", "prefix-sum"]
+  },
+  "560": {
+    "id": 560,
+    "slug": "subarray-sum-equals-k",
+    "title": "Subarray Sum Equals K",
+    "url": "https://leetcode.com/problems/subarray-sum-equals-k/",
+    "difficulty": "Medium",
+    "patterns": ["array", "prefix-sum"]
+  },
+  "11": {
+    "id": 11,
+    "slug": "container-with-most-water",
+    "title": "Container With Most Water",
+    "url": "https://leetcode.com/problems/container-with-most-water/",
+    "difficulty": "Medium",
+    "patterns": ["two-pointer"]
+  },
+  "125": {
+    "id": 125,
+    "slug": "valid-palindrome",
+    "title": "Valid Palindrome",
+    "url": "https://leetcode.com/problems/valid-palindrome/",
+    "difficulty": "Easy",
+    "patterns": ["two-pointer"]
+  },
+  "167": {
+    "id": 167,
+    "slug": "two-sum-ii-input-array-is-sorted",
+    "title": "Two Sum II - Input Array Is Sorted",
+    "url": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+    "difficulty": "Medium",
+    "patterns": ["two-pointer"]
   }
 }
