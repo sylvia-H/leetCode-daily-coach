@@ -54,9 +54,9 @@ runtime 線）為原子性 green-build 單元，置於 Foundational（Phase 2）
 
 **Independent Test**: 給合法與各類非法題庫 fixture（缺欄位、型別錯、`difficulty`/`review_priority` 值域、key≠id），驗證器逐一正確接受/拒絕且每個拒絕指名題號與欄位。
 
-- [ ] T008 [P] [US1] 在 `src/compiler/problem.ts`（或同檔內）以 `zod` 定義 `ProblemMeta` schema：必填 `id/slug/title/url/difficulty/patterns`、型別、`difficulty` enum、`review_priority` enum、選配欄位型別；以 `.strict()`（或等價）拒絕未知欄位以擋內容欄位混入（FR-004、[data-model.md](./data-model.md) §1）
-- [ ] T009 [US1] 將 per-entry schema 驗證 + `key == id` 檢查接入 `loadProblemBank`，蒐集 `schema-missing-field`/`schema-type`/`difficulty-range`/`review-priority-range`/`key-id-mismatch`/`patterns-empty` violations（穩定排序；FR-001/002/003、data-model §1）
-- [ ] T010 [P] [US1] 新增 `tests/unit/problem-bank-validate.test.ts`：每一 US1 違規規則各一案 + `bank-load`（檔缺/壞 JSON）+ 一份全合法 bank 產出零 violation（US1 Acceptance 1–4、SC-004）
+- [X] T008 [P] [US1] 在 `src/compiler/problem.ts`（或同檔內）以 `zod` 定義 `ProblemMeta` schema：必填 `id/slug/title/url/difficulty/patterns`、型別、`difficulty` enum、`review_priority` enum、選配欄位型別；以 `.strict()`（或等價）拒絕未知欄位以擋內容欄位混入（FR-004、[data-model.md](./data-model.md) §1）
+- [X] T009 [US1] 將 per-entry schema 驗證 + `key == id` 檢查接入 `loadProblemBank`，蒐集 `schema-missing-field`/`schema-type`/`difficulty-range`/`review-priority-range`/`key-id-mismatch`/`patterns-empty` violations（穩定排序；FR-001/002/003、data-model §1）
+- [X] T010 [P] [US1] 新增 `tests/unit/problem-bank-validate.test.ts`：每一 US1 違規規則各一案 + `bank-load`（檔缺/壞 JSON）+ 一份全合法 bank 產出零 violation（US1 Acceptance 1–4、SC-004）
 
 **Checkpoint**: US1 可獨立驗收；`npm run build` + `npm test` 綠。
 
