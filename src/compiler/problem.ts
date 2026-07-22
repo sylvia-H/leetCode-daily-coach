@@ -172,3 +172,9 @@ export function getProblemsForConcept(
     return meta;
   });
 }
+
+// FR-009：把 F2 預留的可插拔 problemExists 由 deferred-to-F3 的 stub 換成以真實題庫為背景的實作，
+// 供注入 validateCurriculum(graph, { problemExists })，使 leetcode 存在性檢查由 skipped 轉為實際執行。
+export function makeProblemExists(bank: ProblemBank): (leetcodeId: number) => boolean {
+  return (leetcodeId: number) => bank.byId.has(leetcodeId);
+}

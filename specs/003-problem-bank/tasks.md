@@ -68,9 +68,9 @@ runtime 線）為原子性 green-build 單元，置於 Foundational（Phase 2）
 
 **Independent Test**: 給 F2 stub Concept 與 seed 題庫，確認有題 Concept 解析出 1~3 題、空題 Concept 回空；注入「題號不在題庫」「題數 4」皆拋指名成因的錯誤。
 
-- [ ] T011 [US2] 在 `src/compiler/problem.ts` 為 `getProblemsForConcept(conceptId, leetcodeIds, bank)` **補上守門分支**（happy-path 空陣列→`[]`、命中→**同序** `ProblemMeta[]` 已於 T004 交付且維持不變）：`>3`→throw `problem-count-range`（指名 conceptId/題數）、id 不在 `bank.byId`→throw `unknown-leetcode`（指名 conceptId/缺漏題號）；並實作 `makeProblemExists(bank)`（[contracts/problem-module-api.md](./contracts/problem-module-api.md)、data-model §3；FR-007/008、§12.1）
-- [ ] T012 [P] [US2] 新增 `tests/unit/problem-lookup.test.ts`（前向）：正常 1~3 同序；`leetcode:[]`→`[]` 不 throw；`>3` 與 `unknown-leetcode` 皆 throw 且訊息指名（US2 Acceptance 1–4、SC-001/004）
-- [ ] T013 [P] [US2] 新增 `tests/unit/leetcode-existence.test.ts`：把 `makeProblemExists(bank)` 注入 `validateCurriculum(graph, { problemExists })`，驗證 leetcode 存在性由 `skipped` 轉為實際執行、既有 stub Concept 的 `leetcode` 參照全通過（FR-009、SC-005、US2 Acceptance 5）。**與既有 `tests/unit/leetcode-pluggable.test.ts` 分工**：後者以 mock predicate 測介面行為（skipped ↔ `dangling-leetcode`），本檔以**真實 seed bank + 真實 stub Concept** 端到端驗 SC-005，兩者互補、勿合併或互刪
+- [X] T011 [US2] 在 `src/compiler/problem.ts` 為 `getProblemsForConcept(conceptId, leetcodeIds, bank)` **補上守門分支**（happy-path 空陣列→`[]`、命中→**同序** `ProblemMeta[]` 已於 T004 交付且維持不變）：`>3`→throw `problem-count-range`（指名 conceptId/題數）、id 不在 `bank.byId`→throw `unknown-leetcode`（指名 conceptId/缺漏題號）；並實作 `makeProblemExists(bank)`（[contracts/problem-module-api.md](./contracts/problem-module-api.md)、data-model §3；FR-007/008、§12.1）
+- [X] T012 [P] [US2] 新增 `tests/unit/problem-lookup.test.ts`（前向）：正常 1~3 同序；`leetcode:[]`→`[]` 不 throw；`>3` 與 `unknown-leetcode` 皆 throw 且訊息指名（US2 Acceptance 1–4、SC-001/004）
+- [X] T013 [P] [US2] 新增 `tests/unit/leetcode-existence.test.ts`：把 `makeProblemExists(bank)` 注入 `validateCurriculum(graph, { problemExists })`，驗證 leetcode 存在性由 `skipped` 轉為實際執行、既有 stub Concept 的 `leetcode` 參照全通過（FR-009、SC-005、US2 Acceptance 5）。**與既有 `tests/unit/leetcode-pluggable.test.ts` 分工**：後者以 mock predicate 測介面行為（skipped ↔ `dangling-leetcode`），本檔以**真實 seed bank + 真實 stub Concept** 端到端驗 SC-005，兩者互補、勿合併或互刪
 
 **Checkpoint**: US1 + US2（兩個 P1）皆可獨立驗收——F3 核心價值達成。
 
