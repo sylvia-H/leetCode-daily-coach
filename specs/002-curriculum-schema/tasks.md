@@ -33,8 +33,8 @@ description: "Task list for 002-curriculum-schema"
 
 **Purpose**: 加入 F2 的相依與 §17 新目錄。產物為永久資產（`zod` schema、`curriculum/`、`concepts/`、`scripts/`）。
 
-- [ ] T001 修改 `package.json`：dependencies 新增 `zod`（^3.23）；devDependencies 新增 `tsx`；scripts 新增 `"validate:curriculum": "tsx scripts/validate-curriculum.ts"`。**MUST NOT** 加入 `@google/genai`（憲章 VIII）。接著執行 `npm install` 更新 `package-lock.json` 並**一併 commit**（CI 以 `npm ci` 安裝，缺 lockfile 會直接失敗）
-- [ ] T002 [P] 建立新目錄骨架：`curriculum/`、`concepts/programming-mindset/`、`concepts/array/`（資料夾名 == topic id；主 Topic 沿用 Module id，clarify 2026-07-21）、`scripts/`，以及 `tests/fixtures/curriculum/` 下的 `valid/`、`cycle/`、`forward-dep/`、`dangling-ref/`、`orphan/`、`dup-id/`、`bad-frontmatter/`、`edge-inconsistency/`、`duplicate-edge/`、`empty/`、`granularity/`、`skeleton-shape/`
+- [X] T001 修改 `package.json`：dependencies 新增 `zod`（^3.23）；devDependencies 新增 `tsx`；scripts 新增 `"validate:curriculum": "tsx scripts/validate-curriculum.ts"`。**MUST NOT** 加入 `@google/genai`（憲章 VIII）。接著執行 `npm install` 更新 `package-lock.json` 並**一併 commit**（CI 以 `npm ci` 安裝，缺 lockfile 會直接失敗）
+- [X] T002 [P] 建立新目錄骨架：`curriculum/`、`concepts/programming-mindset/`、`concepts/array/`（資料夾名 == topic id；主 Topic 沿用 Module id，clarify 2026-07-21）、`scripts/`，以及 `tests/fixtures/curriculum/` 下的 `valid/`、`cycle/`、`forward-dep/`、`dangling-ref/`、`orphan/`、`dup-id/`、`bad-frontmatter/`、`edge-inconsistency/`、`duplicate-edge/`、`empty/`、`granularity/`、`skeleton-shape/`
 
 ---
 
@@ -44,7 +44,7 @@ description: "Task list for 002-curriculum-schema"
 
 **⚠️ CRITICAL**: 本階段完成前，任何 User Story 都無法開始。
 
-- [ ] T003 建立 `src/types/curriculum.ts`：定義 `ModuleSkeleton` / `TopicSkeleton` / `ModuleNode` / `TopicNode` / `ConceptNode`（**欄位對齊 `docs/spec.md` §16.1**，含 `localOrder` / `skeletonPath` / `articlePath`）/ `CurriculumGraph` / `ValidationResult` / `Violation` / `ViolationRule`（union 枚舉，**MUST 涵蓋 [data-model.md](./data-model.md) §4 全部 15 類，含 `skeleton-shape`**，FR-001c）/ `ValidateOptions` / `SkippedCheck`。**此檔 MUST 為純型別、不含 runtime import**（供 schema / curriculum / 未來 F5 Compiler 共用型別入口）
+- [X] T003 建立 `src/types/curriculum.ts`：定義 `ModuleSkeleton` / `TopicSkeleton` / `ModuleNode` / `TopicNode` / `ConceptNode`（**欄位對齊 `docs/spec.md` §16.1**，含 `localOrder` / `skeletonPath` / `articlePath`）/ `CurriculumGraph` / `ValidationResult` / `Violation` / `ViolationRule`（union 枚舉，**MUST 涵蓋 [data-model.md](./data-model.md) §4 全部 15 類，含 `skeleton-shape`**，FR-001c）/ `ValidateOptions` / `SkippedCheck`。**此檔 MUST 為純型別、不含 runtime import**（供 schema / curriculum / 未來 F5 Compiler 共用型別入口）
 
 ---
 
