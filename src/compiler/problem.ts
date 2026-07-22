@@ -182,6 +182,15 @@ export function getProblemsForConcept(
       `problem-count-range：Concept「${conceptId}」宣告 ${leetcodeIds.length} 題，超過上限 3 題`,
     );
   }
+  // §12.1（F3 澄清）：同一 Concept 內 MUST NOT 重複引用同一題號——重複幾乎必為填寫失誤（漏改第二題），
+  // 靜默去重會讓「本想排兩題卻只出一題」永不被發現，違「MUST NOT 靜默截斷題數」；故在此唯一守門點 fail loud。
+  const seen = new Set<number>();
+  for (const id of leetcodeIds) {
+    if (seen.has(id)) {
+      throw new Error(`duplicate-leetcode：Concept「${conceptId}」重複引用題號 ${id}`);
+    }
+    seen.add(id);
+  }
   return leetcodeIds.map((id) => {
     const meta = bank.byId.get(id);
     if (!meta) {

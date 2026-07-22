@@ -34,6 +34,13 @@ describe("getProblemsForConcept（US2：前向查找 + 題數守門）", () => {
     expect(() => getProblemsForConcept("unknown-id-concept", [999], bank)).toThrow(/unknown-leetcode/);
     expect(() => getProblemsForConcept("unknown-id-concept", [999], bank)).toThrow(/999/);
   });
+
+  it("同一 Concept 內重複引用同一題號 → throw，指名 conceptId 與重複題號（duplicate-leetcode，§12.1）", () => {
+    const { bank } = loadProblemBank(LEGAL_BANK);
+    expect(() => getProblemsForConcept("dup-concept", [1, 1], bank)).toThrow(/duplicate-leetcode/);
+    expect(() => getProblemsForConcept("dup-concept", [1, 1], bank)).toThrow(/dup-concept/);
+    expect(() => getProblemsForConcept("dup-concept", [2, 1, 2], bank)).toThrow(/duplicate-leetcode/);
+  });
 });
 
 describe("getProblemsByPattern（US3：反查 + 確定性）", () => {

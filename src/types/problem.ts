@@ -44,6 +44,7 @@ export type ProblemViolationRule =
   | "dangling-pattern"
   | "slug-url-mismatch"
   | "problem-count-range"
+  | "duplicate-leetcode"
   | "unknown-leetcode";
 
 /** 沿用 F2 `Violation` 結構（rule/severity/subject/field?/target?/message），擴充 F3 規則值域。 */
