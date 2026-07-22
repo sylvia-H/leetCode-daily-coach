@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:curriculum": "tsx scripts/validate-curriculum.ts",
+    "validate:problem-bank": "tsx scripts/validate-problem-bank.ts",
     "start": "node dist/main.js"
   },
   "dependencies": {

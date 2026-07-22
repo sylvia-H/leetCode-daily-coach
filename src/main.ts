@@ -1,5 +1,5 @@
 import { pathToFileURL } from "node:url";
-import { compile } from "./compiler/lesson.js";
+import { compile, loadCompilerProblemBank } from "./compiler/lesson.js";
 import { type Config, type EnvLike, loadConfig, parseWebhooks, TRACK_ORDER } from "./config.js";
 import { createWebhookClient, type WebhookClient } from "./discord/webhook-client.js";
 import { checkBudget, type BudgetReport } from "./renderer/budget.js";
@@ -7,6 +7,7 @@ import { render } from "./renderer/discord.js";
 import { renderAlert } from "./renderer/alert.js";
 import { advance, type AppState, load as loadState, save as saveState } from "./state/state-store.js";
 import type { DiscordEmbed, Lesson, Track } from "./types/lesson.js";
+import type { ProblemBank } from "./types/problem.js";
 import { toTaipeiDateString } from "./util/taipei-date.js";
 
 export type PushTrack = (track: Track, config: Config, state: AppState) => Promise<Lesson>;
@@ -19,16 +20,21 @@ interface CompiledPush {
 
 // 純粹的 compile + render + checkBudget，**不因超限而拋錯**——DRY_RUN 需要在超限時仍完整輸出
 // 逐項明細（US4 Scenario 2），超限與否由呼叫方決定如何處置。
-function compileLesson(track: Track, state: AppState): CompiledPush {
+function compileLesson(track: Track, state: AppState, bank?: ProblemBank): CompiledPush {
   const sessionIndex = state.tracks[track]?.currentSessionIndex ?? 1;
-  const lesson = compile(track, sessionIndex);
+  const lesson = compile(track, sessionIndex, bank ? { bank } : {});
   const embeds = render(lesson);
   const report = checkBudget(embeds);
   return { lesson, embeds, report };
 }
 
-async function defaultPushTrack(track: Track, config: Config, state: AppState): Promise<Lesson> {
-  const { lesson, embeds, report } = compileLesson(track, state);
+async function defaultPushTrack(
+  track: Track,
+  config: Config,
+  state: AppState,
+  bank?: ProblemBank,
+): Promise<Lesson> {
+  const { lesson, embeds, report } = compileLesson(track, state, bank);
   if (!report.ok) {
     const overItems = report.items
       .filter((item) => item.over)
@@ -66,8 +72,6 @@ export interface RunOptions {
 }
 
 export async function run(env: EnvLike, options: RunOptions = {}): Promise<number> {
-  const pushTrack = options.pushTrack ?? defaultPushTrack;
-
   const webhooks = parseWebhooks(env);
   const firstConfiguredTrack = TRACK_ORDER.find((track) => webhooks[track]);
 
@@ -96,6 +100,19 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     return 1;
   }
 
+  // 多 Track 執行前載入題庫一次並注入 compile（消除每 Track 重讀 + 重跑 zod 的冗餘）。載入失敗時保持
+  // undefined，使每 Track 的 compile 各自載入並在該 Track 內 fail loud——維持多 Track 失敗隔離（憲章 X），
+  // 不因題庫問題全域中止。注入 pushTrack 的測試不經此路徑，預載結果對其無影響。
+  let preloadedBank: ProblemBank | undefined;
+  try {
+    preloadedBank = loadCompilerProblemBank();
+  } catch (err) {
+    console.error(`題庫預載失敗，改由各 Track 自行載入以維持失敗隔離：${(err as Error).message}`);
+  }
+
+  const pushTrack: PushTrack =
+    options.pushTrack ?? ((t, c, s) => defaultPushTrack(t, c, s, preloadedBank));
+
   let anyFailed = false;
 
   for (const track of config.enabledTracks) {
@@ -118,7 +135,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       if (config.dryRun) {
         // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（research R9）；
         // 不推播、不寫入狀態（FR-021）；即使超限仍完整輸出逐項明細，不因此視為失敗（US4 Scenario 2）。
-        const { embeds, report } = compileLesson(track, state);
+        const { embeds, report } = compileLesson(track, state, preloadedBank);
         printDryRunPreview(track, embeds, report);
         continue;
       }

@@ -1,0 +1,34 @@
+{
+  "101": {
+    "id": 101,
+    "slug": "too-many-one",
+    "title": "Too Many One",
+    "url": "https://leetcode.com/problems/too-many-one/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  },
+  "102": {
+    "id": 102,
+    "slug": "too-many-two",
+    "title": "Too Many Two",
+    "url": "https://leetcode.com/problems/too-many-two/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  },
+  "103": {
+    "id": 103,
+    "slug": "too-many-three",
+    "title": "Too Many Three",
+    "url": "https://leetcode.com/problems/too-many-three/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  },
+  "104": {
+    "id": 104,
+    "slug": "too-many-four",
+    "title": "Too Many Four",
+    "url": "https://leetcode.com/problems/too-many-four/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  }
+}

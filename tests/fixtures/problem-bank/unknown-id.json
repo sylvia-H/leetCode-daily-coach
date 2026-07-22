@@ -1,0 +1,10 @@
+{
+  "201": {
+    "id": 201,
+    "slug": "unknown-id-known",
+    "title": "Unknown Id Known",
+    "url": "https://leetcode.com/problems/unknown-id-known/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  }
+}

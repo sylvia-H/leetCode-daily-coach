@@ -507,7 +507,7 @@ Skeleton（`concepts/**`）是內容的來源真相，MUST 只含兩部分：
 - `patterns` MUST 對應到 Curriculum 內的 Topic / Concept key，讓「Concept → Problem」可逆向查找。
 - `url` 的 slug MUST 與 `slug` 欄位一致（Gate 檢查，避免死鏈；§20.3）。
 - 題庫 MUST 涵蓋三個 Track 難度帶所需的 Easy / Medium / Hard 題目（三軌全量交付）。
-- **題數合法性的唯一權威守門點（MUST，F1 定案）**：每個 Concept 對應的題數 MUST 為 1～3 題；查無對應、對應題號在題庫中不存在、題數為 0 或超過 3，一律 MUST 在**題目查找階段**（`src/compiler/problem.ts`）拋出可辨識且訊息指名成因的錯誤（fail loud），MUST NOT 靜默截斷題數或略過缺漏題目。渲染後的字元預算檢查雖亦含題數上限，但僅為 defense-in-depth，MUST NOT 被當作主要判準，也 MUST NOT 在查找階段之外另行定義題數的錯誤型態與訊息——避免兩處各說各話。
+- **題數合法性的唯一權威守門點（MUST，F1 定案；F3 澄清）**：對**宣告 ≥1 題**的 Concept，其對應題數 MUST 為 1～3 題；對應題號在題庫中不存在、宣告超過 3 題、或**同一 Concept 內重複引用同一題號**（`leetcode` 陣列 MUST NOT 含重複元素——重複幾乎必為填寫失誤，靜默去重會讓「本想排兩題卻只出一題」永不被發現），一律 MUST 在**題目查找階段**（`src/compiler/problem.ts`）拋出可辨識且訊息指名成因的錯誤（fail loud），MUST NOT 靜默截斷題數、略過缺漏題目或靜默去重。**合法宣告 `leetcode: []` 的「無題目觀念課」為一等合法狀態**（如 Programming Mindset 的複雜度分析、讀題等基礎觀念，本質上無單一對應 LeetCode 題）：前向查找對其 MUST 回傳空清單、MUST NOT 因題數 0 而報錯，1～3 守門不對其生效。渲染後的字元預算檢查雖亦含題數上限，但僅為 defense-in-depth，MUST NOT 被當作主要判準，也 MUST NOT 在查找階段之外另行定義題數的錯誤型態與訊息——避免兩處各說各話。
 
 ### 12.2 教材依源（借鑑知識架構，不轉載內容）
 

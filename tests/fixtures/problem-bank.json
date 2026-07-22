@@ -1,14 +1,26 @@
 {
-  "problems": [
-    { "id": 1, "title": "Fixture One", "url": "https://leetcode.com/problems/fixture-one/", "difficulty": "Easy", "whyThisPattern": "why 1", "hint": "hint 1" },
-    { "id": 2, "title": "Fixture Two", "url": "https://leetcode.com/problems/fixture-two/", "difficulty": "Medium", "whyThisPattern": "why 2" },
-    { "id": 3, "title": "Fixture Three", "url": "https://leetcode.com/problems/fixture-three/", "difficulty": "Hard", "whyThisPattern": "why 3", "hint": "hint 3" },
-    { "id": 4, "title": "Fixture Four", "url": "https://leetcode.com/problems/fixture-four/", "difficulty": "Easy", "whyThisPattern": "why 4" }
-  ],
-  "conceptProblems": {
-    "fixture-concept": [1, 2, 3],
-    "too-many-concept": [1, 2, 3, 4],
-    "empty-concept": [],
-    "unknown-id-concept": [999]
+  "1": {
+    "id": 1,
+    "slug": "fixture-one",
+    "title": "Fixture One",
+    "url": "https://leetcode.com/problems/fixture-one/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  },
+  "2": {
+    "id": 2,
+    "slug": "fixture-two",
+    "title": "Fixture Two",
+    "url": "https://leetcode.com/problems/fixture-two/",
+    "difficulty": "Medium",
+    "patterns": ["array", "two-pointer"]
+  },
+  "3": {
+    "id": 3,
+    "slug": "fixture-three",
+    "title": "Fixture Three",
+    "url": "https://leetcode.com/problems/fixture-three/",
+    "difficulty": "Hard",
+    "patterns": ["two-pointer"]
   }
 }
