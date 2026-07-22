@@ -135,11 +135,11 @@ description: "Task list for 002-curriculum-schema"
 
 **Purpose**: 整體驗收、交棒紀律確認，並建立 CI 工程 Gate（FR-028a）。
 
-- [ ] T022 執行 `npm run build`、`npm test`、`npm run validate:curriculum`，確認：`tsc` 無誤、全部單元測試綠、驗證入口 exit 0（[quickstart.md](./quickstart.md) 主要驗收路徑）
-- [ ] T023 [P] 撰寫 `tests/unit/zero-llm-curriculum.test.ts`（或擴充既有守衛）：斷言 `src/compiler/schema.ts` 與 `src/compiler/curriculum.ts` 的相依集合**不含** `@google/genai`（憲章 VIII）；並確認 `validateCurriculum` 被 import 時無副作用（不觸發 `process.exit` / I/O）
-- [ ] T024 [P] 確認交棒紀律：F1 未被本 Feature 改動執行路徑（僅 clarify 回寫的註解）；`concepts/**` 每檔 seed 註記齊備；`curriculum/modules.json` 為手寫骨架（非生成物）。更新本檔勾選與 [checklists/](./checklists/)（如適用）
-- [ ] T025 [P] **查核 SC-007（單一實作、無平行驗證）**：確認 DAG / 顆粒度 / schema 規則在 `src/**` 與 `scripts/**` 中**僅一處實作**——`scripts/validate-curriculum.ts` MUST 只 `import` 並呼叫 `loadCurriculum` / `validateCurriculum`，MUST NOT 自行重寫任何檢查邏輯；測試檔亦 MUST NOT 重新實作規則（只呼叫與斷言）。以程式碼審視 + `grep` 確認無第二份拓樸排序 / 顆粒度門檻常數。**並確認參照完整性只實作於 `validateCurriculum`**（`loadCurriculum` 內無任何 `dangling-ref` 產出，FR-013）
-- [ ] T026 **建立 `.github/workflows/ci.yml`（FR-028a / SC-008）**：`on: [push, pull_request]`；`ubuntu-latest` + `actions/setup-node@v4`（`node-version: 24`、`cache: npm`）→ `npm ci` → `npm run build` → `npm test` → `npm run validate:curriculum`；任一步失敗即 CI 失敗。**MUST NOT 加入任何 secrets**（本 workflow 不需 Discord / Gemini 憑證，憲章 VIII / XIV）；**MUST NOT 改動既有 `daily.yml`**。驗收：刻意讓一個測試失敗 → CI 紅燈；還原 → 綠燈。已回寫 `docs/spec.md` §17 目錄結構與 §21.3（兩道 Gate 職責分離）
+- [X] T022 執行 `npm run build`、`npm test`、`npm run validate:curriculum`，確認：`tsc` 無誤、全部單元測試綠、驗證入口 exit 0（[quickstart.md](./quickstart.md) 主要驗收路徑）
+- [X] T023 [P] 撰寫 `tests/unit/zero-llm-curriculum.test.ts`（或擴充既有守衛）：斷言 `src/compiler/schema.ts` 與 `src/compiler/curriculum.ts` 的相依集合**不含** `@google/genai`（憲章 VIII）；並確認 `validateCurriculum` 被 import 時無副作用（不觸發 `process.exit` / I/O）
+- [X] T024 [P] 確認交棒紀律：F1 未被本 Feature 改動執行路徑（僅 clarify 回寫的註解）；`concepts/**` 每檔 seed 註記齊備；`curriculum/modules.json` 為手寫骨架（非生成物）。更新本檔勾選與 [checklists/](./checklists/)（如適用）
+- [X] T025 [P] **查核 SC-007（單一實作、無平行驗證）**：確認 DAG / 顆粒度 / schema 規則在 `src/**` 與 `scripts/**` 中**僅一處實作**——`scripts/validate-curriculum.ts` MUST 只 `import` 並呼叫 `loadCurriculum` / `validateCurriculum`，MUST NOT 自行重寫任何檢查邏輯；測試檔亦 MUST NOT 重新實作規則（只呼叫與斷言）。以程式碼審視 + `grep` 確認無第二份拓樸排序 / 顆粒度門檻常數。**並確認參照完整性只實作於 `validateCurriculum`**（`loadCurriculum` 內無任何 `dangling-ref` 產出，FR-013）
+- [X] T026 **建立 `.github/workflows/ci.yml`（FR-028a / SC-008）**：`on: [push, pull_request]`；`ubuntu-latest` + `actions/setup-node@v4`（`node-version: 24`、`cache: npm`）→ `npm ci` → `npm run build` → `npm test` → `npm run validate:curriculum`；任一步失敗即 CI 失敗。**MUST NOT 加入任何 secrets**（本 workflow 不需 Discord / Gemini 憑證，憲章 VIII / XIV）；**MUST NOT 改動既有 `daily.yml`**。驗收：刻意讓一個測試失敗 → CI 紅燈；還原 → 綠燈。已回寫 `docs/spec.md` §17 目錄結構與 §21.3（兩道 Gate 職責分離）
 
 ---
 
