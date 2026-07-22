@@ -1,5 +1,6 @@
 // ⚠️ F1 臨時產物（FR-002）：硬編 3-Session 課表 + 學習路徑對照表。
-// 課表本身 → F4（generate-schedule.ts 取代）；學習路徑對照表 → F2（DAG 的 prerequisite/next 取代）。
+// 課表本身 → F4（generate-schedule.ts 取代）；學習路徑對照表 → F5（Lesson Compiler 消費 F2 建立的
+// DAG，改由 prerequisite/next 取代。F2 clarify 2026-07-21 定案：F2 只建 DAG，接入與移除屬 F5）。
 // 三個 Session 共用同一篇教材是刻意設計，見 spec.md Assumptions；MUST NOT 視為資料錯誤。
 import type { PathLabels, SessionType, Track } from "../types/lesson.js";
 

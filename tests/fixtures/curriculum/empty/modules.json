@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "programming-mindset",
+      "title": "Programming Mindset",
+      "level": 0,
+      "topics": [
+        {
+          "id": "programming-mindset",
+          "title": "Programming Mindset"
+        }
+      ]
+    },
+    {
+      "id": "array",
+      "title": "Array",
+      "level": 1,
+      "topics": [
+        {
+          "id": "array",
+          "title": "Array"
+        }
+      ]
+    },
+    {
+      "id": "hash-table",
+      "title": "Hash Table",
+      "level": 2,
+      "topics": [
+        {
+          "id": "hash-table",
+          "title": "Hash Table"
+        }
+      ]
+    },
+    {
+      "id": "string",
+      "title": "String",
+      "level": 3,
+      "topics": [
+        {
+          "id": "string",
+          "title": "String"
+        }
+      ]
+    },
+    {
+      "id": "two-pointer",
+      "title": "Two Pointer",
+      "level": 4,
+      "topics": [
+        {
+          "id": "two-pointer",
+          "title": "Two Pointer"
+        }
+      ]
+    },
+    {
+      "id": "binary-search",
+      "title": "Binary Search",
+      "level": 5,
+      "topics": [
+        {
+          "id": "binary-search",
+          "title": "Binary Search"
+        }
+      ]
+    },
+    {
+      "id": "sliding-window",
+      "title": "Sliding Window",
+      "level": 6,
+      "topics": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window"
+        }
+      ]
+    },
+    {
+      "id": "stack",
+      "title": "Stack",
+      "level": 7,
+      "topics": [
+        {
+          "id": "stack",
+          "title": "Stack"
+        }
+      ]
+    },
+    {
+      "id": "queue",
+      "title": "Queue",
+      "level": 8,
+      "topics": [
+        {
+          "id": "queue",
+          "title": "Queue"
+        }
+      ]
+    },
+    {
+      "id": "linked-list",
+      "title": "Linked List",
+      "level": 9,
+      "topics": [
+        {
+          "id": "linked-list",
+          "title": "Linked List"
+        }
+      ]
+    },
+    {
+      "id": "tree",
+      "title": "Tree",
+      "level": 10,
+      "topics": [
+        {
+          "id": "tree",
+          "title": "Tree"
+        }
+      ]
+    },
+    {
+      "id": "graph",
+      "title": "Graph",
+      "level": 11,
+      "topics": [
+        {
+          "id": "graph",
+          "title": "Graph"
+        }
+      ]
+    },
+    {
+      "id": "heap",
+      "title": "Heap / Priority Queue",
+      "level": 12,
+      "topics": [
+        {
+          "id": "heap",
+          "title": "Heap / Priority Queue"
+        }
+      ]
+    },
+    {
+      "id": "backtracking",
+      "title": "Backtracking",
+      "level": 13,
+      "topics": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking"
+        }
+      ]
+    },
+    {
+      "id": "dfs-bfs",
+      "title": "DFS / BFS",
+      "level": 14,
+      "topics": [
+        {
+          "id": "dfs-bfs",
+          "title": "DFS / BFS"
+        }
+      ]
+    },
+    {
+      "id": "dynamic-programming",
+      "title": "Dynamic Programming",
+      "level": 15,
+      "topics": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming"
+        }
+      ]
+    }
+  ]
+}

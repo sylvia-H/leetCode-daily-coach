@@ -243,7 +243,8 @@
   第 1 課 MUST 省略「昨天」一行；第 3 課 MUST 仍顯示「明天」（預告後續內容）。
   對照表中的觀念名稱 **MAY 指向本 Feature 尚未建立的後續 Concept**（本 Feature 只有一篇教材，
   「明天」必然如此）；這些名稱僅為版面顯示字串，MUST NOT 被解讀為內容存在性的承諾。
-  此對照表為臨時產物，F2 接上 DAG 後 MUST 改由 prerequisite / next 取得。
+  此對照表為臨時產物：F2 建立 Curriculum DAG，F5 Lesson Compiler 消費該 DAG 後 MUST 改由
+  prerequisite / next 取得並移除本對照表（F2 clarify 2026-07-21 定案）。
 - **FR-007b**: 題目的 **Hint 為選填**。缺少 Hint 時，版面 MUST 省略該題的 Hint 段落（含其分隔符），
   MUST NOT 顯示空白欄位或佔位文字。
 - **FR-007c**: 課程版面 MUST 依教材所屬 Module 套用對應顏色。Module → 色碼的對照 MUST 為
@@ -364,7 +365,7 @@
   正式的 frontmatter schema、DAG 建置與驗證屬 F2 範圍。教材**會被實際解析**（FR-004a），
   但解析只認固定區塊的存在與內容，不對 metadata 做型別 / 值域驗證。
 - **學習路徑（昨天/今天/明天）在本 Feature 為硬編對照表**：依課程序號查表取得三個鄰近觀念名稱
-  （見 FR-007a）；正式取自 DAG 的 prerequisite / next 屬 F2 之後。
+  （見 FR-007a）；正式取自 DAG 的 prerequisite / next 屬 F5（Lesson Compiler 消費 F2 建立的 DAG）。
 - **三個 Session 內容相同是刻意的**：本 Feature 驗證的是鏈路、去重與版面，不是內容多樣性；
   連續三天收到同一堂課屬預期行為，不列為缺陷。
 - **課表走完即失敗**：3 個 Session 用完後不循環、不自動延伸，改為 fail loud，提醒這是臨時課表。
@@ -395,7 +396,7 @@
 | 手寫教材（一篇） | FR-001 | **F7** | 內容產線生成並通過品質 Gate 後，由生成物取代 |
 | 硬編 3-Session 課表 | FR-002 | **F4** | 課表生成器產出正式課表後移除 |
 | 最小題庫（3 題） | FR-003a | **F3** | 擴充為完整題庫，資料檔延續使用（**不需移除，只需擴充**） |
-| 學習路徑硬編對照表 | FR-007a | **F2** | DAG 建立後改由 prerequisite / next 取得，對照表移除 |
+| 學習路徑硬編對照表 | FR-007a | **F5** | F5 Lesson Compiler 消費 F2 建立的 DAG，改由 prerequisite / next 取得，對照表移除（F2 clarify 2026-07-21 定案：F2 只建 DAG，接入與移除屬 F5） |
 
 **交棒規則（MUST）**：
 - 上述每一項 MUST 在其檔案內明確標示臨時性與接手 Feature。
