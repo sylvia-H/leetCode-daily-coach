@@ -12,6 +12,7 @@
     "validate:problem-bank": "tsx scripts/validate-problem-bank.ts",
     "generate:schedule": "tsx scripts/generate-schedule.ts",
     "validate:schedule": "tsx scripts/validate-schedule.ts",
+    "validate:content": "tsx scripts/validate.ts",
     "start": "node dist/main.js"
   },
   "dependencies": {
