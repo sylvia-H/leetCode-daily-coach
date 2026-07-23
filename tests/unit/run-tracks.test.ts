@@ -1,8 +1,8 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { run } from "../../src/main.js";
+import { PartialPushError, run } from "../../src/main.js";
 import type { Lesson } from "../../src/types/lesson.js";
 
 function makeLesson(): Lesson {
@@ -46,6 +46,9 @@ describe("run — 多 Track 失敗隔離", () => {
     vi.unstubAllGlobals();
   });
 
+  // webhook 重試不該讓測試真的等待（且斷言不該受 jitter 影響）。
+  const fastRetry = { sleep: async () => undefined, random: () => 0 };
+
   const baseEnv = () => ({
     DISCORD_WEBHOOK_URL_FOUNDATION: "https://discord.com/api/webhooks/1/aaa",
     DISCORD_WEBHOOK_URL_INTERVIEW_READY: "https://discord.com/api/webhooks/2/bbb",
@@ -58,6 +61,7 @@ describe("run — 多 Track 失敗隔離", () => {
 
     let secondCalled = false;
     const exitCode = await run(baseEnv(), {
+      webhookOptions: fastRetry,
       pushTrack: async (track) => {
         if (track === "foundation") {
           throw new Error("推播失敗：HTTP 500");
@@ -82,6 +86,7 @@ describe("run — 多 Track 失敗隔離", () => {
 
     let secondCalled = false;
     const exitCode = await run(baseEnv(), {
+      webhookOptions: fastRetry,
       pushTrack: async (track) => {
         if (track === "foundation") {
           throw new Error("推播失敗：HTTP 500");
@@ -110,7 +115,7 @@ describe("run — 多 Track 失敗隔離", () => {
       {
         DISCORD_WEBHOOK_URL_FOUNDATION: "https://discord.com/api/webhooks/1/aaa",
       },
-      { pushTrack },
+      { pushTrack, webhookOptions: fastRetry },
     );
 
     expect(exitCode).toBe(1);
@@ -129,11 +134,39 @@ describe("run — 多 Track 失敗隔離", () => {
     writeFileSync(stateFile, broken);
 
     const pushTrack = vi.fn();
-    const exitCode = await run(baseEnv(), { pushTrack });
+    const exitCode = await run(baseEnv(), { pushTrack, webhookOptions: fastRetry });
 
     expect(exitCode).toBe(1);
     expect(pushTrack).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("多則訊息推播到一半失敗 → state 仍前進（避免補跑重發已送出的前段），但 exit 1 且有告警", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const lesson = makeLesson();
+    const exitCode = await run(
+      { DISCORD_WEBHOOK_URL_FOUNDATION: "https://discord.com/api/webhooks/1/aaa", STATE_FILE: stateFile },
+      {
+        webhookOptions: fastRetry,
+        pushTrack: async () => {
+          throw new PartialPushError(lesson, 1, 2, new Error("推播失敗：HTTP 500"));
+        },
+      },
+    );
+
+    expect(exitCode).toBe(1);
+    const saved = JSON.parse(readFileSync(stateFile, "utf-8")) as {
+      tracks: { foundation: { currentSessionIndex: number; lastPushAt: string | null } };
+    };
+    expect(saved.tracks.foundation.currentSessionIndex).toBe(2);
+    expect(saved.tracks.foundation.lastPushAt).not.toBeNull();
+
+    const errorCalls = (console.error as unknown as { mock: { calls: unknown[][] } }).mock.calls.map((args) =>
+      String(args[0]),
+    );
+    expect(errorCalls.some((line) => line.includes("partial push"))).toBe(true);
   });
 
   it("三個 webhook 皆空 → 完全未呼叫 fetch，僅 log + exit 1", async () => {
@@ -141,7 +174,7 @@ describe("run — 多 Track 失敗隔離", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const pushTrack = vi.fn();
-    const exitCode = await run({ STATE_FILE: stateFile }, { pushTrack });
+    const exitCode = await run({ STATE_FILE: stateFile }, { pushTrack, webhookOptions: fastRetry });
 
     expect(exitCode).toBe(1);
     expect(pushTrack).not.toHaveBeenCalled();

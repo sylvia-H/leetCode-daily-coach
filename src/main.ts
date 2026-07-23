@@ -1,7 +1,11 @@
 import { pathToFileURL } from "node:url";
 import { compile, loadCompilerDeps, type CompilerDeps } from "./compiler/lesson.js";
 import { type Config, type EnvLike, loadConfig, parseWebhooks, TRACK_ORDER } from "./config.js";
-import { createWebhookClient, type WebhookClient } from "./discord/webhook-client.js";
+import {
+  createWebhookClient,
+  type WebhookClient,
+  type WebhookClientOptions,
+} from "./discord/webhook-client.js";
 import { checkBudget, type BudgetReport } from "./renderer/budget.js";
 import { render } from "./renderer/discord.js";
 import { renderAlert } from "./renderer/alert.js";
@@ -9,7 +13,8 @@ import { advance, type AppState, load as loadState, save as saveState } from "./
 import type { Lesson, RenderedMessage, Track } from "./types/lesson.js";
 import { toTaipeiDateString } from "./util/taipei-date.js";
 
-export type PushTrack = (track: Track, config: Config, state: AppState) => Promise<Lesson>;
+// 推播一個 Track 的注入點。webhook client 由 run() 統一建立並注入預設實作，故此處不再需要 config。
+export type PushTrack = (track: Track, state: AppState) => Promise<Lesson>;
 
 interface CompiledPush {
   lesson: Lesson;
@@ -27,7 +32,31 @@ function compileLesson(track: Track, state: AppState, deps: CompilerDeps): Compi
   return { lesson, messages, reports };
 }
 
-async function defaultPushTrack(track: Track, config: Config, state: AppState, deps: CompilerDeps): Promise<Lesson> {
+/**
+ * 多則訊息推播到一半失敗：前段已公開發出，後段沒有。Discord webhook 無法撤回、也沒有 idempotency
+ * key，故唯一能避免「補跑重貼前段」的做法是照常前進 state，同時發紅色告警 + 非零 exit code
+ * 讓缺漏的後段被人看見（憲章 XV Fail loud）。
+ */
+export class PartialPushError extends Error {
+  constructor(
+    readonly lesson: Lesson,
+    readonly postedCount: number,
+    readonly totalCount: number,
+    cause: Error,
+  ) {
+    super(`推播中斷於第 ${postedCount + 1}/${totalCount} 則（前 ${postedCount} 則已送出）：${cause.message}`, {
+      cause,
+    });
+    this.name = "PartialPushError";
+  }
+}
+
+async function defaultPushTrack(
+  track: Track,
+  state: AppState,
+  deps: CompilerDeps,
+  client: WebhookClient,
+): Promise<Lesson> {
   const { lesson, messages, reports } = compileLesson(track, state, deps);
   const overIndex = reports.findIndex((report) => !report.ok);
   if (overIndex >= 0) {
@@ -39,10 +68,18 @@ async function defaultPushTrack(track: Track, config: Config, state: AppState, d
     throw new Error(`字元預算超限：${overItems}`);
   }
 
-  const client = createWebhookClient(config.webhooks);
   // §14.5 對呼叫端的要求：render 回傳多則時 MUST 依序 post。
-  for (const message of messages) {
-    await client.post(track, message.embeds);
+  for (const [index, message] of messages.entries()) {
+    try {
+      await client.post(track, message.embeds);
+    } catch (err) {
+      // 已有訊息落到頻道上時，MUST 讓呼叫方知道這是「部分推播」而非「完全沒推」——兩者對 state 的
+      // 處置相反：後者不前進（漏跑不跳課），前者若不前進，補跑 cron 會把已發出的前段再貼一次。
+      if (index > 0) {
+        throw new PartialPushError(lesson, index, messages.length, err as Error);
+      }
+      throw err;
+    }
   }
   return lesson;
 }
@@ -70,6 +107,8 @@ async function sendGlobalAlert(client: WebhookClient, track: Track, reason: stri
 
 export interface RunOptions {
   pushTrack?: PushTrack;
+  /** **測試 seam**：重試策略的注入點（測試以此關閉真實等待與 jitter）；正式執行 MUST 留空。 */
+  webhookOptions?: WebhookClientOptions;
 }
 
 export async function run(env: EnvLike, options: RunOptions = {}): Promise<number> {
@@ -83,13 +122,13 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     const reason = (err as Error).message;
     console.error(reason);
     if (firstConfiguredTrack) {
-      const client = createWebhookClient(webhooks);
+      const client = createWebhookClient(webhooks, options.webhookOptions);
       await sendGlobalAlert(client, firstConfiguredTrack, reason);
     }
     return 1;
   }
 
-  const client = createWebhookClient(config.webhooks);
+  const client = createWebhookClient(config.webhooks, options.webhookOptions);
 
   let state: AppState;
   try {
@@ -113,7 +152,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     return 1;
   }
 
-  const pushTrack: PushTrack = options.pushTrack ?? ((t, c, s) => defaultPushTrack(t, c, s, deps));
+  const pushTrack: PushTrack = options.pushTrack ?? ((t, s) => defaultPushTrack(t, s, deps, client));
 
   let anyFailed = false;
 
@@ -142,13 +181,20 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
         continue;
       }
 
-      const lesson = await pushTrack(track, config, state);
+      const lesson = await pushTrack(track, state);
       advance(state, track, lesson, new Date());
       console.log(`${track}: pushed`);
     } catch (err) {
       anyFailed = true;
       const reason = (err as Error).message;
       console.error(`${track}: failed: ${reason}`);
+      // 部分推播：state 照常前進，避免補跑 cron 重發已送出的前段（詳見 PartialPushError）。
+      if (err instanceof PartialPushError) {
+        advance(state, track, err.lesson, new Date());
+        console.error(
+          `${track}: partial push: 已送出 ${err.postedCount}/${err.totalCount} 則，state 仍前進以避免重複推播`,
+        );
+      }
       // 預覽模式 MUST 完全不推播（cli-contract.md §3）——告警也是一次推播，故 DRY_RUN 下只留日誌。
       if (!config.dryRun) {
         try {
