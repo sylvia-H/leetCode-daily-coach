@@ -32,3 +32,6 @@ jobs:
 
       - name: Validate problem bank
         run: npm run validate:problem-bank
+
+      - name: Validate schedule
+        run: npm run validate:schedule

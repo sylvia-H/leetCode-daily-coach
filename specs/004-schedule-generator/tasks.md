@@ -142,14 +142,14 @@ description: "Task list for 004-schedule-generator implementation"
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T027 [P] [US5] 建立 `tests/unit/schedule-gate.test.ts`：逐一驗每種 `ScheduleViolationRule` 具名 fail loud、`generateAllSchedules` 有 error 時 caller 不寫檔（無半成品）、違規清單穩定排序（SC-007）
+- [X] T027 [P] [US5] 建立 `tests/unit/schedule-gate.test.ts`：逐一驗每種 `ScheduleViolationRule` 具名 fail loud、`generateAllSchedules` 有 error 時 caller 不寫檔（無半成品）、違規清單穩定排序（SC-007）
 
 ### Implementation for User Story 5
 
-- [ ] T028 [US5] 在 `src/compiler/schedule-generator.ts` 彙整 `validateSchedule` 全規則集 + 穩定排序，並確保 `generateAllSchedules` 完整回報全部違規、`ok=false` 語意（依賴 T017、T020、T025）
-- [ ] T029 [US5] 建立 `scripts/validate-schedule.ts`（CI Gate 入口）：以同一顆生成器重生成於記憶體 → `validateSchedule` 全 Track → 讀 committed `schedules/{track}.json` 與 `serializeSchedule` 輸出**逐位元組比對** → 任一 error 或 `determinism-drift` 非零 exit（唯一 `process.exit`），對齊 research R10（依賴 T028、T026）
-- [ ] T030 [US5] 於 [.github/workflows/ci.yml](../../.github/workflows/ci.yml) 在 `validate:problem-bank` 後新增一步 `npm run validate:schedule`（依賴 T029）
-- [ ] T031 [P] [US5] 擴充 `tests/unit/zero-llm.test.ts`：加斷言 `src/compiler/schedule-generator.ts` 與 `src/compiler/schedule-schema.ts` 未 import `@google/genai`（憲章 VIII）（依賴 T006）
+- [X] T028 [US5] 在 `src/compiler/schedule-generator.ts` 彙整 `validateSchedule` 全規則集 + 穩定排序，並確保 `generateAllSchedules` 完整回報全部違規、`ok=false` 語意（依賴 T017、T020、T025）
+- [X] T029 [US5] 建立 `scripts/validate-schedule.ts`（CI Gate 入口）：以同一顆生成器重生成於記憶體 → `validateSchedule` 全 Track → 讀 committed `schedules/{track}.json` 與 `serializeSchedule` 輸出**逐位元組比對** → 任一 error 或 `determinism-drift` 非零 exit（唯一 `process.exit`），對齊 research R10（依賴 T028、T026）
+- [X] T030 [US5] 於 [.github/workflows/ci.yml](../../.github/workflows/ci.yml) 在 `validate:problem-bank` 後新增一步 `npm run validate:schedule`（依賴 T029）
+- [X] T031 [P] [US5] 擴充 `tests/unit/zero-llm.test.ts`：加斷言 `src/compiler/schedule-generator.ts` 與 `src/compiler/schedule-schema.ts` 未 import `@google/genai`（憲章 VIII）（依賴 T006）
 
 **Checkpoint**: US1–US5——完整 Gate + CI drift 守門，F4 功能完成
 

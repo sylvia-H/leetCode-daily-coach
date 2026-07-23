@@ -394,4 +394,19 @@ export function serializeSchedule(schedule: TrackSchedule): string {
   return JSON.stringify(canonical, null, 2) + "\n";
 }
 
+/**
+ * determinism drift 檢查（US5 / R10）：committed 檔內容與重新生成的 `serializeSchedule` 輸出逐位元組
+ * 比對；純函式供 `scripts/validate-schedule.ts` 與單元測試共用（避免 CI 與測試各自手比字串）。
+ */
+export function checkDrift(track: Track, committed: string, freshlyGenerated: string): ScheduleViolation[] {
+  if (committed === freshlyGenerated) return [];
+  return [
+    violation(
+      "determinism-drift",
+      track,
+      `schedules/${TRACK_FILE_NAME[track]} 與重新生成結果不一致（determinism drift，可能為手改生成物或輸入未同步重新生成）`,
+    ),
+  ];
+}
+
 export { cmpViolation };
