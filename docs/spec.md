@@ -562,7 +562,7 @@ Sun  rest       休息
 
 - `schedules/{track}.json` MUST NOT 手工撰寫與維護（3 × ~180 筆手寫必然出錯且難以演進）。
 - MUST 由 `scripts/generate-schedule.ts` **確定性生成**（三份課表一次生成）：
-  - **輸入**：Curriculum DAG、每週節奏模板（§13.2）、Track 參數（涵蓋子集規則、難度帶、challenge 難度、節奏微調）。
+  - **輸入**：Curriculum DAG、每週節奏模板（§13.2）、Track 參數（`curriculum/track-params.json`，zod 驗證；涵蓋範圍準則以 Module/Level 宣告 + prerequisite 閉包、難度帶、challenge 難度、節奏微調、targetLevel；F4 定案）。題目難度分歧由生成器以 Problem Bank difficulty 過濾 + Overlay 附加實現。
   - **輸出**：`schedules/{track}.json` × 3，生成後 commit 定版（Constitution 第 13 條：commit 後即凍結；重新生成是刻意的 build-time 行為）。
   - **確定性（MUST）**：同一輸入 → byte-identical 輸出（不得使用未固定 seed 的隨機源）。
 - 生成器 MUST 內建驗證：產出課表為 DAG 的合法拓樸子序列、review 的 `reviewRange` 正確涵蓋本週、所有 `conceptId` / `problemIds` 參照存在。
@@ -836,6 +836,7 @@ leetcode-daily-coach/
 ├── tsconfig.json
 ├── curriculum/
 │   ├── modules.json             # Module / Topic 骨架與順序（Deterministic）
+│   ├── track-params.json        # 三組 Track 參數（涵蓋範圍準則/難度帶/challenge/節奏微調/targetLevel）；generate-schedule.ts 輸入，zod 驗證（F4 定案）
 │   └── outline.md               # 課綱大綱表（generate-curriculum 產出；唯一人工定稿物）
 ├── schedules/                   # 每 Track 一份課表；由 script 生成後 commit（MUST NOT 手寫）
 │   ├── foundation.json          # ~180 Session；目標 Easy
