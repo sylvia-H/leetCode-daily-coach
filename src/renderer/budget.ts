@@ -56,6 +56,14 @@ export function checkBudget(message: RenderedMessage): BudgetReport {
   if (budgetSlots.overlayNotes !== undefined) {
     items.push(makeItem("overlayNotes", codePointLength(budgetSlots.overlayNotes), 400));
   }
+  // Reflection / 鼓勵語（docs/spec.md §14.5，F5 定案）：素材由 F8 灌入，但預算 MUST 現在就存在——
+  // 否則 F8 的第一批素材會在完全沒有逐區塊把關的情況下上線。
+  if (budgetSlots.reflectionQuestion !== undefined) {
+    items.push(makeItem("reflectionQuestion", codePointLength(budgetSlots.reflectionQuestion), 300));
+  }
+  if (budgetSlots.encouragement !== undefined) {
+    items.push(makeItem("encouragement", codePointLength(budgetSlots.encouragement), 200));
+  }
   if (budgetSlots.takeaway !== undefined) {
     items.push(makeItem("takeaway", codePointLength(budgetSlots.takeaway), 120));
   }
