@@ -183,11 +183,11 @@ contracts/renderer-contract.md §2，且不含空字串或佔位段落。
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T052 移除孤兒教材 `articles/two-pointer/002-left-right-pointer.md`（不對應任何 DAG Concept 且格式已過時；內容可由 git 歷史取回）（FR-029、research R8）
-- [ ] T053 [P] 擴充 `tests/unit/zero-llm.test.ts` 的掃描範圍至 `src/compiler/gate.ts`、`src/compiler/overlay.ts` 與 `scripts/validate.ts`（憲章 VIII、FR-013）；併加一條斷言：`scripts/validate.ts` 與 Gate 路徑 MUST NOT 讀取任何 API key／webhook 環境變數（SC-007 的自動化把關，取代純手動驗證）
-- [ ] T054 [P] `tests/unit/debt-cleanup.test.ts`：掃描 `src/**` 確認 `SESSION_PLANS` / `getPathLabels` / `DEMO_LEETCODE_IDS` / `DEMO_PROBLEM_CONTENT` 皆已不存在（FR-029、SC-009）
-- [ ] T055 依 [quickstart.md](./quickstart.md) 逐節走完 §1–§8 驗收（含失敗路徑注入與復原、DRY_RUN 版面預覽、`$LASTEXITCODE` 檢查）
-- [ ] T056 執行 `npm run build` + `npm test` + `npm run validate:curriculum` + `npm run validate:problem-bank` + `npm run validate:schedule` + `npm run validate:content` 全綠回歸（對齊 `ci.yml` 與 `content-gate.yml` 的完整步驟），並勾選 [checklists/compiler.md](./checklists/compiler.md) 中與實作相關的驗證
+- [X] T052 移除孤兒教材 `articles/two-pointer/002-left-right-pointer.md`（不對應任何 DAG Concept 且格式已過時；內容可由 git 歷史取回）（FR-029、research R8）
+- [X] T053 [P] 擴充 `tests/unit/zero-llm.test.ts` 的掃描範圍至 `src/compiler/gate.ts`、`src/compiler/overlay.ts` 與 `scripts/validate.ts`（憲章 VIII、FR-013）；併加一條斷言：`scripts/validate.ts` 與 Gate 路徑 MUST NOT 讀取任何 API key／webhook 環境變數（SC-007 的自動化把關，取代純手動驗證）
+- [X] T054 [P] `tests/unit/debt-cleanup.test.ts`：掃描 `src/**` 確認 `SESSION_PLANS` / `getPathLabels` / `DEMO_LEETCODE_IDS` / `DEMO_PROBLEM_CONTENT` 皆已不存在（FR-029、SC-009）
+- [X] T055 依 [quickstart.md](./quickstart.md) 逐節走完 §1–§8 驗收（含失敗路徑注入與復原、DRY_RUN 版面預覽、`$LASTEXITCODE` 檢查）
+- [X] T056 執行 `npm run build` + `npm test` + `npm run validate:curriculum` + `npm run validate:problem-bank` + `npm run validate:schedule` + `npm run validate:content` 全綠回歸（對齊 `ci.yml` 與 `content-gate.yml` 的完整步驟），並勾選 [checklists/compiler.md](./checklists/compiler.md) 中與實作相關的驗證
 
 ---
 

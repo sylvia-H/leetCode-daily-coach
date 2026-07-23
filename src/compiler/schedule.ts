@@ -1,4 +1,4 @@
-// 課表載入器（F5）：讀 F4 生成物 schedules/{track}.json，取代 F1 硬編 SESSION_PLANS（FR-002、FR-029）。
+// 課表載入器（F5）：讀 F4 生成物 schedules/{track}.json，取代 F1 硬編課表常數（FR-002、FR-029）。
 // 讀檔集中於 loadAllSchedules（供 loadCompilerDeps 呼叫）；getSessionPlan 為純函式，供 compile() 使用。
 import { readFileSync } from "node:fs";
 import type { Track } from "../types/lesson.js";
