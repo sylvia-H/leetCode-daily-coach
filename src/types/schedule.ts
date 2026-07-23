@@ -87,6 +87,7 @@ export type ScheduleViolationRule =
   | "dangling-concept"
   | "dangling-problem"
   | "overlay-unknown-concept"
+  | "session-problem-overflow"
   | "determinism-drift";
 
 export interface ScheduleViolation {

@@ -160,10 +160,24 @@ function validateOverlay(
 }
 
 /**
+ * 每 Session 題數上限（`docs/spec.md` §13.4 / §14.5，F5 定案 2026-07-23）：與推播預算「每題 ≤350、
+ * 最多 3 題」對齊。**唯一套用點在生成端**——Compiler / Renderer MUST NOT 截斷題目（§14.5 禁止截斷），
+ * 故超出的部分必須在寫進 `schedules/{track}.json` 之前就依確定性規則捨去。
+ */
+const MAX_SESSION_PROBLEMS = 3;
+
+/** 依既有穩定序取前 3 題（§13.4 定案的取捨規則）。 */
+function capProblems(ids: number[]): number[] {
+  return ids.length > MAX_SESSION_PROBLEMS ? ids.slice(0, MAX_SESSION_PROBLEMS) : ids;
+}
+
+/**
  * concept 槽題目選取（US3 / R5）：Concept `leetcode`（保留宣告序）依 Problem Bank `difficulty`
  * 過濾至該 Track `problemDifficulties`，再附加 overlay 的 `extraProblemIds`（去重、穩定序，
  * 只納入已通過 bank 存在性驗證的題號——懸空題號已由 validateOverlay 具名回報，此處靜默排除
  * 避免把已知非法題號寫進生成物）。過濾後為空（含 `leetcode: []`）為一等合法（FR-015a/FR-019）。
+ * 最後依 §13.4 取前 3 題：`leetcode` 本身受 §12.1 `problem-count-range` 限制為 ≤3，但疊上
+ * `extraProblemIds` 後可能超出，故此處亦 MUST 套上限。
  */
 function selectConceptProblems(
   concept: ConceptNode,
@@ -183,7 +197,7 @@ function selectConceptProblems(
     seen.add(id);
     appended.push(id);
   }
-  return [...core, ...appended];
+  return capProblems([...core, ...appended]);
 }
 
 /**
@@ -191,6 +205,8 @@ function selectConceptProblems(
  * Overlay 的 `extraProblemIds` 亦納入聯集——否則同一份 Overlay 在 concept 槽生效、在同週 practice 槽
  * 失效，違反「Overlay 疊加不取代」的一致性（FR-009）。懸空題號已由 validateOverlay 具名回報，
  * 此處靜默排除以免把已知非法題號寫進生成物（與 selectConceptProblems 同一策略）。
+ * 聯集常會超過 §13.4 的每 Session 3 題上限（一週最多 3 個 concept 槽 × 各自的題目），故 MUST 於升冪
+ * 排序後**取前 3 題**——排序 + 取前 N 為完全確定性的取捨，同輸入 → byte-identical 輸出。
  */
 function unionProblems(
   concepts: ConceptNode[],
@@ -209,7 +225,7 @@ function unionProblems(
       if (bank.byId.has(id)) ids.add(id);
     }
   }
-  return [...ids].sort((a, b) => a - b);
+  return capProblems([...ids].sort((a, b) => a - b));
 }
 
 /**
@@ -361,6 +377,19 @@ export function validateSchedule(schedule: TrackSchedule, input: GenerateInput):
   const firstSeenAt = new Map<string, number>();
 
   for (const session of schedule.sessions) {
+    // §13.4 / §14.5 的每 Session ≤3 題不變式（自檢）：生成端已於 selectConceptProblems / unionProblems
+    // 套上限，故此處命中代表課表為手改或生成器退化。committed 課表重驗時同樣有效——F5 內容 Gate 的
+    // problems.count 檢查只是兜底，題數缺陷 MUST 在課表層就被指名。
+    if ((session.problemIds?.length ?? 0) > MAX_SESSION_PROBLEMS) {
+      violations.push(
+        violation(
+          "session-problem-overflow",
+          `${track}:session-${session.sessionIndex}`,
+          `Session #${session.sessionIndex}（${session.type}）排了 ${session.problemIds!.length} 題，超過每 Session 上限 ${MAX_SESSION_PROBLEMS} 題（docs/spec.md §13.4 / §14.5）`,
+          { field: "problemIds" },
+        ),
+      );
+    }
     if (session.type === "concept") {
       if (session.conceptId === undefined) {
         violations.push(
