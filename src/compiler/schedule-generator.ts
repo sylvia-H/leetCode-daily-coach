@@ -124,17 +124,90 @@ function selectCoveredConcepts(track: Track, graph: CurriculumGraph, param: Trac
   return { covered, coveredIds, violations };
 }
 
+/** Overlay 驗證（US3 / R7 / clarify Q4）：key 非涵蓋 Concept、extraProblemIds 懸空 → fail loud。 */
+function validateOverlay(
+  track: Track,
+  overlay: TrackOverlay,
+  coveredIds: Set<string>,
+  bank: ProblemBank,
+): ScheduleViolation[] {
+  const violations: ScheduleViolation[] = [];
+  for (const [conceptId, entry] of Object.entries(overlay.byConcept)) {
+    if (!coveredIds.has(conceptId)) {
+      violations.push(
+        violation(
+          "overlay-unknown-concept",
+          `${track}:${conceptId}`,
+          `overlays/${track} 的 byConcept key「${conceptId}」不是該 Track 已涵蓋的 Concept`,
+        ),
+      );
+      continue;
+    }
+    for (const id of entry.extraProblemIds ?? []) {
+      if (!bank.byId.has(id)) {
+        violations.push(
+          violation(
+            "dangling-problem",
+            `${track}:${conceptId}`,
+            `overlays/${track} 的 extraProblemIds 含題庫不存在的題號：${id}`,
+            { field: "extraProblemIds", target: String(id) },
+          ),
+        );
+      }
+    }
+  }
+  return violations;
+}
+
+/**
+ * concept 槽題目選取（US3 / R5）：Concept `leetcode`（保留宣告序）依 Problem Bank `difficulty`
+ * 過濾至該 Track `problemDifficulties`，再附加 overlay 的 `extraProblemIds`（去重、穩定序，
+ * 只納入已通過 bank 存在性驗證的題號——懸空題號已由 validateOverlay 具名回報，此處靜默排除
+ * 避免把已知非法題號寫進生成物）。過濾後為空（含 `leetcode: []`）為一等合法（FR-015a/FR-019）。
+ */
+function selectConceptProblems(
+  concept: ConceptNode,
+  difficulties: readonly string[],
+  bank: ProblemBank,
+  overlayEntry: TrackOverlay["byConcept"][string] | undefined,
+): number[] {
+  const allowed = new Set(difficulties);
+  const core = concept.leetcode.filter((id) => {
+    const meta = bank.byId.get(id);
+    return meta !== undefined && allowed.has(meta.difficulty);
+  });
+  const seen = new Set(core);
+  const appended: number[] = [];
+  for (const id of overlayEntry?.extraProblemIds ?? []) {
+    if (seen.has(id) || !bank.byId.has(id)) continue;
+    seen.add(id);
+    appended.push(id);
+  }
+  return [...core, ...appended];
+}
+
 export function generateAllSchedules(input: GenerateInput): GenerateResult {
   const schedules = {} as Record<Track, TrackSchedule>;
   const violations: ScheduleViolation[] = [];
 
   for (const track of TRACKS) {
     const param = input.params.tracks[track];
-    const { covered, violations: coverageViolations } = selectCoveredConcepts(track, input.graph, param);
+    const overlay = input.overlays[track];
+    const { covered, coveredIds, violations: coverageViolations } = selectCoveredConcepts(
+      track,
+      input.graph,
+      param,
+    );
     violations.push(...coverageViolations);
+    violations.push(...validateOverlay(track, overlay, coveredIds, input.bank));
 
-    // US1：concept-only emit（先驗證確定性生成鏈路；US4 將以 rhythm 節奏取代本段落）。
-    const sessions: SessionPlan[] = covered.map((c, i) => buildSession(i + 1, "concept", { conceptId: c.id }));
+    // US1：concept-only emit（US4 將以 rhythm 節奏取代本段落）；US3：附加難度過濾 + Overlay 題目。
+    const sessions: SessionPlan[] = covered.map((c, i) =>
+      buildSession(i + 1, "concept", {
+        conceptId: c.id,
+        problemIds: selectConceptProblems(c, param.problemDifficulties, input.bank, overlay.byConcept[c.id]),
+      }),
+    );
 
     const schedule: TrackSchedule = { track, targetLevel: param.targetLevel, sessions };
     schedules[track] = schedule;

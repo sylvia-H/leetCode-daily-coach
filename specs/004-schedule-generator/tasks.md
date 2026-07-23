@@ -101,13 +101,13 @@ description: "Task list for 004-schedule-generator implementation"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T018 [P] [US3] 建立 `tests/unit/schedule-track.test.ts`：三 Track conceptId 序相同（SC-005）、同 Concept problemIds 依 `problemDifficulties` 分歧、Overlay `extraProblemIds` 附加不取代（Core 仍在）、`overlay-unknown-concept` + `dangling-problem` fail loud、`challengeDifficulty` 僅驗型別/enum（不套用）
+- [X] T018 [P] [US3] 建立 `tests/unit/schedule-track.test.ts`：三 Track conceptId 序相同（SC-005）、同 Concept problemIds 依 `problemDifficulties` 分歧、Overlay `extraProblemIds` 附加不取代（Core 仍在）、`overlay-unknown-concept` + `dangling-problem` fail loud、`challengeDifficulty` 僅驗型別/enum（不套用）
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] 在 `src/compiler/schedule-generator.ts` 實作**題目選取**：以 Problem Bank `difficulty` 過濾 Concept `leetcode` 至該 Track `problemDifficulties`（保留宣告序），對齊 research R5 / FR-015a（依賴 T011）
-- [ ] T020 [US3] 實作 **Overlay 套用 + 驗證**：`extraProblemIds` 附加（去重、穩定序，不取代 Core）、`challengeDifficulty` 僅驗型別/enum（**不套用**；challenge 槽非 concept-bound，語意由 F5 消費，比照 `extraNotesMarkdown`）、`overlay-unknown-concept`（Overlay key 非涵蓋 Concept）與 `dangling-problem`（題號不存在）具名 fail loud，對齊 clarify Q4 / FR-008/009（依賴 T019）
-- [ ] T021 [US3] 執行 `npm run generate:schedule` 重生成含 `problemIds` 的三份課表並 commit（依賴 T019、T020）
+- [X] T019 [US3] 在 `src/compiler/schedule-generator.ts` 實作**題目選取**：以 Problem Bank `difficulty` 過濾 Concept `leetcode` 至該 Track `problemDifficulties`（保留宣告序），對齊 research R5 / FR-015a（依賴 T011）
+- [X] T020 [US3] 實作 **Overlay 套用 + 驗證**：`extraProblemIds` 附加（去重、穩定序，不取代 Core）、`challengeDifficulty` 僅驗型別/enum（**不套用**；challenge 槽非 concept-bound，語意由 F5 消費，比照 `extraNotesMarkdown`）、`overlay-unknown-concept`（Overlay key 非涵蓋 Concept）與 `dangling-problem`（題號不存在）具名 fail loud，對齊 clarify Q4 / FR-008/009（依賴 T019）
+- [X] T021 [US3] 執行 `npm run generate:schedule` 重生成含 `problemIds` 的三份課表並 commit（依賴 T019、T020）
 
 **Checkpoint**: US1–US3——三 Track 共用教材、難度分歧、Overlay 疊加可驗（AC5）
 

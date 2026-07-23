@@ -15,17 +15,29 @@
     {
       "sessionIndex": 3,
       "type": "concept",
-      "conceptId": "array-traversal"
+      "conceptId": "array-traversal",
+      "problemIds": [
+        1,
+        26
+      ]
     },
     {
       "sessionIndex": 4,
       "type": "concept",
-      "conceptId": "in-place-operations"
+      "conceptId": "in-place-operations",
+      "problemIds": [
+        27,
+        283
+      ]
     },
     {
       "sessionIndex": 5,
       "type": "concept",
-      "conceptId": "prefix-sum"
+      "conceptId": "prefix-sum",
+      "problemIds": [
+        303,
+        560
+      ]
     }
   ]
 }

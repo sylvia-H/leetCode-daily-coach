@@ -25,7 +25,10 @@
     {
       "sessionIndex": 5,
       "type": "concept",
-      "conceptId": "prefix-sum"
+      "conceptId": "prefix-sum",
+      "problemIds": [
+        560
+      ]
     }
   ]
 }
