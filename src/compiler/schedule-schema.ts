@@ -10,6 +10,7 @@ import type {
   TrackOverlay,
   TrackParamsFile,
 } from "../types/schedule.js";
+import { cmpViolation } from "./schedule-violation.js";
 
 const DIFFICULTY_ENUM = z.enum(["Easy", "Medium", "Hard"]);
 const SESSION_TYPE_ENUM = z.enum(["concept", "practice", "review", "challenge", "rest"]);
@@ -41,14 +42,6 @@ function classifyIssue(issue: z.ZodIssue): { rule: ScheduleViolationRule; field?
     return { rule: "param-invalid", field };
   }
   return { rule: "schema-type", field };
-}
-
-function cmpViolation(a: ScheduleViolation, b: ScheduleViolation): number {
-  return (
-    a.rule.localeCompare(b.rule) ||
-    a.subject.localeCompare(b.subject) ||
-    (a.field ?? "").localeCompare(b.field ?? "")
-  );
 }
 
 // ── curriculum/track-params.json ────────────────────────────────────────────
@@ -85,10 +78,48 @@ function makeTrackParamSchema(moduleIds: Set<string>, maxModuleLevel: number) {
           }
         }
       }
-      if (!val.rhythm.includes("review") || !val.rhythm.includes("rest")) {
-        withCustomIssue(ctx, ["rhythm"], "rhythm MUST 含至少一個 review 與一個 rest", "param-invalid");
-      }
+      validateRhythm(val.rhythm, ctx);
     });
+}
+
+/**
+ * rhythm 槽位順序約束：僅檢查「含 review / rest」不足以擋下 schema-valid 卻生不出合法課表的排法，
+ * 錯誤會延後到生成後才被 validateSchedule 攔下、且訊息指向 Session 而非真正的根因（rhythm 設定）。
+ * 四條約束皆在此以 param-invalid 具名回報：
+ *  1. 至少一個 concept 槽——否則 emitSessions 的涵蓋佇列永遠不被消耗（無限迴圈）。
+ *  2. 每個 practice 槽之前 MUST 有 concept 槽——否則該週 practice 拿到空的 weekConcepts。
+ *  3. 最後一個 concept 槽 MUST 早於某個 review 槽——否則該 concept 落在 reviewRange
+ *     （= [weekStart, review−1]，FR-013）之外，永遠不被複習（對應 validateSchedule 的
+ *     review-coverage-gap；此處於參數層先擋，指名根因）。此條亦排除 review 落首槽的空區間。
+ */
+function validateRhythm(rhythm: readonly z.infer<typeof SESSION_TYPE_ENUM>[], ctx: z.RefinementCtx): void {
+  if (!rhythm.includes("review") || !rhythm.includes("rest")) {
+    withCustomIssue(ctx, ["rhythm"], "rhythm MUST 含至少一個 review 與一個 rest", "param-invalid");
+  }
+  if (!rhythm.includes("concept")) {
+    withCustomIssue(ctx, ["rhythm"], "rhythm MUST 含至少一個 concept 槽，否則涵蓋 Concept 永遠無法排入", "param-invalid");
+    return;
+  }
+  const firstConcept = rhythm.indexOf("concept");
+  const firstPractice = rhythm.indexOf("practice");
+  if (firstPractice >= 0 && firstPractice < firstConcept) {
+    withCustomIssue(
+      ctx,
+      ["rhythm"],
+      `rhythm 的第一個 practice 槽（第 ${firstPractice + 1} 槽）早於第一個 concept 槽（第 ${firstConcept + 1} 槽），該週 practice 將無題可練`,
+      "param-invalid",
+    );
+  }
+  const lastConcept = rhythm.lastIndexOf("concept");
+  const lastReview = rhythm.lastIndexOf("review");
+  if (lastReview >= 0 && lastReview < lastConcept) {
+    withCustomIssue(
+      ctx,
+      ["rhythm"],
+      `rhythm 的最後一個 review 槽（第 ${lastReview + 1} 槽）早於最後一個 concept 槽（第 ${lastConcept + 1} 槽），該 concept 將落在 reviewRange 之外、永遠不被複習`,
+      "param-invalid",
+    );
+  }
 }
 
 function makeTrackParamsFileSchema(moduleIds: Set<string>, maxModuleLevel: number) {

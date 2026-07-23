@@ -18,11 +18,8 @@
     },
     {
       "sessionIndex": 4,
-      "type": "review",
-      "reviewRange": [
-        1,
-        3
-      ]
+      "type": "concept",
+      "conceptId": "array-traversal"
     },
     {
       "sessionIndex": 5,
@@ -30,8 +27,11 @@
     },
     {
       "sessionIndex": 6,
-      "type": "concept",
-      "conceptId": "array-traversal"
+      "type": "review",
+      "reviewRange": [
+        1,
+        5
+      ]
     },
     {
       "sessionIndex": 7,
@@ -59,15 +59,15 @@
     },
     {
       "sessionIndex": 11,
-      "type": "review",
-      "reviewRange": [
-        8,
-        10
-      ]
+      "type": "challenge"
     },
     {
       "sessionIndex": 12,
-      "type": "challenge"
+      "type": "review",
+      "reviewRange": [
+        8,
+        11
+      ]
     },
     {
       "sessionIndex": 13,

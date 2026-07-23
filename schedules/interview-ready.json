@@ -18,26 +18,23 @@
     },
     {
       "sessionIndex": 4,
-      "type": "review",
-      "reviewRange": [
-        1,
-        3
-      ]
-    },
-    {
-      "sessionIndex": 5,
-      "type": "challenge",
-      "problemIds": [
-        560
-      ]
-    },
-    {
-      "sessionIndex": 6,
       "type": "concept",
       "conceptId": "array-traversal",
       "problemIds": [
         1,
         26
+      ]
+    },
+    {
+      "sessionIndex": 5,
+      "type": "challenge"
+    },
+    {
+      "sessionIndex": 6,
+      "type": "review",
+      "reviewRange": [
+        1,
+        5
       ]
     },
     {
@@ -74,17 +71,17 @@
     },
     {
       "sessionIndex": 11,
-      "type": "review",
-      "reviewRange": [
-        8,
-        10
+      "type": "challenge",
+      "problemIds": [
+        560
       ]
     },
     {
       "sessionIndex": 12,
-      "type": "challenge",
-      "problemIds": [
-        560
+      "type": "review",
+      "reviewRange": [
+        8,
+        11
       ]
     },
     {

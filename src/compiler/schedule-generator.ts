@@ -6,13 +6,13 @@ import type { SessionType, Track } from "../types/lesson.js";
 import type { ProblemBank } from "../types/problem.js";
 import type {
   ScheduleViolation,
-  ScheduleViolationRule,
   SessionPlan,
   TrackOverlay,
   TrackParam,
   TrackParamsFile,
   TrackSchedule,
 } from "../types/schedule.js";
+import { cmpViolation, violation } from "./schedule-violation.js";
 
 export const TRACKS: readonly Track[] = ["foundation", "interviewReady", "interviewMastery"];
 
@@ -33,24 +33,6 @@ export interface GenerateInput {
 export interface GenerateResult {
   schedules: Record<Track, TrackSchedule>;
   violations: ScheduleViolation[];
-}
-
-/** 沿用 F2/F3 的具名違規排序慣例（rule → subject → field），使違規清單本身亦 determinism。 */
-function cmpViolation(a: ScheduleViolation, b: ScheduleViolation): number {
-  return (
-    a.rule.localeCompare(b.rule) ||
-    a.subject.localeCompare(b.subject) ||
-    (a.field ?? "").localeCompare(b.field ?? "")
-  );
-}
-
-function violation(
-  rule: ScheduleViolationRule,
-  subject: string,
-  message: string,
-  extra: { field?: string; target?: string } = {},
-): ScheduleViolation {
-  return { rule, severity: "error", subject, message, ...extra };
 }
 
 /** 沿用 F2 `Ordinal` 的確定性全序比較（moduleIndex→topicIndex→localOrder→id）；F2 未輸出此比較器，故於此複寫一份。 */
@@ -85,6 +67,26 @@ interface CoverageResult {
 
 /** 涵蓋子集選取（FR-014a）：maxLevel（含）或 moduleAllowlist，依 F2 canonical ordinal 排序取子序列（R3）。 */
 function selectCoveredConcepts(track: Track, graph: CurriculumGraph, param: TrackParam): CoverageResult {
+  const violations: ScheduleViolation[] = [];
+  const levelOf = new Map(graph.modules.map((m) => [m.id, m.level]));
+
+  // module 懸空時，maxLevel 路徑的 level 查不到、moduleAllowlist 路徑的 id 對不上——兩者都會把該
+  // Concept 從三份課表靜默剔除（0 違規、CI 全綠、重生成亦一致），教材無聲流失。F2 的 validateCurriculum
+  // 會以 dangling-ref 攔下此狀況，但 generateAllSchedules 是可被 F5 / F6 直接餵圖的純函式，故在此
+  // 獨立 fail loud（§4-15）。
+  for (const c of graph.concepts.values()) {
+    if (!levelOf.has(c.module)) {
+      violations.push(
+        violation(
+          "unknown-module",
+          `${track}:${c.id}`,
+          `Concept ${c.id} 的 module「${c.module}」不存在於 modules.json，無法判定是否納入 Track ${track} 的涵蓋子集`,
+          { field: "module", target: c.module },
+        ),
+      );
+    }
+  }
+
   const coveredIds = new Set<string>();
   if (param.moduleAllowlist) {
     const allow = new Set(param.moduleAllowlist);
@@ -92,7 +94,6 @@ function selectCoveredConcepts(track: Track, graph: CurriculumGraph, param: Trac
       if (allow.has(c.module)) coveredIds.add(c.id);
     }
   } else {
-    const levelOf = new Map(graph.modules.map((m) => [m.id, m.level]));
     for (const c of graph.concepts.values()) {
       const level = levelOf.get(c.module);
       if (level !== undefined && level <= param.maxLevel) coveredIds.add(c.id);
@@ -105,7 +106,6 @@ function selectCoveredConcepts(track: Track, graph: CurriculumGraph, param: Trac
 
   // 閉包驗證（US2 / R3 / FR-014a）：被涵蓋 Concept 的 prerequisite 若不在涵蓋集內即 fail loud，
   // 不靜默擴張宣告範圍。連續 maxLevel 切法天然閉包，僅 moduleAllowlist 跳號時才可能觸發。
-  const violations: ScheduleViolation[] = [];
   for (const c of covered) {
     for (const p of c.prerequisite) {
       if (!coveredIds.has(p)) {
@@ -186,8 +186,18 @@ function selectConceptProblems(
   return [...core, ...appended];
 }
 
-/** practice 槽題目選取（US4 / R5）：當週已引入 Concept 的過濾題目聯集，升冪 id（確定性）。 */
-function unionProblems(concepts: ConceptNode[], difficulties: readonly string[], bank: ProblemBank): number[] {
+/**
+ * practice 槽題目選取（US4 / R5）：當週已引入 Concept 的過濾題目聯集，升冪 id（確定性）。
+ * Overlay 的 `extraProblemIds` 亦納入聯集——否則同一份 Overlay 在 concept 槽生效、在同週 practice 槽
+ * 失效，違反「Overlay 疊加不取代」的一致性（FR-009）。懸空題號已由 validateOverlay 具名回報，
+ * 此處靜默排除以免把已知非法題號寫進生成物（與 selectConceptProblems 同一策略）。
+ */
+function unionProblems(
+  concepts: ConceptNode[],
+  difficulties: readonly string[],
+  bank: ProblemBank,
+  overlay: TrackOverlay,
+): number[] {
   const allowed = new Set(difficulties);
   const ids = new Set<number>();
   for (const concept of concepts) {
@@ -195,20 +205,37 @@ function unionProblems(concepts: ConceptNode[], difficulties: readonly string[],
       const meta = bank.byId.get(id);
       if (meta && allowed.has(meta.difficulty)) ids.add(id);
     }
+    for (const id of overlay.byConcept[concept.id]?.extraProblemIds ?? []) {
+      if (bank.byId.has(id)) ids.add(id);
+    }
   }
   return [...ids].sort((a, b) => a - b);
 }
 
-/** challenge 槽題目選取（US4 / R5）：涵蓋 Concept 中符合 challengeDifficulty 的題目、取 id 最小一題。 */
-function selectChallengeProblem(covered: ConceptNode[], challengeDifficulty: string, bank: ProblemBank): number | undefined {
+/**
+ * challenge 槽題目選取（US4 / R5）：候選池為**該 challenge 槽之前已引入**的 Concept 的題目
+ * （取符合 `challengeDifficulty` 者）——池限於已引入 Concept 才不會讓使用者在第 5 天收到一題屬於
+ * 明天才教的 Concept 的「挑戰題」（validateSchedule 的 forward-dependency 只看 conceptId，抓不到
+ * 由 problemIds 造成的前向引用）。取尚未被前面任一 challenge 用過的最小 id；全部用過時退回池中
+ * 最小 id（不致因題庫耗盡而讓 challenge 槽突然消失）。純函式、無隨機源，同輸入 → 同輸出。
+ */
+function selectChallengeProblem(
+  introduced: ConceptNode[],
+  challengeDifficulty: string,
+  bank: ProblemBank,
+  used: ReadonlySet<number>,
+): number | undefined {
   let min: number | undefined;
-  for (const concept of covered) {
+  let minUnused: number | undefined;
+  for (const concept of introduced) {
     for (const id of concept.leetcode) {
       const meta = bank.byId.get(id);
-      if (meta && meta.difficulty === challengeDifficulty && (min === undefined || id < min)) min = id;
+      if (!meta || meta.difficulty !== challengeDifficulty) continue;
+      if (min === undefined || id < min) min = id;
+      if (!used.has(id) && (minUnused === undefined || id < minUnused)) minUnused = id;
     }
   }
-  return min;
+  return minUnused ?? min;
 }
 
 /**
@@ -218,13 +245,33 @@ function selectChallengeProblem(covered: ConceptNode[], challengeDifficulty: str
  * reviewSessionIndex-1]（含第一週）。
  */
 function emitSessions(
+  track: Track,
   covered: ConceptNode[],
   param: TrackParam,
   bank: ProblemBank,
   overlay: TrackOverlay,
-): SessionPlan[] {
+): { sessions: SessionPlan[]; violations: ScheduleViolation[] } {
   const sessions: SessionPlan[] = [];
-  const challengeProblemId = selectChallengeProblem(covered, param.challengeDifficulty, bank);
+  const violations: ScheduleViolation[] = [];
+
+  // 無 concept 槽時佇列永遠不被消耗，下方 while 會無限成長至 OOM。schema 層已以 param-invalid 擋下
+  // （validateRhythm），此處為純函式被直接呼叫（測試 / F5 / F6）時的 fail-fast 防線。
+  if (!param.rhythm.includes("concept")) {
+    return {
+      sessions,
+      violations: [
+        violation(
+          "param-invalid",
+          `${track}:rhythm`,
+          `Track ${track} 的 rhythm 不含任何 concept 槽，涵蓋 Concept 永遠無法排入`,
+          { field: "rhythm" },
+        ),
+      ],
+    };
+  }
+
+  const introduced: ConceptNode[] = [];
+  const usedChallengeIds = new Set<number>();
   let qi = 0;
   let sessionIndex = 1;
 
@@ -239,20 +286,33 @@ function emitSessions(
         const problemIds = selectConceptProblems(concept, param.problemDifficulties, bank, overlay.byConcept[concept.id]);
         sessions.push(buildSession(sessionIndex, "concept", { conceptId: concept.id, problemIds }));
         weekConcepts.push(concept);
+        introduced.push(concept);
         sessionIndex++;
       } else if (slotType === "practice") {
-        const problemIds = unionProblems(weekConcepts, param.problemDifficulties, bank);
+        const problemIds = unionProblems(weekConcepts, param.problemDifficulties, bank, overlay);
         sessions.push(buildSession(sessionIndex, "practice", { problemIds }));
         sessionIndex++;
       } else if (slotType === "review") {
         sessions.push(buildSession(sessionIndex, "review", { reviewRange: [weekStartIndex, sessionIndex - 1] }));
         sessionIndex++;
       } else if (slotType === "challenge") {
-        sessions.push(
-          buildSession(sessionIndex, "challenge", {
-            problemIds: challengeProblemId !== undefined ? [challengeProblemId] : [],
-          }),
-        );
+        const id = selectChallengeProblem(introduced, param.challengeDifficulty, bank, usedChallengeIds);
+        if (id === undefined) {
+          // FR-015a 明文「過濾後為空為一等合法、無 fallback」，故不 fail loud；但無題的 challenge 會讓
+          // F5 Renderer 推出一則沒有任何題目連結的「今日挑戰」，通常代表該 Track 的 challengeDifficulty
+          // 與題庫難度分布對不上。以 warning 留下訊號而不擋 CI（stub 題庫無 Hard 題為 FR-018 預期狀態）。
+          violations.push(
+            violation(
+              "challenge-no-problem",
+              `${track}:session-${sessionIndex}`,
+              `challenge Session（#${sessionIndex}）在已引入 Concept 中找不到難度為 ${param.challengeDifficulty} 的題目，將產出無題目的挑戰日`,
+              { severity: "warning", field: "challengeDifficulty" },
+            ),
+          );
+        } else {
+          usedChallengeIds.add(id);
+        }
+        sessions.push(buildSession(sessionIndex, "challenge", { problemIds: id !== undefined ? [id] : [] }));
         sessionIndex++;
       } else {
         sessions.push(buildSession(sessionIndex, "rest"));
@@ -261,7 +321,7 @@ function emitSessions(
     }
   }
 
-  return sessions;
+  return { sessions, violations };
 }
 
 export function generateAllSchedules(input: GenerateInput): GenerateResult {
@@ -279,7 +339,8 @@ export function generateAllSchedules(input: GenerateInput): GenerateResult {
     violations.push(...coverageViolations);
     violations.push(...validateOverlay(track, overlay, coveredIds, input.bank));
 
-    const sessions = emitSessions(covered, param, input.bank, overlay);
+    const { sessions, violations: emitViolations } = emitSessions(track, covered, param, input.bank, overlay);
+    violations.push(...emitViolations);
 
     const schedule: TrackSchedule = { track, targetLevel: param.targetLevel, sessions };
     schedules[track] = schedule;
@@ -374,7 +435,35 @@ export function validateSchedule(schedule: TrackSchedule, input: GenerateInput):
     }
   }
 
+  violations.push(...checkReviewCoverage(schedule));
   violations.sort(cmpViolation);
+  return violations;
+}
+
+/**
+ * 每個 concept Session MUST 至少被一個 review 的 `reviewRange` 涵蓋（US4 / §13.2 週複習的實質要求）。
+ * `review-range-invalid` 只驗單一區間本身是否越界，抓不到「涵蓋不足」——review 若排在某個 concept 槽
+ * 之前，該 concept 就永遠落在 [weekStart, review−1]（FR-013）之外、整份課表沒有任何一天複習到它。
+ * 此規則即為擋下該排法的護欄（根因在 rhythm，schema 層的 validateRhythm 會先具名回報）。
+ */
+function checkReviewCoverage(schedule: TrackSchedule): ScheduleViolation[] {
+  const ranges = schedule.sessions
+    .filter((s) => s.type === "review" && s.reviewRange)
+    .map((s) => s.reviewRange!);
+  const violations: ScheduleViolation[] = [];
+  for (const session of schedule.sessions) {
+    if (session.type !== "concept") continue;
+    const covered = ranges.some(([start, end]) => start <= session.sessionIndex && session.sessionIndex <= end);
+    if (!covered) {
+      violations.push(
+        violation(
+          "review-coverage-gap",
+          `${schedule.track}:session-${session.sessionIndex}`,
+          `concept Session（#${session.sessionIndex}${session.conceptId ? `，${session.conceptId}` : ""}）未被任何 review 的 reviewRange 涵蓋，該 Concept 永遠不會被複習`,
+        ),
+      );
+    }
+  }
   return violations;
 }
 
@@ -409,4 +498,4 @@ export function checkDrift(track: Track, committed: string, freshlyGenerated: st
   ];
 }
 
-export { cmpViolation };
+export { cmpViolation } from "./schedule-violation.js";
