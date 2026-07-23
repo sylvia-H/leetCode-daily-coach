@@ -101,6 +101,8 @@ describe("validateSchedule 結構不變式（US2 / SC-006~007，合成違規案�
       sessions: [
         { sessionIndex: 1, type: "concept", conceptId: "c0" },
         { sessionIndex: 2, type: "concept", conceptId: "c1" },
+        // review 不可省略：review-coverage-gap 要求每個 concept Session 都被某個 reviewRange 涵蓋
+        { sessionIndex: 3, type: "review", reviewRange: [1, 2] },
       ],
     };
     expect(validateSchedule(schedule, input)).toEqual([]);

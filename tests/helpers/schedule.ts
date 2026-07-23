@@ -22,13 +22,14 @@ import type {
 
 export const TRACK_IDS: readonly Track[] = ["foundation", "interviewReady", "interviewMastery"];
 
+/** 對齊 curriculum/track-params.json：review 落在最後一個 concept 槽之後，使 reviewRange 涵蓋全週。 */
 export const DEFAULT_RHYTHM: SessionType[] = [
   "concept",
   "concept",
   "practice",
-  "review",
-  "challenge",
   "concept",
+  "challenge",
+  "review",
   "rest",
 ];
 

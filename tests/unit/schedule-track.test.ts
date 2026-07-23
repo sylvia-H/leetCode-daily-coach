@@ -81,6 +81,8 @@ describe("Overlay fail loud（US3 / clarify Q4，合成情境）", () => {
     const params = makeParamsFile({ foundation: { maxLevel: 0 } });
     const overlays = makeOverlays({ foundation: emptyOverlay("foundation") });
     const { violations } = generateAllSchedules({ graph, bank, params, overlays });
-    expect(violations).toEqual([]);
+    // 空題庫下 challenge 槽必然無題，會留下 challenge-no-problem 的 warning 訊號；此案例要驗的是無 error。
+    expect(violations.filter((v) => v.severity === "error")).toEqual([]);
+    expect(violations.every((v) => v.rule === "challenge-no-problem")).toBe(true);
   });
 });

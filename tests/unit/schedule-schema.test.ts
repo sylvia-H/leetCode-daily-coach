@@ -56,6 +56,31 @@ describe("parseTrackParamsFile（US1 / SC-008）", () => {
     expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
   });
 
+  it("rhythm 不含 concept 槽 → param-invalid（否則涵蓋佇列永不消耗，生成器無限迴圈）", () => {
+    const raw = makeParamsFile({
+      foundation: { rhythm: ["practice", "practice", "practice", "practice", "practice", "review", "rest"] },
+    });
+    const { file, violations } = parseTrackParamsFile(raw, MODULES);
+    expect(file).toBeUndefined();
+    expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
+  });
+
+  it("rhythm 的 practice 槽早於第一個 concept 槽 → param-invalid", () => {
+    const raw = makeParamsFile({
+      foundation: { rhythm: ["practice", "concept", "concept", "concept", "challenge", "review", "rest"] },
+    });
+    const { violations } = parseTrackParamsFile(raw, MODULES);
+    expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
+  });
+
+  it("rhythm 的最後一個 review 早於最後一個 concept → param-invalid（該 concept 永不被複習）", () => {
+    const raw = makeParamsFile({
+      foundation: { rhythm: ["concept", "concept", "practice", "review", "challenge", "concept", "rest"] },
+    });
+    const { violations } = parseTrackParamsFile(raw, MODULES);
+    expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
+  });
+
   it("problemDifficulties 為空 → param-invalid", () => {
     const raw = makeParamsFile({ foundation: { problemDifficulties: [] } });
     const { violations } = parseTrackParamsFile(raw, MODULES);

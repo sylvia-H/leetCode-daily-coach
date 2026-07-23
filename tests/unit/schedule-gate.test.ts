@@ -117,6 +117,53 @@ describe("ScheduleViolationRule 逐一 fail loud（US5 / SC-007）", () => {
     expect(validateSchedule(schedule, input).some((v) => v.rule === "dangling-problem")).toBe(true);
   });
 
+  it("review-coverage-gap：concept Session 落在所有 reviewRange 之外", () => {
+    const schedule: TrackSchedule = {
+      track: "foundation",
+      targetLevel: "easy",
+      sessions: [
+        { sessionIndex: 1, type: "concept", conceptId: "c0" },
+        { sessionIndex: 2, type: "review", reviewRange: [1, 1] },
+        { sessionIndex: 3, type: "concept", conceptId: "c1" }, // review 之後才引入，永不被複習
+      ],
+    };
+    const violations = validateSchedule(schedule, input);
+    expect(violations.some((v) => v.rule === "review-coverage-gap" && v.subject === "foundation:session-3")).toBe(
+      true,
+    );
+    expect(violations.some((v) => v.rule === "review-coverage-gap" && v.subject === "foundation:session-1")).toBe(
+      false,
+    );
+  });
+
+  it("unknown-module：Concept 的 module 不存在於 modules.json（不靜默剔除）", () => {
+    const graph = buildMultiLevelGraph();
+    graph.concepts.get("c1")!.module = "no-such-module";
+    const bank = buildBank([]);
+    const { violations } = generateAllSchedules({
+      graph,
+      bank,
+      params: makeParamsFile(),
+      overlays: makeOverlays(),
+    });
+    expect(violations.some((v) => v.rule === "unknown-module" && v.target === "no-such-module")).toBe(true);
+  });
+
+  it("param-invalid（生成器層）：rhythm 無 concept 槽時 fail fast，不進入無限迴圈", () => {
+    const graph = buildMultiLevelGraph();
+    const params = makeParamsFile();
+    // 繞過 zod（模擬 F5 / F6 直接餵參數給純函式）：schema 層已擋，此處驗生成器自身的防線。
+    params.tracks.foundation.rhythm = ["practice", "practice", "practice", "practice", "practice", "review", "rest"];
+    const { schedules, violations } = generateAllSchedules({
+      graph,
+      bank: buildBank([]),
+      params,
+      overlays: makeOverlays(),
+    });
+    expect(violations.some((v) => v.rule === "param-invalid" && v.subject === "foundation:rhythm")).toBe(true);
+    expect(schedules.foundation.sessions).toEqual([]);
+  });
+
   it("determinism-drift：committed 檔與重生成結果不一致", () => {
     const schedule: TrackSchedule = { track: "foundation", targetLevel: "easy", sessions: [] };
     const freshlyGenerated = serializeSchedule(schedule);
