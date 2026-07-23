@@ -36,8 +36,8 @@ function classifyIssue(issue: z.ZodIssue): { rule: ScheduleViolationRule; field?
     const params = (issue as z.ZodIssue & { params?: CustomParams }).params;
     if (params?.rule) return { rule: params.rule, field };
   }
-  const top = String(issue.path[0] ?? "");
-  if ((top === "rhythm" || top === "problemDifficulties") && (issue.code === "too_small" || issue.code === "too_big")) {
+  const last = String(issue.path[issue.path.length - 1] ?? "");
+  if ((last === "rhythm" || last === "problemDifficulties") && (issue.code === "too_small" || issue.code === "too_big")) {
     return { rule: "param-invalid", field };
   }
   return { rule: "schema-type", field };

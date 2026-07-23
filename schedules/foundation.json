@@ -1,0 +1,31 @@
+{
+  "track": "foundation",
+  "targetLevel": "easy",
+  "sessions": [
+    {
+      "sessionIndex": 1,
+      "type": "concept",
+      "conceptId": "time-space-complexity"
+    },
+    {
+      "sessionIndex": 2,
+      "type": "concept",
+      "conceptId": "reading-the-problem"
+    },
+    {
+      "sessionIndex": 3,
+      "type": "concept",
+      "conceptId": "array-traversal"
+    },
+    {
+      "sessionIndex": 4,
+      "type": "concept",
+      "conceptId": "in-place-operations"
+    },
+    {
+      "sessionIndex": 5,
+      "type": "concept",
+      "conceptId": "prefix-sum"
+    }
+  ]
+}

@@ -56,16 +56,16 @@ description: "Task list for 004-schedule-generator implementation"
 
 ### Tests for User Story 1 ⚠️（先寫、先 FAIL）
 
-- [ ] T007 [P] [US1] 建立 `tests/unit/schedule-generate.test.ts`：determinism——同 input 連續 `generateAllSchedules` 兩次字串相等、`serializeSchedule` 輸出穩定（含固定欄位序、檔尾 `\n`、LF）、無 `Date`/`Math.random` 依賴（SC-001）
-- [ ] T008 [P] [US1] 建立 `tests/unit/schedule-schema.test.ts`：track-params / overlay 的 zod 結構驗證——合法樣本通過、非法樣本（缺欄位 / 型別錯 / 未知欄位 / 非法 enum）被具名 `schema-*` 拒絕（SC-008）
+- [X] T007 [P] [US1] 建立 `tests/unit/schedule-generate.test.ts`：determinism——同 input 連續 `generateAllSchedules` 兩次字串相等、`serializeSchedule` 輸出穩定（含固定欄位序、檔尾 `\n`、LF）、無 `Date`/`Math.random` 依賴（SC-001）
+- [X] T008 [P] [US1] 建立 `tests/unit/schedule-schema.test.ts`：track-params / overlay 的 zod 結構驗證——合法樣本通過、非法樣本（缺欄位 / 型別錯 / 未知欄位 / 非法 enum）被具名 `schema-*` 拒絕（SC-008）
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] 在 `src/compiler/schedule-generator.ts` 實作**涵蓋子集選取**（依 `maxLevel` 或 `moduleAllowlist` 從 `graph.concepts` 篩選）+ 依 F2 canonical `topoOrder` 取子序列排序（本階段先 concept-only emit），對齊 [research.md](./research.md) R3（依賴 T006）
-- [ ] T010 [US1] 在 `src/compiler/schedule-generator.ts` 實作 **canonical `serializeSchedule`**：固定欄位序（`track→targetLevel→sessions`、`sessionIndex→type→conceptId?→reviewRange?→problemIds?`）、`JSON.stringify(_,null,2)` + 檔尾 `\n`、空 optional 省略，對齊 research R2（依賴 T006）
-- [ ] T011 [US1] 在 `src/compiler/schedule-generator.ts` 實作 `generateAllSchedules` 主流程（逐 Track：選取+排序 → emit concept sessions → serialize），回傳 `{ schedules, violations }`（依賴 T009、T010）
-- [ ] T012 [US1] 建立 `scripts/generate-schedule.ts` 入口：`loadCurriculum` + `validateCurriculum`（error 中止）→ `loadProblemBank` → 讀 `track-params.json` + `overlays/*`（經 T005 zod）→ `generateAllSchedules` → 有 error 印具名違規並非零 exit（**不寫檔**）→ 無 error 寫三檔 + 摘要 + exit 0（唯一 I/O + `process.exit`）（依賴 T011）
-- [ ] T013 [US1] 執行 `npm run generate:schedule` 生成並 commit `schedules/foundation.json`、`schedules/interview-ready.json`、`schedules/interview-mastery.json`（凍結產物）（依賴 T012）
+- [X] T009 [US1] 在 `src/compiler/schedule-generator.ts` 實作**涵蓋子集選取**（依 `maxLevel` 或 `moduleAllowlist` 從 `graph.concepts` 篩選）+ 依 F2 canonical `topoOrder` 取子序列排序（本階段先 concept-only emit），對齊 [research.md](./research.md) R3（依賴 T006）
+- [X] T010 [US1] 在 `src/compiler/schedule-generator.ts` 實作 **canonical `serializeSchedule`**：固定欄位序（`track→targetLevel→sessions`、`sessionIndex→type→conceptId?→reviewRange?→problemIds?`）、`JSON.stringify(_,null,2)` + 檔尾 `\n`、空 optional 省略，對齊 research R2（依賴 T006）
+- [X] T011 [US1] 在 `src/compiler/schedule-generator.ts` 實作 `generateAllSchedules` 主流程（逐 Track：選取+排序 → emit concept sessions → serialize），回傳 `{ schedules, violations }`（依賴 T009、T010）
+- [X] T012 [US1] 建立 `scripts/generate-schedule.ts` 入口：`loadCurriculum` + `validateCurriculum`（error 中止）→ `loadProblemBank` → 讀 `track-params.json` + `overlays/*`（經 T005 zod）→ `generateAllSchedules` → 有 error 印具名違規並非零 exit（**不寫檔**）→ 無 error 寫三檔 + 摘要 + exit 0（唯一 I/O + `process.exit`）（依賴 T011）
+- [X] T013 [US1] 執行 `npm run generate:schedule` 生成並 commit `schedules/foundation.json`、`schedules/interview-ready.json`、`schedules/interview-mastery.json`（凍結產物）（依賴 T012）
   - ⚠️ **此階段產物為刻意的 concept-only 中間形態**：僅含 `concept` Session，尚不含 rhythm 的 review/rest/practice/challenge 與 `problemIds`，**暫不代表 FR-011 的最終樣貌**。US3（T021 加 `problemIds`）、US4（T026 補完整週節奏）將**重生成並重新 commit**；CI drift gate（T030）於 US5 才接線，故中間形態不會被紅燈攔截——屬增量交付的預期路徑。
 
 **Checkpoint**: 執行生成器 → 三份確定性課表；重跑無 diff（MVP 可驗）
