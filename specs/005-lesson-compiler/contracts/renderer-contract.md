@@ -19,7 +19,13 @@ function checkBudget(message: RenderedMessage): BudgetReport; // src/renderer/bu
    Problem Bank、state、`node:fs` 或任何 Compiler 模組（以 import 掃描測試守住）。
 3. 版面分派**只依 `lesson.type`**；`lesson.track` MUST NOT 影響結構、順序或欄位數。
 4. 顏色一律取 `lesson.color`；Renderer **不查任何對照表**、不認得 Module。
-5. `budgetSlots` 的每個值 MUST 是放進 `embeds` 的**同一份字串實例**。
+5. `budgetSlots` 的每個值 MUST 是放進 `embeds` 的**同一份字串實例**；且**反向亦成立**（slot⇄field
+   parity，2026-07-24 補）：放進 embed 的每一段**可變長度文字** MUST 有對應 slot，未登記者等同完全逃過
+   逐區塊預算。例外只給非教材自由文字（固定標籤、由 Compiler 依課表生成的清單，如 review 的
+   `📚 本週涵蓋`）。此不變式由 `tests/unit/review-fixes.test.ts` 的 parity 測試強制。
+5b. `Lesson` 為 discriminated union，Renderer 的各版面函式 MUST 接收收斂後的成員型別
+   （`ConceptLesson` / `PracticeLesson` / `ReviewLesson` / `RestLesson`），**MUST NOT** 以 `!` 斷言
+   取用類型專屬欄位。
 6. `checkBudget` 是**唯一**的限制檢查函式，於**同一次呼叫**中同時檢查逐區塊預算、結構性上限與總量
    （F1 定案）。Gate 與 runtime MUST 共用它。
 
@@ -104,5 +110,8 @@ interface BudgetReport { items: BudgetItem[]; total: number; totalLimit: 5500; h
 ## §5 對呼叫端的要求
 
 - `src/main.ts`：`render` 回傳多則時 MUST **依序** post，且每則各自通過 `checkBudget` 才送出。
+  **中途失敗（已送出 ≥1 則）MUST 以 `PartialPushError` 回報**，呼叫端據此照常前進 state 並發告警——
+  Discord 不可撤回、無 idempotency key，維持「全成功才前進」會讓補跑 cron 重貼已送出的前段
+  （`docs/spec.md` §18 錯誤處理）。
 - `src/compiler/gate.ts`：對每則訊息各跑一次 `checkBudget`，任一 `ok === false` 即產生 `budget-over` 違規
   （逐項列出超限明細，不只回報一個布林）。

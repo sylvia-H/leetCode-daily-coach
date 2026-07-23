@@ -83,19 +83,36 @@ interface LessonConcept {
 
 interface ReviewConcept { id: string; title: string; }
 
-interface Lesson {
+// 【改 2026-07-24】以 type 為判別子的 discriminated union：每種 Session 類型的必備欄位
+// 由型別系統保證，Renderer 因而不需要（也 MUST NOT 用）非空斷言取用類型專屬欄位。
+interface LessonBase {
   sessionIndex: number;
-  type: SessionType;
   track: Track;
   color: number;             // 【改】F1 的 concept.moduleColor 上移：非 concept 類亦需顏色
-  concept?: LessonConcept;   // 【改】type === 'concept' 時 MUST 存在
-  path?: PathLabels;         // 【改】type === 'concept' 時 MUST 存在
   problems: Problem[];       // 恆存在（可為空陣列）
-  reviewConcepts?: ReviewConcept[];  // 【新】type === 'review' 時 MUST 存在且非空
-  overlayNotes?: string;     // 【新】Overlay extraNotesMarkdown（疊加，不取代）
-  reflectionQuestion?: string; // 【新】F8 素材；缺席即省略（spec FR-031）
-  encouragement?: string;      // 【新】F8 素材；缺席即省略
 }
+
+interface ConceptLesson extends LessonBase {
+  type: "concept";
+  concept: LessonConcept;    // MUST 存在
+  path: PathLabels;          // MUST 存在
+  overlayNotes?: string;     // Overlay extraNotesMarkdown（疊加，不取代）
+}
+
+interface PracticeLesson extends LessonBase { type: "practice" | "challenge"; }
+
+interface ReviewLesson extends LessonBase {
+  type: "review";
+  reviewConcepts: ReviewConcept[];   // MUST 存在且非空
+  reflectionQuestion?: string;       // F8 素材；缺席即省略（spec FR-031）
+}
+
+interface RestLesson extends LessonBase {
+  type: "rest";
+  encouragement?: string;    // F8 素材；缺席即省略
+}
+
+type Lesson = ConceptLesson | PracticeLesson | ReviewLesson | RestLesson;
 ```
 
 ### 型別不變式（單元測試守住）
@@ -127,14 +144,17 @@ interface CompilerDeps {
   overlays: Record<Track, TrackOverlay>;   // F4（檔案缺席 ⇒ { track, byConcept: {} }）
                                            // 僅消費 extraNotesMarkdown（research R6）
   readArticle: (path: string) => string;   // 讀檔邊界（預設 fs.readFileSync）
-  articleCache?: Map<string, ArticleContent>; // 同一批 Gate 執行內共用
-  reflectionBank?: unknown;                // F8；未提供即缺席
-  encouragement?: unknown;                 // F8；未提供即缺席
+  articleCache?: Map<string, ArticleContent>; // 同一批 Gate 執行內共用；命中時 MUST 重驗
+                                           // article.meta.id === conceptId（否則繞過 id-mismatch 檢查）
+  problemOrigins: Record<Track, ProblemOrigin>; // problemId → 首次引入它的 conceptId
+  reflectionBank?: unknown;                // F8；未提供即缺席（載入時驗最小結構 schema）
+  encouragement?: unknown;                 // F8；未提供即缺席（載入時驗最小結構 schema）
 }
 ```
 
 `loadCompilerDeps(paths?)` 於載入層完成：讀 DAG（並跑 `validateCurriculum`，有 error 即拋）、讀題庫、
-讀三份課表與三份 Overlay（zod 驗證），任一失敗 fail loud。
+讀三份課表與三份 Overlay（**皆經 zod 驗證**，課表 MUST NOT 盲目 cast），任一失敗 fail loud；
+F8 素材（`reflection-bank.json` / `encouragement.json`）缺席即略過，存在但不符最小結構 schema ⇒ fail loud。
 
 ---
 
@@ -165,6 +185,8 @@ interface BudgetSlots {
   takeaway?: string;
   pathFooter?: string;
   overlayNotes?: string;
+  reflectionQuestion?: string;  // 【新 2026-07-24】review 的 Reflection 段
+  encouragement?: string;       // 【新 2026-07-24】rest 的鼓勵語
   problems?: string[];   // 每題一則（已渲染的完整字串）
 }
 
@@ -172,6 +194,9 @@ interface RenderedMessage {
   embeds: DiscordEmbed[];
   budgetSlots: BudgetSlots; // 值 MUST 為放進 embeds 的同一份字串實例
 }
+// 不變式（測試強制，tests/unit/review-fixes.test.ts）：Renderer 放進 embed 的每一段**可變長度文字**
+// MUST 登記對應 slot，否則該段落完全逃過逐區塊預算。例外只給非教材自由文字（固定標籤、
+// 由 Compiler 依課表生成的清單，如 review 的「本週涵蓋」）。
 ```
 
 ### 預算表（`checkBudget` 的判準，`docs/spec.md` §14.5）
@@ -185,6 +210,8 @@ interface RenderedMessage {
 | `exitCriteria` | 400 | ≤6 條、每條 ≤60（條數與單條長度亦檢查） |
 | `takeaway` | 120 | |
 | `pathFooter` | 200 | |
+| `reflectionQuestion` | 300 | 【新 2026-07-24】F8 素材；預算 MUST 在素材之前就位（`docs/spec.md` §14.5） |
+| `encouragement` | 200 | 【新 2026-07-24】同上 |
 | `overlayNotes` | 400 | 本 Feature 新增（Overlay 附加註記亦須受控，否則可繞過總量以外的所有逐區塊上限） |
 | `embed[i].title` | 256 | 結構性上限 |
 | `embed[i].description` | 4096 | 結構性上限 |

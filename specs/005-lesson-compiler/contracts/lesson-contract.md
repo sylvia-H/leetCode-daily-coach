@@ -34,6 +34,13 @@ function compile(track: Track, sessionIndex: number, deps: CompilerDeps): Lesson
 `loadCompilerDeps` 於載入層 fail loud：DAG 有 error 級違規、題庫載入失敗、課表缺檔／不符 schema、
 Overlay 存在但不符 schema ⇒ 拋錯。
 
+- **課表 MUST 經 zod 驗證後才回傳（2026-07-24 補）**：`loadTrackSchedule` MUST NOT 以
+  `JSON.parse(...) as TrackSchedule` 盲目 cast（見 `docs/spec.md` §16.2）。
+- **F8 素材的 schema 層級**：`reflection-bank.json` / `encouragement.json` 於本 Feature 只驗**最小結構**
+  （前者為物件、後者為非空字串陣列或物件）；完整 schema 隨素材由 F8 定義。缺席與壞檔 MUST 走不同路徑。
+- **`articleCache` 命中時 MUST 重驗 `article.meta.id === conceptId`**：快取以 `articlePath` 為鍵，
+  不重驗會讓兩個 Concept 指向同一篇 Article 時繞過 `article-id-mismatch`，組出張冠李戴的 Lesson。
+
 **「缺席」與「壞檔」MUST 明確區分**（兩者行為不同，MUST NOT 以同一條路徑處理）：
 
 | 檔案 | 不存在 | 存在但不符 schema |
@@ -106,6 +113,10 @@ Overlay 存在但不符 schema ⇒ 拋錯。
 
 - `Lesson` 是 **Compiler → Renderer 的唯一介面**。新增 delivery（Telegram / Email / Web）只需新增
   Renderer，不動上游。
+- **MUST 為以 `type` 為判別子的 discriminated union（2026-07-24 補）**：`ConceptLesson` /
+  `PracticeLesson` / `ReviewLesson` / `RestLesson`。上表的「MUST 存在」由型別系統保證，而非只寫在文件上。
+- `compile()` 的類型分派 MUST 有 fail-loud 的 `default` 分支：課表是外部 JSON，未知 `type` MUST 指名該值
+  拋錯，MUST NOT 回傳 `undefined`（會延後到 `render` 才以 `TypeError` 爆開，Gate 只會記成 `render-error`）。
 - Renderer MUST 只依賴 `Lesson`；`Lesson` 內 MUST NOT 出現檔案路徑以外的來源引用，
   也 MUST NOT 出現需要 Renderer 再查表才能顯示的代碼（例如 Module id）。
 - `Lesson.track` **只是資料**：Renderer MUST NOT 依它改變版面結構。

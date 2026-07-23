@@ -679,11 +679,22 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | Exit Criteria（checklist）     | ≤ 400（≤6 條、每條 ≤60）|
 | Takeaway                       | ≤ 120                   |
 | 學習路徑 footer                | ≤ 200                   |
+| Track 補充（Overlay notes）    | ≤ 400                   |
+| Weekly Reflection 問題（review）| ≤ 300                   |
+| 鼓勵語（rest）                 | ≤ 200                   |
 
 - **「最多 3 題」的把關點在課表生成端（MUST，F5 定案 2026-07-23）**：Compiler 與 Renderer **MUST NOT**
   為了滿足此上限而截斷題目清單（同本節「超限一律視為失敗、MUST NOT 自動截斷」）。題數上限由
   `generate-schedule.ts` 於寫入 `schedules/{track}.json` 時保證（§13.4），Gate 的 `problems.count` 檢查
   是**兜底**而非唯一防線——Gate 攔下時代表課表本身有缺陷，處置方式是修生成器並重跑，不是改 Compiler。
+- **Reflection / 鼓勵語的預算在素材之前就位（MUST，F5 定案 2026-07-24）**：`reflectionQuestion`（≤300）
+  與 `encouragement`（≤200）的素材由 **F8** 灌入，但兩者的逐區塊預算 MUST 於 F5 即存在於 `checkBudget`，
+  否則 F8 的第一批素材會在完全沒有逐區塊把關的情況下上線（只剩 field 1024 與總量 5,500 兜底）。
+- **Renderer 的 slot⇄field 對等不變式（MUST，F5 定案 2026-07-24）**：Renderer 每放進 embed 的一段
+  **可變長度文字**，MUST 同時於 `RenderedMessage.budgetSlots` 登記對應 slot；未登記者等同完全逃過逐區塊
+  預算。此不變式 MUST 由測試強制（`tests/unit/review-fixes.test.ts` 的 parity 測試），MUST NOT 只靠
+  版面作者記得。唯一例外是**非教材自由文字**：固定標籤與由 Compiler 依課表生成的清單（如 review 的
+  「本週涵蓋」）。
 - Render 後單則訊息總長 MUST ≤ **5,500** 字元（保留 500 安全餘裕）。
 - 一則訊息裝不下時 MUST 確定性拆為第二則訊息（fallback，正常情況下預算設計應使其不發生）。
 - 全文（Corner 等閱讀用區塊）不進 Discord；留待未來 GitHub Pages（F9）以連結提供。
@@ -796,6 +807,15 @@ interface TrackSchedule {
 }
 ```
 
+- **載入端 MUST 驗 schema（MUST，F5 定案 2026-07-24）**：`schedules/{track}.json` 雖為確定性生成物，
+  Compiler 的載入器仍 MUST 以 zod 驗證後才回傳（與 `overlays/{track}.json` 同一套把關），
+  MUST NOT 只做 `JSON.parse(...) as TrackSchedule`。至少涵蓋：根物件已知欄位齊備、`track` 與檔名對應、
+  `sessions` 為陣列、每筆 `type` 在五種之內、`type === 'concept'` ⇒ `conceptId` 存在、
+  `type === 'review'` ⇒ `reviewRange` 存在。**理由**：手改、半寫入或舊版格式的檔案在盲目 cast 下會一路
+  穿透，最後在 Gate 或 Renderer 以 `TypeError` 爆開（脫離 per-Track 的錯誤隔離），失去具名違規與失敗位置。
+- **`compile()` 的類型分派 MUST 有 fail-loud 的 default 分支**：型別層雖已窮舉五種 `SessionType`，
+  但課表是外部 JSON；未知 type MUST 拋出指名該值的錯誤，MUST NOT 讓 `compile()` 回傳 `undefined`。
+
 ### 16.3 Track Overlay
 
 ```ts
@@ -875,6 +895,13 @@ interface Lesson {
   - 新增 `overlayNotes?: string`：Track Overlay 的 `extraNotesMarkdown`（疊加，不取代；§16.3）。
   - `problems[].whyThisPattern` 轉為**選配**：`practice` / `challenge` 的題目若查不到「引入它的 Concept」
     （§14.3 的反查規則），該題只呈現題號 / 標題 / 連結 / 難度，MUST NOT 以空字串填充。
+- **`Lesson` MUST 為以 `type` 為判別子的 discriminated union（MUST，F5 定案 2026-07-24）**：上方
+  程式碼區塊以「選配欄位」表達的，是**每種 Session 類型各自的必備欄位**，而非任意組合皆合法。實作
+  （`src/types/lesson.ts`）MUST 以 union 表達——`ConceptLesson`（`concept` / `path` 必備）、
+  `PracticeLesson`（`practice` | `challenge`）、`ReviewLesson`（`reviewConcepts` 必備）、`RestLesson`——
+  使「`type: 'concept'` 卻沒有 `concept`」在編譯期就不成立。**理由**：以全選配欄位表達會逼 Renderer 用
+  非空斷言（`!`）取回型別系統已經丟失的保證，任何非 Compiler 產生的 `Lesson`（測試替身、F8 的新版面路徑）
+  都能編譯通過而在 render 時才崩潰。Renderer MUST NOT 使用 `!` 斷言取用類型專屬欄位。
 
 ### 16.5 使用者設定（Multi-Track）
 
@@ -986,6 +1013,14 @@ leetcode-daily-coach/
 錯誤處理（MUST）：
 
 - 單一 Track 的核心步驟（compile / render / post）失敗：發紅色告警 Embed（若該 webhook 可用）、記錄錯誤、**不中斷其他 Track**、該 Track 的 state 不前進。
+- **部分推播（多則訊息推到一半失敗）MUST 前進 state（MUST，F5 定案 2026-07-24）**：`render` 拆成多則
+  （§14.5 fallback）時，若第 1 則已送達而後續某則失敗，該 Track 的 state **MUST 照常前進**
+  （`currentSessionIndex++` + `lastPushAt`），同時發紅色告警並計入非零 exit code。**理由**：Discord webhook
+  不可撤回、也沒有 idempotency key；若維持「全部成功才前進」，06:37 補跑會重新編譯同一 `sessionIndex`
+  並**再貼一次已送出的前段**。缺漏的後段由告警交人工處置，MUST NOT 用重複推播換取完整性。
+- **推播 MUST 對暫時性失敗重試（MUST，F5 定案 2026-07-24）**：`WebhookClient.post` 對 429 與 5xx、以及
+  `fetch` 本身丟出的網路錯誤 MUST 以指數退避 + jitter 重試（預設 3 次，尊重 `Retry-After` 標頭，單次等待
+  有上限）；429 以外的 4xx MUST NOT 重試（請求本身有問題，重試只會重複失敗）。
 - 全域性失敗（無任何 webhook 設定、state 讀寫失敗）：直接以非零 exit code 結束。
 - 流程中不存在 LLM 步驟，因此不存在「enhancement 降級」路徑；唯一的外部依賴是 Discord API。
 
