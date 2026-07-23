@@ -1,0 +1,92 @@
+{
+  "track": "interviewReady",
+  "targetLevel": "medium",
+  "sessions": [
+    {
+      "sessionIndex": 1,
+      "type": "concept",
+      "conceptId": "time-space-complexity"
+    },
+    {
+      "sessionIndex": 2,
+      "type": "concept",
+      "conceptId": "reading-the-problem"
+    },
+    {
+      "sessionIndex": 3,
+      "type": "practice"
+    },
+    {
+      "sessionIndex": 4,
+      "type": "concept",
+      "conceptId": "array-traversal",
+      "problemIds": [
+        1,
+        26
+      ]
+    },
+    {
+      "sessionIndex": 5,
+      "type": "challenge"
+    },
+    {
+      "sessionIndex": 6,
+      "type": "review",
+      "reviewRange": [
+        1,
+        5
+      ]
+    },
+    {
+      "sessionIndex": 7,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 8,
+      "type": "concept",
+      "conceptId": "in-place-operations",
+      "problemIds": [
+        27,
+        283
+      ]
+    },
+    {
+      "sessionIndex": 9,
+      "type": "concept",
+      "conceptId": "prefix-sum",
+      "problemIds": [
+        303,
+        560
+      ]
+    },
+    {
+      "sessionIndex": 10,
+      "type": "practice",
+      "problemIds": [
+        27,
+        283,
+        303,
+        560
+      ]
+    },
+    {
+      "sessionIndex": 11,
+      "type": "challenge",
+      "problemIds": [
+        560
+      ]
+    },
+    {
+      "sessionIndex": 12,
+      "type": "review",
+      "reviewRange": [
+        8,
+        11
+      ]
+    },
+    {
+      "sessionIndex": 13,
+      "type": "rest"
+    }
+  ]
+}

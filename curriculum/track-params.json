@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "tracks": {
+    "foundation": {
+      "targetLevel": "easy",
+      "maxLevel": 1,
+      "problemDifficulties": ["Easy"],
+      "challengeDifficulty": "Easy",
+      "rhythm": ["concept", "concept", "practice", "concept", "challenge", "review", "rest"]
+    },
+    "interviewReady": {
+      "targetLevel": "medium",
+      "maxLevel": 1,
+      "problemDifficulties": ["Easy", "Medium"],
+      "challengeDifficulty": "Medium",
+      "rhythm": ["concept", "concept", "practice", "concept", "challenge", "review", "rest"]
+    },
+    "interviewMastery": {
+      "targetLevel": "hard",
+      "maxLevel": 1,
+      "problemDifficulties": ["Medium", "Hard"],
+      "challengeDifficulty": "Hard",
+      "rhythm": ["concept", "concept", "practice", "concept", "challenge", "review", "rest"]
+    }
+  }
+}

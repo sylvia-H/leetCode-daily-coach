@@ -34,6 +34,13 @@ describe("零 LLM 憲章驗證（憲章 VIII、SC-008）", () => {
     expect(normalized.some((f) => f.endsWith("src/compiler/problem.ts"))).toBe(true);
   });
 
+  it("全樹掃描含 src/compiler/schedule-generator.ts 與 schedule-schema.ts（F4 憲章 VIII 回歸守衛）", () => {
+    const files = listTsFiles(join(process.cwd(), "src"));
+    const normalized = files.map((f) => f.replace(/\\/g, "/"));
+    expect(normalized.some((f) => f.endsWith("src/compiler/schedule-generator.ts"))).toBe(true);
+    expect(normalized.some((f) => f.endsWith("src/compiler/schedule-schema.ts"))).toBe(true);
+  });
+
   it(".github/workflows/daily.yml 不含 GEMINI_API_KEY 字串", () => {
     const workflowPath = join(process.cwd(), ".github", "workflows", "daily.yml");
     const content = readFileSync(workflowPath, "utf-8");
