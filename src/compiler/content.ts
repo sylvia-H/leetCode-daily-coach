@@ -139,38 +139,62 @@ function isStrongToken(token: Token): token is Tokens.Strong {
   return token.type === "strong";
 }
 
+/**
+ * 取出 list item 內全部「承載 inline 內容」的 token 群組。marked 依 list 的鬆緊會把同一段內容
+ * 分別 lex 成 `text` 或 `paragraph`，且多段落的 item 會產生**多個**群組——只取第一個會靜默丟掉
+ * 後續段落的 whyThisPattern。
+ */
+function inlineGroups(item: Tokens.ListItem): Token[][] {
+  return item.tokens
+    .filter((t): t is Tokens.Text | Tokens.Paragraph => isTextToken(t) || t.type === "paragraph")
+    .map((t) => (t.tokens ?? []) as Token[]);
+}
+
+function nestedListTokens(item: Tokens.ListItem): Tokens.List[] {
+  return item.tokens.filter(isListToken);
+}
+
 // article-format.md §4：頂層 list item 以 `**{leetcodeId}**` 開頭，之後的文字即 whyThisPattern；
 // 巢狀 list item 以 `Hint:` / `Hint：` 開頭者為 hint（至多一則，選配）。以 marked lexer token 走訪，
 // 不需正則硬解整段文字（research R1）。
 function parseChallengeEntries(markdown: string, articlePath: string): Map<number, ArticleChallengeEntry> {
   const tokens = marked.lexer(markdown) as Token[];
-  const listToken = tokens.find(isListToken);
-  if (!listToken) {
+  // 段落或子標題會把條目切成**多個**頂層 list token；只讀第一個會讓後面的題目無聲消失，
+  // 失敗會遠遠延後成「課表題號在 Article 條目中缺漏」（甚至在 practice/review 路徑下完全不報錯）。
+  const listTokens = tokens.filter(isListToken);
+  if (listTokens.length === 0) {
     throw new Error(`article-challenge-format：Today's Challenge 沒有可解析的條目（${articlePath}）`);
   }
 
   const entries = new Map<number, ArticleChallengeEntry>();
 
-  for (const item of listToken.items) {
-    const textToken = item.tokens.find(isTextToken);
-    const inline = textToken?.tokens ?? [];
-    const strongToken = inline.find(isStrongToken);
+  for (const item of listTokens.flatMap((list) => list.items)) {
+    const groups = inlineGroups(item);
+    const strongToken = groups.flat().find(isStrongToken);
     if (!strongToken) {
       throw new Error(
         `article-challenge-format：Today's Challenge 條目缺少 **{題號}** 開頭（${articlePath}）`,
       );
     }
-    const problemId = Number(strongToken.text.trim());
-    if (!Number.isInteger(problemId)) {
+    // 題號 MUST 是純十進位數字：`Number()` 會把 " "、`1e3`、`+167` 都收成「合法整數」，
+    // 讓打錯的行以「別的題號」或 0 悄悄註冊，錯誤現場因而消失。
+    const idText = strongToken.text.trim();
+    if (!/^\d+$/.test(idText) || Number(idText) <= 0) {
       throw new Error(
-        `article-challenge-format：Today's Challenge 條目的題號不是合法整數：${strongToken.text}（${articlePath}）`,
+        `article-challenge-format：Today's Challenge 條目的題號不是合法正整數：「${strongToken.text}」（${articlePath}）`,
       );
     }
+    const problemId = Number(idText);
 
-    const rest = inline
-      .filter((t) => t !== strongToken)
-      .map((t) => t.raw)
-      .join("");
+    const rest = groups
+      .map((group) =>
+        group
+          .filter((t) => t !== strongToken)
+          .map((t) => t.raw)
+          .join(""),
+      )
+      .filter((text) => text.trim() !== "")
+      .join("\n\n");
     const whyThisPattern = rest.replace(/^[\s·\-—]+/, "").trim();
     if (!whyThisPattern) {
       throw new Error(
@@ -178,16 +202,13 @@ function parseChallengeEntries(markdown: string, articlePath: string): Map<numbe
       );
     }
 
-    const nestedList = item.tokens.find(isListToken);
     let hint: string | undefined;
-    if (nestedList) {
-      for (const hintItem of nestedList.items) {
-        const hintText = (hintItem.tokens.find(isTextToken)?.text ?? hintItem.text).trim();
-        const match = /^Hint[:：]\s*(.+)$/s.exec(hintText);
-        if (match) {
-          hint = match[1]!.trim();
-          break;
-        }
+    for (const hintItem of nestedListTokens(item).flatMap((list) => list.items)) {
+      const hintText = (hintItem.tokens.find(isTextToken)?.text ?? hintItem.text).trim();
+      const match = /^Hint[:：]\s*(.+)$/s.exec(hintText);
+      if (match) {
+        hint = match[1]!.trim();
+        break;
       }
     }
 
