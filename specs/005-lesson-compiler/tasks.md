@@ -169,13 +169,13 @@ contracts/renderer-contract.md §2，且不含空字串或佔位段落。
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T048 [P] [US5] `tests/unit/overlay-apply.test.ts`：`extraNotesMarkdown` 進 `overlayNotes` 且 Digest 不變；Overlay 指向未涵蓋 Concept ⇒ fail loud；**`extraProblemIds` 與 per-Concept `challengeDifficulty` 皆不被消費**——以合成 Overlay 宣告一個不在課表 `problemIds` 中的題號，斷言 `Lesson.problems` **不變**（FR-009、research R6）
-- [ ] T049 [P] [US5] `tests/unit/overlay-load.test.ts`：Overlay 檔不存在 ⇒ 空 Overlay 不失敗；存在但不符 schema ⇒ fail loud。**同檔涵蓋 F8 素材的相同對照**：`data/reflection-bank.json` / `data/encouragement.json` 不存在 ⇒ 缺席不失敗、存在但不符 schema ⇒ fail loud（FR-031、contracts/lesson-contract.md §1 對照表）
-- [ ] T050 [P] [US5] `tests/unit/shared-content.test.ts`：同一 `conceptId` 於三個 Track 編譯，`concept` 的 digest / tsTip / pyTip / takeaway / exitCriteria 全等；**逐 Track 逐 Session 斷言 `Lesson.problems` 的題號序完全等於課表 `problemIds`**（SC-005、憲章 VI、US5 AS-2）
+- [X] T048 [P] [US5] `tests/unit/overlay-apply.test.ts`：`extraNotesMarkdown` 進 `overlayNotes` 且 Digest 不變；Overlay 指向未涵蓋 Concept ⇒ fail loud；**`extraProblemIds` 與 per-Concept `challengeDifficulty` 皆不被消費**——以合成 Overlay 宣告一個不在課表 `problemIds` 中的題號，斷言 `Lesson.problems` **不變**（FR-009、research R6）
+- [X] T049 [P] [US5] `tests/unit/overlay-load.test.ts`：Overlay 檔不存在 ⇒ 空 Overlay 不失敗；存在但不符 schema ⇒ fail loud。**同檔涵蓋 F8 素材的相同對照**：`data/reflection-bank.json` / `data/encouragement.json` 不存在 ⇒ 缺席不失敗、存在但不符 schema ⇒ fail loud（FR-031、contracts/lesson-contract.md §1 對照表）
+- [X] T050 [P] [US5] `tests/unit/shared-content.test.ts`：同一 `conceptId` 於三個 Track 編譯，`concept` 的 digest / tsTip / pyTip / takeaway / exitCriteria 全等；**逐 Track 逐 Session 斷言 `Lesson.problems` 的題號序完全等於課表 `problemIds`**（SC-005、憲章 VI、US5 AS-2）
 
 ### Implementation for User Story 5
 
-- [ ] T051 [US5] 於 `src/compiler/lesson.ts` 套用 Overlay：`extraNotesMarkdown` → `Lesson.overlayNotes`（僅 concept 類）、指向未涵蓋 Concept ⇒ fail loud；**MUST NOT 取代任何核心欄位**，且 **MUST NOT 消費 `extraProblemIds` 或 `challengeDifficulty`**（選題已於 F4 生成階段凍結進課表；FR-009、research R6）
+- [X] T051 [US5] 於 `src/compiler/lesson.ts` 套用 Overlay：`extraNotesMarkdown` → `Lesson.overlayNotes`（僅 concept 類）、指向未涵蓋 Concept ⇒ fail loud；**MUST NOT 取代任何核心欄位**，且 **MUST NOT 消費 `extraProblemIds` 或 `challengeDifficulty`**（選題已於 F4 生成階段凍結進課表；FR-009、research R6）
 
 **Checkpoint**: 全部五個 Story 皆可獨立驗證。
 

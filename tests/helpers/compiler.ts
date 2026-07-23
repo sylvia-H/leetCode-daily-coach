@@ -1,6 +1,6 @@
 // 測試專用：建構合成 CompilerDeps（DAG / 課表 / Overlay / readArticle），供各 Story 的單元測試共用，
 // 不需依賴真實 concepts/ 與 articles/（T012）。
-import type { CompilerDeps, ProblemOrigin } from "../../src/compiler/lesson.js";
+import { checkOverlayCoverage, type CompilerDeps, type ProblemOrigin } from "../../src/compiler/lesson.js";
 import type { ConceptNode, CurriculumGraph, ModuleNode, Ordinal, TopicNode } from "../../src/types/curriculum.js";
 import type { Track } from "../../src/types/lesson.js";
 import type { ProblemBank, ProblemMeta } from "../../src/types/problem.js";
@@ -235,6 +235,8 @@ export function makeCompilerDeps(input: TestDepsInput): CompilerDeps {
     overlays[track] = makeOverlay(track, input.overlays?.[track] ?? {});
     problemOrigins[track] = buildProblemOrigin(schedules[track], graph);
   }
+
+  checkOverlayCoverage(schedules, overlays);
 
   return {
     graph,

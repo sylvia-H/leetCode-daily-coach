@@ -74,6 +74,28 @@ function buildProblemOrigin(schedule: TrackSchedule, graph: CurriculumGraph): Pr
   return origin;
 }
 
+/**
+ * 第二道防線（research R6 / T051）：Overlay 指向該 Track 未涵蓋的 Concept ⇒ fail loud。
+ * 匯出供 loadCompilerDeps 與測試共用同一實作（避免測試另複寫一份而與正式載入路徑分歧）。
+ */
+export function checkOverlayCoverage(
+  schedules: Record<Track, TrackSchedule>,
+  overlays: Record<Track, TrackOverlay>,
+): void {
+  for (const track of TRACK_ORDER) {
+    const scheduledConceptIds = new Set(
+      schedules[track].sessions
+        .filter((s): s is SessionPlan & { conceptId: string } => s.type === "concept" && s.conceptId !== undefined)
+        .map((s) => s.conceptId),
+    );
+    for (const conceptId of Object.keys(overlays[track].byConcept)) {
+      if (!scheduledConceptIds.has(conceptId)) {
+        throw new Error(`overlay 指向未涵蓋的 Concept：track=${track}, conceptId=${conceptId}`);
+      }
+    }
+  }
+}
+
 export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDeps {
   const p: CompilerPaths = { ...DEFAULT_PATHS, ...paths };
 
@@ -99,20 +121,7 @@ export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDe
 
   const schedules = loadAllSchedules(p.schedulesDir);
   const overlays = loadAllOverlays(p.overlaysDir);
-
-  // 第二道防線（研究 R6 / T051）：Overlay 指向該 Track 未涵蓋的 Concept ⇒ fail loud。
-  for (const track of TRACK_ORDER) {
-    const scheduledConceptIds = new Set(
-      schedules[track].sessions
-        .filter((s): s is SessionPlan & { conceptId: string } => s.type === "concept" && s.conceptId !== undefined)
-        .map((s) => s.conceptId),
-    );
-    for (const conceptId of Object.keys(overlays[track].byConcept)) {
-      if (!scheduledConceptIds.has(conceptId)) {
-        throw new Error(`overlay 指向未涵蓋的 Concept：track=${track}, conceptId=${conceptId}`);
-      }
-    }
-  }
+  checkOverlayCoverage(schedules, overlays);
 
   const problemOrigins = {} as Record<Track, ProblemOrigin>;
   for (const track of TRACK_ORDER) {
