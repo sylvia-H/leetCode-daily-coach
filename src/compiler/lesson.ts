@@ -1,100 +1,316 @@
-import { loadArticle, moduleColor } from "./content.js";
-import { getProblemsForConcept, loadProblemBank } from "./problem.js";
-import { getPathLabels, getSessionPlan } from "./schedule.js";
-import type { Lesson, Problem, Track } from "../types/lesson.js";
+// 本專案唯一的 Lesson Compiler（docs/spec.md §7.1）：CI Gate 與每日 runtime MUST import 同一個
+// compile（憲章 IX）。純函式（除 deps.readArticle 這個明確的讀檔邊界外，無 I/O、無網路、無 LLM）。
+import { existsSync, readFileSync } from "node:fs";
+import { z } from "zod";
+import { TRACK_ORDER } from "../config.js";
+import { loadCurriculum, validateCurriculum } from "./curriculum.js";
+import { type ArticleContent, DEFAULT_MODULE_COLOR, moduleColor, parseArticle } from "./content.js";
+import { getOverlayNotes, loadAllOverlays } from "./overlay.js";
+import { getProblemsForConcept, loadProblemBank, makeProblemExists } from "./problem.js";
+import { getSessionPlan, loadAllSchedules } from "./schedule.js";
+import type { ConceptNode, CurriculumGraph, Ordinal } from "../types/curriculum.js";
+import type {
+  ConceptLesson,
+  Lesson,
+  PathLabels,
+  PracticeLesson,
+  Problem,
+  RestLesson,
+  ReviewConcept,
+  ReviewLesson,
+  Track,
+} from "../types/lesson.js";
 import type { ProblemBank } from "../types/problem.js";
+import type { SessionPlan, TrackOverlay, TrackSchedule } from "../types/schedule.js";
 
-export interface CompileOptions {
-  articlePath?: string;
-  problemBankPath?: string;
-  /**
-   * 已載入並通過 load 驗證的題庫。多 Track 執行時由 caller（main.ts run()）載入一次後注入，
-   * 避免每次 compile 重讀 + 重跑 zod 驗證。未提供時 compile 自 problemBankPath 載入（測試 / 單獨呼叫）。
-   */
-  bank?: ProblemBank;
+/** problemId → 首次引入它的 conceptId（per Track，research R3）。 */
+export type ProblemOrigin = Map<number, string>;
+
+export interface CompilerDeps {
+  graph: CurriculumGraph;
+  bank: ProblemBank;
+  schedules: Record<Track, TrackSchedule>;
+  overlays: Record<Track, TrackOverlay>;
+  readArticle: (path: string) => string;
+  articleCache?: Map<string, ArticleContent>;
+  problemOrigins: Record<Track, ProblemOrigin>;
+  reflectionBank?: unknown;
+  encouragement?: unknown;
 }
 
-// F1 只有一篇教材、一份最小題庫，故路徑為固定預設值；F2/F3 起會依 conceptId 動態解析路徑。
-const DEFAULT_ARTICLE_PATH = "articles/two-pointer/002-left-right-pointer.md";
-const DEFAULT_PROBLEM_BANK_PATH = "data/problem-bank.json";
+export interface CompilerPaths {
+  modulesPath: string;
+  conceptsDir: string;
+  problemBankPath: string;
+  schedulesDir: string;
+  overlaysDir: string;
+  reflectionBankPath: string;
+  encouragementPath: string;
+}
 
-// F1 walking-skeleton 的 demo 題號：left-right-pointer 不在 F2 DAG 中，故不透過 Concept.leetcode
-// 取得題號，而是沿用 F1 原有的固定三題（R1）。F5/F7 起改由 Concept.leetcode 提供並套用 Overlay。
-const DEMO_LEETCODE_IDS = [167, 125, 11];
-
-// F1-local why/hint 常數表（demo 三題）。此為 Lesson 組裝內容、非題庫欄位（不違 FR-004）；
-// F5/F7 起由 Overlay 取代（R1）。
-const DEMO_PROBLEM_CONTENT: Record<number, { whyThisPattern: string; hint?: string }> = {
-  167: {
-    whyThisPattern: "陣列已排序，兩數之和的經典應用——直接用左右指標，不需要額外的雜湊表。",
-    hint: "想想總和與 target 的大小關係，該移動哪一個指標？",
-  },
-  125: {
-    whyThisPattern: "字串視為字元陣列，左右指標同時往中間夾，檢查兩端字元是否對稱。",
-    hint: "先想清楚哪些字元要忽略（非英數字），大小寫要怎麼處理？",
-  },
-  11: {
-    whyThisPattern: "左右指標往中間移動時，每次移動較短的那一側，才能保證不漏掉更大的面積。",
-    hint: "面積 = 較短邊 × 寬度，怎麼移動指標才不會漏掉更大的解？",
-  },
+const DEFAULT_PATHS: CompilerPaths = {
+  modulesPath: "curriculum/modules.json",
+  conceptsDir: "concepts",
+  problemBankPath: "data/problem-bank.json",
+  schedulesDir: "schedules",
+  overlaysDir: "overlays",
+  reflectionBankPath: "data/reflection-bank.json",
+  encouragementPath: "data/encouragement.json",
 };
 
-// 供 caller（main.ts run()）於多 Track 執行前載入一次題庫並注入 compile（CompileOptions.bank），
-// 消除每 Track 重讀 + 重跑 zod 驗證的冗餘。載入級錯誤（檔缺失 / 非法 JSON / 逐題 schema）在此 fail loud，
-// 使 caller 能在 compile 之前決定失敗處置（維持多 Track 失敗隔離語意）。
-export function loadCompilerProblemBank(problemBankPath: string = DEFAULT_PROBLEM_BANK_PATH): ProblemBank {
-  const { bank, loadViolations } = loadProblemBank(problemBankPath);
-  const bankErrors = loadViolations.filter((v) => v.severity === "error");
+// 沿用 F2 `Ordinal` 的確定性全序比較；F2 未輸出此比較器（同 F4 schedule-generator.ts 的做法），
+// 於此複寫一份而非重建課程結構。
+function cmpOrdinal(a: Ordinal, b: Ordinal): number {
+  return (
+    a.moduleIndex - b.moduleIndex ||
+    a.topicIndex - b.topicIndex ||
+    a.localOrder - b.localOrder ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  );
+}
+
+/** per Track：依 sessionIndex 遞增走訪 concept Session，problemId 首次出現者記錄其 conceptId（R3）。 */
+function buildProblemOrigin(schedule: TrackSchedule, graph: CurriculumGraph): ProblemOrigin {
+  const origin: ProblemOrigin = new Map();
+  const conceptSessions = schedule.sessions
+    .filter((s): s is SessionPlan & { conceptId: string } => s.type === "concept" && s.conceptId !== undefined)
+    .sort((a, b) => a.sessionIndex - b.sessionIndex);
+  for (const session of conceptSessions) {
+    const concept = graph.concepts.get(session.conceptId);
+    if (!concept) continue; // dangling-concept 已由課表載入的第二道防線攔下，此處僅防禦
+    for (const id of concept.leetcode) {
+      if (!origin.has(id)) origin.set(id, concept.id);
+    }
+  }
+  return origin;
+}
+
+/**
+ * 第二道防線（research R6 / T051）：Overlay 指向該 Track 未涵蓋的 Concept ⇒ fail loud。
+ * 匯出供 loadCompilerDeps 與測試共用同一實作（避免測試另複寫一份而與正式載入路徑分歧）。
+ */
+export function checkOverlayCoverage(
+  schedules: Record<Track, TrackSchedule>,
+  overlays: Record<Track, TrackOverlay>,
+): void {
+  for (const track of TRACK_ORDER) {
+    const scheduledConceptIds = new Set(
+      schedules[track].sessions
+        .filter((s): s is SessionPlan & { conceptId: string } => s.type === "concept" && s.conceptId !== undefined)
+        .map((s) => s.conceptId),
+    );
+    for (const conceptId of Object.keys(overlays[track].byConcept)) {
+      if (!scheduledConceptIds.has(conceptId)) {
+        throw new Error(`overlay 指向未涵蓋的 Concept：track=${track}, conceptId=${conceptId}`);
+      }
+    }
+  }
+}
+
+/**
+ * F8 素材（`data/reflection-bank.json` / `data/encouragement.json`）的**最小結構** schema。
+ * 完整 schema（依 Topic／週次組織、決定性輪替規則）屬 F8；此處只釘住足以讓
+ * contracts/lesson-contract.md §1「存在但不符 schema ⇒ fail loud」成立的骨架，避免把「壞檔」
+ * 靜默當成「缺席」——後者會讓一個打錯字的 JSON 讓整個段落無聲消失。
+ */
+const REFLECTION_BANK_SHAPE = z.record(z.string(), z.unknown());
+const ENCOURAGEMENT_SHAPE = z.union([
+  z.array(z.string().min(1)).min(1),
+  z.record(z.string(), z.unknown()),
+]);
+
+function loadOptionalMaterial(path: string, label: string, shape: z.ZodTypeAny): unknown {
+  if (!existsSync(path)) return undefined;
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(path, "utf-8"));
+  } catch (err) {
+    throw new Error(`${label} 壞檔：${path}（${(err as Error).message}）`);
+  }
+
+  const result = shape.safeParse(raw);
+  if (!result.success) {
+    const detail = result.error.issues
+      .map((issue) => `${issue.path.join(".") || "(root)"}：${issue.message}`)
+      .join("; ");
+    throw new Error(`${label} 壞檔：${path} 不符 schema（${detail}）`);
+  }
+  return result.data;
+}
+
+export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDeps {
+  const p: CompilerPaths = { ...DEFAULT_PATHS, ...paths };
+
+  const { bank, loadViolations: bankViolations } = loadProblemBank(p.problemBankPath);
+  const bankErrors = bankViolations.filter((v) => v.severity === "error");
   if (bankErrors.length > 0) {
     throw new Error(`題庫載入失敗：${bankErrors.map((v) => v.message).join("; ")}`);
   }
-  return bank;
-}
 
-// 本 Feature 唯一的 Lesson Compiler（docs/spec.md §7.1）：runtime 與未來 F5 的 CI Gate MUST 呼叫同一顆
-// （憲章 IX）。純粹的 (track, sessionIndex) → Lesson 映射，所有欄位皆來自既有凍結內容（憲章 VIII）。
-export function compile(track: Track, sessionIndex: number, options: CompileOptions = {}): Lesson {
-  const plan = getSessionPlan(track, sessionIndex);
-  if (plan.type !== "concept" || !plan.conceptId) {
-    throw new Error(`本 Feature 只支援 concept 類型的 Session（sessionIndex=${sessionIndex}）`);
+  const { graph, loadViolations: curriculumLoadViolations } = loadCurriculum({
+    modulesPath: p.modulesPath,
+    conceptsDir: p.conceptsDir,
+  });
+  const curriculumLoadErrors = curriculumLoadViolations.filter((v) => v.severity === "error");
+  if (curriculumLoadErrors.length > 0) {
+    throw new Error(`Curriculum 載入失敗：${curriculumLoadErrors.map((v) => v.message).join("; ")}`);
+  }
+  const validation = validateCurriculum(graph, { problemExists: makeProblemExists(bank) });
+  if (!validation.ok) {
+    const errors = validation.violations.filter((v) => v.severity === "error");
+    throw new Error(`Curriculum 驗證失敗：${errors.map((v) => v.message).join("; ")}`);
   }
 
-  const articlePath = options.articlePath ?? DEFAULT_ARTICLE_PATH;
+  const schedules = loadAllSchedules(p.schedulesDir);
+  const overlays = loadAllOverlays(p.overlaysDir);
+  checkOverlayCoverage(schedules, overlays);
 
-  const article = loadArticle(articlePath, plan.conceptId);
+  const problemOrigins = {} as Record<Track, ProblemOrigin>;
+  for (const track of TRACK_ORDER) {
+    problemOrigins[track] = buildProblemOrigin(schedules[track], graph);
+  }
 
-  // caller 注入的題庫優先（多 Track 載入一次）；否則自 problemBankPath 載入並在此 fail loud。
-  const bank = options.bank ?? loadCompilerProblemBank(options.problemBankPath ?? DEFAULT_PROBLEM_BANK_PATH);
-  const problemMetas = getProblemsForConcept(plan.conceptId, DEMO_LEETCODE_IDS, bank);
-  const problems: Problem[] = problemMetas.map((meta) => {
-    const content = DEMO_PROBLEM_CONTENT[meta.id];
-    // Fail loud（憲章 XV）：DEMO_LEETCODE_IDS 與 DEMO_PROBLEM_CONTENT MUST 同步；缺對應內容代表兩者已脫鉤，
-    // MUST NOT 以空 whyThisPattern 靜默出無理由的題目行（budget.ts 不檢查此欄位空值，無其他關卡可攔）。
-    if (!content) {
+  const deps: CompilerDeps = {
+    graph,
+    bank,
+    schedules,
+    overlays,
+    readArticle: (path: string) => readFileSync(path, "utf-8"),
+    articleCache: new Map(),
+    problemOrigins,
+  };
+
+  const reflectionBank = loadOptionalMaterial(p.reflectionBankPath, "reflection bank", REFLECTION_BANK_SHAPE);
+  if (reflectionBank !== undefined) deps.reflectionBank = reflectionBank;
+  const encouragement = loadOptionalMaterial(p.encouragementPath, "encouragement", ENCOURAGEMENT_SHAPE);
+  if (encouragement !== undefined) deps.encouragement = encouragement;
+
+  return deps;
+}
+
+function readArticleCached(articlePath: string, conceptId: string, deps: CompilerDeps): ArticleContent {
+  const cached = deps.articleCache?.get(articlePath);
+  if (cached) {
+    // 快取以 articlePath 為鍵，故命中時 parseArticle 的 article-id-mismatch 檢查不會執行。
+    // 兩個 Concept 指向同一篇 Article 時若不在此重驗，Compiler 會拿別人的正文組出這堂課
+    // （concept.id / title / digest 全錯，且 state 會記錄錯的 completedConceptIds）。
+    if (cached.meta.id !== conceptId) {
       throw new Error(
-        `demo-content-missing：題號 ${meta.id} 缺少 DEMO_PROBLEM_CONTENT 對應內容（DEMO_LEETCODE_IDS 與 DEMO_PROBLEM_CONTENT 已脫鉤）`,
+        `article-id-mismatch：教材 frontmatter 的 id（${cached.meta.id}）與請求的 conceptId（${conceptId}）不符（${articlePath}）`,
       );
     }
-    return {
+    return cached;
+  }
+  const raw = deps.readArticle(articlePath);
+  const article = parseArticle(raw, conceptId, articlePath);
+  deps.articleCache?.set(articlePath, article);
+  return article;
+}
+
+/** concept 類題目組裝：課表題號 ⊆ Article 條目，缺漏即 fail loud（FR-006，單向包含）。 */
+function buildConceptProblems(
+  problemIds: number[],
+  article: ArticleContent,
+  bank: ProblemBank,
+  track: Track,
+  sessionIndex: number,
+): Problem[] {
+  return problemIds.map((id) => {
+    const meta = bank.byId.get(id);
+    if (!meta) {
+      throw new Error(`題號不在 Problem Bank：${id}（track=${track}, sessionIndex=${sessionIndex}）`);
+    }
+    const entry = article.challenge.get(id);
+    if (!entry) {
+      throw new Error(`課表題號在 Article 條目中缺漏：track=${track}, sessionIndex=${sessionIndex}, 題號=${id}`);
+    }
+    const problem: Problem = {
       id: meta.id,
       title: meta.title,
       url: meta.url,
       difficulty: meta.difficulty,
-      whyThisPattern: content.whyThisPattern,
-      hint: content.hint,
+      whyThisPattern: entry.whyThisPattern,
     };
+    if (entry.hint !== undefined) problem.hint = entry.hint;
+    return problem;
   });
+}
 
-  const path = getPathLabels(sessionIndex);
+/**
+ * practice / challenge / review 類題目組裝：以 ProblemOrigin 反查引入該題的 Concept Article
+ * （research R3）。查無來源（表中無此題號、或反查到 conceptId 但 Article 無該題號條目）皆省略
+ * whyThisPattern / hint，**不失敗**（FR-030）——MUST NOT 重新選題。
+ */
+function buildOriginProblems(problemIds: number[], deps: CompilerDeps, track: Track, sessionIndex: number): Problem[] {
+  const origin = deps.problemOrigins[track];
+  return problemIds.map((id) => {
+    const meta = deps.bank.byId.get(id);
+    if (!meta) {
+      throw new Error(`題號不在 Problem Bank：${id}（track=${track}, sessionIndex=${sessionIndex}）`);
+    }
+    const problem: Problem = { id: meta.id, title: meta.title, url: meta.url, difficulty: meta.difficulty };
+    const originConceptId = origin.get(id);
+    const originConcept = originConceptId ? deps.graph.concepts.get(originConceptId) : undefined;
+    if (originConcept) {
+      const article = readArticleCached(originConcept.articlePath, originConcept.id, deps);
+      const entry = article.challenge.get(id);
+      if (entry) {
+        problem.whyThisPattern = entry.whyThisPattern;
+        if (entry.hint !== undefined) problem.hint = entry.hint;
+      }
+    }
+    return problem;
+  });
+}
 
-  return {
-    sessionIndex,
-    type: plan.type,
+function closestOrdinal(ids: string[], graph: CurriculumGraph, mode: "max" | "min"): string | undefined {
+  let best: { id: string; ordinal: Ordinal } | undefined;
+  for (const id of ids) {
+    const ordinal = graph.ordinalOf.get(id);
+    if (!ordinal) {
+      throw new Error(`path 推導失敗：參照不存在於 DAG 的 Concept：${id}`);
+    }
+    if (!best || (mode === "max" ? cmpOrdinal(ordinal, best.ordinal) > 0 : cmpOrdinal(ordinal, best.ordinal) < 0)) {
+      best = { id, ordinal };
+    }
+  }
+  return best?.id;
+}
+
+/** DAG 推導 prev/current/next：prev = prerequisite 中 ordinalOf 最大者；next = next 中最小者（R4）。 */
+function derivePath(node: ConceptNode, graph: CurriculumGraph): PathLabels {
+  const prevId = closestOrdinal(node.prerequisite, graph, "max");
+  const nextId = closestOrdinal(node.next, graph, "min");
+  const path: PathLabels = { current: node.title };
+  if (prevId !== undefined) path.prev = graph.concepts.get(prevId)!.title;
+  if (nextId !== undefined) path.next = graph.concepts.get(nextId)!.title;
+  return path;
+}
+
+function compileConcept(track: Track, plan: SessionPlan, deps: CompilerDeps): ConceptLesson {
+  const conceptId = plan.conceptId;
+  if (!conceptId) {
+    throw new Error(`concept Session 缺少 conceptId：track=${track}, sessionIndex=${plan.sessionIndex}`);
+  }
+  const node = deps.graph.concepts.get(conceptId);
+  if (!node) {
+    throw new Error(`conceptId 不在 DAG 中：track=${track}, sessionIndex=${plan.sessionIndex}, conceptId=${conceptId}`);
+  }
+
+  const article = readArticleCached(node.articlePath, conceptId, deps);
+  const problems = buildConceptProblems(plan.problemIds ?? [], article, deps.bank, track, plan.sessionIndex);
+  const path = derivePath(node, deps.graph);
+  const overlayNotes = getOverlayNotes(deps.overlays[track], conceptId);
+
+  const lesson: ConceptLesson = {
+    sessionIndex: plan.sessionIndex,
+    type: "concept",
     track,
+    color: moduleColor(article.meta.module),
     concept: {
       id: article.meta.id,
       title: article.meta.title,
-      moduleColor: moduleColor(article.meta.module),
       digest: article.digest,
       tsTip: article.tsTip,
       pyTip: article.pyTip,
@@ -103,9 +319,104 @@ export function compile(track: Track, sessionIndex: number, options: CompileOpti
       patternLabel: article.meta.patternLabel,
       complexityLabel: article.meta.complexityLabel,
       estimatedMinutes: article.meta.estimatedMinutes,
-      articlePath,
+      articlePath: node.articlePath,
     },
-    problems,
     path,
+    problems,
   };
+  if (overlayNotes !== undefined && overlayNotes.trim() !== "") {
+    lesson.overlayNotes = overlayNotes;
+  }
+  return lesson;
+}
+
+function compilePracticeOrChallenge(
+  track: Track,
+  plan: SessionPlan,
+  deps: CompilerDeps,
+  type: PracticeLesson["type"],
+): PracticeLesson {
+  const problems = buildOriginProblems(plan.problemIds ?? [], deps, track, plan.sessionIndex);
+  return {
+    sessionIndex: plan.sessionIndex,
+    type,
+    track,
+    color: DEFAULT_MODULE_COLOR,
+    problems,
+  };
+}
+
+function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, schedule: TrackSchedule): ReviewLesson {
+  const range = plan.reviewRange;
+  if (!range) {
+    throw new Error(`review Session 缺少 reviewRange：track=${track}, sessionIndex=${plan.sessionIndex}`);
+  }
+  const [start, end] = range;
+  const reviewConcepts: ReviewConcept[] = schedule.sessions
+    .filter(
+      (s): s is SessionPlan & { conceptId: string } =>
+        s.type === "concept" &&
+        s.conceptId !== undefined &&
+        s.sessionIndex >= start &&
+        s.sessionIndex <= end,
+    )
+    .sort((a, b) => a.sessionIndex - b.sessionIndex)
+    .map((s) => {
+      const node = deps.graph.concepts.get(s.conceptId);
+      if (!node) {
+        throw new Error(`review 涵蓋的 conceptId 不在 DAG 中：track=${track}, conceptId=${s.conceptId}`);
+      }
+      return { id: node.id, title: node.title };
+    });
+
+  if (reviewConcepts.length === 0) {
+    throw new Error(
+      `review Session 的 reviewRange [${start}, ${end}] 內無任何 concept Session：track=${track}, sessionIndex=${plan.sessionIndex}`,
+    );
+  }
+
+  const problems = buildOriginProblems(plan.problemIds ?? [], deps, track, plan.sessionIndex);
+  return {
+    sessionIndex: plan.sessionIndex,
+    type: "review",
+    track,
+    color: DEFAULT_MODULE_COLOR,
+    problems,
+    reviewConcepts,
+  };
+}
+
+function compileRest(track: Track, plan: SessionPlan): RestLesson {
+  return {
+    sessionIndex: plan.sessionIndex,
+    type: "rest",
+    track,
+    color: DEFAULT_MODULE_COLOR,
+    problems: [],
+  };
+}
+
+export function compile(track: Track, sessionIndex: number, deps: CompilerDeps): Lesson {
+  const schedule = deps.schedules[track];
+  const plan = getSessionPlan(track, sessionIndex, schedule);
+
+  switch (plan.type) {
+    case "concept":
+      return compileConcept(track, plan, deps);
+    case "practice":
+      return compilePracticeOrChallenge(track, plan, deps, "practice");
+    case "challenge":
+      return compilePracticeOrChallenge(track, plan, deps, "challenge");
+    case "review":
+      return compileReview(track, plan, deps, schedule);
+    case "rest":
+      return compileRest(track, plan);
+    default: {
+      // `plan.type` 在此為 `never`（型別層已窮舉），但課表是外部 JSON——schema 之外的來源（測試替身、
+      // 未來新增的 type）仍可能帶進未知值。少了這一支，compile() 會回傳 undefined，錯誤延後到
+      // render() 才以 TypeError 爆開，Gate 也只會記成 render-error 而非指名根因（憲章 XV Fail loud）。
+      const unknownType: string = plan.type;
+      throw new Error(`未知的 Session type：${unknownType}（track=${track}, sessionIndex=${plan.sessionIndex}）`);
+    }
+  }
 }

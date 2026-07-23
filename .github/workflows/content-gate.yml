@@ -1,0 +1,50 @@
+# F5 內容 Gate（contracts/gate-contract.md §4）：對教材／課表／Overlay／課程骨架／原始碼變更執行
+# 全 Track × 全 Session 編譯 + render + 限制檢查。與 ci.yml（工程 Gate）職責分離；
+# 重跑 build/test 是刻意的（見 gate-contract.md §4 附註），MUST NOT 引用任何 secret。
+name: Content Gate
+
+on:
+  push:
+    paths:
+      - "concepts/**"
+      - "articles/**"
+      - "data/**"
+      - "schedules/**"
+      - "overlays/**"
+      - "curriculum/**"
+      - "src/**"
+      - ".github/workflows/content-gate.yml"
+  pull_request:
+    paths:
+      - "concepts/**"
+      - "articles/**"
+      - "data/**"
+      - "schedules/**"
+      - "overlays/**"
+      - "curriculum/**"
+      - "src/**"
+      - ".github/workflows/content-gate.yml"
+
+jobs:
+  content-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (tsc)
+        run: npm run build
+
+      - name: Unit tests (vitest)
+        run: npm test
+
+      - name: Validate content (Lesson Compiler Gate)
+        run: npm run validate:content

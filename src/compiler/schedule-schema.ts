@@ -1,4 +1,4 @@
-// curriculum/track-params.json 與 overlays/{track}.json 的 zod schema 驗證。
+// curriculum/track-params.json、overlays/{track}.json 與 schedules/{track}.json 的 zod schema 驗證。
 // 只做 schema 層（型別 / 值域 / 長度 / 已知欄位）＋ 需要外部資料（modules 範圍、檔名對應 Track）的
 // 輕量交叉檢查；「byConcept key 是否為該 Track 已涵蓋 Concept」「extraProblemIds 是否存在於 Problem
 // Bank」等需先算出涵蓋子集才能判定的規則歸 schedule-generator.ts（FR-006）。
@@ -9,6 +9,7 @@ import type {
   ScheduleViolationRule,
   TrackOverlay,
   TrackParamsFile,
+  TrackSchedule,
 } from "../types/schedule.js";
 import { cmpViolation } from "./schedule-violation.js";
 
@@ -213,6 +214,86 @@ export function parseTrackOverlay(raw: unknown, expectedTrack: Track): ParsedTra
       subject: `overlays/${expectedTrack}`,
       field,
       message: `overlays/${expectedTrack}.json ${field ?? "(root)"}：${issue.message}`,
+    };
+  });
+  violations.sort(cmpViolation);
+  return { violations };
+}
+
+// ── 生成物：schedules/{track}.json ──────────────────────────────────────────
+
+// 課表雖為 generate-schedule.ts 的確定性生成物，載入端仍 MUST 驗 schema：手改／半寫入／舊版格式的檔案
+// 若只做 `JSON.parse as TrackSchedule`，缺欄位會延後到 Gate 的 `schedule.sessions.length` 或 runtime 的
+// render 才以 TypeError 爆開（脫離 per-Track try/catch），失去具名違規與失敗位置。
+const sessionPlanSchema = z
+  .object({
+    sessionIndex: z.number().int().positive(),
+    type: SESSION_TYPE_ENUM,
+    conceptId: z.string().min(1).optional(),
+    reviewRange: z.tuple([z.number().int(), z.number().int()]).optional(),
+    problemIds: z.array(z.number().int().positive()).optional(),
+  })
+  .strict()
+  .superRefine((val, ctx) => {
+    // 型別不變式（data-model.md §1）：concept ⇒ conceptId、review ⇒ reviewRange。此處於載入層先擋；
+    // compile() 內的同名檢查保留為第二道防線（compile 也接受非載入路徑構造的課表）。
+    if (val.type === "concept" && val.conceptId === undefined) {
+      withCustomIssue(
+        ctx,
+        ["conceptId"],
+        `Session ${val.sessionIndex} 為 concept 但缺少 conceptId`,
+        "schema-missing-field",
+      );
+    }
+    if (val.type === "review" && val.reviewRange === undefined) {
+      withCustomIssue(
+        ctx,
+        ["reviewRange"],
+        `Session ${val.sessionIndex} 為 review 但缺少 reviewRange`,
+        "schema-missing-field",
+      );
+    }
+  });
+
+function makeTrackScheduleSchema(expectedTrack: Track) {
+  return z
+    .object({
+      track: TRACK_ENUM,
+      targetLevel: z.enum(["easy", "medium", "hard"]),
+      sessions: z.array(sessionPlanSchema),
+    })
+    .strict()
+    .superRefine((val, ctx) => {
+      if (val.track !== expectedTrack) {
+        withCustomIssue(
+          ctx,
+          ["track"],
+          `課表的 track（${val.track}）與檔名對應 Track（${expectedTrack}）不符`,
+          "param-invalid",
+        );
+      }
+    });
+}
+
+export interface ParsedTrackSchedule {
+  schedule?: TrackSchedule;
+  violations: ScheduleViolation[];
+}
+
+/** 純函式：解析 schedules/{track}.json；expectedTrack 為檔名對應的 Track，用於偵測 track 欄位不符。 */
+export function parseTrackSchedule(raw: unknown, expectedTrack: Track): ParsedTrackSchedule {
+  const schema = makeTrackScheduleSchema(expectedTrack);
+  const result = schema.safeParse(raw);
+  if (result.success) return { schedule: result.data as TrackSchedule, violations: [] };
+
+  const violations: ScheduleViolation[] = result.error.issues.map((issue) => {
+    const { rule, field } = classifyIssue(issue);
+    return {
+      rule,
+      severity: "error" as const,
+      subject: `schedules/${expectedTrack}`,
+      field,
+      message: `schedules/${expectedTrack}.json ${field ?? "(root)"}：${issue.message}`,
     };
   });
   violations.sort(cmpViolation);

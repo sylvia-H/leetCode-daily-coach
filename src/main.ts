@@ -1,62 +1,100 @@
 import { pathToFileURL } from "node:url";
-import { compile, loadCompilerProblemBank } from "./compiler/lesson.js";
+import { compile, loadCompilerDeps, type CompilerDeps } from "./compiler/lesson.js";
 import { type Config, type EnvLike, loadConfig, parseWebhooks, TRACK_ORDER } from "./config.js";
-import { createWebhookClient, type WebhookClient } from "./discord/webhook-client.js";
+import {
+  createWebhookClient,
+  type WebhookClient,
+  type WebhookClientOptions,
+} from "./discord/webhook-client.js";
 import { checkBudget, type BudgetReport } from "./renderer/budget.js";
 import { render } from "./renderer/discord.js";
 import { renderAlert } from "./renderer/alert.js";
 import { advance, type AppState, load as loadState, save as saveState } from "./state/state-store.js";
-import type { DiscordEmbed, Lesson, Track } from "./types/lesson.js";
-import type { ProblemBank } from "./types/problem.js";
+import type { Lesson, RenderedMessage, Track } from "./types/lesson.js";
 import { toTaipeiDateString } from "./util/taipei-date.js";
 
-export type PushTrack = (track: Track, config: Config, state: AppState) => Promise<Lesson>;
+// 推播一個 Track 的注入點。webhook client 由 run() 統一建立並注入預設實作，故此處不再需要 config。
+export type PushTrack = (track: Track, state: AppState) => Promise<Lesson>;
 
 interface CompiledPush {
   lesson: Lesson;
-  embeds: DiscordEmbed[];
-  report: BudgetReport;
+  messages: RenderedMessage[];
+  reports: BudgetReport[];
 }
 
 // 純粹的 compile + render + checkBudget，**不因超限而拋錯**——DRY_RUN 需要在超限時仍完整輸出
 // 逐項明細（US4 Scenario 2），超限與否由呼叫方決定如何處置。
-function compileLesson(track: Track, state: AppState, bank?: ProblemBank): CompiledPush {
+function compileLesson(track: Track, state: AppState, deps: CompilerDeps): CompiledPush {
   const sessionIndex = state.tracks[track]?.currentSessionIndex ?? 1;
-  const lesson = compile(track, sessionIndex, bank ? { bank } : {});
-  const embeds = render(lesson);
-  const report = checkBudget(embeds);
-  return { lesson, embeds, report };
+  const lesson = compile(track, sessionIndex, deps);
+  const messages = render(lesson);
+  const reports = messages.map((message) => checkBudget(message));
+  return { lesson, messages, reports };
+}
+
+/**
+ * 多則訊息推播到一半失敗：前段已公開發出，後段沒有。Discord webhook 無法撤回、也沒有 idempotency
+ * key，故唯一能避免「補跑重貼前段」的做法是照常前進 state，同時發紅色告警 + 非零 exit code
+ * 讓缺漏的後段被人看見（憲章 XV Fail loud）。
+ */
+export class PartialPushError extends Error {
+  constructor(
+    readonly lesson: Lesson,
+    readonly postedCount: number,
+    readonly totalCount: number,
+    cause: Error,
+  ) {
+    super(`推播中斷於第 ${postedCount + 1}/${totalCount} 則（前 ${postedCount} 則已送出）：${cause.message}`, {
+      cause,
+    });
+    this.name = "PartialPushError";
+  }
 }
 
 async function defaultPushTrack(
   track: Track,
-  config: Config,
   state: AppState,
-  bank?: ProblemBank,
+  deps: CompilerDeps,
+  client: WebhookClient,
 ): Promise<Lesson> {
-  const { lesson, embeds, report } = compileLesson(track, state, bank);
-  if (!report.ok) {
-    const overItems = report.items
-      .filter((item) => item.over)
-      .map((item) => `${item.name}(${item.length}/${item.limit})`)
+  const { lesson, messages, reports } = compileLesson(track, state, deps);
+  const overIndex = reports.findIndex((report) => !report.ok);
+  if (overIndex >= 0) {
+    const overItems = reports
+      .flatMap((report, i) =>
+        report.items.filter((item) => item.over).map((item) => `msg${i + 1}:${item.name}(${item.length}/${item.limit})`),
+      )
       .join(", ");
     throw new Error(`字元預算超限：${overItems}`);
   }
 
-  const client = createWebhookClient(config.webhooks);
-  await client.post(track, embeds);
+  // §14.5 對呼叫端的要求：render 回傳多則時 MUST 依序 post。
+  for (const [index, message] of messages.entries()) {
+    try {
+      await client.post(track, message.embeds);
+    } catch (err) {
+      // 已有訊息落到頻道上時，MUST 讓呼叫方知道這是「部分推播」而非「完全沒推」——兩者對 state 的
+      // 處置相反：後者不前進（漏跑不跳課），前者若不前進，補跑 cron 會把已發出的前段再貼一次。
+      if (index > 0) {
+        throw new PartialPushError(lesson, index, messages.length, err as Error);
+      }
+      throw err;
+    }
+  }
   return lesson;
 }
 
-// US4：預覽模式輸出——完整 embeds（格式化 JSON）與 BudgetReport 逐項明細
-// （§14.5 每一個預算項目：名稱 / 實際字元數 / 上限 / 是否超限）。
-function printDryRunPreview(track: Track, embeds: DiscordEmbed[], report: BudgetReport): void {
-  console.log(`${track}: dry-run preview`);
-  console.log(JSON.stringify(embeds, null, 2));
-  console.log(`${track}: budget report`);
-  for (const item of report.items) {
-    console.log(`  ${item.name}: ${item.length}/${item.limit}${item.over ? " (OVER)" : ""}`);
-  }
+// US4：預覽模式輸出——完整 embeds（格式化 JSON）與 BudgetReport 逐項明細，逐則訊息各自輸出。
+function printDryRunPreview(track: Track, messages: RenderedMessage[], reports: BudgetReport[]): void {
+  messages.forEach((message, i) => {
+    const label = messages.length > 1 ? `${track} (${i + 1}/${messages.length})` : track;
+    console.log(`${label}: dry-run preview`);
+    console.log(JSON.stringify(message.embeds, null, 2));
+    console.log(`${label}: budget report`);
+    for (const item of reports[i]!.items) {
+      console.log(`  ${item.name}: ${item.length}/${item.limit}${item.over ? " (OVER)" : ""}`);
+    }
+  });
 }
 
 async function sendGlobalAlert(client: WebhookClient, track: Track, reason: string): Promise<void> {
@@ -69,6 +107,8 @@ async function sendGlobalAlert(client: WebhookClient, track: Track, reason: stri
 
 export interface RunOptions {
   pushTrack?: PushTrack;
+  /** **測試 seam**：重試策略的注入點（測試以此關閉真實等待與 jitter）；正式執行 MUST 留空。 */
+  webhookOptions?: WebhookClientOptions;
 }
 
 export async function run(env: EnvLike, options: RunOptions = {}): Promise<number> {
@@ -82,13 +122,13 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     const reason = (err as Error).message;
     console.error(reason);
     if (firstConfiguredTrack) {
-      const client = createWebhookClient(webhooks);
+      const client = createWebhookClient(webhooks, options.webhookOptions);
       await sendGlobalAlert(client, firstConfiguredTrack, reason);
     }
     return 1;
   }
 
-  const client = createWebhookClient(config.webhooks);
+  const client = createWebhookClient(config.webhooks, options.webhookOptions);
 
   let state: AppState;
   try {
@@ -100,18 +140,19 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     return 1;
   }
 
-  // 多 Track 執行前載入題庫一次並注入 compile（消除每 Track 重讀 + 重跑 zod 的冗餘）。載入失敗時保持
-  // undefined，使每 Track 的 compile 各自載入並在該 Track 內 fail loud——維持多 Track 失敗隔離（憲章 X），
-  // 不因題庫問題全域中止。注入 pushTrack 的測試不經此路徑，預載結果對其無影響。
-  let preloadedBank: ProblemBank | undefined;
+  // 課程素材（DAG / 題庫 / 三份課表 / 三份 Overlay）為全部 Track 共用的基礎，載入失敗屬全域性失敗
+  // （任何 Track 皆無法在缺少完整素材下編譯），故與 config / state 載入失敗同樣處置。
+  let deps: CompilerDeps;
   try {
-    preloadedBank = loadCompilerProblemBank();
+    deps = loadCompilerDeps();
   } catch (err) {
-    console.error(`題庫預載失敗，改由各 Track 自行載入以維持失敗隔離：${(err as Error).message}`);
+    const reason = `課程素材載入失敗：${(err as Error).message}`;
+    console.error(reason);
+    await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    return 1;
   }
 
-  const pushTrack: PushTrack =
-    options.pushTrack ?? ((t, c, s) => defaultPushTrack(t, c, s, preloadedBank));
+  const pushTrack: PushTrack = options.pushTrack ?? ((t, s) => defaultPushTrack(t, s, deps, client));
 
   let anyFailed = false;
 
@@ -135,18 +176,25 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       if (config.dryRun) {
         // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（research R9）；
         // 不推播、不寫入狀態（FR-021）；即使超限仍完整輸出逐項明細，不因此視為失敗（US4 Scenario 2）。
-        const { embeds, report } = compileLesson(track, state, preloadedBank);
-        printDryRunPreview(track, embeds, report);
+        const { messages, reports } = compileLesson(track, state, deps);
+        printDryRunPreview(track, messages, reports);
         continue;
       }
 
-      const lesson = await pushTrack(track, config, state);
+      const lesson = await pushTrack(track, state);
       advance(state, track, lesson, new Date());
       console.log(`${track}: pushed`);
     } catch (err) {
       anyFailed = true;
       const reason = (err as Error).message;
       console.error(`${track}: failed: ${reason}`);
+      // 部分推播：state 照常前進，避免補跑 cron 重發已送出的前段（詳見 PartialPushError）。
+      if (err instanceof PartialPushError) {
+        advance(state, track, err.lesson, new Date());
+        console.error(
+          `${track}: partial push: 已送出 ${err.postedCount}/${err.totalCount} 則，state 仍前進以避免重複推播`,
+        );
+      }
       // 預覽模式 MUST 完全不推播（cli-contract.md §3）——告警也是一次推播，故 DRY_RUN 下只留日誌。
       if (!config.dryRun) {
         try {
