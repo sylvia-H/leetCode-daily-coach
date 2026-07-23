@@ -159,10 +159,10 @@ description: "Task list for 004-schedule-generator implementation"
 
 **Purpose**: 跨 Story 收尾與回歸保護
 
-- [ ] T032 [P] 確認 F1 `tests/unit/schedule.test.ts` 仍綠（`src/compiler/schedule.ts` shim 未被本 Feature 更動），執行 `npm test` 全綠
-- [ ] T033 [P] 執行 `npm run build`（`tsc`）零錯，確認 strict TS 無 `any` 逃逸
-- [ ] T034 依 [quickstart.md](./quickstart.md) 場景 1–6 逐項驗收（含 determinism diff、手改觸發 drift、難度分歧、fail loud）
-- [ ] T035 [P] 對照 [checklists/generator.md](./checklists/generator.md) 逐項確認需求已落地（特別 CHK006–017 Determinism 與難度帶/Overlay）
+- [X] T032 [P] 確認 F1 `tests/unit/schedule.test.ts` 仍綠（`src/compiler/schedule.ts` shim 未被本 Feature 更動），執行 `npm test` 全綠
+- [X] T033 [P] 執行 `npm run build`（`tsc`）零錯，確認 strict TS 無 `any` 逃逸
+- [X] T034 依 [quickstart.md](./quickstart.md) 場景 1–6 逐項驗收（含 determinism diff、手改觸發 drift、難度分歧、fail loud）
+- [X] T035 [P] 對照 [checklists/generator.md](./checklists/generator.md) 逐項確認需求已落地（特別 CHK006–017 Determinism 與難度帶/Overlay）
 
 ---
 
