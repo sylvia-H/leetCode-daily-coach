@@ -1,0 +1,11 @@
+// 型別檢查專用（不產出）：`tsconfig.json` 的 `include` 只涵蓋 src/，而 vitest 不做型別檢查，
+// 因此 tests/ 與 scripts/ 的型別漂移（例如 Lesson 欄位變更後未更新的 fixture）長期無人察覺。
+// 此設定把三者一起納入 strict 檢查，由 `npm run typecheck` 與 CI 執行。
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"]
+}

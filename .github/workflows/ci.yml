@@ -24,6 +24,11 @@ jobs:
       - name: Build (tsc)
         run: npm run build
 
+      # `npm run build` 只涵蓋 src/（tsconfig.json 的 include），而 vitest 不做型別檢查——
+      # tests/ 與 scripts/ 的型別漂移只有這一步擋得下來。
+      - name: Type-check tests & scripts
+        run: npm run typecheck
+
       - name: Unit tests (vitest)
         run: npm test
 
