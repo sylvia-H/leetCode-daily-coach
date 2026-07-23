@@ -144,15 +144,15 @@ contracts/renderer-contract.md §2，且不含空字串或佔位段落。
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T042 [P] [US4] `tests/unit/renderer-purity.test.ts`：連續 render deep-equal；同 Lesson 換三個 Track 結構與內容零差異；**import 掃描**斷言 `src/renderer/**` 只有型別 import（無 `node:fs` / compiler / state）（FR-015、FR-017、SC-004）
-- [ ] T043 [P] [US4] 擴充 `tests/unit/budget.test.ts`：每個預算項（`digest` / `tsTip` / `pyTip` / `problem[i]` / `problems.count` / `exitCriteria` 含條數與單條長度 / `takeaway` / `pathFooter` / `overlayNotes`）與每個結構性上限（title / description / fields 數 / field name / value / embeds 數）各有觸發案例；`total` 與 `total.hard`（6,000）各有獨立斷言；長度以 code point 計（emoji 案例）
-- [ ] T044 [P] [US4] `tests/unit/renderer-split.test.ts`：總長 ≤5,500 回傳單則；超過時依 embed 邊界確定性拆為兩則且 `budgetSlots` 隨其 embed 移動；拆後仍超限或單一 embed 自身超限 ⇒ 回報違規而非再拆、**不截斷**（FR-020、research R11）
+- [X] T042 [P] [US4] `tests/unit/renderer-purity.test.ts`：連續 render deep-equal；同 Lesson 換三個 Track 結構與內容零差異；**import 掃描**斷言 `src/renderer/**` 只有型別 import（無 `node:fs` / compiler / state）（FR-015、FR-017、SC-004）
+- [X] T043 [P] [US4] 擴充 `tests/unit/budget.test.ts`：每個預算項（`digest` / `tsTip` / `pyTip` / `problem[i]` / `problems.count` / `exitCriteria` 含條數與單條長度 / `takeaway` / `pathFooter` / `overlayNotes`）與每個結構性上限（title / description / fields 數 / field name / value / embeds 數）各有觸發案例；`total` 與 `total.hard`（6,000）各有獨立斷言；長度以 code point 計（emoji 案例）
+- [X] T044 [P] [US4] `tests/unit/renderer-split.test.ts`：總長 ≤5,500 回傳單則；超過時依 embed 邊界確定性拆為兩則且 `budgetSlots` 隨其 embed 移動；拆後仍超限或單一 embed 自身超限 ⇒ 回報違規而非再拆、**不截斷**（FR-020、research R11）
 
 ### Implementation for User Story 4
 
-- [ ] T045 [US4] 於 `src/renderer/discord.ts` 實作拆訊息 fallback：先組單則 → 超過 5,500 時依 embed 邊界原序切為至多兩則；embed 內部不切分（contracts/renderer-contract.md §3）
-- [ ] T046 [US4] 於 `src/renderer/budget.ts` 補齊 `overlayNotes`（≤400）與 `exitCriteria` 的條數（≤6）／單條長度（≤60）檢查項（data-model.md §5、`docs/spec.md` §10.2）
-- [ ] T047 [US4] 於 `src/compiler/gate.ts` 與 `src/main.ts` 確認多則訊息路徑：Gate 對每則各跑 `checkBudget` 並逐項列出超限明細；main 逐則檢查後依序 post（contracts/renderer-contract.md §5）
+- [X] T045 [US4] 於 `src/renderer/discord.ts` 實作拆訊息 fallback：先組單則 → 超過 5,500 時依 embed 邊界原序切為至多兩則；embed 內部不切分（contracts/renderer-contract.md §3）
+- [X] T046 [US4] 於 `src/renderer/budget.ts` 補齊 `overlayNotes`（≤400）與 `exitCriteria` 的條數（≤6）／單條長度（≤60）檢查項（data-model.md §5、`docs/spec.md` §10.2）
+- [X] T047 [US4] 於 `src/compiler/gate.ts` 與 `src/main.ts` 確認多則訊息路徑：Gate 對每則各跑 `checkBudget` 並逐項列出超限明細；main 逐則檢查後依序 post（contracts/renderer-contract.md §5）
 
 **Checkpoint**: AC7 與 §14.5 全部限制皆有測試把關。
 
