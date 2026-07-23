@@ -121,15 +121,15 @@ contracts/renderer-contract.md §2，且不含空字串或佔位段落。
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T036 [P] [US3] `tests/unit/gate.test.ts`（happy path）：以真實素材執行 `runContentGate`，`violations` 為空且 `compiled === total`；`total` 等於三份課表 Session 數總和
-- [ ] T037 [P] [US3] `tests/unit/gate-violations.test.ts`：注入多筆不同成因（Digest 超預算、Article 缺區塊、`conceptId` 斷鏈）⇒ **一次回報全部**、不於第一筆中止、排序穩定（track → sessionIndex → rule → subject）；空課表 ⇒ `schedule-empty`（FR-022、FR-024）
+- [X] T036 [P] [US3] `tests/unit/gate.test.ts`（happy path）：以真實素材執行 `runContentGate`，`violations` 為空且 `compiled === total`；`total` 等於三份課表 Session 數總和
+- [X] T037 [P] [US3] `tests/unit/gate-violations.test.ts`：注入多筆不同成因（Digest 超預算、Article 缺區塊、`conceptId` 斷鏈）⇒ **一次回報全部**、不於第一筆中止、排序穩定（track → sessionIndex → rule → subject）；空課表 ⇒ `schedule-empty`（FR-022、FR-024）
 
 ### Implementation for User Story 3
 
-- [ ] T038 [US3] 新增 `src/compiler/gate.ts`：`runContentGate(input): GateResult` 純函式——逐 Track × 逐 Session `compile` → `render` → 逐則 `checkBudget`，例外與超限一律轉為結構化 `GateViolation`；無 `process.exit` / `console` / 檔案 I/O（data-model.md §6、contracts/gate-contract.md §1）
-- [ ] T039 [US3] 於 `src/compiler/gate.ts` 實作違規排序與 `schedule-empty` 守衛（contracts/gate-contract.md §2）
-- [ ] T040 [US3] 新增 `scripts/validate.ts`：`loadCompilerDeps()` → `validateCurriculum`（error 轉 `curriculum-invalid` 並繼續）→ `runContentGate` → 逐筆列印 `{track} #{sessionIndex} [{rule}] {subject}: {message}` → 彙總 → `process.exit(0|1)`；**唯一的 I/O 與 exit 位置**（FR-022、FR-024、contracts/gate-contract.md §3）
-- [ ] T041 [US3] 新增 `.github/workflows/content-gate.yml`：`pull_request` / `push` 對 `concepts/**`、`articles/**`、`data/**`、`schedules/**`、`overlays/**`、`curriculum/**`、`src/**`（及本檔）觸發；Node 24；`npm ci` → `npm run build` → `npm test` → `npm run validate:content`；**不引用任何 secret、不含 TS/Python 程式碼實測**（FR-025、FR-027、FR-028、contracts/gate-contract.md §4）
+- [X] T038 [US3] 新增 `src/compiler/gate.ts`：`runContentGate(input): GateResult` 純函式——逐 Track × 逐 Session `compile` → `render` → 逐則 `checkBudget`，例外與超限一律轉為結構化 `GateViolation`；無 `process.exit` / `console` / 檔案 I/O（data-model.md §6、contracts/gate-contract.md §1）
+- [X] T039 [US3] 於 `src/compiler/gate.ts` 實作違規排序與 `schedule-empty` 守衛（contracts/gate-contract.md §2）
+- [X] T040 [US3] 新增 `scripts/validate.ts`：`loadCompilerDeps()` → `validateCurriculum`（error 轉 `curriculum-invalid` 並繼續）→ `runContentGate` → 逐筆列印 `{track} #{sessionIndex} [{rule}] {subject}: {message}` → 彙總 → `process.exit(0|1)`；**唯一的 I/O 與 exit 位置**（FR-022、FR-024、contracts/gate-contract.md §3）
+- [X] T041 [US3] 新增 `.github/workflows/content-gate.yml`：`pull_request` / `push` 對 `concepts/**`、`articles/**`、`data/**`、`schedules/**`、`overlays/**`、`curriculum/**`、`src/**`（及本檔）觸發；Node 24；`npm ci` → `npm run build` → `npm test` → `npm run validate:content`；**不引用任何 secret、不含 TS/Python 程式碼實測**（FR-025、FR-027、FR-028、contracts/gate-contract.md §4）
 
 **Checkpoint**: quickstart §1 的通過與四種失敗路徑皆符合預期。
 
