@@ -221,9 +221,11 @@ MUST 以指名成因的違規 fail loud 並以非零 exit 結束、不寫出課�
 - **FR-014**: Track 課表 MAY 涵蓋教材庫的**子集**，但 MUST NOT 引入不存在於教材庫（DAG）的 Concept；被涵蓋
   Concept 的 prerequisite MUST 亦被該 Track 涵蓋（維持子序列合法）。
 - **FR-014a**: 涵蓋子集 MUST 由 Track 參數以 **Module/Level 準則**宣告（如 max Level 或 module allowlist）
-  決定：範圍外 Concept 排除，範圍內 Concept 全數納入，並自動強制 **prerequisite 閉包**（若某被涵蓋 Concept
-  的前置落在宣告範圍外，生成器 MUST 自動納入該前置或 fail loud，不得產生違反子序列的課表）。逐 Concept 的
-  include/exclude override MAY 作為補丁存在，但 MUST NOT 作為主要涵蓋機制（避免 150+ Concept 手寫清單）。
+  決定：範圍外 Concept 排除，範圍內 Concept 全數納入，並強制 **prerequisite 閉包驗證**——若某被涵蓋 Concept
+  的前置落在宣告範圍外，生成器 MUST 以具名違規 `coverage-gap` **fail loud**（非零 exit、不寫出課表），
+  MUST NOT 靜默自動納入該前置以擴張宣告範圍（宣告範圍為權威；`maxLevel` 連續切法對閉包恆天然成立，此規則
+  實務上只在 `moduleAllowlist` 跳號時觸發）。逐 Concept 的 include/exclude override MAY 作為補丁存在，但
+  MUST NOT 作為主要涵蓋機制（避免 150+ Concept 手寫清單）。
 - **FR-015**: `challenge` 與題目難度帶 MUST 依 Track 參數分歧（Foundation 降級、InterviewMastery 升級為變體 /
   綜合），且此分歧 MUST 由 Track 參數 / Overlay 驅動，MUST NOT 硬編於 Renderer 或下游。
 - **FR-015a**: Session 的 `problemIds` MUST 由生成器以 **Problem Bank 的 `difficulty` 過濾** Concept 的

@@ -77,6 +77,13 @@ Session」使第一週亦非空（模板 review 落在第 4 槽 → range `[1,3]
 - Concept 取空後以 practice/review 填滿到 180 → 否決（clarify Q3：不憑空填充）。
 - 節奏綁日曆星期 → 否決（憲章「漏跑不跳課」使星期漂移，FR-012 明禁）。
 
+**implement 前補充決策（週節奏走到「該排 Concept 但佇列已空」的槽位）**：概念數不一定整除「每週 concept 槽數」
+（stub 5 Concept、每週 3 concept 槽即為一例：第 2 週僅夠排 2 個，模板第 3 個 concept 槽落空）。此時**跳過該
+concept 槽（不消耗 sessionIndex、不產出對應 session），繼續攤課至該週剩餘槽位**（practice/review/challenge/
+rest 正常產出，皆為對已涵蓋 Concept 的純函數，無需等待該槽）；跳過後仍在**同一輪**（週）內走到 rest 才真正
+收尾，不提前中止、也不跨到下一輪。收尾點 = 該輪（週）跑完剩餘非 concept 槽位之處，`sessionIndex` 連續遞增
+無缺口。此舉為輸入的確定性函數（僅取決於「涵蓋 Concept 數」與「rhythm 模板」），不引入隨機或非確定行為。
+
 ---
 
 ## R5 — 題目選取與難度帶：Problem Bank 過濾 + Overlay 附加（clarify Q2 / FR-015a）
