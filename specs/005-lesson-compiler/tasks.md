@@ -66,20 +66,20 @@ T010／T011 MUST 於同一批完成，維持 build 綠燈。
 
 ### Tests for User Story 1 ⚠️（先寫、先失敗）
 
-- [ ] T015 [P] [US1] `tests/unit/article-parse.test.ts`：固定區塊缺漏（`Digest` / `Python Tip` / `Today's Challenge`）、frontmatter 欄位缺漏、`exit_criteria` 非陣列、`id` 與 conceptId 不符、條目缺 `whyThisPattern`、同題號重複——各自拋出指名成因的錯誤（data-model.md §1 驗證規則表）
-- [ ] T016 [P] [US1] `tests/unit/compile-concept.test.ts`：concept Lesson 各欄位來源正確（教材欄位取自 Article、題號/標題/連結/難度取自 Problem Bank、`color` 取自 Module 色表）；`leetcode: []` 的無題目觀念課編出 `problems: []` 且不報錯
-- [ ] T017 [P] [US1] `tests/unit/compile-path.test.ts`：以合成多前置／多後繼 DAG 驗證 `prev` 取 `ordinalOf` 最大者、`next` 取最小者；無前置／無後繼時對應欄位省略（research R4）
-- [ ] T018 [P] [US1] `tests/unit/compile-determinism.test.ts`：同一 `(track, sessionIndex)` 連續 compile 10 次，`JSON.stringify` 全等（SC-003）
-- [ ] T019 [P] [US1] `tests/unit/compile-errors.test.ts`：`sessionIndex` 為 0 / 負數 / 非整數 / 超出 N、`conceptId` 不在 DAG、Article 檔案缺漏、課表題號在條目中缺漏——各自拋出含 track / sessionIndex / 主體的錯誤（contracts/lesson-contract.md §4）
+- [X] T015 [P] [US1] `tests/unit/article-parse.test.ts`：固定區塊缺漏（`Digest` / `Python Tip` / `Today's Challenge`）、frontmatter 欄位缺漏、`exit_criteria` 非陣列、`id` 與 conceptId 不符、條目缺 `whyThisPattern`、同題號重複——各自拋出指名成因的錯誤（data-model.md §1 驗證規則表）
+- [X] T016 [P] [US1] `tests/unit/compile-concept.test.ts`：concept Lesson 各欄位來源正確（教材欄位取自 Article、題號/標題/連結/難度取自 Problem Bank、`color` 取自 Module 色表）；`leetcode: []` 的無題目觀念課編出 `problems: []` 且不報錯
+- [X] T017 [P] [US1] `tests/unit/compile-path.test.ts`：以合成多前置／多後繼 DAG 驗證 `prev` 取 `ordinalOf` 最大者、`next` 取最小者；無前置／無後繼時對應欄位省略（research R4）
+- [X] T018 [P] [US1] `tests/unit/compile-determinism.test.ts`：同一 `(track, sessionIndex)` 連續 compile 10 次，`JSON.stringify` 全等（SC-003）
+- [X] T019 [P] [US1] `tests/unit/compile-errors.test.ts`：`sessionIndex` 為 0 / 負數 / 非整數 / 超出 N、`conceptId` 不在 DAG、Article 檔案缺漏、課表題號在條目中缺漏——各自拋出含 track / sessionIndex / 主體的錯誤（contracts/lesson-contract.md §4）
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] 於 `src/compiler/lesson.ts` 重寫 `compile(track, sessionIndex, deps)` 主流程：取 `SessionPlan` → 依 `type` 分派（本階段只實作 `concept`，其餘暫拋「尚未支援」）→ 組 `Lesson`（FR-001、FR-002、FR-010 的 concept 部分）
-- [ ] T021 [US1] 於 `src/compiler/lesson.ts` 實作 concept 教材組裝：依 `ConceptNode.articlePath` 經 `deps.readArticle` + `articleCache` 解析，`id` 與 `conceptId` 不符即 fail loud；`patternLabel` / `complexityLabel` 原樣帶入不改寫（FR-004、FR-005）
-- [ ] T022 [US1] 於 `src/compiler/lesson.ts` 實作題目組裝：題號 / 標題 / 連結 / 難度自 Problem Bank 帶入（沿用 F3 `getProblemsForConcept`，題數守門不另立語意），`whyThisPattern` / `hint` 取自本篇 `Today's Challenge`；對齊規則為**單向包含**（課表題號 ⊆ 條目，缺漏即失敗；條目較多不報錯）（FR-006、FR-007）
-- [ ] T023 [US1] 於 `src/compiler/lesson.ts` 實作 `derivePath()`：由 DAG `prerequisite` / `next` 取「最接近者」，以 F2 `ordinalOf` 全序決勝（FR-008、research R4）
-- [ ] T024 [US1] 移除 `src/compiler/lesson.ts` 的 `DEMO_LEETCODE_IDS` 與 `DEMO_PROBLEM_CONTENT` 常數表及其相關分支（FR-029）
-- [ ] T025 [US1] 更新既有 `tests/unit/lesson.test.ts` / `tests/unit/schedule.test.ts` / `tests/unit/content.test.ts` 至新契約（移除對 F1 硬編課表與 demo 常數的斷言）
+- [X] T020 [US1] 於 `src/compiler/lesson.ts` 重寫 `compile(track, sessionIndex, deps)` 主流程：取 `SessionPlan` → 依 `type` 分派（本階段只實作 `concept`，其餘暫拋「尚未支援」）→ 組 `Lesson`（FR-001、FR-002、FR-010 的 concept 部分）
+- [X] T021 [US1] 於 `src/compiler/lesson.ts` 實作 concept 教材組裝：依 `ConceptNode.articlePath` 經 `deps.readArticle` + `articleCache` 解析，`id` 與 `conceptId` 不符即 fail loud；`patternLabel` / `complexityLabel` 原樣帶入不改寫（FR-004、FR-005）
+- [X] T022 [US1] 於 `src/compiler/lesson.ts` 實作題目組裝：題號 / 標題 / 連結 / 難度自 Problem Bank 帶入（沿用 F3 `getProblemsForConcept`，題數守門不另立語意），`whyThisPattern` / `hint` 取自本篇 `Today's Challenge`；對齊規則為**單向包含**（課表題號 ⊆ 條目，缺漏即失敗；條目較多不報錯）（FR-006、FR-007）
+- [X] T023 [US1] 於 `src/compiler/lesson.ts` 實作 `derivePath()`：由 DAG `prerequisite` / `next` 取「最接近者」，以 F2 `ordinalOf` 全序決勝（FR-008、research R4）
+- [X] T024 [US1] 移除 `src/compiler/lesson.ts` 的 `DEMO_LEETCODE_IDS` 與 `DEMO_PROBLEM_CONTENT` 常數表及其相關分支（FR-029）
+- [X] T025 [US1] 更新既有 `tests/unit/lesson.test.ts` / `tests/unit/schedule.test.ts` / `tests/unit/content.test.ts` 至新契約（移除對 F1 硬編課表與 demo 常數的斷言）
 
 **Checkpoint**: US1 可獨立驗證——quickstart §2 的單堂編譯與 determinism 檢查通過。
 
