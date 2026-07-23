@@ -28,7 +28,7 @@ description: "Task list for 004-schedule-generator implementation"
 
 **Purpose**: 專案入口與腳本
 
-- [ ] T001 在 [package.json](../../package.json) 的 `scripts` 新增 `generate:schedule`（`tsx scripts/generate-schedule.ts`）與 `validate:schedule`（`tsx scripts/validate-schedule.ts`）
+- [X] T001 在 [package.json](../../package.json) 的 `scripts` 新增 `generate:schedule`（`tsx scripts/generate-schedule.ts`）與 `validate:schedule`（`tsx scripts/validate-schedule.ts`）
 
 ---
 
@@ -38,11 +38,11 @@ description: "Task list for 004-schedule-generator implementation"
 
 **⚠️ CRITICAL**: 本階段完成前，任何 User Story 不得開始
 
-- [ ] T002 建立 `src/types/schedule.ts`：`SessionPlan` / `TrackSchedule` / `TrackParam` / `TrackParamsFile` / `ConceptOverlay` / `TrackOverlay` / `ScheduleViolation` / `ScheduleViolationRule`（純型別；`Track` / `SessionType` **import 自** `src/types/lesson.ts`，MUST NOT 重定義），欄位對齊 [data-model.md](./data-model.md) §1–§5
-- [ ] T003 [P] 建立 `curriculum/track-params.json`：三 Track stub 值（`foundation`/`interviewReady`/`interviewMastery`），對齊 [contracts/track-params-schema.md](./contracts/track-params-schema.md) 的 stub 表
-- [ ] T004 [P] 建立 `overlays/foundation.json`、`overlays/interview-ready.json`、`overlays/interview-mastery.json`：stub 值（含一筆 `extraProblemIds` 示例驗疊加路徑），對齊 [contracts/overlay-schema.md](./contracts/overlay-schema.md)
-- [ ] T005 建立 `src/compiler/schedule-schema.ts`：以 `zod` `.strict()` 解析 track-params 與 overlay 輸入 → 具名 `schema-missing-field` / `schema-type` / `param-invalid` 違規（分類器比照 F3 `classifyZodIssue`），純函式（依賴 T002）
-- [ ] T006 建立 `src/compiler/schedule-generator.ts` 骨架：`GenerateInput` / `GenerateResult`、Track↔檔名映射常數表（`interviewReady`→`interview-ready.json`）、`ScheduleViolation` 建構子 + 穩定排序器（比照 F2/F3 `cmpViolation`）、`generateAllSchedules` / `validateSchedule` / `serializeSchedule` 函式簽章（先空實作），純函式無 `process.exit`／無 I/O（依賴 T002）
+- [X] T002 建立 `src/types/schedule.ts`：`SessionPlan` / `TrackSchedule` / `TrackParam` / `TrackParamsFile` / `ConceptOverlay` / `TrackOverlay` / `ScheduleViolation` / `ScheduleViolationRule`（純型別；`Track` / `SessionType` **import 自** `src/types/lesson.ts`，MUST NOT 重定義），欄位對齊 [data-model.md](./data-model.md) §1–§5
+- [X] T003 [P] 建立 `curriculum/track-params.json`：三 Track stub 值（`foundation`/`interviewReady`/`interviewMastery`），對齊 [contracts/track-params-schema.md](./contracts/track-params-schema.md) 的 stub 表
+- [X] T004 [P] 建立 `overlays/foundation.json`、`overlays/interview-ready.json`、`overlays/interview-mastery.json`：stub 值（含一筆 `extraProblemIds` 示例驗疊加路徑），對齊 [contracts/overlay-schema.md](./contracts/overlay-schema.md)
+- [X] T005 建立 `src/compiler/schedule-schema.ts`：以 `zod` `.strict()` 解析 track-params 與 overlay 輸入 → 具名 `schema-missing-field` / `schema-type` / `param-invalid` 違規（分類器比照 F3 `classifyZodIssue`），純函式（依賴 T002）
+- [X] T006 建立 `src/compiler/schedule-generator.ts` 骨架：`GenerateInput` / `GenerateResult`、Track↔檔名映射常數表（`interviewReady`→`interview-ready.json`）、`ScheduleViolation` 建構子 + 穩定排序器（比照 F2/F3 `cmpViolation`）、`generateAllSchedules` / `validateSchedule` / `serializeSchedule` 函式簽章（先空實作），純函式無 `process.exit`／無 I/O（依賴 T002）
 
 **Checkpoint**: 基礎就緒——User Story 實作可開始
 
