@@ -27,8 +27,8 @@ Gate）MUST 有單元測試。故測試任務為 MUST，非選配。
 
 **Purpose**: 讓後續任務有可執行的入口與測試落點；本 Feature **無新增相依**（plan.md Technical Context）。
 
-- [ ] T001 在 `package.json` 的 `scripts` 新增 `"validate:content": "tsx scripts/validate.ts"`（FR-026；本機與 CI 同一條指令）
-- [ ] T002 [P] 建立測試素材目錄 `tests/fixtures/articles/`（放置各類錯誤形態的 Article fixture，內容於各 Story 階段補入）
+- [X] T001 在 `package.json` 的 `scripts` 新增 `"validate:content": "tsx scripts/validate.ts"`（FR-026；本機與 CI 同一條指令）
+- [X] T002 [P] 建立測試素材目錄 `tests/fixtures/articles/`（放置各類錯誤形態的 Article fixture，內容於各 Story 階段補入）
 
 ---
 
@@ -39,18 +39,18 @@ Gate）MUST 有單元測試。故測試任務為 MUST，非選配。
 **⚠️ CRITICAL**: T003 改動 `Lesson` 型別後，`src/renderer/**` 與 `src/main.ts` 會立即型別不符——
 T010／T011 MUST 於同一批完成，維持 build 綠燈。
 
-- [ ] T003 更新 `src/types/lesson.ts`：`Lesson` 支援五種 Session 類型（`concept?` / `path?` 轉選配、`color` 上移至頂層、新增 `reviewConcepts?` / `overlayNotes?` / `reflectionQuestion?` / `encouragement?`、`Problem.whyThisPattern` 轉選配），並新增 `ReviewConcept` / `BudgetSlots` / `RenderedMessage`（data-model.md §2、§5）
-- [ ] T004 擴充 `src/compiler/content.ts` 的固定區塊解析：`docs/spec.md` §10 全部固定區塊皆必備且非空（閱讀用 8 區塊 + 推播用 4 區塊 + `Today's Challenge`），缺漏拋出指名區塊名稱與 articlePath 的錯誤；未列於契約的 `##` 區塊允許存在但忽略（contracts/article-format.md §3）
-- [ ] T005 於 `src/compiler/content.ts` 新增 `Today's Challenge` 逐題條目解析：以 `marked` lexer token 走訪巢狀 list，取 `**{id}**` → `whyThisPattern`（去除前導 `·` / `-` / `—` 與空白，MUST 非空）與巢狀 `Hint:` / `Hint：` → `hint`；同題號重複即拋錯；輸出 `Map<number, ArticleChallengeEntry>`（contracts/article-format.md §4、data-model.md §1）
-- [ ] T006 於 `src/compiler/content.ts` 補齊 `MODULE_COLORS`：涵蓋 `curriculum/modules.json` 全部 16 個 Module，並保留單一 fallback 中性色供未知 Module 與非 concept 類 Session 使用（FR-018、SC-010）
-- [ ] T007 重寫 `src/compiler/schedule.ts`：移除 F1 硬編 `SESSION_PLANS` 與 `getPathLabels`，改為載入 `schedules/{track}.json`（F4 生成物）並提供 `sessionIndex → SessionPlan`；`sessionIndex` 非 1..N 整數即拋出含 track / sessionIndex / 課表長度的錯誤（FR-002、FR-003、FR-029）
-- [ ] T008 [P] 新增 `src/compiler/overlay.ts`：以 F4 `parseTrackOverlay` 載入 `overlays/{track}.json`，並提供 `conceptId → extraNotesMarkdown` 的查詢；**檔案不存在 ⇒ 空 Overlay 不失敗、存在但不符 schema ⇒ fail loud**（contracts/lesson-contract.md §1 對照表）。**MUST NOT 提供 `extraProblemIds` 的取用點**——選題類欄位已於 F4 生成階段套入課表，Compiler 不消費（research R6、FR-009）
-- [ ] T009 於 `src/compiler/lesson.ts` 實作 `loadCompilerDeps(paths?)`：載入 DAG（跑 `validateCurriculum`，error 級即拋）、Problem Bank、三份課表、三份 Overlay、選配 F8 素材（**檔案不存在 ⇒ 缺席不失敗；存在但不符 schema ⇒ fail loud**，兩者 MUST NOT 走同一條路徑），並建立每 Track 的 `ProblemOrigin`（`problemId → 首次引入的 conceptId`，依 sessionIndex 遞增先到先得，並列時以 `ordinalOf` 決勝）與 `articleCache`（data-model.md §3、§4、research R2/R3）
-- [ ] T010 改寫 `src/renderer/discord.ts` 與 `src/renderer/budget.ts` 至新契約：`render(lesson)` 回傳 `RenderedMessage[]`、`budgetSlots` 與 embeds 共用同一份字串實例；`checkBudget(message)` 改由 slot 檢查逐區塊預算（移除 `PROBLEM_BULLET` 反解析與 `embeds[0..2]` 位置假設），結構性上限與總量仍於同一次呼叫檢查。**本任務只搬遷機制，concept 版面輸出行為維持不變**（contracts/renderer-contract.md §1、§4、research R10）。**同批更新既有 `tests/unit/renderer.test.ts` 與 `tests/unit/budget.test.ts` 至新契約**（原斷言依賴 `render → embeds` 與反解析式預算，改契約後必然紅燈；data-model.md §7）
-- [ ] T011 適配 `src/main.ts`：於 `run()` 起始呼叫 `loadCompilerDeps()` 一次並注入 `compile`；push 路徑改為逐則 `RenderedMessage` 檢查預算後依序 post；DRY_RUN 預覽逐則輸出 embeds 與 BudgetReport（contracts/renderer-contract.md §5）。**同批更新既有 `tests/unit/dry-run.test.ts` 與 `tests/unit/run-tracks.test.ts`**（兩者斷言 F1 的單則 post 流程與 DRY_RUN 輸出形態；data-model.md §7）
-- [ ] T012 [P] 新增 `tests/helpers/compiler.ts`：建構測試用 `CompilerDeps`（可注入合成 DAG / 課表 / Overlay / `readArticle`），供各 Story 的單元測試共用
-- [ ] T013 [P] 建立 stub fixture Article `articles/programming-mindset/001-time-space-complexity.md` 與 `articles/programming-mindset/002-reading-the-problem.md`：§10 全部固定區塊、frontmatter（`id` / `title` / `module` / `pattern_label` / `complexity_label` / `estimated_minutes` / `exit_criteria` ≤6 條且每條 ≤60）、真實可讀繁中內容、`Today's Challenge` 涵蓋三份課表用到的題號（spec Assumptions、contracts/article-format.md）
-- [ ] T014 [P] 建立 stub fixture Article `articles/array/001-array-traversal.md`、`articles/array/002-in-place-operations.md`、`articles/array/003-prefix-sum.md`：規格同 T013。**逐篇比對三份課表**確認條目涵蓋該 Concept 被排入的**全部**題號——`array-traversal` MUST 含 `1 / 26 / 27`（27 為 `foundation` 課表經 F4 Overlay 加題後的既有題號）、`in-place-operations` MUST 含 `27 / 283`、`prefix-sum` MUST 含 `303 / 560`（`303` 用於 foundation/interviewReady、`560` 用於 interviewReady/interviewMastery）
+- [X] T003 更新 `src/types/lesson.ts`：`Lesson` 支援五種 Session 類型（`concept?` / `path?` 轉選配、`color` 上移至頂層、新增 `reviewConcepts?` / `overlayNotes?` / `reflectionQuestion?` / `encouragement?`、`Problem.whyThisPattern` 轉選配），並新增 `ReviewConcept` / `BudgetSlots` / `RenderedMessage`（data-model.md §2、§5）
+- [X] T004 擴充 `src/compiler/content.ts` 的固定區塊解析：`docs/spec.md` §10 全部固定區塊皆必備且非空（閱讀用 8 區塊 + 推播用 4 區塊 + `Today's Challenge`），缺漏拋出指名區塊名稱與 articlePath 的錯誤；未列於契約的 `##` 區塊允許存在但忽略（contracts/article-format.md §3）
+- [X] T005 於 `src/compiler/content.ts` 新增 `Today's Challenge` 逐題條目解析：以 `marked` lexer token 走訪巢狀 list，取 `**{id}**` → `whyThisPattern`（去除前導 `·` / `-` / `—` 與空白，MUST 非空）與巢狀 `Hint:` / `Hint：` → `hint`；同題號重複即拋錯；輸出 `Map<number, ArticleChallengeEntry>`（contracts/article-format.md §4、data-model.md §1）
+- [X] T006 於 `src/compiler/content.ts` 補齊 `MODULE_COLORS`：涵蓋 `curriculum/modules.json` 全部 16 個 Module，並保留單一 fallback 中性色供未知 Module 與非 concept 類 Session 使用（FR-018、SC-010）
+- [X] T007 重寫 `src/compiler/schedule.ts`：移除 F1 硬編 `SESSION_PLANS` 與 `getPathLabels`，改為載入 `schedules/{track}.json`（F4 生成物）並提供 `sessionIndex → SessionPlan`；`sessionIndex` 非 1..N 整數即拋出含 track / sessionIndex / 課表長度的錯誤（FR-002、FR-003、FR-029）
+- [X] T008 [P] 新增 `src/compiler/overlay.ts`：以 F4 `parseTrackOverlay` 載入 `overlays/{track}.json`，並提供 `conceptId → extraNotesMarkdown` 的查詢；**檔案不存在 ⇒ 空 Overlay 不失敗、存在但不符 schema ⇒ fail loud**（contracts/lesson-contract.md §1 對照表）。**MUST NOT 提供 `extraProblemIds` 的取用點**——選題類欄位已於 F4 生成階段套入課表，Compiler 不消費（research R6、FR-009）
+- [X] T009 於 `src/compiler/lesson.ts` 實作 `loadCompilerDeps(paths?)`：載入 DAG（跑 `validateCurriculum`，error 級即拋）、Problem Bank、三份課表、三份 Overlay、選配 F8 素材（**檔案不存在 ⇒ 缺席不失敗；存在但不符 schema ⇒ fail loud**，兩者 MUST NOT 走同一條路徑），並建立每 Track 的 `ProblemOrigin`（`problemId → 首次引入的 conceptId`，依 sessionIndex 遞增先到先得，並列時以 `ordinalOf` 決勝）與 `articleCache`（data-model.md §3、§4、research R2/R3）
+- [X] T010 改寫 `src/renderer/discord.ts` 與 `src/renderer/budget.ts` 至新契約：`render(lesson)` 回傳 `RenderedMessage[]`、`budgetSlots` 與 embeds 共用同一份字串實例；`checkBudget(message)` 改由 slot 檢查逐區塊預算（移除 `PROBLEM_BULLET` 反解析與 `embeds[0..2]` 位置假設），結構性上限與總量仍於同一次呼叫檢查。**本任務只搬遷機制，concept 版面輸出行為維持不變**（contracts/renderer-contract.md §1、§4、research R10）。**同批更新既有 `tests/unit/renderer.test.ts` 與 `tests/unit/budget.test.ts` 至新契約**（原斷言依賴 `render → embeds` 與反解析式預算，改契約後必然紅燈；data-model.md §7）
+- [X] T011 適配 `src/main.ts`：於 `run()` 起始呼叫 `loadCompilerDeps()` 一次並注入 `compile`；push 路徑改為逐則 `RenderedMessage` 檢查預算後依序 post；DRY_RUN 預覽逐則輸出 embeds 與 BudgetReport（contracts/renderer-contract.md §5）。**同批更新既有 `tests/unit/dry-run.test.ts` 與 `tests/unit/run-tracks.test.ts`**（兩者斷言 F1 的單則 post 流程與 DRY_RUN 輸出形態；data-model.md §7）
+- [X] T012 [P] 新增 `tests/helpers/compiler.ts`：建構測試用 `CompilerDeps`（可注入合成 DAG / 課表 / Overlay / `readArticle`），供各 Story 的單元測試共用
+- [X] T013 [P] 建立 stub fixture Article `articles/programming-mindset/001-time-space-complexity.md` 與 `articles/programming-mindset/002-reading-the-problem.md`：§10 全部固定區塊、frontmatter（`id` / `title` / `module` / `pattern_label` / `complexity_label` / `estimated_minutes` / `exit_criteria` ≤6 條且每條 ≤60）、真實可讀繁中內容、`Today's Challenge` 涵蓋三份課表用到的題號（spec Assumptions、contracts/article-format.md）
+- [X] T014 [P] 建立 stub fixture Article `articles/array/001-array-traversal.md`、`articles/array/002-in-place-operations.md`、`articles/array/003-prefix-sum.md`：規格同 T013。**逐篇比對三份課表**確認條目涵蓋該 Concept 被排入的**全部**題號——`array-traversal` MUST 含 `1 / 26 / 27`（27 為 `foundation` 課表經 F4 Overlay 加題後的既有題號）、`in-place-operations` MUST 含 `27 / 283`、`prefix-sum` MUST 含 `303 / 560`（`303` 用於 foundation/interviewReady、`560` 用於 interviewReady/interviewMastery）
 
 **Checkpoint**: `npm run build` 與既有 `npm test` 綠燈；素材齊備，五個 Story 可開始。
 
