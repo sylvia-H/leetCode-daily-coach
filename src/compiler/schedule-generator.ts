@@ -103,7 +103,25 @@ function selectCoveredConcepts(track: Track, graph: CurriculumGraph, param: Trac
     .map((id) => graph.concepts.get(id)!)
     .sort((a, b) => cmpOrdinal(graph.ordinalOf.get(a.id)!, graph.ordinalOf.get(b.id)!));
 
-  return { covered, coveredIds, violations: [] };
+  // 閉包驗證（US2 / R3 / FR-014a）：被涵蓋 Concept 的 prerequisite 若不在涵蓋集內即 fail loud，
+  // 不靜默擴張宣告範圍。連續 maxLevel 切法天然閉包，僅 moduleAllowlist 跳號時才可能觸發。
+  const violations: ScheduleViolation[] = [];
+  for (const c of covered) {
+    for (const p of c.prerequisite) {
+      if (!coveredIds.has(p)) {
+        violations.push(
+          violation(
+            "coverage-gap",
+            `${track}:${c.id}`,
+            `Track ${track} 涵蓋 Concept ${c.id} 的 prerequisite「${p}」不在涵蓋集內`,
+            { field: "prerequisite", target: p },
+          ),
+        );
+      }
+    }
+  }
+
+  return { covered, coveredIds, violations };
 }
 
 export function generateAllSchedules(input: GenerateInput): GenerateResult {
@@ -127,8 +145,92 @@ export function generateAllSchedules(input: GenerateInput): GenerateResult {
   return { schedules, violations };
 }
 
-export function validateSchedule(_schedule: TrackSchedule, _input: GenerateInput): ScheduleViolation[] {
-  return [];
+/**
+ * 對單一課表跑全部結構不變式（US2/US4/US5；schedule-schema.md「不變式」表）：純函式，
+ * 供 generateAllSchedules 內建 Gate 與 CI 對 committed 檔重驗共用（FR-017，單一實作）。
+ */
+export function validateSchedule(schedule: TrackSchedule, input: GenerateInput): ScheduleViolation[] {
+  const violations: ScheduleViolation[] = [];
+  const track = schedule.track;
+  const firstSeenAt = new Map<string, number>();
+
+  for (const session of schedule.sessions) {
+    if (session.type === "concept") {
+      if (session.conceptId === undefined) {
+        violations.push(
+          violation(
+            "one-concept-violation",
+            `${track}:session-${session.sessionIndex}`,
+            `concept Session（#${session.sessionIndex}）未引入任何 Concept`,
+          ),
+        );
+      } else {
+        const conceptId = session.conceptId;
+        const node = input.graph.concepts.get(conceptId);
+        if (!node) {
+          violations.push(
+            violation(
+              "dangling-concept",
+              `${track}:${conceptId}`,
+              `Session #${session.sessionIndex} 的 conceptId 不存在於 DAG：${conceptId}`,
+            ),
+          );
+        } else {
+          for (const p of node.prerequisite) {
+            const prereqSeenAt = firstSeenAt.get(p);
+            if (prereqSeenAt === undefined || prereqSeenAt >= session.sessionIndex) {
+              violations.push(
+                violation(
+                  "forward-dependency",
+                  `${track}:${conceptId}`,
+                  `Concept ${conceptId}（Session #${session.sessionIndex}）的 prerequisite「${p}」未在更前面的 Session 引入`,
+                  { target: p },
+                ),
+              );
+            }
+          }
+        }
+        if (firstSeenAt.has(conceptId)) {
+          violations.push(
+            violation(
+              "duplicate-concept",
+              `${track}:${conceptId}`,
+              `Concept ${conceptId} 被多個 concept Session 引入（重複於 Session #${session.sessionIndex}）`,
+            ),
+          );
+        } else {
+          firstSeenAt.set(conceptId, session.sessionIndex);
+        }
+      }
+    } else if (session.type === "review") {
+      const range = session.reviewRange;
+      if (!range || !(range[0] <= range[1]) || range[1] >= session.sessionIndex || range[0] < 1) {
+        violations.push(
+          violation(
+            "review-range-invalid",
+            `${track}:session-${session.sessionIndex}`,
+            `review Session（#${session.sessionIndex}）的 reviewRange ${range ? `[${range[0]}, ${range[1]}]` : "缺席"} 不合法`,
+          ),
+        );
+      }
+    }
+
+    for (const id of session.problemIds ?? []) {
+      if (!input.bank.byId.has(id)) {
+        violations.push(
+          violation(
+            "dangling-problem",
+            `${track}:session-${session.sessionIndex}`,
+            `Session #${session.sessionIndex} 的 problemIds 含題庫不存在的題號：${id}`,
+            { target: String(id) },
+          ),
+        );
+      }
+    }
+  }
+
+  violations.sort(cmpViolation);
+  return violations;
 }
 
 /** canonical 序列化（R2）：固定欄位序、2-space、檔尾 `\n`；重建物件以保證欄位序不受呼叫端影響。 */

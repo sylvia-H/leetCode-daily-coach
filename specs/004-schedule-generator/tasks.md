@@ -80,13 +80,14 @@ description: "Task list for 004-schedule-generator implementation"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T014 [P] [US2] 建立 `tests/fixtures/schedule/` 合成 fixture：一個 ≥3 Level、含跨 Level prereq 的多-Level DAG（`modules.json` + `concepts/**`），以及一個 `moduleAllowlist` 跳號（缺前置）案例
-- [ ] T015 [P] [US2] 建立 `tests/unit/schedule-topo.test.ts`：驗每個 concept Session 的 prereq 皆在更前 index（SC-002）、one-concept-per-session（SC-006）、`forward-dependency`/`duplicate-concept`/`coverage-gap` 具名 fail loud（用 T014 fixture）
+- [X] T014 [P] [US2] 建立 `tests/fixtures/schedule/` 合成 fixture：一個 ≥3 Level、含跨 Level prereq 的多-Level DAG（`modules.json` + `concepts/**`），以及一個 `moduleAllowlist` 跳號（缺前置）案例
+  - 實作改採 `tests/helpers/schedule.ts` 的 `buildMultiLevelGraph()`（in-memory `buildGraph`），比照既有 `tests/unit/topo-order.test.ts` 的作法，等價於檔案型 fixture 但免除手寫 markdown frontmatter。
+- [X] T015 [P] [US2] 建立 `tests/unit/schedule-topo.test.ts`：驗每個 concept Session 的 prereq 皆在更前 index（SC-002）、one-concept-per-session（SC-006）、`forward-dependency`/`duplicate-concept`/`coverage-gap` 具名 fail loud（用 T014 fixture）
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] 在 `src/compiler/schedule-generator.ts` 實作 **prerequisite 閉包檢查**：被涵蓋 Concept 的前置若不在涵蓋集 → `coverage-gap`（error），對齊 research R3 / FR-014a（依賴 T009）
-- [ ] T017 [US2] 在 `validateSchedule` 實作 `forward-dependency`（子序列合法性）、`one-concept-violation`、`duplicate-concept`、`dangling-concept` 規則（依賴 T011）
+- [X] T016 [US2] 在 `src/compiler/schedule-generator.ts` 實作 **prerequisite 閉包檢查**：被涵蓋 Concept 的前置若不在涵蓋集 → `coverage-gap`（error），對齊 research R3 / FR-014a（依賴 T009）
+- [X] T017 [US2] 在 `validateSchedule` 實作 `forward-dependency`（子序列合法性）、`one-concept-violation`、`duplicate-concept`、`dangling-concept` 規則（依賴 T011）
 
 **Checkpoint**: US1 + US2——生成物保證為合法拓樸子序列且每課恰一新觀念
 

@@ -2,11 +2,13 @@
 // 在記憶體中組情境。graph 沿用 tests/helpers/curriculum.ts 的 buildGraph（不重寫任何驗證/生成規則）。
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { buildGraph, skeletonOf, type ConceptSpec } from "./curriculum.js";
 import { loadCurriculum } from "../../src/compiler/curriculum.js";
 import { loadProblemBank } from "../../src/compiler/problem.js";
 import { parseTrackOverlay, parseTrackParamsFile } from "../../src/compiler/schedule-schema.js";
 import type { GenerateInput } from "../../src/compiler/schedule-generator.js";
 import { TRACK_FILE_NAME } from "../../src/compiler/schedule-generator.js";
+import type { CurriculumGraph } from "../../src/types/curriculum.js";
 import type { ProblemBank, ProblemMeta } from "../../src/types/problem.js";
 import type {
   SessionType,
@@ -115,4 +117,24 @@ export function loadRealGenerateInput(): GenerateInput {
   }
 
   return { graph, bank, params, overlays };
+}
+
+/**
+ * 合成 3-Level DAG（US2/FR-014a、T014）：m0/c0 → m1/c1 → m2/c2 線性跨 Level 依賴。
+ * 沿用 tests/helpers/curriculum.ts 的 buildGraph（比照 topo-order.test.ts 的既有作法：以
+ * in-memory 圖取代手寫 markdown fixture，兩者對驗證邏輯而言等價，前者更利於窮舉邊界案例）。
+ * 供 maxLevel 切分（天然閉包）與 moduleAllowlist 跳號（觸發 coverage-gap）兩種情境測試。
+ */
+export function buildMultiLevelGraph(): CurriculumGraph {
+  const skeleton = skeletonOf([
+    { id: "m0", topics: ["t0"] },
+    { id: "m1", topics: ["t1"] },
+    { id: "m2", topics: ["t2"] },
+  ]);
+  const specs: ConceptSpec[] = [
+    { id: "c0", module: "m0", topic: "t0", localOrder: 1 },
+    { id: "c1", module: "m1", topic: "t1", localOrder: 1, prerequisite: ["c0"] },
+    { id: "c2", module: "m2", topic: "t2", localOrder: 1, prerequisite: ["c1"] },
+  ];
+  return buildGraph(specs, skeleton);
 }
