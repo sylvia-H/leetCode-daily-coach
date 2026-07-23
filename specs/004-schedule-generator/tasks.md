@@ -121,14 +121,14 @@ description: "Task list for 004-schedule-generator implementation"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T022 [P] [US4] 建立 `tests/unit/schedule-rhythm.test.ts`：每 7 Session 含 review+rest（SC-003 前提）、`reviewRange = [weekStart, reviewIndex-1]`（含第一週）、相對天數非日曆星期（FR-012）、Concept 用盡自然收尾不填充（FR-019）
+- [X] T022 [P] [US4] 建立 `tests/unit/schedule-rhythm.test.ts`：每 7 Session 含 review+rest（SC-003 前提）、`reviewRange = [weekStart, reviewIndex-1]`（含第一週）、相對天數非日曆星期（FR-012）、Concept 用盡自然收尾不填充（FR-019）
 
 ### Implementation for User Story 4
 
-- [ ] T023 [US4] 在 `src/compiler/schedule-generator.ts` 以 rhythm 模板**取代 US1 的 concept-only emit**：7 槽逐週攤課（concept 槽消耗 topo 佇列；practice/challenge/review/rest 依模板；佇列取空於當週節奏走完自然收尾），對齊 research R4（依賴 T011）
-- [ ] T024 [US4] 實作 `reviewRange` 計算 + practice/challenge 槽 `problemIds` 選取（practice = 當週已引入 Concept 過濾題目聯集；challenge = 涵蓋 Concept 符合 `challengeDifficulty` 取 id 最小一題），對齊 research R4/R5（依賴 T023、T019）
-- [ ] T025 [US4] 在 `validateSchedule` 實作 `review-range-invalid` 規則（「rhythm 缺 review/rest」已由 T005 zod `param-invalid` 於**輸入端**把關，不另設輸出級 `rhythm-missing-rest-review`——避免雙重歸類，且末尾 partial week 本就可能不含 review/rest）（依賴 T023）
-- [ ] T026 [US4] 執行 `npm run generate:schedule` 重生成最終節奏形態課表並 commit（依賴 T023、T024）
+- [X] T023 [US4] 在 `src/compiler/schedule-generator.ts` 以 rhythm 模板**取代 US1 的 concept-only emit**：7 槽逐週攤課（concept 槽消耗 topo 佇列；practice/challenge/review/rest 依模板；佇列取空於當週節奏走完自然收尾），對齊 research R4（依賴 T011）
+- [X] T024 [US4] 實作 `reviewRange` 計算 + practice/challenge 槽 `problemIds` 選取（practice = 當週已引入 Concept 過濾題目聯集；challenge = 涵蓋 Concept 符合 `challengeDifficulty` 取 id 最小一題），對齊 research R4/R5（依賴 T023、T019）
+- [X] T025 [US4] 在 `validateSchedule` 實作 `review-range-invalid` 規則（「rhythm 缺 review/rest」已由 T005 zod `param-invalid` 於**輸入端**把關，不另設輸出級 `rhythm-missing-rest-review`——避免雙重歸類，且末尾 partial week 本就可能不含 review/rest）（依賴 T023）
+- [X] T026 [US4] 執行 `npm run generate:schedule` 重生成最終節奏形態課表並 commit（依賴 T023、T024）
 
 **Checkpoint**: US1–US4——課表具完整週節奏與正確 reviewRange
 

@@ -14,8 +14,10 @@ describe("涵蓋子集 + 拓樸子序列（US2 / SC-002 / FR-014a）", () => {
       interviewMastery: { maxLevel: 2 },
     });
     const { schedules, violations } = generateAllSchedules({ graph, bank, params, overlays: makeOverlays() });
-    expect(schedules.foundation.sessions.map((s) => s.conceptId)).toEqual(["c0", "c1"]);
-    expect(schedules.interviewReady.sessions.map((s) => s.conceptId)).toEqual(["c0", "c1", "c2"]);
+    const conceptIdsOf = (sessions: TrackSchedule["sessions"]) =>
+      sessions.filter((s) => s.type === "concept").map((s) => s.conceptId);
+    expect(conceptIdsOf(schedules.foundation.sessions)).toEqual(["c0", "c1"]);
+    expect(conceptIdsOf(schedules.interviewReady.sessions)).toEqual(["c0", "c1", "c2"]);
     expect(violations.filter((v) => v.rule === "coverage-gap")).toEqual([]);
   });
 

@@ -186,6 +186,84 @@ function selectConceptProblems(
   return [...core, ...appended];
 }
 
+/** practice 槽題目選取（US4 / R5）：當週已引入 Concept 的過濾題目聯集，升冪 id（確定性）。 */
+function unionProblems(concepts: ConceptNode[], difficulties: readonly string[], bank: ProblemBank): number[] {
+  const allowed = new Set(difficulties);
+  const ids = new Set<number>();
+  for (const concept of concepts) {
+    for (const id of concept.leetcode) {
+      const meta = bank.byId.get(id);
+      if (meta && allowed.has(meta.difficulty)) ids.add(id);
+    }
+  }
+  return [...ids].sort((a, b) => a - b);
+}
+
+/** challenge 槽題目選取（US4 / R5）：涵蓋 Concept 中符合 challengeDifficulty 的題目、取 id 最小一題。 */
+function selectChallengeProblem(covered: ConceptNode[], challengeDifficulty: string, bank: ProblemBank): number | undefined {
+  let min: number | undefined;
+  for (const concept of covered) {
+    for (const id of concept.leetcode) {
+      const meta = bank.byId.get(id);
+      if (meta && meta.difficulty === challengeDifficulty && (min === undefined || id < min)) min = id;
+    }
+  }
+  return min;
+}
+
+/**
+ * 週節奏攤課（US4 / R4）：每 `rhythm.length`（7）Session 一輪，`concept` 槽依序消耗涵蓋佇列；
+ * 佇列取空時該槽跳過（不消耗 sessionIndex），該輪其餘槽位（practice/review/challenge/rest）
+ * 正常產出，於該輪跑完處自然收尾（不填充、不跨輪）。`reviewRange` = 本輪 [weekStartIndex,
+ * reviewSessionIndex-1]（含第一週）。
+ */
+function emitSessions(
+  covered: ConceptNode[],
+  param: TrackParam,
+  bank: ProblemBank,
+  overlay: TrackOverlay,
+): SessionPlan[] {
+  const sessions: SessionPlan[] = [];
+  const challengeProblemId = selectChallengeProblem(covered, param.challengeDifficulty, bank);
+  let qi = 0;
+  let sessionIndex = 1;
+
+  while (qi < covered.length) {
+    const weekStartIndex = sessionIndex;
+    const weekConcepts: ConceptNode[] = [];
+    for (const slotType of param.rhythm) {
+      if (slotType === "concept") {
+        if (qi >= covered.length) continue; // 涵蓋佇列已空：跳過本槽，不消耗 sessionIndex（R4 補充決策）
+        const concept = covered[qi]!;
+        qi++;
+        const problemIds = selectConceptProblems(concept, param.problemDifficulties, bank, overlay.byConcept[concept.id]);
+        sessions.push(buildSession(sessionIndex, "concept", { conceptId: concept.id, problemIds }));
+        weekConcepts.push(concept);
+        sessionIndex++;
+      } else if (slotType === "practice") {
+        const problemIds = unionProblems(weekConcepts, param.problemDifficulties, bank);
+        sessions.push(buildSession(sessionIndex, "practice", { problemIds }));
+        sessionIndex++;
+      } else if (slotType === "review") {
+        sessions.push(buildSession(sessionIndex, "review", { reviewRange: [weekStartIndex, sessionIndex - 1] }));
+        sessionIndex++;
+      } else if (slotType === "challenge") {
+        sessions.push(
+          buildSession(sessionIndex, "challenge", {
+            problemIds: challengeProblemId !== undefined ? [challengeProblemId] : [],
+          }),
+        );
+        sessionIndex++;
+      } else {
+        sessions.push(buildSession(sessionIndex, "rest"));
+        sessionIndex++;
+      }
+    }
+  }
+
+  return sessions;
+}
+
 export function generateAllSchedules(input: GenerateInput): GenerateResult {
   const schedules = {} as Record<Track, TrackSchedule>;
   const violations: ScheduleViolation[] = [];
@@ -201,13 +279,7 @@ export function generateAllSchedules(input: GenerateInput): GenerateResult {
     violations.push(...coverageViolations);
     violations.push(...validateOverlay(track, overlay, coveredIds, input.bank));
 
-    // US1：concept-only emit（US4 將以 rhythm 節奏取代本段落）；US3：附加難度過濾 + Overlay 題目。
-    const sessions: SessionPlan[] = covered.map((c, i) =>
-      buildSession(i + 1, "concept", {
-        conceptId: c.id,
-        problemIds: selectConceptProblems(c, param.problemDifficulties, input.bank, overlay.byConcept[c.id]),
-      }),
-    );
+    const sessions = emitSessions(covered, param, input.bank, overlay);
 
     const schedule: TrackSchedule = { track, targetLevel: param.targetLevel, sessions };
     schedules[track] = schedule;
