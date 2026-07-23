@@ -1,41 +1,42 @@
-// ⚠️ F1 臨時產物（FR-002）：硬編 3-Session 課表 + 學習路徑對照表。
-// 課表本身 → F4（generate-schedule.ts 取代）；學習路徑對照表 → F5（Lesson Compiler 消費 F2 建立的
-// DAG，改由 prerequisite/next 取代。F2 clarify 2026-07-21 定案：F2 只建 DAG，接入與移除屬 F5）。
-// 三個 Session 共用同一篇教材是刻意設計，見 spec.md Assumptions；MUST NOT 視為資料錯誤。
-import type { PathLabels, SessionType, Track } from "../types/lesson.js";
+// 課表載入器（F5）：讀 F4 生成物 schedules/{track}.json，取代 F1 硬編 SESSION_PLANS（FR-002、FR-029）。
+// 讀檔集中於 loadAllSchedules（供 loadCompilerDeps 呼叫）；getSessionPlan 為純函式，供 compile() 使用。
+import { readFileSync } from "node:fs";
+import type { Track } from "../types/lesson.js";
+import type { SessionPlan, TrackSchedule } from "../types/schedule.js";
+import { TRACK_FILE_NAME } from "./schedule-generator.js";
 
-export interface SessionPlan {
-  sessionIndex: number;
-  type: SessionType;
-  conceptId?: string;
+export function loadTrackSchedule(track: Track, schedulesDir: string): TrackSchedule {
+  const path = `${schedulesDir}/${TRACK_FILE_NAME[track]}`;
+  let raw: string;
+  try {
+    raw = readFileSync(path, "utf-8");
+  } catch (err) {
+    throw new Error(`課表載入失敗：${path} 無法讀取（${(err as Error).message}）`);
+  }
+  try {
+    return JSON.parse(raw) as TrackSchedule;
+  } catch (err) {
+    throw new Error(`課表載入失敗：${path} 無法解析為 JSON（${(err as Error).message}）`);
+  }
 }
 
-const CONCEPT_ID = "left-right-pointer";
+export function loadAllSchedules(schedulesDir: string): Record<Track, TrackSchedule> {
+  return {
+    foundation: loadTrackSchedule("foundation", schedulesDir),
+    interviewReady: loadTrackSchedule("interviewReady", schedulesDir),
+    interviewMastery: loadTrackSchedule("interviewMastery", schedulesDir),
+  };
+}
 
-const SESSION_PLANS: readonly SessionPlan[] = [
-  { sessionIndex: 1, type: "concept", conceptId: CONCEPT_ID },
-  { sessionIndex: 2, type: "concept", conceptId: CONCEPT_ID },
-  { sessionIndex: 3, type: "concept", conceptId: CONCEPT_ID },
-];
-
-const PATH_LABELS: readonly PathLabels[] = [
-  { current: "Left-Right Pointer", next: "Fast-Slow Pointer" },
-  { prev: "Left-Right Pointer", current: "Fast-Slow Pointer", next: "Sliding Window" },
-  { prev: "Fast-Slow Pointer", current: "Sliding Window", next: "Prefix Sum" },
-];
-
-export function getSessionPlan(_track: Track, sessionIndex: number): SessionPlan {
-  const plan = SESSION_PLANS[sessionIndex - 1];
+// sessionIndex 非 1..N 範圍內的整數即 fail loud（FR-003），訊息含 track / sessionIndex / 課表長度。
+export function getSessionPlan(track: Track, sessionIndex: number, schedule: TrackSchedule): SessionPlan {
+  const plan = Number.isInteger(sessionIndex)
+    ? schedule.sessions.find((s) => s.sessionIndex === sessionIndex)
+    : undefined;
   if (!plan) {
-    throw new Error(`課表用盡：sessionIndex ${sessionIndex} 超出本 Feature 的硬編課表範圍（1～3）`);
+    throw new Error(
+      `sessionIndex 超出課表範圍：track=${track}, sessionIndex=${sessionIndex}, 課表長度=${schedule.sessions.length}`,
+    );
   }
   return plan;
-}
-
-export function getPathLabels(sessionIndex: number): PathLabels {
-  const labels = PATH_LABELS[sessionIndex - 1];
-  if (!labels) {
-    throw new Error(`課表用盡：sessionIndex ${sessionIndex} 超出本 Feature 的硬編課表範圍（1～3）`);
-  }
-  return labels;
 }

@@ -1,68 +1,216 @@
-import type { DiscordEmbed, Lesson } from "../types/lesson.js";
+import type { BudgetSlots, DiscordEmbed, DiscordEmbedField, Lesson, PathLabels, Problem, RenderedMessage } from "../types/lesson.js";
 
-// 題目 Embed 中每一則的 bullet 前綴（contracts/discord-embed-contract.md §1）。
-//
-// `budget.ts` MUST import 這一顆常數來切分逐題內容，MUST NOT 自行寫死 "• "。checkBudget 是
-// post-render validator——它量測的是「實際會送出去的 payload」，逐題預算因此必須從已渲染的
-// description 切分。兩邊各自寫死時，調整版面只改其中一處會讓逐題 350 上限與題數上限**靜默失效**
-// （超長 lesson 仍以 ok === true 通過 Gate）。常數由產生者匯出、量測者引用，使其無法單邊漂移。
+// 題目 Embed 中每一則的 bullet 前綴（budget.ts 不再反解析——budgetSlots.problems 已逐題提供同一份
+// 字串實例；此常數只用於渲染，保留匯出供既有測試沿用）。
 export const PROBLEM_BULLET = "• ";
+// Exit Criteria checklist 每行的固定前綴；budget.ts 量測單條長度時需剝除同一份前綴常數，避免版面
+// 調整（如改用不同 checkbox 符號）時兩處單邊漂移。
+export const EXIT_CRITERIA_PREFIX = "- [ ] ";
 
-function renderProblemsDescription(lesson: Lesson): string {
-  return lesson.problems
-    .map((problem) => {
-      const hintPart = problem.hint ? ` · Hint: ${problem.hint}` : "";
-      return `${PROBLEM_BULLET}[${problem.id}. ${problem.title}](${problem.url})\n  ${problem.difficulty} · ${problem.whyThisPattern}${hintPart}`;
-    })
-    .join("\n");
+const TOTAL_LIMIT = 5500;
+
+const PRACTICE_PROMPT = "今天不引入新觀念，把前面學過的 Pattern 拿出來練，把熟練度變成直覺。";
+const CHALLENGE_PROMPT = "準備好了嗎？今天是綜合運用的時刻，試著在不看提示的狀況下解出來。";
+const REST_DESCRIPTION = "今天是休息日：回顧這週學到的東西，讓大腦消化一下，明天再繼續前進。";
+
+interface Block {
+  embed: DiscordEmbed;
+  slots: BudgetSlots;
 }
 
-function renderPathFooter(lesson: Lesson): string {
+function textLength(s: string | undefined): number {
+  return s ? Array.from(s).length : 0;
+}
+
+// 供 render() 內部的拆訊息門檻判斷用（R11）；與 budget.ts 的 countedTextLength 計入相同欄位，
+// 但因 Renderer MUST 只 import 型別（憲章 XI），無法 import budget.ts，於此獨立實作同一套計數規則。
+function embedLength(embed: DiscordEmbed): number {
+  let total = textLength(embed.title) + textLength(embed.description);
+  for (const field of embed.fields ?? []) {
+    total += textLength(field.name) + textLength(field.value);
+  }
+  total += textLength(embed.footer?.text);
+  total += textLength(embed.author?.name);
+  return total;
+}
+
+function renderProblemEntry(problem: Problem): string {
+  const hintPart = problem.hint ? ` · Hint: ${problem.hint}` : "";
+  const detail = problem.whyThisPattern
+    ? `\n  ${problem.difficulty} · ${problem.whyThisPattern}${hintPart}`
+    : `\n  ${problem.difficulty}`;
+  return `${PROBLEM_BULLET}[${problem.id}. ${problem.title}](${problem.url})${detail}`;
+}
+
+function renderPathFooter(path: PathLabels): string {
   const lines: string[] = [];
-  if (lesson.path.prev) {
-    lines.push(`昨天  ${lesson.path.prev} ✓`);
-  }
-  lines.push(`今天  ${lesson.path.current}`);
-  if (lesson.path.next) {
-    lines.push(`明天  ${lesson.path.next}`);
-  }
+  if (path.prev) lines.push(`昨天  ${path.prev} ✓`);
+  lines.push(`今天  ${path.current}`);
+  if (path.next) lines.push(`明天  ${path.next}`);
   return lines.join("\n");
 }
 
-function renderExitCriteria(lesson: Lesson): string {
-  return lesson.concept.exitCriteria.map((item) => `- [ ] ${item}`).join("\n");
+function renderExitCriteria(items: string[]): string {
+  return items.map((item) => `${EXIT_CRITERIA_PREFIX}${item}`).join("\n");
+}
+
+function buildConceptBlocks(lesson: Lesson): Block[] {
+  const concept = lesson.concept!;
+  const path = lesson.path!;
+  const blocks: Block[] = [];
+
+  const digest = concept.digest;
+  const tsTip = concept.tsTip;
+  const pyTip = concept.pyTip;
+  const mainEmbed: DiscordEmbed = {
+    title: `📚 Session ${lesson.sessionIndex} · ${concept.title}`,
+    description: digest,
+    color: lesson.color,
+    fields: [
+      { name: "Pattern", value: concept.patternLabel, inline: true },
+      { name: "複雜度", value: concept.complexityLabel, inline: true },
+      { name: "預估時間", value: `${concept.estimatedMinutes} 分鐘`, inline: true },
+      { name: "TypeScript Tip", value: tsTip },
+      { name: "Python Tip", value: pyTip },
+    ],
+  };
+  blocks.push({ embed: mainEmbed, slots: { digest, tsTip, pyTip } });
+
+  if (lesson.problems.length > 0) {
+    const entries = lesson.problems.map(renderProblemEntry);
+    blocks.push({
+      embed: { title: "🎯 Today's Challenge", description: entries.join("\n"), color: lesson.color },
+      slots: { problems: entries },
+    });
+  }
+
+  if (lesson.overlayNotes !== undefined) {
+    const overlayNotes = lesson.overlayNotes;
+    blocks.push({
+      embed: { title: "📎 Track 補充", description: overlayNotes, color: lesson.color },
+      slots: { overlayNotes },
+    });
+  }
+
+  const pathFooter = renderPathFooter(path);
+  const exitCriteria = renderExitCriteria(concept.exitCriteria);
+  const takeaway = concept.takeaway;
+  blocks.push({
+    embed: {
+      color: lesson.color,
+      fields: [
+        { name: "🧭 學習路徑", value: pathFooter },
+        { name: "✅ Exit Criteria", value: exitCriteria },
+        { name: "💡 Takeaway", value: takeaway },
+      ],
+    },
+    slots: { pathFooter, exitCriteria, takeaway },
+  });
+
+  return blocks;
+}
+
+function buildPracticeOrChallengeBlocks(lesson: Lesson): Block[] {
+  const isChallenge = lesson.type === "challenge";
+  const title = isChallenge ? `🔥 Session ${lesson.sessionIndex} · Challenge` : `🏋️ Session ${lesson.sessionIndex} · 練習`;
+  const prompt = isChallenge ? CHALLENGE_PROMPT : PRACTICE_PROMPT;
+
+  if (lesson.problems.length === 0) {
+    return [{ embed: { title, description: prompt, color: lesson.color }, slots: {} }];
+  }
+
+  const entries = lesson.problems.map(renderProblemEntry);
+  const description = `${prompt}\n\n${entries.join("\n")}`;
+  return [{ embed: { title, description, color: lesson.color }, slots: { problems: entries } }];
+}
+
+function buildReviewBlocks(lesson: Lesson): Block[] {
+  const fields: DiscordEmbedField[] = [
+    { name: "📚 本週涵蓋", value: (lesson.reviewConcepts ?? []).map((c) => `- ${c.title}`).join("\n") },
+  ];
+  const slots: BudgetSlots = {};
+
+  if (lesson.reflectionQuestion !== undefined) {
+    fields.push({ name: "🤔 Reflection", value: lesson.reflectionQuestion });
+  }
+  if (lesson.problems.length > 0) {
+    const entries = lesson.problems.map(renderProblemEntry);
+    slots.problems = entries;
+    fields.push({ name: "🎯 Challenge", value: entries.join("\n") });
+  }
+
+  return [{ embed: { title: `🔁 Session ${lesson.sessionIndex} · 本週複習`, color: lesson.color, fields }, slots }];
+}
+
+function buildRestBlocks(lesson: Lesson): Block[] {
+  const embed: DiscordEmbed = {
+    title: `😌 Session ${lesson.sessionIndex} · 休息日`,
+    description: REST_DESCRIPTION,
+    color: lesson.color,
+  };
+  if (lesson.encouragement !== undefined) {
+    embed.fields = [{ name: "💬 一句話", value: lesson.encouragement }];
+  }
+  return [{ embed, slots: {} }];
+}
+
+function buildBlocks(lesson: Lesson): Block[] {
+  switch (lesson.type) {
+    case "concept":
+      return buildConceptBlocks(lesson);
+    case "practice":
+    case "challenge":
+      return buildPracticeOrChallengeBlocks(lesson);
+    case "review":
+      return buildReviewBlocks(lesson);
+    case "rest":
+      return buildRestBlocks(lesson);
+  }
+}
+
+function mergeSlots(blocks: Block[]): BudgetSlots {
+  const merged: BudgetSlots = {};
+  for (const { slots } of blocks) {
+    if (slots.digest !== undefined) merged.digest = slots.digest;
+    if (slots.tsTip !== undefined) merged.tsTip = slots.tsTip;
+    if (slots.pyTip !== undefined) merged.pyTip = slots.pyTip;
+    if (slots.exitCriteria !== undefined) merged.exitCriteria = slots.exitCriteria;
+    if (slots.takeaway !== undefined) merged.takeaway = slots.takeaway;
+    if (slots.pathFooter !== undefined) merged.pathFooter = slots.pathFooter;
+    if (slots.overlayNotes !== undefined) merged.overlayNotes = slots.overlayNotes;
+    if (slots.problems !== undefined) merged.problems = slots.problems;
+  }
+  return merged;
 }
 
 // Renderer：stateless 純函式，只 import src/types/lesson.ts（憲章 XI）。
-// 版面順序寫死：觀念先於題目（憲章 I）。
-export function render(lesson: Lesson): DiscordEmbed[] {
-  const mainEmbed: DiscordEmbed = {
-    title: `📚 Session ${lesson.sessionIndex} · ${lesson.concept.title}`,
-    description: lesson.concept.digest,
-    color: lesson.concept.moduleColor,
-    fields: [
-      { name: "Pattern", value: lesson.concept.patternLabel, inline: true },
-      { name: "複雜度", value: lesson.concept.complexityLabel, inline: true },
-      { name: "預估時間", value: `${lesson.concept.estimatedMinutes} 分鐘`, inline: true },
-      { name: "TypeScript Tip", value: lesson.concept.tsTip, inline: false },
-      { name: "Python Tip", value: lesson.concept.pyTip, inline: false },
-    ],
-  };
+// 版面順序寫死：觀念先於題目（憲章 I）；版面分派只依 lesson.type（憲章 XI 版面規則）。
+export function render(lesson: Lesson): RenderedMessage[] {
+  const blocks = buildBlocks(lesson);
+  const total = blocks.reduce((sum, b) => sum + embedLength(b.embed), 0);
 
-  const problemEmbed: DiscordEmbed = {
-    title: "🎯 Today's Challenge",
-    description: renderProblemsDescription(lesson),
-    color: lesson.concept.moduleColor,
-  };
+  if (total <= TOTAL_LIMIT) {
+    return [{ embeds: blocks.map((b) => b.embed), budgetSlots: mergeSlots(blocks) }];
+  }
 
-  const closingEmbed: DiscordEmbed = {
-    color: lesson.concept.moduleColor,
-    fields: [
-      { name: "🧭 學習路徑", value: renderPathFooter(lesson) },
-      { name: "✅ Exit Criteria", value: renderExitCriteria(lesson) },
-      { name: "💡 Takeaway", value: lesson.concept.takeaway },
-    ],
-  };
+  // 拆訊息 fallback（§14.5、research R11）：依 embed 邊界原序切分，最多兩則，embed 內部不切分。
+  const firstBlocks: Block[] = [];
+  let running = 0;
+  let splitIndex = 0;
+  for (; splitIndex < blocks.length; splitIndex++) {
+    const block = blocks[splitIndex]!;
+    const candidate = running + embedLength(block.embed);
+    if (firstBlocks.length > 0 && candidate > TOTAL_LIMIT) break;
+    firstBlocks.push(block);
+    running = candidate;
+  }
+  const secondBlocks = blocks.slice(splitIndex);
 
-  return [mainEmbed, problemEmbed, closingEmbed];
+  const messages: RenderedMessage[] = [
+    { embeds: firstBlocks.map((b) => b.embed), budgetSlots: mergeSlots(firstBlocks) },
+  ];
+  if (secondBlocks.length > 0) {
+    messages.push({ embeds: secondBlocks.map((b) => b.embed), budgetSlots: mergeSlots(secondBlocks) });
+  }
+  return messages;
 }

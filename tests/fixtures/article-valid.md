@@ -40,7 +40,10 @@ function corner() {
 閱讀用內容。
 
 ## Today's Challenge
-閱讀用內容。
+
+- **1** · 測試用說明文字。
+  - Hint: 測試用提示。
+- **2** · 另一則測試用說明文字。
 
 ## Tomorrow Preview
 閱讀用內容。

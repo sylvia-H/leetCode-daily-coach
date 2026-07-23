@@ -32,7 +32,8 @@ O(1)。
 閱讀用內容。
 
 ## Today's Challenge
-閱讀用內容。
+
+- **1** · 測試用說明文字。
 
 ## Tomorrow Preview
 閱讀用內容。

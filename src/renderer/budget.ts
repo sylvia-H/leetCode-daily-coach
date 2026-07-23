@@ -1,5 +1,5 @@
-import type { DiscordEmbed } from "../types/lesson.js";
-import { PROBLEM_BULLET } from "./discord.js";
+import { EXIT_CRITERIA_PREFIX } from "./discord.js";
+import type { DiscordEmbed, RenderedMessage } from "../types/lesson.js";
 
 export interface BudgetItem {
   name: string;
@@ -27,10 +27,6 @@ function makeItem(name: string, length: number, limit: number): BudgetItem {
   return { name, length, limit, over: length > limit };
 }
 
-function findFieldValue(embed: DiscordEmbed | undefined, fieldName: string): string | undefined {
-  return embed?.fields?.find((field) => field.name === fieldName)?.value;
-}
-
 function countedTextLength(embed: DiscordEmbed): number {
   let total = codePointLength(embed.title) + codePointLength(embed.description);
   for (const field of embed.fields ?? []) {
@@ -41,67 +37,50 @@ function countedTextLength(embed: DiscordEmbed): number {
   return total;
 }
 
-interface ProblemEntry {
-  id: string;
-  text: string;
-}
-
-// 題目 Embed 的每一則以 `PROBLEM_BULLET` 開頭（contracts/discord-embed-contract.md §1），依此切分
-// 逐題內容。前綴取自 renderer 共用的同一顆常數，避免版面調整後單邊漂移使檢查靜默失效。
-function parseProblemEntries(description: string | undefined): ProblemEntry[] {
-  if (!description) return [];
-  const lines = description.split("\n");
-  const entries: ProblemEntry[] = [];
-  let current: ProblemEntry | null = null;
-
-  for (const line of lines) {
-    if (line.startsWith(PROBLEM_BULLET)) {
-      if (current) entries.push(current);
-      const match = line.slice(PROBLEM_BULLET.length).match(/^\s*\[(\d+)\./);
-      current = { id: match?.[1] ?? String(entries.length + 1), text: line };
-    } else if (current) {
-      current.text += `\n${line}`;
-    }
-  }
-  if (current) entries.push(current);
-  return entries;
-}
-
-// 獨立純函式（憲章 IX）：同時涵蓋逐區塊預算、總量上限與平台結構性上限，供 runtime 與未來 F5 的
-// scripts/validate.ts 共用同一顆實作。
-export function checkBudget(embeds: DiscordEmbed[]): BudgetReport {
+// 獨立純函式（憲章 IX）：對單一 RenderedMessage 同時檢查逐區塊預算、結構性上限與總量，
+// 供 runtime 與 scripts/validate.ts 共用同一顆實作。budgetSlots 由 render() 提供，
+// 值 MUST 是放進 embeds 的同一份字串實例，故此處不再反解析 embeds（research R10）。
+export function checkBudget(message: RenderedMessage): BudgetReport {
+  const { embeds, budgetSlots } = message;
   const items: BudgetItem[] = [];
 
-  const mainEmbed = embeds[0];
-  const problemEmbed = embeds[1];
-  const closingEmbed = embeds[2];
-
-  if (mainEmbed) {
-    items.push(makeItem("digest", codePointLength(mainEmbed.description), 900));
-    items.push(makeItem("tsTip", codePointLength(findFieldValue(mainEmbed, "TypeScript Tip")), 450));
-    items.push(makeItem("pyTip", codePointLength(findFieldValue(mainEmbed, "Python Tip")), 450));
+  if (budgetSlots.digest !== undefined) {
+    items.push(makeItem("digest", codePointLength(budgetSlots.digest), 900));
+  }
+  if (budgetSlots.tsTip !== undefined) {
+    items.push(makeItem("tsTip", codePointLength(budgetSlots.tsTip), 450));
+  }
+  if (budgetSlots.pyTip !== undefined) {
+    items.push(makeItem("pyTip", codePointLength(budgetSlots.pyTip), 450));
+  }
+  if (budgetSlots.overlayNotes !== undefined) {
+    items.push(makeItem("overlayNotes", codePointLength(budgetSlots.overlayNotes), 400));
+  }
+  if (budgetSlots.takeaway !== undefined) {
+    items.push(makeItem("takeaway", codePointLength(budgetSlots.takeaway), 120));
+  }
+  if (budgetSlots.pathFooter !== undefined) {
+    items.push(makeItem("pathFooter", codePointLength(budgetSlots.pathFooter), 200));
+  }
+  if (budgetSlots.exitCriteria !== undefined) {
+    items.push(makeItem("exitCriteria", codePointLength(budgetSlots.exitCriteria), 400));
+    const lines = budgetSlots.exitCriteria.split("\n").filter((line) => line.length > 0);
+    items.push(makeItem("exitCriteria.count", lines.length, 6));
+    lines.forEach((line, i) => {
+      const text = line.startsWith(EXIT_CRITERIA_PREFIX) ? line.slice(EXIT_CRITERIA_PREFIX.length) : line;
+      items.push(makeItem(`exitCriteria[${i}]`, codePointLength(text), 60));
+    });
+  }
+  if (budgetSlots.problems !== undefined) {
+    budgetSlots.problems.forEach((entry, i) => {
+      items.push(makeItem(`problem[${i}]`, codePointLength(entry), 350));
+    });
+    // 兜底檢查（唯一套用點在生成端 generate-schedule.ts，docs/spec.md §13.4）：
+    // 命中代表課表缺陷，MUST NOT 由 Compiler / Renderer 截斷（data-model.md §5）。
+    items.push(makeItem("problems.count", budgetSlots.problems.length, 3));
   }
 
-  if (problemEmbed) {
-    const entries = parseProblemEntries(problemEmbed.description);
-    // Fail loud（憲章 XV）：description 非空卻切不出任何一題，代表題目版面已與此處的切分假設脫鉤。
-    // 此時 MUST NOT 靜默放行——否則逐題 350 與題數上限會無聲消失，超長 lesson 反而以 ok === true 通過。
-    if ((problemEmbed.description ?? "").trim() !== "" && entries.length === 0) {
-      items.push(makeItem("problems.parse", 1, 0));
-    }
-    for (const entry of entries) {
-      items.push(makeItem(`problem[${entry.id}]`, codePointLength(entry.text), 350));
-    }
-    items.push(makeItem("problems.count", entries.length, 3));
-  }
-
-  if (closingEmbed) {
-    items.push(makeItem("exitCriteria", codePointLength(findFieldValue(closingEmbed, "✅ Exit Criteria")), 400));
-    items.push(makeItem("takeaway", codePointLength(findFieldValue(closingEmbed, "💡 Takeaway")), 120));
-    items.push(makeItem("pathFooter", codePointLength(findFieldValue(closingEmbed, "🧭 學習路徑")), 200));
-  }
-
-  // 平台結構性上限（FR-006b）：這些是平台會直接拒絕請求的硬限制，MUST 與逐區塊預算在同一次呼叫中檢查。
+  // 平台結構性上限：這些是平台會直接拒絕請求的硬限制，MUST 與逐區塊預算在同一次呼叫中檢查。
   embeds.forEach((embed, i) => {
     items.push(makeItem(`embed[${i}].title`, codePointLength(embed.title), 256));
     items.push(makeItem(`embed[${i}].description`, codePointLength(embed.description), 4096));

@@ -10,10 +10,10 @@ function makeLesson(): Lesson {
     sessionIndex: 1,
     type: "concept",
     track: "foundation",
+    color: 1,
     concept: {
       id: "left-right-pointer",
       title: "Left-Right Pointer",
-      moduleColor: 1,
       digest: "d",
       tsTip: "t",
       pyTip: "p",

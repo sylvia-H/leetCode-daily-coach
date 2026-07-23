@@ -6,7 +6,7 @@ export interface Problem {
   title: string;
   url: string;
   difficulty: "Easy" | "Medium" | "Hard";
-  whyThisPattern: string;
+  whyThisPattern?: string;
   hint?: string;
 }
 
@@ -19,7 +19,6 @@ export interface PathLabels {
 export interface LessonConcept {
   id: string;
   title: string;
-  moduleColor: number;
   digest: string;
   tsTip: string;
   pyTip: string;
@@ -31,13 +30,23 @@ export interface LessonConcept {
   articlePath: string;
 }
 
+export interface ReviewConcept {
+  id: string;
+  title: string;
+}
+
 export interface Lesson {
   sessionIndex: number;
   type: SessionType;
   track: Track;
-  concept: LessonConcept;
+  color: number;
+  concept?: LessonConcept;
+  path?: PathLabels;
   problems: Problem[];
-  path: PathLabels;
+  reviewConcepts?: ReviewConcept[];
+  overlayNotes?: string;
+  reflectionQuestion?: string;
+  encouragement?: string;
 }
 
 export interface DiscordEmbedField {
@@ -54,4 +63,20 @@ export interface DiscordEmbed {
   footer?: { text: string };
   author?: { name: string };
   url?: string;
+}
+
+export interface BudgetSlots {
+  digest?: string;
+  tsTip?: string;
+  pyTip?: string;
+  exitCriteria?: string;
+  takeaway?: string;
+  pathFooter?: string;
+  overlayNotes?: string;
+  problems?: string[];
+}
+
+export interface RenderedMessage {
+  embeds: DiscordEmbed[];
+  budgetSlots: BudgetSlots;
 }

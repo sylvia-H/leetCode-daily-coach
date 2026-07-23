@@ -6,7 +6,8 @@ const HISTORY_LIMIT = 30;
 
 export interface HistoryEntry {
   sessionIndex: number;
-  conceptId: string;
+  /** 僅 concept 類 Session 有值；其餘四種 Session 類型無 conceptId 可記（F5 五種類型）。 */
+  conceptId?: string;
   pushedAt: string;
 }
 
@@ -128,15 +129,13 @@ export function advance(state: AppState, track: Track, lesson: Lesson, pushedAt:
   trackState.currentSessionIndex += 1;
   trackState.lastPushAt = pushedAt.toISOString();
 
-  if (!trackState.completedConceptIds.includes(lesson.concept.id)) {
+  if (lesson.concept && !trackState.completedConceptIds.includes(lesson.concept.id)) {
     trackState.completedConceptIds.push(lesson.concept.id);
   }
 
-  trackState.history.push({
-    sessionIndex: lesson.sessionIndex,
-    conceptId: lesson.concept.id,
-    pushedAt: pushedAt.toISOString(),
-  });
+  const historyEntry: HistoryEntry = { sessionIndex: lesson.sessionIndex, pushedAt: pushedAt.toISOString() };
+  if (lesson.concept) historyEntry.conceptId = lesson.concept.id;
+  trackState.history.push(historyEntry);
   if (trackState.history.length > HISTORY_LIMIT) {
     trackState.history = trackState.history.slice(trackState.history.length - HISTORY_LIMIT);
   }
