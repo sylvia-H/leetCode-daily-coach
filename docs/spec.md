@@ -395,6 +395,12 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
 - Python Tip           （Python 一則實戰要點，含短程式碼）
 ```
 
+**`Today's Challenge` 的機器可解析格式（MUST，F5 定案 2026-07-23）**：該區塊 MUST 以巢狀 markdown list
+逐題描述，每題一個頂層項目、以 `**{leetcodeId}**` 開頭，其後文字即「為什麼適合此 Pattern」（MUST 非空）；
+`Hint` 為其下以 `Hint:` 開頭的巢狀項目（選配、至多一則）。同一題號 MUST NOT 重複出現；條目順序不影響
+推播結果（題序由課表 `problemIds` 決定）。**MUST NOT 在此寫入題目標題 / URL / 難度**——三者由程式自
+Problem Bank 帶入（§5、§11、§12.1）。完整契約見 `specs/005-lesson-compiler/contracts/article-format.md` §4。
+
 ### 10.1 Frontmatter（Concept metadata）
 
 每個 Concept 檔 MUST 以 YAML frontmatter 描述 metadata：
@@ -435,7 +441,10 @@ tags: [array, in-place, sorted]
 
 - 每個 Concept MUST 定義 `exit_criteria`，明確列出「今天真正學會什麼」，而非「今天學完」。
 - Exit Criteria SHOULD 可勾選（呈現為 checklist），供使用者自評。
-- 推播版面考量：`exit_criteria` SHOULD ≤ 6 條、每條 SHOULD ≤ 60 字元（Gate 檢查，§20.3）。
+- 推播版面考量：`exit_criteria` **MUST ≤ 6 條、每條 MUST ≤ 60 字元**（F5 定案 2026-07-23 由 SHOULD 升為
+  MUST）。**理由**：此上限由 §14.5 的 Exit Criteria 預算（≤400 字元）反推而來，且 F5 的預算檢查函式會
+  逐一檢查條數與單條長度並在超限時**失敗**——既然機器會擋，規範就 MUST NOT 停留在 SHOULD，否則
+  「合規的 SHOULD 卻過不了 Gate」會成為常態。F7 產線生成 `exit_criteria` 時 MUST 遵守此上限。
 
 ### 10.3 內容長度與詳盡度
 
@@ -568,6 +577,13 @@ Day 7  rest       休息
   - **確定性（MUST）**：同一輸入 → byte-identical 輸出（不得使用未固定 seed 的隨機源）。
 - 生成器 MUST 內建驗證：產出課表為 DAG 的合法拓樸子序列、review 的 `reviewRange` 正確涵蓋本週、**每個 `concept` Session 皆被某個 `reviewRange` 涵蓋**（`review-coverage-gap`，見 §13.2 的槽位順序約束）、所有 `conceptId` / `problemIds` 參照存在、每個 Concept 的 `module` 存在於 `modules.json`（`unknown-module`；否則該 Concept 會從三份課表靜默消失）。
 - **`challenge` 槽選題（MUST，F4 定案）**：候選池 MUST 限於**該 challenge Session 之前已引入**的 Concept 的題目（取符合該 Track `challengeDifficulty` 者），避免挑戰題指向尚未教到的 Concept；取尚未被前面任一 challenge 用過的最小題號，全數用過時退回池中最小題號。候選池為空時 `problemIds` 省略為合法（沿用「無 fallback」定案），但生成器 MUST 留下 `challenge-no-problem` 的 **warning** 訊號（通常代表該 Track 的難度帶與題庫分布對不上）。
+- **每 Session 題數上限 ≤ 3（MUST，F5 定案 2026-07-23）**：課表中**任一** Session 的 `problemIds` 長度
+  MUST ≤ 3，與 §14.5 的推播預算「每題 ≤350、最多 3 題」對齊。此上限的**唯一套用點在生成器**——
+  concept 槽沿用 §12.1 的 `problem-count-range`（Concept 宣告的 `leetcode` 本就 ≤3），practice / challenge
+  等聯集或多來源選題的槽位，生成器 MUST 在既有穩定序上**取前 3 題**後才寫入課表。
+  **Lesson Compiler 與 Renderer MUST NOT 截斷題目**（§14.5 明文禁止截斷）：題數超限一律是課表缺陷，
+  由生成端消除、由內容 Gate 的預算檢查兜底。生成器 MUST 以 `session-problem-overflow` 具名回報任何
+  超過 3 題卻未被截取的情形（不變式自檢）。
 - 插入 / 調整 Concept 時的工作流：改 Curriculum → 重跑生成器 → review diff → commit。MUST NOT 手改生成物。
 
 ---
@@ -615,6 +631,22 @@ Day 7  rest       休息
 - `review`：見 §15。
 - `rest`：一句簡短鼓勵（內建語錄池決定性輪替）+ 本週回顧提示。
 
+**`practice` / `challenge` 的題目說明來源（MUST，F5 定案 2026-07-23）**：這兩類 Session 沒有對應的 Full
+Article，但其題目仍 MUST 呈現「為什麼適合此 Pattern」與 Hint。該內容 MUST 取自**引入該題的 Concept
+Article 的 `Today's Challenge` 條目**——Compiler MUST 提供 `problemId → conceptId` 的**確定性**反查（該題被
+多個 Concept 引用時取該 Track 課表中**較早引入**者；仍並列時以 §16.1 的全序 `ordinalOf` 決勝）。查無來源
+時該題 MUST 僅呈現題號 / 官方標題 / 連結 / 難度，MUST NOT 因此失敗，亦 MUST NOT 以空字串填充說明欄位。
+
+**「查無來源」涵蓋兩種狀態（MUST，皆為省略而非失敗）**：(a) 反查表中找不到引入該題的 Concept；
+(b) 反查到 Concept、但該 Concept 的 Article `Today's Challenge` 沒有該題號的條目。兩者對使用者的結果
+相同（該題只有 metadata），故 MUST 走同一條「省略說明、不失敗」的路徑。**這與 `concept` 類 Session 的
+題目不對齊（課表題號不在本篇條目中 ⇒ fail loud）語意不同，MUST NOT 混用**：concept 類的題目是這堂課
+的教學主體，缺說明代表教材與課表脫鉤；practice / challenge 的題目是跨課複習，缺說明只是少了註解。
+
+**理由**：Problem Bank 只存題目 metadata（§12.1），不存教學說明；把說明放進 Bank 會使「同一題在不同 Pattern
+下為何適合」無處安放。此規則亦意味 **Article 的 `Today's Challenge` 是全專案題目說明的唯一來源**，F7 產線
+展開全文時 MUST 為每個 `leetcode` 題號產出對應條目。
+
 ### 14.4 顏色（依 Module，教材更快辨識）
 
 - 每個 Module 一色（Array / Hash / String / Two Pointer …），同一 Module 的 Concept 共用色。
@@ -648,6 +680,10 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | Takeaway                       | ≤ 120                   |
 | 學習路徑 footer                | ≤ 200                   |
 
+- **「最多 3 題」的把關點在課表生成端（MUST，F5 定案 2026-07-23）**：Compiler 與 Renderer **MUST NOT**
+  為了滿足此上限而截斷題目清單（同本節「超限一律視為失敗、MUST NOT 自動截斷」）。題數上限由
+  `generate-schedule.ts` 於寫入 `schedules/{track}.json` 時保證（§13.4），Gate 的 `problems.count` 檢查
+  是**兜底**而非唯一防線——Gate 攔下時代表課表本身有缺陷，處置方式是修生成器並重跑，不是改 Compiler。
 - Render 後單則訊息總長 MUST ≤ **5,500** 字元（保留 500 安全餘裕）。
 - 一則訊息裝不下時 MUST 確定性拆為第二則訊息（fallback，正常情況下預算設計應使其不發生）。
 - 全文（Corner 等閱讀用區塊）不進 Discord；留待未來 GitHub Pages（F9）以連結提供。
@@ -704,7 +740,12 @@ Challenge    一題 Medium 綜合題（Track 難度不同）
 
 - Review 段的 Concept 清單 MUST 由 Compiler 依「本週涵蓋的 sessionIndex 範圍」推導；MUST NOT 由 LLM 決定範圍。
 - Reflection 問題 MUST 來自 **build-time 預生成的題庫**（`data/reflection-bank.json`，依 Topic / 週次組織，過 Gate 凍結；§20），每日 runtime 依 sessionIndex 決定性選取。MUST NOT 於 runtime 呼叫 LLM 生成。
-- Challenge 題目 MUST 取自 Problem Bank（deterministic 選題）。
+- **F8 之前的過渡規則（MUST，F5 定案 2026-07-23）**：`data/reflection-bank.json` 與 `data/encouragement.json` 由 **F8** 建立，在此之前「review MUST 含三段」不適用。`Lesson` 的 `reflectionQuestion` / `encouragement` MUST 為選配欄位；素材檔缺席時 Renderer MUST **省略**該段落（MUST NOT 產生空段落或佔位字串），CI Gate MUST 照常通過。F5 MUST NOT 代 F8 建立佔位素材；F8 灌入素材後，版面 MUST 在不修改 Compiler / Renderer 版面邏輯的前提下自動長出。**理由**：素材與版面分屬不同 Feature，佔位素材會讓「決定性輪替規則」在 F8 定案前先被實作一次，形成兩套。
+- Challenge 題目 MUST 取自 Problem Bank（deterministic 選題）。**選題於課表生成階段定案（MUST，F5 定案
+  2026-07-23）**：review Session 的 Challenge 題目 MUST 由該 Session 的 `problemIds`（`schedules/{track}.json`）
+  提供，Lesson Compiler **MUST NOT 於 runtime 即時選題**（否則生成物失去權威、且形成「生成一套選題、
+  runtime 另一套」的雙軌，違反 §4-9／§4-13）。`generate-schedule.ts` 目前尚未為 review 槽選題，在補上之前
+  該段省略為合法狀態（與上一條的 F8 過渡規則一致）。
 
 ---
 
@@ -771,6 +812,24 @@ interface TrackOverlay {
 }
 ```
 
+**Overlay 各欄位的套用點（MUST，F5 定案 2026-07-23）**：
+
+**總則——選題一律在生成階段定案，Compiler 只組裝不選題**：凡是會改變「今天做哪幾題」的 Overlay 欄位，
+其唯一套用點 MUST 在 `scripts/generate-schedule.ts`，結果凍結於 `schedules/{track}.json`；Lesson Compiler
+MUST NOT 於 runtime 重新選題或再次加題。否則生成物將失去權威（§4-13），並形成「生成一套選題、runtime
+另一套」的雙軌實作（§4-9）。
+
+- `extraProblemIds`：**唯一套用點在 `generate-schedule.ts`**——生成器於 concept 槽選題時把它**附加**於
+  難度帶過濾結果之後（首次出現保留去重），並一併納入同週 practice 槽的題目聯集，結果凍結於課表。
+  **Lesson Compiler MUST NOT 消費 `extraProblemIds`**（重複套用等於同一規則兩處實作）。
+- `extraNotesMarkdown`：由 Compiler 帶入 `Lesson.overlayNotes`，Renderer 以**獨立附加區塊**呈現，
+  MUST NOT 併入或取代 Digest 等核心區塊（§4-5）。**這是 Overlay 唯一由 Compiler 消費的欄位**——
+  它是補充說明，不改變選題。
+- `challengeDifficulty`（per-Concept）：**目前無消費者**。challenge 選題已於 `generate-schedule.ts` 依
+  `track-params.json` 的 per-Track `challengeDifficulty` 決定並凍結於課表，且 challenge 槽非 concept-bound，
+  在 Compiler 側沒有套用點。若日後要使其生效，套用點 MUST 在 `generate-schedule.ts`（生成階段），
+  **MUST NOT 移到 Compiler**（同上總則）。
+
 ### 16.4 Lesson（Compiler → Renderer 的唯一介面）
 
 ```ts
@@ -808,6 +867,14 @@ interface Lesson {
 
 - Renderer MUST 只依賴 `Lesson`。新增 delivery（Telegram / Email / Web）時只需新增 Renderer，不動上游。
 - `Lesson` 內所有欄位 MUST 為 build-time 可得的凍結內容；MUST NOT 有任何欄位需要 runtime LLM 填充。
+- **五種 Session 類型的欄位增補（MUST，F5 定案 2026-07-23）**：
+  - `color: number` 上移至 `Lesson` 頂層（取代 `concept.moduleColor`）——`practice` / `challenge` /
+    `review` / `rest` 無單一 Module 但仍需顏色，一律由 Compiler 填入（Renderer MUST NOT 查任何色表）。
+  - 新增 `reviewConcepts?: Array<{ id, title }>`：`type === 'review'` 時 MUST 存在且非空，由 Compiler 依
+    `reviewRange` 推導（§15）。
+  - 新增 `overlayNotes?: string`：Track Overlay 的 `extraNotesMarkdown`（疊加，不取代；§16.3）。
+  - `problems[].whyThisPattern` 轉為**選配**：`practice` / `challenge` 的題目若查不到「引入它的 Concept」
+    （§14.3 的反查規則），該題只呈現題號 / 標題 / 連結 / 難度，MUST NOT 以空字串填充。
 
 ### 16.5 使用者設定（Multi-Track）
 
@@ -1139,14 +1206,22 @@ jobs:
 
 - 觸發：所有 push / pull request。
 - 內容：`npm ci` → `npm run build`（`tsc`）→ `npm test`（vitest）→ `npm run validate:curriculum`
-  （課程骨架 + Concept 的 DAG / schema / 顆粒度驗證，§8.3）。
+  （課程骨架 + Concept 的 DAG / schema / 顆粒度驗證，§8.3）→ `npm run validate:problem-bank`（F3）
+  → `npm run validate:schedule`（F4）。
 - 任一步失敗 MUST 使 CI 失敗（fail loud）。
 
 **（b）`content-gate.yml` — 內容 Gate（F5 建立）**
 
 - 觸發：對 `concepts/** articles/** data/** schedules/** overlays/** curriculum/** src/**` 的 PR / push。
-- 內容：`scripts/validate.ts`（DAG 驗證 + 全 Track × 全 Session 完整編譯 + Discord 限制檢查）+ TS/Python 程式碼實測（§20.3 Stage 2-1）+ 單元測試。
+- 內容：`scripts/validate.ts`（DAG 驗證 + 全 Track × 全 Session 完整編譯 + Discord 限制檢查）+ 單元測試；
+  **TS/Python 程式碼實測（§20.3 Stage 2-1）由 F7 加入同一支 workflow**（F5 定案 2026-07-23：F5 交付時 repo 內
+  只有 stub / fixture 教材，實測 harness 無真實素材可驗；F5 MUST NOT 留下無驗證力的實測空殼步驟）。
 - Gate 不通過 MUST 阻擋合併。
+- **兩支 workflow 對 `src/**` 的 PR 會各跑一次 `npm ci` / `build` / `test`——這是刻意的**：內容 Gate 的
+  結論「Gate 通過 ⇒ runtime 不會因內容失敗」以 Compiler 行為正確為前提，故 `content-gate.yml` MUST 自帶
+  build + test 而非倚賴另一支 workflow 的結果。以本專案規模（單一小型 repo、兩支 job 各約 1–2 分鐘）此
+  重複遠低於 GitHub Actions 免費層額度，不違反 §4-16；**若未來 job 時間顯著成長，SHOULD 先合併兩支
+  workflow 為單一 job 的多個 step，MUST NOT 改以「省略 build/test」的方式節省**。
 
 ---
 
@@ -1270,6 +1345,7 @@ MUST 有單元測試：
   - **Stage 1**：`generate-curriculum.ts`——LLM 批次起草完整課綱（150+ Concept 的 frontmatter + Author Hints）→ 結構 Gate → 產出 `curriculum/outline.md` → **你一次性定稿（唯一人工檢查點）** → Skeleton 凍結。
   - **Stage 2**：`generate-content.ts`——全量展開 Full Article（**繁體中文、詳盡、觀念本體 ≤2,000 字、含 Digest / TS·Python Tip / Corner / Exit Criteria / 每題 Hint**）；§20.3 全部 Gate；§20.4 節流 + 斷點續跑 + 冪等。
   - 課綱凍結後執行 `generate-schedule.ts` 產出三份正式課表並 commit。
+  - **補入 `content-gate.yml` 的 TS/Python 程式碼實測步驟**（§21.3、§20.3 Stage 2-1；F5 定案 2026-07-23 由本 Feature 承接）。
 - 定位：內容工程主軸，**可與 F5/F6 並行**（機器批次 2～4 天）。
 - **本 Feature 待定（clarify 定案）**：Stage 1 / Stage 2 的 prompt 模板與 self-check 準則、Gate 通過門檻（程式碼執行範圍、字數 / 繁中嚴格度）、批次大小與排程。
 - 驗收（= M3 並行）：三軌全部 Session 內容齊備，Gate（含 TS/Python 程式碼在 CI 實測、字元預算、全編譯）全數通過。

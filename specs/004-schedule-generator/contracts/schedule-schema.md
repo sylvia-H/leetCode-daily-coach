@@ -42,7 +42,14 @@
 | `conceptId` 存在於 DAG | `dangling-concept` |
 | `problemIds` 皆存在於 Problem Bank | `dangling-problem` |
 | `review` 的 `reviewRange = [weekStart, reviewIndex-1]`、不越界不錯週 | `review-range-invalid` |
+| 任一 Session 的 `problemIds` ≤ 3 題（F5 定案 2026-07-23 回填） | `session-problem-overflow` |
 | 同輸入 → byte-identical | `determinism-drift`（CI 比對） |
+
+> **題數上限的套用點（F5 定案 2026-07-23，`docs/spec.md` §13.4 / §14.5）**：≤3 與推播預算「每題 ≤350、
+> 最多 3 題」對齊，**唯一套用點在生成器**——`selectConceptProblems`（Core + Overlay 疊加後）與
+> `unionProblems`（practice 聯集）皆於既有穩定序上**取前 3 題**。Lesson Compiler / Renderer MUST NOT 截斷
+> 題目（§14.5 禁止截斷），故上表的 `session-problem-overflow` 是**不變式自檢**：命中代表課表被手改或
+> 生成器退化，處置是修生成器並重跑，不是在下游截斷。
 
 > 「每週含 ≥1 review 與 ≥1 rest」由**輸入端** `rhythm` 模板的 zod 驗證保證（`param-invalid`：長度 7 且含 review+rest），
 > 加上確定性攤課即成立；不另設輸出級 `rhythm-missing-rest-review` 規則（避免與 `param-invalid` 雙重歸類，且自然收尾的
