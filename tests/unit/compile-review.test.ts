@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compile } from "../../src/compiler/lesson.js";
 import { makeArticleMarkdown, makeCompilerDeps } from "../helpers/compiler.js";
+import { asReview } from "../helpers/lesson.js";
 
 describe("compile — review 分支（US2、FR-011）", () => {
   const deps = makeCompilerDeps({
@@ -26,7 +27,7 @@ describe("compile — review 分支（US2、FR-011）", () => {
   });
 
   it("reviewConcepts 由 reviewRange 推導，涵蓋範圍內全部 concept Session（依 sessionIndex 遞增）", () => {
-    const lesson = compile("foundation", 5, deps);
+    const lesson = asReview(compile("foundation", 5, deps));
     expect(lesson.reviewConcepts).toEqual([
       { id: "alpha", title: "Alpha" },
       { id: "beta", title: "Beta" },
@@ -52,12 +53,12 @@ describe("compile — review 分支（US2、FR-011）", () => {
         "articles/test-topic/002-beta.md": makeArticleMarkdown({ id: "beta" }),
       },
     });
-    const lesson = compile("foundation", 3, narrowDeps);
+    const lesson = asReview(compile("foundation", 3, narrowDeps));
     expect(lesson.reviewConcepts).toEqual([{ id: "alpha", title: "Alpha" }]);
   });
 
   it("F8 素材未提供時 reflectionQuestion 省略（不填、不失敗）", () => {
-    const lesson = compile("foundation", 5, deps);
+    const lesson = asReview(compile("foundation", 5, deps));
     expect(lesson.reflectionQuestion).toBeUndefined();
   });
 });

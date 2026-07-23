@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compile } from "../../src/compiler/lesson.js";
 import { makeArticleMarkdown, makeCompilerDeps, makeProblem } from "../helpers/compiler.js";
+import { asReview } from "../helpers/lesson.js";
 
 describe("compile — 四種非 concept 類型的 Lesson 形狀（US2、data-model.md §2 型別不變式）", () => {
   const deps = makeCompilerDeps({
@@ -29,8 +30,8 @@ describe("compile — 四種非 concept 類型的 Lesson 形狀（US2、data-mod
   it("practice：無 concept / path 欄位", () => {
     const lesson = compile("foundation", 3, deps);
     expect(lesson.type).toBe("practice");
-    expect(lesson.concept).toBeUndefined();
-    expect(lesson.path).toBeUndefined();
+    expect("concept" in lesson).toBe(false);
+    expect("path" in lesson).toBe(false);
   });
 
   it("practice：problemIds 缺席時 problems 為空陣列，仍是合法 Lesson", () => {
@@ -41,24 +42,24 @@ describe("compile — 四種非 concept 類型的 Lesson 形狀（US2、data-mod
   it("challenge：無 concept / path 欄位", () => {
     const lesson = compile("foundation", 4, deps);
     expect(lesson.type).toBe("challenge");
-    expect(lesson.concept).toBeUndefined();
-    expect(lesson.path).toBeUndefined();
+    expect("concept" in lesson).toBe(false);
+    expect("path" in lesson).toBe(false);
   });
 
   it("review：reviewConcepts 非空，無 concept / path 欄位", () => {
     const lesson = compile("foundation", 5, deps);
     expect(lesson.type).toBe("review");
-    expect(lesson.reviewConcepts?.length).toBeGreaterThan(0);
-    expect(lesson.concept).toBeUndefined();
-    expect(lesson.path).toBeUndefined();
+    expect(asReview(lesson).reviewConcepts.length).toBeGreaterThan(0);
+    expect("concept" in lesson).toBe(false);
+    expect("path" in lesson).toBe(false);
   });
 
   it("rest：problems 恆為空陣列，無 concept / path 欄位", () => {
     const lesson = compile("foundation", 6, deps);
     expect(lesson.type).toBe("rest");
     expect(lesson.problems).toEqual([]);
-    expect(lesson.concept).toBeUndefined();
-    expect(lesson.path).toBeUndefined();
+    expect("concept" in lesson).toBe(false);
+    expect("path" in lesson).toBe(false);
   });
 
   it("color 於所有類型皆存在（非 concept 類為中性色）", () => {

@@ -3,17 +3,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { run } from "../../src/main.js";
-import type { Lesson } from "../../src/types/lesson.js";
+import type { ConceptLesson } from "../../src/types/lesson.js";
 
-function makeLesson(): Lesson {
-  return {
-    sessionIndex: 2,
-    type: "concept",
-    track: "foundation",
-    concept: {
+import { makeConceptLesson, makeLessonConcept } from "../helpers/lesson.js";
+
+function makeLesson(overrides: Partial<ConceptLesson> = {}): ConceptLesson {
+  return makeConceptLesson({
+    color: 1,
+    concept: makeLessonConcept({
       id: "left-right-pointer",
       title: "Left-Right Pointer",
-      moduleColor: 1,
       digest: "d",
       tsTip: "t",
       pyTip: "p",
@@ -23,10 +22,9 @@ function makeLesson(): Lesson {
       complexityLabel: "O(n)",
       estimatedMinutes: 15,
       articlePath: "articles/x.md",
-    },
-    problems: [],
-    path: { current: "Left-Right Pointer" },
-  };
+    }),
+    ...overrides,
+  });
 }
 
 function writeState(stateFile: string, lastPushAt: string | null): void {

@@ -1,4 +1,16 @@
-import type { BudgetSlots, DiscordEmbed, DiscordEmbedField, Lesson, PathLabels, Problem, RenderedMessage } from "../types/lesson.js";
+import type {
+  BudgetSlots,
+  ConceptLesson,
+  DiscordEmbed,
+  DiscordEmbedField,
+  Lesson,
+  PathLabels,
+  PracticeLesson,
+  Problem,
+  RenderedMessage,
+  RestLesson,
+  ReviewLesson,
+} from "../types/lesson.js";
 
 // 題目 Embed 中每一則的 bullet 前綴（budget.ts 不再反解析——budgetSlots.problems 已逐題提供同一份
 // 字串實例；此常數只用於渲染，保留匯出供既有測試沿用）。
@@ -54,9 +66,8 @@ function renderExitCriteria(items: string[]): string {
   return items.map((item) => `${EXIT_CRITERIA_PREFIX}${item}`).join("\n");
 }
 
-function buildConceptBlocks(lesson: Lesson): Block[] {
-  const concept = lesson.concept!;
-  const path = lesson.path!;
+function buildConceptBlocks(lesson: ConceptLesson): Block[] {
+  const { concept, path } = lesson;
   const blocks: Block[] = [];
 
   const digest = concept.digest;
@@ -110,7 +121,7 @@ function buildConceptBlocks(lesson: Lesson): Block[] {
   return blocks;
 }
 
-function buildPracticeOrChallengeBlocks(lesson: Lesson): Block[] {
+function buildPracticeOrChallengeBlocks(lesson: PracticeLesson): Block[] {
   const isChallenge = lesson.type === "challenge";
   const title = isChallenge ? `🔥 Session ${lesson.sessionIndex} · Challenge` : `🏋️ Session ${lesson.sessionIndex} · 練習`;
   const prompt = isChallenge ? CHALLENGE_PROMPT : PRACTICE_PROMPT;
@@ -124,13 +135,15 @@ function buildPracticeOrChallengeBlocks(lesson: Lesson): Block[] {
   return [{ embed: { title, description, color: lesson.color }, slots: { problems: entries } }];
 }
 
-function buildReviewBlocks(lesson: Lesson): Block[] {
+function buildReviewBlocks(lesson: ReviewLesson): Block[] {
   const fields: DiscordEmbedField[] = [
-    { name: "📚 本週涵蓋", value: (lesson.reviewConcepts ?? []).map((c) => `- ${c.title}`).join("\n") },
+    { name: "📚 本週涵蓋", value: lesson.reviewConcepts.map((c) => `- ${c.title}`).join("\n") },
   ];
   const slots: BudgetSlots = {};
 
   if (lesson.reflectionQuestion !== undefined) {
+    // 放進 embed 的每一段可變長度文字都 MUST 同時登記 slot，否則會完全逃過逐區塊預算。
+    slots.reflectionQuestion = lesson.reflectionQuestion;
     fields.push({ name: "🤔 Reflection", value: lesson.reflectionQuestion });
   }
   if (lesson.problems.length > 0) {
@@ -142,16 +155,18 @@ function buildReviewBlocks(lesson: Lesson): Block[] {
   return [{ embed: { title: `🔁 Session ${lesson.sessionIndex} · 本週複習`, color: lesson.color, fields }, slots }];
 }
 
-function buildRestBlocks(lesson: Lesson): Block[] {
+function buildRestBlocks(lesson: RestLesson): Block[] {
   const embed: DiscordEmbed = {
     title: `😌 Session ${lesson.sessionIndex} · 休息日`,
     description: REST_DESCRIPTION,
     color: lesson.color,
   };
+  const slots: BudgetSlots = {};
   if (lesson.encouragement !== undefined) {
+    slots.encouragement = lesson.encouragement;
     embed.fields = [{ name: "💬 一句話", value: lesson.encouragement }];
   }
-  return [{ embed, slots: {} }];
+  return [{ embed, slots }];
 }
 
 function buildBlocks(lesson: Lesson): Block[] {
@@ -165,6 +180,12 @@ function buildBlocks(lesson: Lesson): Block[] {
       return buildReviewBlocks(lesson);
     case "rest":
       return buildRestBlocks(lesson);
+    default: {
+      // 型別層已窮舉；此支只在 Lesson 由型別系統之外的來源構造時命中，指名根因而非讓版面組裝
+      // 回傳 undefined 後在別處爆開（憲章 XV Fail loud）。
+      const unknown = lesson as { type: string; sessionIndex?: number };
+      throw new Error(`未知的 Session type：${unknown.type}（sessionIndex=${unknown.sessionIndex}）`);
+    }
   }
 }
 
@@ -178,6 +199,8 @@ function mergeSlots(blocks: Block[]): BudgetSlots {
     if (slots.takeaway !== undefined) merged.takeaway = slots.takeaway;
     if (slots.pathFooter !== undefined) merged.pathFooter = slots.pathFooter;
     if (slots.overlayNotes !== undefined) merged.overlayNotes = slots.overlayNotes;
+    if (slots.reflectionQuestion !== undefined) merged.reflectionQuestion = slots.reflectionQuestion;
+    if (slots.encouragement !== undefined) merged.encouragement = slots.encouragement;
     if (slots.problems !== undefined) merged.problems = slots.problems;
   }
   return merged;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compile } from "../../src/compiler/lesson.js";
 import { makeArticleMarkdown, makeCompilerDeps } from "../helpers/compiler.js";
+import { asConcept } from "../helpers/lesson.js";
 
 describe("compile — path 推導（US1、research R4）", () => {
   it("多前置 / 多後繼時取 ordinalOf 最接近者：prev 取最大者、next 取最小者", () => {
@@ -19,10 +20,10 @@ describe("compile — path 推導（US1、research R4）", () => {
       },
     });
 
-    const lesson = compile("foundation", 1, deps);
-    expect(lesson.path?.current).toBe("Target");
-    expect(lesson.path?.prev).toBe("C");
-    expect(lesson.path?.next).toBe("D");
+    const lesson = asConcept(compile("foundation", 1, deps));
+    expect(lesson.path.current).toBe("Target");
+    expect(lesson.path.prev).toBe("C");
+    expect(lesson.path.next).toBe("D");
   });
 
   it("無 prerequisite 時省略 prev；無 next 時省略 next", () => {
@@ -32,9 +33,9 @@ describe("compile — path 推導（US1、research R4）", () => {
       articles: { "articles/test-topic/001-solo.md": makeArticleMarkdown({ id: "solo", title: "Solo" }) },
     });
 
-    const lesson = compile("foundation", 1, deps);
-    expect(lesson.path?.prev).toBeUndefined();
-    expect(lesson.path?.next).toBeUndefined();
-    expect(lesson.path?.current).toBe("Solo");
+    const lesson = asConcept(compile("foundation", 1, deps));
+    expect(lesson.path.prev).toBeUndefined();
+    expect(lesson.path.next).toBeUndefined();
+    expect(lesson.path.current).toBe("Solo");
   });
 });

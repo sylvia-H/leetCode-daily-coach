@@ -1,6 +1,7 @@
 // 本專案唯一的 Lesson Compiler（docs/spec.md §7.1）：CI Gate 與每日 runtime MUST import 同一個
 // compile（憲章 IX）。純函式（除 deps.readArticle 這個明確的讀檔邊界外，無 I/O、無網路、無 LLM）。
 import { existsSync, readFileSync } from "node:fs";
+import { z } from "zod";
 import { TRACK_ORDER } from "../config.js";
 import { loadCurriculum, validateCurriculum } from "./curriculum.js";
 import { type ArticleContent, DEFAULT_MODULE_COLOR, moduleColor, parseArticle } from "./content.js";
@@ -8,7 +9,17 @@ import { getOverlayNotes, loadAllOverlays } from "./overlay.js";
 import { getProblemsForConcept, loadProblemBank, makeProblemExists } from "./problem.js";
 import { getSessionPlan, loadAllSchedules } from "./schedule.js";
 import type { ConceptNode, CurriculumGraph, Ordinal } from "../types/curriculum.js";
-import type { Lesson, PathLabels, Problem, ReviewConcept, Track } from "../types/lesson.js";
+import type {
+  ConceptLesson,
+  Lesson,
+  PathLabels,
+  PracticeLesson,
+  Problem,
+  RestLesson,
+  ReviewConcept,
+  ReviewLesson,
+  Track,
+} from "../types/lesson.js";
 import type { ProblemBank } from "../types/problem.js";
 import type { SessionPlan, TrackOverlay, TrackSchedule } from "../types/schedule.js";
 
@@ -96,6 +107,38 @@ export function checkOverlayCoverage(
   }
 }
 
+/**
+ * F8 素材（`data/reflection-bank.json` / `data/encouragement.json`）的**最小結構** schema。
+ * 完整 schema（依 Topic／週次組織、決定性輪替規則）屬 F8；此處只釘住足以讓
+ * contracts/lesson-contract.md §1「存在但不符 schema ⇒ fail loud」成立的骨架，避免把「壞檔」
+ * 靜默當成「缺席」——後者會讓一個打錯字的 JSON 讓整個段落無聲消失。
+ */
+const REFLECTION_BANK_SHAPE = z.record(z.string(), z.unknown());
+const ENCOURAGEMENT_SHAPE = z.union([
+  z.array(z.string().min(1)).min(1),
+  z.record(z.string(), z.unknown()),
+]);
+
+function loadOptionalMaterial(path: string, label: string, shape: z.ZodTypeAny): unknown {
+  if (!existsSync(path)) return undefined;
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(path, "utf-8"));
+  } catch (err) {
+    throw new Error(`${label} 壞檔：${path}（${(err as Error).message}）`);
+  }
+
+  const result = shape.safeParse(raw);
+  if (!result.success) {
+    const detail = result.error.issues
+      .map((issue) => `${issue.path.join(".") || "(root)"}：${issue.message}`)
+      .join("; ");
+    throw new Error(`${label} 壞檔：${path} 不符 schema（${detail}）`);
+  }
+  return result.data;
+}
+
 export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDeps {
   const p: CompilerPaths = { ...DEFAULT_PATHS, ...paths };
 
@@ -138,27 +181,27 @@ export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDe
     problemOrigins,
   };
 
-  if (existsSync(p.reflectionBankPath)) {
-    try {
-      deps.reflectionBank = JSON.parse(readFileSync(p.reflectionBankPath, "utf-8"));
-    } catch (err) {
-      throw new Error(`reflection bank 壞檔：${p.reflectionBankPath}（${(err as Error).message}）`);
-    }
-  }
-  if (existsSync(p.encouragementPath)) {
-    try {
-      deps.encouragement = JSON.parse(readFileSync(p.encouragementPath, "utf-8"));
-    } catch (err) {
-      throw new Error(`encouragement 壞檔：${p.encouragementPath}（${(err as Error).message}）`);
-    }
-  }
+  const reflectionBank = loadOptionalMaterial(p.reflectionBankPath, "reflection bank", REFLECTION_BANK_SHAPE);
+  if (reflectionBank !== undefined) deps.reflectionBank = reflectionBank;
+  const encouragement = loadOptionalMaterial(p.encouragementPath, "encouragement", ENCOURAGEMENT_SHAPE);
+  if (encouragement !== undefined) deps.encouragement = encouragement;
 
   return deps;
 }
 
 function readArticleCached(articlePath: string, conceptId: string, deps: CompilerDeps): ArticleContent {
   const cached = deps.articleCache?.get(articlePath);
-  if (cached) return cached;
+  if (cached) {
+    // 快取以 articlePath 為鍵，故命中時 parseArticle 的 article-id-mismatch 檢查不會執行。
+    // 兩個 Concept 指向同一篇 Article 時若不在此重驗，Compiler 會拿別人的正文組出這堂課
+    // （concept.id / title / digest 全錯，且 state 會記錄錯的 completedConceptIds）。
+    if (cached.meta.id !== conceptId) {
+      throw new Error(
+        `article-id-mismatch：教材 frontmatter 的 id（${cached.meta.id}）與請求的 conceptId（${conceptId}）不符（${articlePath}）`,
+      );
+    }
+    return cached;
+  }
   const raw = deps.readArticle(articlePath);
   const article = parseArticle(raw, conceptId, articlePath);
   deps.articleCache?.set(articlePath, article);
@@ -245,7 +288,7 @@ function derivePath(node: ConceptNode, graph: CurriculumGraph): PathLabels {
   return path;
 }
 
-function compileConcept(track: Track, plan: SessionPlan, deps: CompilerDeps): Lesson {
+function compileConcept(track: Track, plan: SessionPlan, deps: CompilerDeps): ConceptLesson {
   const conceptId = plan.conceptId;
   if (!conceptId) {
     throw new Error(`concept Session 缺少 conceptId：track=${track}, sessionIndex=${plan.sessionIndex}`);
@@ -260,7 +303,7 @@ function compileConcept(track: Track, plan: SessionPlan, deps: CompilerDeps): Le
   const path = derivePath(node, deps.graph);
   const overlayNotes = getOverlayNotes(deps.overlays[track], conceptId);
 
-  const lesson: Lesson = {
+  const lesson: ConceptLesson = {
     sessionIndex: plan.sessionIndex,
     type: "concept",
     track,
@@ -287,18 +330,23 @@ function compileConcept(track: Track, plan: SessionPlan, deps: CompilerDeps): Le
   return lesson;
 }
 
-function compilePracticeOrChallenge(track: Track, plan: SessionPlan, deps: CompilerDeps): Lesson {
+function compilePracticeOrChallenge(
+  track: Track,
+  plan: SessionPlan,
+  deps: CompilerDeps,
+  type: PracticeLesson["type"],
+): PracticeLesson {
   const problems = buildOriginProblems(plan.problemIds ?? [], deps, track, plan.sessionIndex);
   return {
     sessionIndex: plan.sessionIndex,
-    type: plan.type,
+    type,
     track,
     color: DEFAULT_MODULE_COLOR,
     problems,
   };
 }
 
-function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, schedule: TrackSchedule): Lesson {
+function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, schedule: TrackSchedule): ReviewLesson {
   const range = plan.reviewRange;
   if (!range) {
     throw new Error(`review Session 缺少 reviewRange：track=${track}, sessionIndex=${plan.sessionIndex}`);
@@ -338,7 +386,7 @@ function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, sche
   };
 }
 
-function compileRest(track: Track, plan: SessionPlan): Lesson {
+function compileRest(track: Track, plan: SessionPlan): RestLesson {
   return {
     sessionIndex: plan.sessionIndex,
     type: "rest",
@@ -356,11 +404,19 @@ export function compile(track: Track, sessionIndex: number, deps: CompilerDeps):
     case "concept":
       return compileConcept(track, plan, deps);
     case "practice":
+      return compilePracticeOrChallenge(track, plan, deps, "practice");
     case "challenge":
-      return compilePracticeOrChallenge(track, plan, deps);
+      return compilePracticeOrChallenge(track, plan, deps, "challenge");
     case "review":
       return compileReview(track, plan, deps, schedule);
     case "rest":
       return compileRest(track, plan);
+    default: {
+      // `plan.type` 在此為 `never`（型別層已窮舉），但課表是外部 JSON——schema 之外的來源（測試替身、
+      // 未來新增的 type）仍可能帶進未知值。少了這一支，compile() 會回傳 undefined，錯誤延後到
+      // render() 才以 TypeError 爆開，Gate 也只會記成 render-error 而非指名根因（憲章 XV Fail loud）。
+      const unknownType: string = plan.type;
+      throw new Error(`未知的 Session type：${unknownType}（track=${track}, sessionIndex=${plan.sessionIndex}）`);
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compile } from "../../src/compiler/lesson.js";
 import { makeArticleMarkdown, makeCompilerDeps, makeProblem } from "../helpers/compiler.js";
+import { asConcept } from "../helpers/lesson.js";
 
 const ARTICLE_PATH = "articles/test-topic/001-alpha.md";
 
@@ -21,11 +22,11 @@ describe("compile — concept Lesson 欄位來源（US1）", () => {
       },
     });
 
-    const lesson = compile("foundation", 1, deps);
+    const lesson = asConcept(compile("foundation", 1, deps));
     expect(lesson.type).toBe("concept");
-    expect(lesson.concept?.id).toBe("alpha");
-    expect(lesson.concept?.title).toBe("Alpha");
-    expect(lesson.concept?.digest).toBe("Alpha 的 Digest");
+    expect(lesson.concept.id).toBe("alpha");
+    expect(lesson.concept.title).toBe("Alpha");
+    expect(lesson.concept.digest).toBe("Alpha 的 Digest");
     expect(lesson.problems).toEqual([
       {
         id: 1,
@@ -59,8 +60,8 @@ describe("compile — concept Lesson 欄位來源（US1）", () => {
       },
     });
 
-    const lesson = compile("foundation", 1, deps);
-    expect(lesson.concept?.patternLabel).toBe("Weird Label!");
-    expect(lesson.concept?.complexityLabel).toBe("O(weird)");
+    const lesson = asConcept(compile("foundation", 1, deps));
+    expect(lesson.concept.patternLabel).toBe("Weird Label!");
+    expect(lesson.concept.complexityLabel).toBe("O(weird)");
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compile } from "../../src/compiler/lesson.js";
 import { makeArticleMarkdown, makeCompilerDeps, makeProblem } from "../helpers/compiler.js";
+import { asConcept } from "../helpers/lesson.js";
 
 describe("compile — Overlay 套用（US5、research R6、FR-009）", () => {
   it("extraNotesMarkdown 進 overlayNotes 且 Digest 不變（疊加不取代）", () => {
@@ -11,9 +12,9 @@ describe("compile — Overlay 套用（US5、research R6、FR-009）", () => {
       articles: { "articles/test-topic/001-alpha.md": makeArticleMarkdown({ id: "alpha", digest: "原本的 Digest" }) },
     });
 
-    const lesson = compile("foundation", 1, deps);
+    const lesson = asConcept(compile("foundation", 1, deps));
     expect(lesson.overlayNotes).toBe("Track 專屬補充說明");
-    expect(lesson.concept?.digest).toBe("原本的 Digest");
+    expect(lesson.concept.digest).toBe("原本的 Digest");
   });
 
   it("Overlay 未涵蓋任何欄位時 overlayNotes 省略（不為空字串）", () => {
@@ -23,7 +24,7 @@ describe("compile — Overlay 套用（US5、research R6、FR-009）", () => {
       articles: { "articles/test-topic/001-alpha.md": makeArticleMarkdown({ id: "alpha" }) },
     });
 
-    const lesson = compile("foundation", 1, deps);
+    const lesson = asConcept(compile("foundation", 1, deps));
     expect(lesson.overlayNotes).toBeUndefined();
   });
 

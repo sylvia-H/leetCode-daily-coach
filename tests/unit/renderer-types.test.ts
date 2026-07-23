@@ -1,21 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { render } from "../../src/renderer/discord.js";
-import type { Lesson } from "../../src/types/lesson.js";
-
-function baseLesson(overrides: Partial<Lesson>): Lesson {
-  return {
-    sessionIndex: 1,
-    type: "concept",
-    track: "foundation",
-    color: 0x2ecc71,
-    problems: [],
-    ...overrides,
-  };
-}
+import { makeLesson } from "../helpers/lesson.js";
 
 describe("render — 五種版面的欄位結構（US2、contracts/renderer-contract.md §2）", () => {
   it("concept：主 Embed 的 fields 逐一符合 Pattern/複雜度/預估時間/TypeScript Tip/Python Tip", () => {
-    const lesson = baseLesson({
+    const lesson = makeLesson({
       type: "concept",
       concept: {
         id: "alpha",
@@ -45,7 +34,7 @@ describe("render — 五種版面的欄位結構（US2、contracts/renderer-cont
   });
 
   it("concept：無 problems 時題目 Embed 整個省略（陣列長度減一，而非空 embed）", () => {
-    const withProblems = baseLesson({
+    const withProblems = makeLesson({
       type: "concept",
       concept: {
         id: "a",
@@ -83,28 +72,28 @@ describe("render — 五種版面的欄位結構（US2、contracts/renderer-cont
       estimatedMinutes: 5,
       articlePath: "x.md",
     };
-    const withNotes = render(baseLesson({ type: "concept", concept, path: { current: "A" }, overlayNotes: "補充內容" }))[0]!;
-    const withoutNotes = render(baseLesson({ type: "concept", concept, path: { current: "A" } }))[0]!;
+    const withNotes = render(makeLesson({ type: "concept", concept, path: { current: "A" }, overlayNotes: "補充內容" }))[0]!;
+    const withoutNotes = render(makeLesson({ type: "concept", concept, path: { current: "A" } }))[0]!;
     expect(withNotes.embeds.some((e) => e.title === "📎 Track 補充" && e.description === "補充內容")).toBe(true);
     expect(withoutNotes.embeds.some((e) => e.title === "📎 Track 補充")).toBe(false);
   });
 
   it("practice：單一 Embed，title 含「練習」", () => {
-    const lesson = baseLesson({ type: "practice" });
+    const lesson = makeLesson({ type: "practice" });
     const [message] = render(lesson);
     expect(message!.embeds).toHaveLength(1);
     expect(message!.embeds[0]?.title).toContain("練習");
   });
 
   it("challenge：單一 Embed，title 含「Challenge」", () => {
-    const lesson = baseLesson({ type: "challenge" });
+    const lesson = makeLesson({ type: "challenge" });
     const [message] = render(lesson);
     expect(message!.embeds).toHaveLength(1);
     expect(message!.embeds[0]?.title).toContain("Challenge");
   });
 
   it("review：📚 本週涵蓋 一律存在且列出每個 reviewConcept；Reflection/Challenge 缺席時整個 field 不存在", () => {
-    const lesson = baseLesson({
+    const lesson = makeLesson({
       type: "review",
       reviewConcepts: [
         { id: "a", title: "A" },
@@ -120,7 +109,7 @@ describe("render — 五種版面的欄位結構（US2、contracts/renderer-cont
   });
 
   it("review：reflectionQuestion 與 problems 皆存在時各自輸出對應 field", () => {
-    const lesson = baseLesson({
+    const lesson = makeLesson({
       type: "review",
       reviewConcepts: [{ id: "a", title: "A" }],
       reflectionQuestion: "你學到了什麼？",
@@ -133,21 +122,21 @@ describe("render — 五種版面的欄位結構（US2、contracts/renderer-cont
   });
 
   it("rest：description 為固定文案（非空字串）；無 encouragement 時 fields 不存在", () => {
-    const lesson = baseLesson({ type: "rest" });
+    const lesson = makeLesson({ type: "rest" });
     const [message] = render(lesson);
     expect(message!.embeds[0]?.description?.length).toBeGreaterThan(0);
     expect(message!.embeds[0]?.fields).toBeUndefined();
   });
 
   it("rest：有 encouragement 時附加恰好一個 field，值為該鼓勵語", () => {
-    const lesson = baseLesson({ type: "rest", encouragement: "加油！" });
+    const lesson = makeLesson({ type: "rest", encouragement: "加油！" });
     const [message] = render(lesson);
     expect(message!.embeds[0]?.fields).toHaveLength(1);
     expect(message!.embeds[0]?.fields?.[0]?.value).toBe("加油！");
   });
 
   it("省略一律代表欄位不存在，MUST NOT 出現空字串或佔位符", () => {
-    const lesson = baseLesson({ type: "rest" });
+    const lesson = makeLesson({ type: "rest" });
     const [message] = render(lesson);
     const embed = message!.embeds[0]!;
     expect(embed.fields).not.toEqual([]);

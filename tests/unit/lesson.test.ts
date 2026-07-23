@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compile, loadCompilerDeps } from "../../src/compiler/lesson.js";
+import { asConcept } from "../helpers/lesson.js";
 
 describe("compile（真實素材，US1 MVP）", () => {
   const deps = loadCompilerDeps();
@@ -11,8 +12,8 @@ describe("compile（真實素材，US1 MVP）", () => {
   });
 
   it("只有 track 不同時，concept / problems / path 完全相同（Track 不決定內容）", () => {
-    const a = compile("foundation", 4, deps);
-    const b = compile("interviewReady", 4, deps);
+    const a = asConcept(compile("foundation", 4, deps));
+    const b = asConcept(compile("interviewReady", 4, deps));
     expect(a.concept).toEqual(b.concept);
     expect(a.path).toEqual(b.path);
     expect(a.track).toBe("foundation");

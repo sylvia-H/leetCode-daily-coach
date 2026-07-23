@@ -129,12 +129,14 @@ export function advance(state: AppState, track: Track, lesson: Lesson, pushedAt:
   trackState.currentSessionIndex += 1;
   trackState.lastPushAt = pushedAt.toISOString();
 
-  if (lesson.concept && !trackState.completedConceptIds.includes(lesson.concept.id)) {
-    trackState.completedConceptIds.push(lesson.concept.id);
+  // `Lesson` 為 discriminated union：只有 concept 類 Session 帶得出 conceptId。
+  const conceptId = lesson.type === "concept" ? lesson.concept.id : undefined;
+  if (conceptId !== undefined && !trackState.completedConceptIds.includes(conceptId)) {
+    trackState.completedConceptIds.push(conceptId);
   }
 
   const historyEntry: HistoryEntry = { sessionIndex: lesson.sessionIndex, pushedAt: pushedAt.toISOString() };
-  if (lesson.concept) historyEntry.conceptId = lesson.concept.id;
+  if (conceptId !== undefined) historyEntry.conceptId = conceptId;
   trackState.history.push(historyEntry);
   if (trackState.history.length > HISTORY_LIMIT) {
     trackState.history = trackState.history.slice(trackState.history.length - HISTORY_LIMIT);
