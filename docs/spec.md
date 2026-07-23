@@ -538,16 +538,17 @@ Session 是「每日推播」的邏輯單位；每 Track 總量 MUST 約 **180 �
 ### 13.2 每週節奏（建議樣板，Track 可微調）
 
 ```
-Mon  concept    新觀念
-Tue  concept    新觀念
-Wed  practice   練習
-Thu  review     複習
-Fri  challenge  Medium Challenge
-Sat  concept    補充 / 進階
-Sun  rest       休息
+Day 1  concept    新觀念
+Day 2  concept    新觀念
+Day 3  practice   練習
+Day 4  concept    補充 / 進階
+Day 5  challenge  Challenge
+Day 6  review     複習（涵蓋 Day 1–5）
+Day 7  rest       休息
 ```
 
 - 節奏 MUST 內建 Review 與 Rest（呼應 Learning Philosophy）。
+- **rhythm 槽位順序約束（MUST，F4 定案）**：`reviewRange` 的定義為 `[weekStartIndex, reviewSessionIndex − 1]`（§13.4、F4 FR-013），故 rhythm 中**最後一個 `concept` 槽 MUST 早於最後一個 `review` 槽**——否則該 concept 落在所有 `reviewRange` 之外，該 Concept 在整份課表裡永遠不會被複習。同理，rhythm MUST 含至少一個 `concept` 槽（否則涵蓋佇列永不消耗），且第一個 `practice` 槽 MUST 晚於第一個 `concept` 槽（否則該週 practice 無題可練）。三者由 `track-params.json` 的 zod 層以 `param-invalid` 具名回報，並由生成器內建的 `review-coverage-gap` 不變式二次把關。**F7 課綱定稿後調整節奏時 MUST 維持此順序**（舊樣板把 review 排在第 4 槽，會使每週第三個新觀念永不被複習）。
 - Foundation Track 的 challenge 難度 SHOULD 降級；InterviewMastery 的 challenge SHOULD 升級為變體 / 綜合題。
 - **週節奏不綁日曆星期（MUST）**：上表的 Mon～Sun 僅為示意；節奏以**相對天數**計（Session 1 = 該 Track 實際開始的第一天，每 7 個 Session 一輪）。因「漏跑不跳課」（§19），漏推一天即整體順延一天，星期本來就會漂移，MUST NOT 依日曆星期決定 Session 類型。使用者若希望 rest 落在週日，SHOULD 自行選在週一啟用該 Track（§9.2）。
 
@@ -565,7 +566,8 @@ Sun  rest       休息
   - **輸入**：Curriculum DAG、每週節奏模板（§13.2）、Track 參數（`curriculum/track-params.json`，zod 驗證；涵蓋範圍準則以 Module/Level 宣告 + prerequisite 閉包、難度帶、challenge 難度、節奏微調、targetLevel；F4 定案）。題目難度分歧由生成器以 Problem Bank difficulty 過濾 + Overlay 附加實現。
   - **輸出**：`schedules/{track}.json` × 3，生成後 commit 定版（Constitution 第 13 條：commit 後即凍結；重新生成是刻意的 build-time 行為）。
   - **確定性（MUST）**：同一輸入 → byte-identical 輸出（不得使用未固定 seed 的隨機源）。
-- 生成器 MUST 內建驗證：產出課表為 DAG 的合法拓樸子序列、review 的 `reviewRange` 正確涵蓋本週、所有 `conceptId` / `problemIds` 參照存在。
+- 生成器 MUST 內建驗證：產出課表為 DAG 的合法拓樸子序列、review 的 `reviewRange` 正確涵蓋本週、**每個 `concept` Session 皆被某個 `reviewRange` 涵蓋**（`review-coverage-gap`，見 §13.2 的槽位順序約束）、所有 `conceptId` / `problemIds` 參照存在、每個 Concept 的 `module` 存在於 `modules.json`（`unknown-module`；否則該 Concept 會從三份課表靜默消失）。
+- **`challenge` 槽選題（MUST，F4 定案）**：候選池 MUST 限於**該 challenge Session 之前已引入**的 Concept 的題目（取符合該 Track `challengeDifficulty` 者），避免挑戰題指向尚未教到的 Concept；取尚未被前面任一 challenge 用過的最小題號，全數用過時退回池中最小題號。候選池為空時 `problemIds` 省略為合法（沿用「無 fallback」定案），但生成器 MUST 留下 `challenge-no-problem` 的 **warning** 訊號（通常代表該 Track 的難度帶與題庫分布對不上）。
 - 插入 / 調整 Concept 時的工作流：改 Curriculum → 重跑生成器 → review diff → commit。MUST NOT 手改生成物。
 
 ---
