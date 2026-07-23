@@ -94,19 +94,19 @@ contracts/renderer-contract.md §2，且不含空字串或佔位段落。
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T026 [P] [US2] `tests/unit/compile-types.test.ts`：四種非 concept 類型的 `Lesson` 形狀符合 data-model.md §2 型別不變式（`rest` 恆無題目、`review` 的 `reviewConcepts` 非空、非 concept 類無 `concept` / `path`）
-- [ ] T027 [P] [US2] `tests/unit/compile-review.test.ts`：`reviewConcepts` 由 `reviewRange` 推導且涵蓋範圍內全部 `concept` Session；`reviewRange` 缺席或範圍內無 concept ⇒ fail loud（FR-011、spec Edge Cases）
-- [ ] T028 [P] [US2] `tests/unit/compile-problem-origin.test.ts`：practice / challenge 的題目說明取自「引入該題的 Concept Article」；同題被多 Concept 引用取課表較早者；**「查無來源」的兩種狀態皆省略 `whyThisPattern` 且皆不失敗**——(a) `ProblemOrigin` 無此題號、(b) 反查到 conceptId 但該 Article 的 `Today's Challenge` 無此題號條目（FR-030、research R3）
-- [ ] T029 [P] [US2] `tests/unit/renderer-types.test.ts`：五種版面的 embeds 結構逐欄位斷言（非 snapshot）；缺席內容一律**欄位不存在**而非空字串（contracts/renderer-contract.md §2）
+- [X] T026 [P] [US2] `tests/unit/compile-types.test.ts`：四種非 concept 類型的 `Lesson` 形狀符合 data-model.md §2 型別不變式（`rest` 恆無題目、`review` 的 `reviewConcepts` 非空、非 concept 類無 `concept` / `path`）
+- [X] T027 [P] [US2] `tests/unit/compile-review.test.ts`：`reviewConcepts` 由 `reviewRange` 推導且涵蓋範圍內全部 `concept` Session；`reviewRange` 缺席或範圍內無 concept ⇒ fail loud（FR-011、spec Edge Cases）
+- [X] T028 [P] [US2] `tests/unit/compile-problem-origin.test.ts`：practice / challenge 的題目說明取自「引入該題的 Concept Article」；同題被多 Concept 引用取課表較早者；**「查無來源」的兩種狀態皆省略 `whyThisPattern` 且皆不失敗**——(a) `ProblemOrigin` 無此題號、(b) 反查到 conceptId 但該 Article 的 `Today's Challenge` 無此題號條目（FR-030、research R3）
+- [X] T029 [P] [US2] `tests/unit/renderer-types.test.ts`：五種版面的 embeds 結構逐欄位斷言（非 snapshot）；缺席內容一律**欄位不存在**而非空字串（contracts/renderer-contract.md §2）
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] 於 `src/compiler/lesson.ts` 實作 `practice` / `challenge` 分支：題目自課表 `problemIds` + Problem Bank，說明經 `ProblemOrigin` 反查取得；`problemIds` 缺席 ⇒ `problems: []` 仍產出可推播 Lesson；**MUST NOT 重新選題**（FR-009 challenge 條款、FR-010、FR-030）
-- [ ] T031 [US2] 於 `src/compiler/lesson.ts` 實作 `review` 分支：依 `reviewRange` 推導 `reviewConcepts`；`problems` 取該 Session 的 `problemIds`（目前為空）；`reflectionQuestion` 僅在 F8 素材就緒時填入（FR-011、FR-031）
-- [ ] T032 [US2] 於 `src/compiler/lesson.ts` 實作 `rest` 分支：`problems: []`；`encouragement` 僅在 F8 素材就緒時填入（FR-010、FR-031）
-- [ ] T033 [US2] 於 `src/renderer/discord.ts` 新增 `practice` / `challenge` 版面（題目為主 + 固定版面文案）與其 `budgetSlots`（contracts/renderer-contract.md §2）
-- [ ] T034 [US2] 於 `src/renderer/discord.ts` 新增 `review` 版面（`📚 本週涵蓋` / 選配 `🤔 Reflection` / 選配 `🎯 Challenge`，缺席即省略該 field）與 `rest` 版面（固定文案 + 選配鼓勵語）
-- [ ] T035 [US2] 於 `src/renderer/discord.ts` 的 concept 版面補上 `📎 Track 補充` Embed（`overlayNotes` 存在時才輸出）與其預算 slot（contracts/renderer-contract.md §2；套用邏輯屬 US5）
+- [X] T030 [US2] 於 `src/compiler/lesson.ts` 實作 `practice` / `challenge` 分支：題目自課表 `problemIds` + Problem Bank，說明經 `ProblemOrigin` 反查取得；`problemIds` 缺席 ⇒ `problems: []` 仍產出可推播 Lesson；**MUST NOT 重新選題**（FR-009 challenge 條款、FR-010、FR-030）
+- [X] T031 [US2] 於 `src/compiler/lesson.ts` 實作 `review` 分支：依 `reviewRange` 推導 `reviewConcepts`；`problems` 取該 Session 的 `problemIds`（目前為空）；`reflectionQuestion` 僅在 F8 素材就緒時填入（FR-011、FR-031）
+- [X] T032 [US2] 於 `src/compiler/lesson.ts` 實作 `rest` 分支：`problems: []`；`encouragement` 僅在 F8 素材就緒時填入（FR-010、FR-031）
+- [X] T033 [US2] 於 `src/renderer/discord.ts` 新增 `practice` / `challenge` 版面（題目為主 + 固定版面文案）與其 `budgetSlots`（contracts/renderer-contract.md §2）
+- [X] T034 [US2] 於 `src/renderer/discord.ts` 新增 `review` 版面（`📚 本週涵蓋` / 選配 `🤔 Reflection` / 選配 `🎯 Challenge`，缺席即省略該 field）與 `rest` 版面（固定文案 + 選配鼓勵語）
+- [X] T035 [US2] 於 `src/renderer/discord.ts` 的 concept 版面補上 `📎 Track 補充` Embed（`overlayNotes` 存在時才輸出）與其預算 slot（contracts/renderer-contract.md §2；套用邏輯屬 US5）
 
 **Checkpoint**: US1 + US2 皆可獨立驗證；quickstart §3 的五類型檢查通過。
 
