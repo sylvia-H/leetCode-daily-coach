@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderAlert, renderCompletionNotice } from "../../src/renderer/alert.js";
+import { redactWebhookUrls, renderAlert, renderCompletionNotice } from "../../src/renderer/alert.js";
 
 describe("renderAlert", () => {
   it("為純函式，回傳單一紅色告警 embed", () => {
@@ -28,6 +28,49 @@ describe("renderAlert", () => {
     const a = renderAlert("interviewReady", "reason X");
     const b = renderAlert("interviewReady", "reason X");
     expect(a).toEqual(b);
+  });
+
+  // F6 FR-019b（notice-contract.md §1.1、憲章 XIV）：webhook URL 遮蔽為通知實作的內建行為。
+  it("reason 內含完整 webhook URL 時，產出的 embeds 文字中 URL 出現次數為 0", () => {
+    const reasonWithUrl =
+      "推播失敗：foundation 重試 3 次仍失敗（fetch failed: https://discord.com/api/webhooks/123456/abcDEF-ghi_JKL）";
+    const embeds = renderAlert("foundation", reasonWithUrl);
+    const serialized = JSON.stringify(embeds);
+    expect(serialized).not.toMatch(/discord(?:app)?\.com\/api\/webhooks/);
+    expect(embeds[0]?.description).toContain("[redacted]");
+  });
+
+  it("全域告警（track 為 null）的 reason 同樣被遮蔽", () => {
+    const reasonWithUrl = "狀態存檔失敗：https://discordapp.com/api/webhooks/999/token";
+    const embeds = renderAlert(null, reasonWithUrl);
+    expect(JSON.stringify(embeds)).not.toMatch(/discordapp\.com\/api\/webhooks/);
+  });
+});
+
+describe("redactWebhookUrls", () => {
+  it("純函式：同輸入 → 同輸出", () => {
+    const text = "含 https://discord.com/api/webhooks/1/aaa 的訊息";
+    expect(redactWebhookUrls(text)).toBe(redactWebhookUrls(text));
+  });
+
+  it("把 webhook URL 樣式替換為 [redacted]，非 URL 文字不受影響", () => {
+    const text = "推播失敗：foundation webhook 回應 HTTP 500（url=https://discord.com/api/webhooks/123/token-abc）";
+    const redacted = redactWebhookUrls(text);
+    expect(redacted).not.toMatch(/discord\.com\/api\/webhooks/);
+    expect(redacted).toContain("[redacted]");
+    expect(redacted).toContain("推播失敗：foundation webhook 回應 HTTP 500");
+  });
+
+  it("不含 webhook URL 的文字原樣不變", () => {
+    const text = "字元預算超限：msg1:digest(950/900)";
+    expect(redactWebhookUrls(text)).toBe(text);
+  });
+
+  it("同一字串中出現多個 webhook URL 時全部遮蔽", () => {
+    const text = "a=https://discord.com/api/webhooks/1/aaa b=https://discordapp.com/api/webhooks/2/bbb";
+    const redacted = redactWebhookUrls(text);
+    expect(redacted.match(/\[redacted\]/g)).toHaveLength(2);
+    expect(redacted).not.toMatch(/discord(?:app)?\.com\/api\/webhooks/);
   });
 });
 

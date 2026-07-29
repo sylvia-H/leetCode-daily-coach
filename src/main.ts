@@ -8,7 +8,7 @@ import {
 } from "./discord/webhook-client.js";
 import { checkBudget, type BudgetReport } from "./renderer/budget.js";
 import { render } from "./renderer/discord.js";
-import { renderAlert, renderCompletionNotice } from "./renderer/alert.js";
+import { redactWebhookUrls, renderAlert, renderCompletionNotice } from "./renderer/alert.js";
 import {
   advance,
   type AppState,
@@ -60,9 +60,11 @@ export class PartialPushError extends Error {
     readonly totalCount: number,
     cause: Error,
   ) {
-    super(`推播中斷於第 ${postedCount + 1}/${totalCount} 則（前 ${postedCount} 則已送出）：${cause.message}`, {
-      cause,
-    });
+    super(
+      `推播中斷於第 ${postedCount + 1}/${totalCount} 則（前 ${postedCount} 則已送出）：${cause.message}` +
+        `；本課進度已前進、不會補推（F6 FR-012）`,
+      { cause },
+    );
     this.name = "PartialPushError";
   }
 }
@@ -117,7 +119,7 @@ async function sendGlobalAlert(client: WebhookClient, track: Track, reason: stri
   try {
     await client.post(track, renderAlert(null, reason));
   } catch (alertErr) {
-    console.error(`alert-failed: 全域: ${(alertErr as Error).message}`);
+    console.error(`alert-failed: 全域: ${redactWebhookUrls((alertErr as Error).message)}`);
   }
 }
 
@@ -135,7 +137,9 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   try {
     config = loadConfig(env);
   } catch (err) {
-    const reason = (err as Error).message;
+    // F6 FR-025a：執行記錄輸出 MUST 先經遮蔽再印出——底層例外訊息可能夾帶完整 webhook URL，
+    // 而實機驗收紀錄所附的 Actions 連結指向的是完整 log，log 洩漏等同驗收紀錄洩漏金鑰。
+    const reason = redactWebhookUrls((err as Error).message);
     console.error(reason);
     if (firstConfiguredTrack) {
       const client = createWebhookClient(webhooks, options.webhookOptions);
@@ -150,7 +154,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   try {
     state = loadState(config.stateFile, config.enabledTracks);
   } catch (err) {
-    const reason = (err as Error).message;
+    const reason = redactWebhookUrls((err as Error).message);
     console.error(reason);
     await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
     return 1;
@@ -162,7 +166,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   try {
     deps = loadCompilerDeps();
   } catch (err) {
-    const reason = `課程素材載入失敗：${(err as Error).message}`;
+    const reason = `課程素材載入失敗：${redactWebhookUrls((err as Error).message)}`;
     console.error(reason);
     await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
     return 1;
@@ -231,7 +235,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       console.log(`${track}: pushed`);
     } catch (err) {
       anyFailed = true;
-      const reason = (err as Error).message;
+      const reason = redactWebhookUrls((err as Error).message);
       console.error(`${track}: failed: ${reason}`);
       // 部分推播：state 照常前進，避免補跑 cron 重發已送出的前段（詳見 PartialPushError）。
       if (err instanceof PartialPushError) {
@@ -245,7 +249,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
         try {
           await client.post(track, renderAlert(track, reason));
         } catch (alertErr) {
-          console.error(`alert-failed: ${track}: ${(alertErr as Error).message}`);
+          console.error(`alert-failed: ${track}: ${redactWebhookUrls((alertErr as Error).message)}`);
         }
       }
     }
@@ -257,7 +261,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     try {
       saveState(config.stateFile, state);
     } catch (err) {
-      const reason = `狀態存檔失敗（${config.stateFile}）：${(err as Error).message}`;
+      const reason = `狀態存檔失敗（${config.stateFile}）：${redactWebhookUrls((err as Error).message)}`;
       console.error(reason);
       await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
       return 1;

@@ -171,6 +171,11 @@ describe("run — 多 Track 失敗隔離", () => {
       String(args[0]),
     );
     expect(errorCalls.some((line) => line.includes("partial push"))).toBe(true);
+
+    // F6 T028a／FR-012：告警內文 MUST 明示「本課進度已前進、不會補推」，避免維運者誤等自動補推。
+    const [, alertInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const alertBody = JSON.parse(alertInit.body as string) as { embeds: Array<{ description: string }> };
+    expect(alertBody.embeds[0]?.description).toContain("本課進度已前進、不會補推");
   });
 
   it("三個 webhook 皆空 → 完全未呼叫 fetch，僅 log + exit 1", async () => {

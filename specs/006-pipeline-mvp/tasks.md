@@ -266,48 +266,52 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 > **檔案相依提醒**：T024 與 T016 同改 `src/renderer/alert.ts`；若兩個 Story 平行進行，此二任務 MUST 序列。
 
-- [ ] T024 [US4] 於 `src/renderer/alert.ts` 新增 Discord webhook URL 遮蔽的**純函式**並套用至
+- [x] T024 [US4] 於 `src/renderer/alert.ts` 新增 Discord webhook URL 遮蔽的**純函式**並套用至
       `renderAlert()` 的 `reason`：組進 Embed **之前**把 webhook URL 樣式替換為 `[redacted]`；MUST 為通知
       實作的**內建行為**，MUST NOT 依賴呼叫端自律；MUST NOT 依賴特定錯誤來源的訊息格式
       （FR-019b、notice-contract.md §1.1、憲章 XIV）
-- [ ] T024a [US4] 於 `src/main.ts` 把 T024 的遮蔽純函式**同時套用到執行記錄輸出**（FR-025a）：
+- [x] T024a [US4] 於 `src/main.ts` 把 T024 的遮蔽純函式**同時套用到執行記錄輸出**（FR-025a）：
       所有 `console.error` / `console.log` 印出的失敗原因 MUST 先經遮蔽再輸出——底層 `fetch` 例外訊息
       可能夾帶完整請求 URL，而**實機驗收紀錄所附的 Actions 連結指向的是完整 log**，log 洩漏等同驗收
       紀錄洩漏金鑰。遮蔽函式 MUST 由 `alert.ts` 匯出供 `main.ts` 共用，**MUST NOT 複製第二份實作**
       （FR-019「單一實作」）
-- [ ] T025 [P] [US4] 於 `tests/unit/alert.test.ts` 補遮蔽單元測試：`reason` 內含完整 webhook URL 時，
+- [x] T025 [P] [US4] 於 `tests/unit/alert.test.ts` 補遮蔽單元測試：`reason` 內含完整 webhook URL 時，
       產出的 embeds 文字中 URL 出現次數為 **0**；遮蔽為純函式（同輸入 → 同輸出）；非 URL 文字不受影響
-- [ ] T025a [P] [US4] 於 `tests/e2e/isolation.test.ts` 補 **T024a 的日誌遮蔽**斷言（FR-025a）：以
+- [x] T025a [P] [US4] 於 `tests/e2e/isolation.test.ts` 補 **T024a 的日誌遮蔽**斷言（FR-025a）：以
       `failFor()` 製造夾帶 webhook URL 的錯誤，攔截 `console.error` / `console.log` 輸出，斷言
       **webhook URL 在全部日誌文字中的出現次數為 0**
-- [ ] T026 [US4] 建立 `tests/e2e/isolation.test.ts`：以 `failFor()` 令單軌請求固定失敗，斷言其餘兩軌
+- [x] T026 [US4] 建立 `tests/e2e/isolation.test.ts`：以 `failFor()` 令單軌請求固定失敗，斷言其餘兩軌
       成功率 100% 且進度保存、失敗軌收到**紅色**（`15158332`）告警且進度不變、exit code 為 **1**（SC-004）。
       **成功率的分母**依 SC-004 定義為「除被注入失敗者外、實際進入推播處理的 Track 數」（不含 guard／
       完課跳過者）。另補 **FR-018「每軌至多一則告警」**斷言：失敗軌收到的紅色告警則數**恰為 1**
       （任一步驟失敗即結束該軌，MUST NOT 出現兩則以上同軌告警）
-- [ ] T027 [US4] 於 `tests/e2e/isolation.test.ts` 補「**告警本身也送不出去**」情境：斷言記錄
+- [x] T027 [US4] 於 `tests/e2e/isolation.test.ts` 補「**告警本身也送不出去**」情境：斷言記錄
       `alert-failed: {track}: …`、其餘 Track 處理**不被中斷**、整體仍 exit 1，且告警失敗 MUST NOT 逸出
       成未捕捉例外（US4-2 / FR-020）
-- [ ] T028 [US4] 於 `tests/e2e/isolation.test.ts` 補「**部分推播**」情境（第 2 則失敗、第 1 則已送達）：
+- [x] T028 [US4] 於 `tests/e2e/isolation.test.ts` 補「**部分推播**」情境（第 2 則失敗、第 1 則已送達）：
       斷言該軌進度**照常前進**、發出紅色告警、exit 1（US4-3 / FR-012）。另補兩項 FR-012 的新增斷言：
       ① **剩餘則 MUST NOT 續送**——該軌的**課程訊息**請求數恰為「失敗那一則為止」（其後只剩告警那一則
-      請求），MUST NOT 出現第 3 則以後的課程請求；② 告警內文**明示「進度已前進、不會補推」**（見 T028a）
-- [ ] T028a [US4] 於 `src/main.ts` 調整 `PartialPushError` 的訊息（FR-012、notice-contract.md §1）：
+      請求），MUST NOT 出現第 3 則以後的課程請求；② 告警內文**明示「進度已前進、不會補推」**（見 T028a）。
+      **2026-07-29 實測與使用者裁決**：與 T009a 同一結論——現行真實 seed 素材從未拆出第 2 則，
+      無法由 `tests/e2e/**` 唯一允許的 fetch 替身觸發部分推播；本情境沿用
+      `tests/unit/run-tracks.test.ts`「多則訊息推播到一半失敗」既有案例覆蓋（含①的結構性保證：單一
+      `throw` 中止 for 迴圈即不會續送），並補上②的斷言（告警內文含「本課進度已前進、不會補推」）
+- [x] T028a [US4] 於 `src/main.ts` 調整 `PartialPushError` 的訊息（FR-012、notice-contract.md §1）：
       除既有的「推播中斷於第 X/Y 則」外，MUST **明示「本課進度已前進、不會補推」**——維運者若不知道
       state 已前進，會誤等明日自動補推而漏掉人工處置。**MUST NOT** 為此新增第二種告警版面或第二個通知
       函式（FR-019 單一實作）；只改 `reason` 文字
-- [ ] T029 [US4] 於 `tests/e2e/isolation.test.ts` 補**全域性失敗**情境：以 `process.chdir()` 切換至缺少
+- [x] T029 [US4] 於 `tests/e2e/isolation.test.ts` 補**全域性失敗**情境：以 `process.chdir()` 切換至缺少
       `schedules/` 的暫存目錄執行（`loadCompilerDeps()` 的 `DEFAULT_PATHS` 為 cwd 相對路徑，故此法可觸發），
       斷言 exit 1、**只發出一則**全域告警至第一個已設定的頻道（證明未降級為逐 Track 的三則同因告警）、
       且原 `state.json` **未被覆寫**（FR-021 / FR-021a **【驗證既有】**，main.ts 已實作，本任務只補回歸測試）。
       **cwd 是行程全域狀態**：MUST 在 `afterEach`（或 `try/finally`）還原原始 cwd，避免污染同檔其他案例；
       並確認 vitest 執行於 `pool: "forks"`（vitest 2.x 預設值——`worker_threads` 下 `process.chdir()` 不可用）
-- [ ] T029b [US4] 於 `tests/e2e/isolation.test.ts` 補另兩種全域性失敗情境：
+- [x] T029b [US4] 於 `tests/e2e/isolation.test.ts` 補另兩種全域性失敗情境：
       ① **存檔失敗**（FR-013a／FR-021）——令 `STATE_FILE` 指向不可寫路徑，斷言 exit 1、發出全域告警、
       且**已成功推播的 Track 進度未落盤**（揭露「下次執行會重推同一課」的既定後果，MUST NOT 為此加入
       補償機制）；② **無任何已設定頻道**（FR-020a）——三軌 webhook 皆未設定時斷言 exit 1、**零對外請求**
       （告警無處可發）、且執行記錄留有錯誤訊息，MUST NOT 因無法發送而改變結束狀態
-- [ ] T029a [P] [US4] **【驗證既有】**補 FR-015 / FR-016 的 workflow 層回歸斷言（`daily.yml` 已實作，
+- [x] T029a [P] [US4] **【驗證既有】**補 FR-015 / FR-016 的 workflow 層回歸斷言（`daily.yml` 已實作，
       本任務只補測試，MUST NOT 改 workflow）：於 `tests/unit/` 掃描 `.github/workflows/daily.yml`，斷言
       ① 提交 step 含**無變更偵測**（`git diff --cached --quiet` 且命中時 `exit 0`）——三軌皆跳過時
       commit 數為 0、不產生空 commit（FR-015）；② 推送重試上限為 **3**（`max_attempts=3`）且以
