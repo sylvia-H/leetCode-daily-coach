@@ -155,4 +155,69 @@ describe("US4: 單一 Track 出事不拖垮其他 Track（AC10 / SC-004）", () 
     expect(exitCode).toBe(1);
     expect(recorder.requests).toHaveLength(0);
   });
+
+  // T035：取代 tests/unit/run-tracks.test.ts 原有的兩個全域性失敗案例（config 載入失敗、state.json
+  // 解析失敗）——這兩者皆可由真實 fetch 觸發，不需要推播替身，故移至此處以真實鏈路驗證，
+  // 消除雙份維護。
+  it("全域性失敗（設定錯誤：STATE_FILE 未設定）→ exit 1、發出全域告警至第一個已設定頻道", async () => {
+    const exitCode = await run(
+      { DISCORD_WEBHOOK_URL_FOUNDATION: WEBHOOK_URLS.foundation },
+      { webhookOptions: fastRetry },
+    );
+    expect(exitCode).toBe(1);
+    const redAlerts = recorder.requests.filter((r) => r.embeds.some((e) => e.color === ALERT_COLOR));
+    expect(redAlerts.length).toBeGreaterThan(0);
+    expect(redAlerts[0]?.embeds[0]?.title).toContain("全域");
+  });
+
+  it("全域性失敗（state.json 解析失敗）→ exit 1、發出全域告警、原檔未被覆寫", async () => {
+    writeFileSync(stateFile, "{ not json");
+    const before = readFileSync(stateFile);
+
+    const exitCode = await run(allWebhooksEnv(stateFile), { webhookOptions: fastRetry });
+    expect(exitCode).toBe(1);
+    const redAlerts = recorder.requests.filter((r) => r.embeds.some((e) => e.color === ALERT_COLOR));
+    expect(redAlerts.length).toBeGreaterThan(0);
+    expect(readFileSync(stateFile).equals(before)).toBe(true);
+  });
+
+  // F6 FR-009 修復（T037 手動驗證發現）：預覽模式下 MUST NOT 發送任何通知，全域性失敗亦然——
+  // 通知本身也是一次推播，DRY_RUN 的定義即「不推播」。三條全域性失敗路徑（config／state／素材載入）
+  // 皆須驗證。
+  describe("DRY_RUN 下的全域性失敗 MUST NOT 發送任何通知（FR-009）", () => {
+    it("config 載入失敗（STATE_FILE 未設定）+ DRY_RUN=true → 零對外請求", async () => {
+      const exitCode = await run(
+        { DISCORD_WEBHOOK_URL_FOUNDATION: WEBHOOK_URLS.foundation, DRY_RUN: "true" },
+        { webhookOptions: fastRetry },
+      );
+      expect(exitCode).toBe(1);
+      expect(recorder.requests).toHaveLength(0);
+    });
+
+    it("state.json 解析失敗 + DRY_RUN=true → 零對外請求、原檔未被覆寫", async () => {
+      writeFileSync(stateFile, "{ not json");
+      const before = readFileSync(stateFile);
+
+      const exitCode = await run(allWebhooksEnv(stateFile, { DRY_RUN: "true" }), { webhookOptions: fastRetry });
+      expect(exitCode).toBe(1);
+      expect(recorder.requests).toHaveLength(0);
+      expect(readFileSync(stateFile).equals(before)).toBe(true);
+    });
+
+    it("素材載入失敗 + DRY_RUN=true → 零對外請求", async () => {
+      writeAllTracksState(stateFile);
+      const originalCwd = process.cwd();
+      const emptyDir = mkdtempSync(join(tmpdir(), "isolation-dryrun-empty-cwd-"));
+
+      try {
+        process.chdir(emptyDir);
+        const exitCode = await run(allWebhooksEnv(stateFile, { DRY_RUN: "true" }), { webhookOptions: fastRetry });
+        expect(exitCode).toBe(1);
+        expect(recorder.requests).toHaveLength(0);
+      } finally {
+        process.chdir(originalCwd);
+        rmSync(emptyDir, { recursive: true, force: true });
+      }
+    });
+  });
 });

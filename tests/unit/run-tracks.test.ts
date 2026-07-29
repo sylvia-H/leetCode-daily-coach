@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -55,92 +55,6 @@ describe("run — 多 Track 失敗隔離", () => {
     STATE_FILE: stateFile,
   });
 
-  it("第 1 個 Track 拋錯、第 2 個成功 → 第 2 個仍被處理、exit code 1、失敗 Track 有發出告警", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
-    vi.stubGlobal("fetch", fetchMock);
-
-    let secondCalled = false;
-    const exitCode = await run(baseEnv(), {
-      webhookOptions: fastRetry,
-      pushTrack: async (track) => {
-        if (track === "foundation") {
-          throw new Error("推播失敗：HTTP 500");
-        }
-        secondCalled = true;
-        return makeLesson();
-      },
-    });
-
-    expect(secondCalled).toBe(true);
-    expect(exitCode).toBe(1);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("https://discord.com/api/webhooks/1/aaa");
-    const body = JSON.parse(init.body as string) as { embeds: Array<{ title: string }> };
-    expect(body.embeds[0]?.title).toBe("⚠️ 推播失敗 · foundation");
-  });
-
-  it("第 1 個 Track 推播失敗且其告警 POST 亦失敗 → 第 2 個仍被處理並成功，exit 1，且未拋出未捕捉例外", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500 });
-    vi.stubGlobal("fetch", fetchMock);
-
-    let secondCalled = false;
-    const exitCode = await run(baseEnv(), {
-      webhookOptions: fastRetry,
-      pushTrack: async (track) => {
-        if (track === "foundation") {
-          throw new Error("推播失敗：HTTP 500");
-        }
-        secondCalled = true;
-        return makeLesson();
-      },
-    });
-
-    expect(secondCalled).toBe(true);
-    expect(exitCode).toBe(1);
-
-    const errorCalls = (console.error as unknown as { mock: { calls: unknown[][] } }).mock.calls.map(
-      (args) => String(args[0]),
-    );
-    expect(errorCalls.some((line) => line.includes("foundation: failed"))).toBe(true);
-    expect(errorCalls.some((line) => line.startsWith("alert-failed: foundation"))).toBe(true);
-  });
-
-  it("全域性失敗（STATE_FILE 缺失）→ 以 null 呼叫 renderAlert 並 POST 至第一個已設定 webhook、exit 1、未寫入 state", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
-    vi.stubGlobal("fetch", fetchMock);
-
-    const pushTrack = vi.fn();
-    const exitCode = await run(
-      {
-        DISCORD_WEBHOOK_URL_FOUNDATION: "https://discord.com/api/webhooks/1/aaa",
-      },
-      { pushTrack, webhookOptions: fastRetry },
-    );
-
-    expect(exitCode).toBe(1);
-    expect(pushTrack).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("https://discord.com/api/webhooks/1/aaa");
-    const body = JSON.parse(init.body as string) as { embeds: Array<{ title: string }> };
-    expect(body.embeds[0]?.title).toBe("⚠️ 推播失敗 · 全域");
-  });
-
-  it("全域性失敗（state.json 損毀）→ 發全域告警、exit 1、原檔未被覆寫", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
-    vi.stubGlobal("fetch", fetchMock);
-    const broken = "{ not json";
-    writeFileSync(stateFile, broken);
-
-    const pushTrack = vi.fn();
-    const exitCode = await run(baseEnv(), { pushTrack, webhookOptions: fastRetry });
-
-    expect(exitCode).toBe(1);
-    expect(pushTrack).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
   // 【保留理由】contracts/e2e-harness.md §4：真實 seed 素材（39 筆 Lesson）目前渲染總字數最大僅
   // 1,201（遠低於 5,500 拆訊息門檻），render() 從未把任何一課拆成 2 則訊息，故 PartialPushError
   // 分支在現行真實素材下無法由 tests/e2e/** 唯一允許的 fetch 替身觸發——只能靠 pushTrack 替身直接
@@ -176,17 +90,5 @@ describe("run — 多 Track 失敗隔離", () => {
     const [, alertInit] = fetchMock.mock.calls[0] as [string, RequestInit];
     const alertBody = JSON.parse(alertInit.body as string) as { embeds: Array<{ description: string }> };
     expect(alertBody.embeds[0]?.description).toContain("本課進度已前進、不會補推");
-  });
-
-  it("三個 webhook 皆空 → 完全未呼叫 fetch，僅 log + exit 1", async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-
-    const pushTrack = vi.fn();
-    const exitCode = await run({ STATE_FILE: stateFile }, { pushTrack, webhookOptions: fastRetry });
-
-    expect(exitCode).toBe(1);
-    expect(pushTrack).not.toHaveBeenCalled();
-    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

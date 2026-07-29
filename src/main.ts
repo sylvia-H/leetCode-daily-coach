@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 import { compile, loadCompilerDeps, type CompilerDeps } from "./compiler/lesson.js";
-import { type Config, type EnvLike, loadConfig, parseWebhooks, TRACK_ORDER } from "./config.js";
+import { type Config, type EnvLike, loadConfig, parseBool, parseWebhooks, TRACK_ORDER } from "./config.js";
 import {
   createWebhookClient,
   type WebhookClient,
@@ -133,6 +133,10 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   const webhooks = parseWebhooks(env);
   const firstConfiguredTrack = TRACK_ORDER.find((track) => webhooks[track]);
 
+  // F6 FR-009 修復：預覽模式下 MUST NOT 發送任何通知（含全域告警）——通知本身也是一次推播。此處
+  // config 尚未（或可能未）載入成功，dryRun 旗標 MUST 直接由 env 讀取，不能等 config.dryRun。
+  const previewOnly = parseBool(env.DRY_RUN);
+
   let config: Config;
   try {
     config = loadConfig(env);
@@ -141,7 +145,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     // 而實機驗收紀錄所附的 Actions 連結指向的是完整 log，log 洩漏等同驗收紀錄洩漏金鑰。
     const reason = redactWebhookUrls((err as Error).message);
     console.error(reason);
-    if (firstConfiguredTrack) {
+    if (!previewOnly && firstConfiguredTrack) {
       const client = createWebhookClient(webhooks, options.webhookOptions);
       await sendGlobalAlert(client, firstConfiguredTrack, reason);
     }
@@ -156,7 +160,9 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   } catch (err) {
     const reason = redactWebhookUrls((err as Error).message);
     console.error(reason);
-    await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    if (!config.dryRun) {
+      await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    }
     return 1;
   }
 
@@ -168,7 +174,9 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   } catch (err) {
     const reason = `課程素材載入失敗：${redactWebhookUrls((err as Error).message)}`;
     console.error(reason);
-    await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    if (!config.dryRun) {
+      await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    }
     return 1;
   }
 

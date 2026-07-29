@@ -26,12 +26,17 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 ## ⚠️ 本 Feature 的實作紀律（開工前必讀）
 
 1. **程式改動刻意極小**：F1／F5 已定案且已驗證的行為 **MUST NOT 重寫**。本 Feature 的程式增量為
-   **下列五處**（2026-07-29 `/speckit-clarify` 與 `/speckit-analyze` 後由三處修訂為五處）：
+   **下列六處**（2026-07-29 `/speckit-clarify` 與 `/speckit-analyze` 後由三處修訂為五處；`/speckit-implement`
+   執行 T037 手動驗證時發現第六處必要修復，經使用者確認後補入）：
    ① `state-store.ts` 的 `completedAt`／`markCompleted`（T014／T015）；
    ② `state-store.ts` 的 **`tracks` 未知鍵判為語意損毀**（T015a，FR-031）；
    ③ `alert.ts` 的完課通知＋webhook URL 遮蔽（T016／T024）；
    ④ `main.ts` 的完課檢查（T017／T018）；
-   ⑤ `main.ts` 的**部分推播告警文案**（T028a，FR-012）與**日誌遮蔽**（T024a，FR-025a）。
+   ⑤ `main.ts` 的**部分推播告警文案**（T028a，FR-012）與**日誌遮蔽**（T024a，FR-025a）；
+   ⑥ `main.ts` 的 **DRY_RUN 下全域性失敗 MUST NOT 發送通知修復**（FR-009；T037 手動驗證發現 F1 既有
+   實作在 config／state／素材載入失敗時，即使 `DRY_RUN=true` 仍會真的送出全域告警，違反 FR-009「預覽
+   模式下 MUST NOT 發送任何通知」；已於 `run()` 三處早退 catch 區塊補上 `dryRun` 判斷，並於
+   `tests/e2e/isolation.test.ts` 補三條回歸測試）。
    除此之外一律只補測試與文件。
 2. **既有實作已滿足的需求只補測試與文件，不改程式**：FR-021a（素材載入失敗＝全域失敗）已由
    [main.ts:143-153](../../src/main.ts#L143-L153) 實作；FR-015 的「無變更不提交」與 FR-016 的「重試 3 次
@@ -385,25 +390,41 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 **Purpose**: 清理重疊測試、跑完 quickstart 全套、完成實機驗收並留下證據
 
-- [ ] T035 [P] 依 [contracts/e2e-harness.md](./contracts/e2e-harness.md) §4 檢視
+- [x] T035 [P] 依 [contracts/e2e-harness.md](./contracts/e2e-harness.md) §4 檢視
       `tests/unit/run-tracks.test.ts`：**保留**以 `pushTrack` 替身製造難以由 `fetch` 觸發之例外形狀的
       分支覆蓋案例，且**保留的每個案例 MUST 於註解註明其「`fetch` 攔截無法觸發」的分支理由**
-      （FR-001 可稽核條件 ②）；**刪除**無此理由、或與 e2e 重疊且無額外分支價值者，避免雙份維護
-- [ ] T035a [P] 依 [contracts/e2e-harness.md](./contracts/e2e-harness.md) **§3.1** 逐條核對
+      （FR-001 可稽核條件 ②）；**刪除**無此理由、或與 e2e 重疊且無額外分支價值者，避免雙份維護。
+      **執行結果**：刪除四個與 e2e 完全重疊、且不需要 `pushTrack` 替身能力的案例（第 1/2 軌失敗隔離、
+      STATE_FILE 缺失、state.json 損毀、三 webhook 皆空）；後兩者的全域性失敗情境已補進
+      `tests/e2e/isolation.test.ts`（真實 fetch 觸發，消除雙份維護）。**僅保留**部分推播案例（唯一
+      無法由真實 seed 素材經 fetch 觸發者），已補上「fetch 攔截無法觸發」的理由註解
+- [x] T035a [P] 依 [contracts/e2e-harness.md](./contracts/e2e-harness.md) **§3.1** 逐條核對
       `main` 流程的 **8 條結局路徑**（`SKIPPED`／`SKIPPED (completed)`／`SUCCEEDED`／`COMPLETED`／
       `FAILED` 推播失敗／`FAILED` 部分推播／全域性失敗／`DRY_RUN` 預覽）**各有至少 1 個 e2e 案例**，
-      未覆蓋數為 **0**；若 §3.1 的「覆蓋檔案」欄與實際落地的測試不符 MUST 更新該表（SC-006）
-- [ ] T035b [P] 補兩項**可稽核性**核對（皆為 review 型，不新增相依）：
+      未覆蓋數為 **0**；若 §3.1 的「覆蓋檔案」欄與實際落地的測試不符 MUST 更新該表（SC-006）。
+      **執行結果**：逐條核對後僅「部分推播」一列的覆蓋檔案不符（原表誤植為 `isolation.test.ts`），
+      已更正為 `tests/unit/run-tracks.test.ts` 並註明原因；其餘 7 條與實際測試檔一致
+- [x] T035b [P] 補兩項**可稽核性**核對（皆為 review 型，不新增相依）：
       ① **FR-002d**——確認 `tests/e2e/**` 匯入的 `compile`／`render`／`checkBudget` 與 `src/main.ts`
       為**同一組實作**（憲章 IX），MUST NOT 存在測試專用的平行解析或渲染路徑；
       ② **FR-019「單一實作」**——確認全部通知（Track 告警／全域告警／完課通知）皆由
       `src/renderer/alert.ts` **單一檔案**匯出的函式族產生，且 `.github/workflows/daily.yml` 內
-      **未另行拼組 Embed**；核對結果記入本任務勾選即可，無須另建測試
-- [ ] T036 執行 [quickstart.md](./quickstart.md) **A 段**全套（`npm run build`／`npm run typecheck`／
-      `npm test`／`npm run validate:content`），確認四項綠燈且 `npm test` 已包含 `tests/e2e/` 的全部檔案
-- [ ] T037 執行 [quickstart.md](./quickstart.md) **B 段**本機預覽（`DRY_RUN=true`、webhook 一律用
+      **未另行拼組 Embed**；核對結果記入本任務勾選即可，無須另建測試。
+      **執行結果**：①掃描 `tests/e2e/**` 的 import 陳述式，`compile`／`loadCompilerDeps` 均來自
+      `src/compiler/lesson.js`、`render` 來自 `src/renderer/discord.js`、`checkBudget` 來自
+      `src/renderer/budget.js`，與 `src/main.ts` 完全一致，無平行路徑；②掃描 `src/**` 確認
+      `renderAlert`／`renderCompletionNotice` 僅由 `src/main.ts` 呼叫、僅由 `src/renderer/alert.ts`
+      匯出；`daily.yml` 的最後防線通知為純文字 `curl`，不含 `embeds` 鍵
+- [x] T036 執行 [quickstart.md](./quickstart.md) **A 段**全套（`npm run build`／`npm run typecheck`／
+      `npm test`／`npm run validate:content`），確認四項綠燈且 `npm test` 已包含 `tests/e2e/` 的全部檔案。
+      **執行結果**：四項皆綠燈，60 個測試檔、451 個測試通過，`tests/e2e/` 五個檔案（three-tracks／
+      guard-and-modes／state-advance／isolation／completion）皆在其中；內容 Gate 39 筆 Lesson 全數通過
+- [x] T037 執行 [quickstart.md](./quickstart.md) **B 段**本機預覽（`DRY_RUN=true`、webhook 一律用
       `example.invalid`）：確認三軌各印出完整 embeds 與字元預算逐項明細、**無任何對外請求**、
-      `STATE_FILE` 不被建立；另驗證完課版面（`currentSessionIndex` 設為 `99`）
+      `STATE_FILE` 不被建立；另驗證完課版面（`currentSessionIndex` 設為 `99`）。
+      **執行結果**：本機預覽輸出正確、無對外請求、`STATE_FILE` 未建立。**過程中意外發現並修復第六處
+      程式改動**：見上方實作紀律第 1 點——DRY_RUN 下三種全域性失敗原本仍會真的發出全域告警，違反
+      FR-009，已修復並補上回歸測試
 - [ ] T038 依 [research.md](./research.md) R8 與 `docs/runbook.md`，把 `state` 分支的 `state.json`
       **人工重置為三軌初始值**（`currentSessionIndex: 1`、`lastPushAt: null`、`completedConceptIds: []`、
       `history: []`，且無 `completedAt`），以一次人工 commit 完成；此操作同時是 runbook「調整某軌進度」
