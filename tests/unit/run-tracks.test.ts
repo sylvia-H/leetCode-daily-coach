@@ -141,6 +141,10 @@ describe("run — 多 Track 失敗隔離", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  // 【保留理由】contracts/e2e-harness.md §4：真實 seed 素材（39 筆 Lesson）目前渲染總字數最大僅
+  // 1,201（遠低於 5,500 拆訊息門檻），render() 從未把任何一課拆成 2 則訊息，故 PartialPushError
+  // 分支在現行真實素材下無法由 tests/e2e/** 唯一允許的 fetch 替身觸發——只能靠 pushTrack 替身直接
+  // 拋出來製造這個例外形狀。2026-07-29 與使用者確認：沿用本案例覆蓋，e2e 不為此人工湊出多則訊息。
   it("多則訊息推播到一半失敗 → state 仍前進（避免補跑重發已送出的前段），但 exit 1 且有告警", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
     vi.stubGlobal("fetch", fetchMock);
