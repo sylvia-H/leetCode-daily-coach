@@ -1025,6 +1025,12 @@ leetcode-daily-coach/
   （`currentSessionIndex++` + `lastPushAt`），同時發紅色告警並計入非零 exit code。**理由**：Discord webhook
   不可撤回、也沒有 idempotency key；若維持「全部成功才前進」，06:37 補跑會重新編譯同一 `sessionIndex`
   並**再貼一次已送出的前段**。缺漏的後段由告警交人工處置，MUST NOT 用重複推播換取完整性。
+  - **剩餘則 MUST NOT 續送（MUST，F6 定案 2026-07-29）**：某則失敗（`WebhookClient.post` 的退避重試已耗盡）
+    即代表該頻道當下大機率不可用，該 Track 的**剩餘未送出訊息 MUST 立即中止、不再嘗試**（fail-fast），
+    直接走告警路徑。**理由**：續送多半只是重複失敗並吃掉整輪執行的時間預算（§24 要求單次 run ≤ 10 分鐘），
+    且會拖累尚未處理的 Track；分支確定亦使端到端驗證可斷言。
+  - **告警文案 MUST 明示「進度已前進、不會補推」（MUST，F6 定案 2026-07-29）**：部分推播的紅色告警
+    MUST 讓維運者知道這一課的 state 已前進、明日不會自動重推，否則會誤等補推而漏掉人工處置。
 - **推播 MUST 對暫時性失敗重試（MUST，F5 定案 2026-07-24）**：`WebhookClient.post` 對 429 與 5xx、以及
   `fetch` 本身丟出的網路錯誤 MUST 以指數退避 + jitter 重試（預設 3 次，尊重 `Retry-After` 標頭，單次等待
   有上限）；429 以外的 4xx MUST NOT 重試（請求本身有問題，重試只會重複失敗）。
@@ -1085,6 +1091,8 @@ leetcode-daily-coach/
 - **載入時的欄位語意驗證（MUST，F1 定案）**：StateStore 載入 `state.json` 後，MUST 驗證各 Track 進度的欄位語意，**任一項不合法即比照「JSON 解析失敗」視為全域性失敗**（發告警 → 非零 exit code → **MUST NOT 覆寫原檔**）：`currentSessionIndex` MUST 為 ≥ 1 的整數；`lastPushAt` MUST 為 `null` 或可解析的日期字串；`completedConceptIds` / `history` MUST 為陣列；`completedAt`（若存在）MUST 為 `null` 或可解析的日期字串。
   - **理由**：既然「調整進度的官方方式」就是人工編輯這份檔案，手誤是可預期的常態輸入而非例外。少了這道驗證，字串型的 `currentSessionIndex` 會在推進時被當成字串串接（`"3"` → `"31"`）並靜默寫回，毀掉唯一權威狀態；不可解析的 `lastPushAt` 則會讓日期 guard 的時區換算丟出例外而使整輪執行中止（失敗隔離失效）。
   - 此為**結構性驗證**，非 schema 型別 / 值域驗證（後者屬 F2 的 zod 範圍）。MUST 寬容接受執行環境可解析的日期格式，MUST NOT 僅因非嚴格 ISO 8601 就判定損毀。
+  - **`tracks` 中的未知鍵 MUST 判為損毀（MUST，F6 定案 2026-07-29）**：`tracks` 出現不屬於三個已知 Track 的鍵時 MUST 比照欄位語意損毀處置（全域失敗、不覆寫原檔），MUST NOT 靜默忽略、MUST NOT 於 `save()` 時移除。**理由**：既然人工編輯 `state.json` 就是調整進度的官方方式，把 Track 名稱打錯（如 `interviewready`）代表維運者的意圖**完全沒有生效**——靜默忽略會讓這個手誤數日無人察覺，與「對值的手誤即判損毀」的既有裁決也不一致。且因中止點在逐 Track 迴圈之前、`save()` 不會被呼叫，打錯的內容原封留在 `state` 分支上供修正，是唯一同時做到「fail loud」與「不動原檔」的處置。
+  - **「檔案不存在」是唯一的寬容入口（MUST，F6 定案 2026-07-29）**：`STATE_FILE` 指向的檔案**不存在**時 MUST 視為空狀態（`state` 分支初次使用），所有啟用 Track 以初始值補建、不算失敗；但檔案**存在**而內容為**空字串／純空白／非 JSON／不符結構**時 MUST 一律判為**解析失敗＝全域性失敗**（發告警 → 非零 exit code → **MUST NOT 覆寫原檔**），MUST NOT 退化為「視為空狀態」。**理由**：截斷的寫入或誤清空會產生零長度檔案，若當成空狀態處理，三軌進度會被靜默重置回 Session 1 並重推已上過的課——這是資料損失級別的後果，遠比 fail loud 後人工修復昂貴。
   - **狀態存檔本身失敗**（如路徑不可寫）亦 MUST 視為全域性失敗：發告警 + 非零 exit code，MUST NOT 讓例外逸出成為無告警的未捕捉錯誤（§4-15 Fail loud）。
 - workflow 對 `state` 分支的 push 衝突 MUST 以 `git pull --rebase --autostash` + 重試處理，**重試上限固定為 3 次**（F1 定案：衝突來源僅有相隔 30 分鐘的雙 cron 極罕見重疊，3 次已足夠）；耗盡即以非零狀態結束該 step，MUST NOT 無限重試，亦 MUST NOT 以 `--force` push 覆蓋他人變更（會毀掉唯一權威狀態）。
 - 任一分支的每日 commit 均可維持 repo 活動（避免 scheduled workflow 60 天無活動被停用）。
@@ -1186,6 +1194,7 @@ free-tier infra：
   - `force`（boolean，預設 false）：繞過 idempotency guard 強制推播（仍會寫 state）。供補推 / 除錯，日常勿用。
 - **`dry_run` 與 idempotency guard 的關係（MUST）**：`dry_run=true` 時 **MUST 略過 guard**——即使該 Track 今天已推播過，仍照常 compile + render 並輸出至 log。guard 防的是「重複打擾使用者」，而 dry run 不推播亦不寫 state，該風險不存在；若讓 guard 擋下 dry run，會使版面調校工具在當天失效。
 - **`dry_run` 與 `force` 同時為 true（MUST）**：以 `dry_run` 為準——不推播、不寫 state，行為與單獨 `dry_run=true` 完全相同。MUST NOT 視為設定衝突而失敗。
+- **`force` 的語意 MUST 維持單一（MUST，F6 定案 2026-07-29）**：`force=true` 的效果**只有「繞過日期 guard」**，其餘行為（推播成功即 `currentSessionIndex++`、寫 state）一律照常。故**同一台北日期內多次 `force` 執行，該 Track 會連續前進多課**（同日跳課）。此後果 MUST 明確揭露並接受，MUST NOT 於程式內建「同日第二次不推進」之類的隱藏例外——那會讓 `force` 帶隱藏狀態，也會使「今天想一次補推兩課」這個正當維運需求變成不可能。回復路徑為依 §9.2「指定起點 / 跳課 / 重來」編輯 `state.json` 的 `currentSessionIndex`；維運 runbook MUST 以警示形式載明此風險與回復方式。
 
 ### 21.2 Workflow（骨架）
 
