@@ -67,3 +67,18 @@ markCompleted(state: AppState, track: Track, completedAt: Date): void
 > 只改 `currentSessionIndex` 而未刪 `completedAt` ⇒ 該軌仍會被靜默跳過。程式 MUST NOT 自動清除
 > `completedAt`（狀態層不認識課表，見 [research.md](../research.md) R1），故此規則 MUST 在
 > `docs/runbook.md` 明示。
+
+---
+
+## 4. 未知 Track 鍵（F6 定案 2026-07-29）
+
+| 規則 | 等級 |
+| --- | --- |
+| `tracks` 中出現**不屬於三個已知 Track 的鍵**（例：人工編輯時打成 `interviewready`）MUST 判為**欄位語意損毀 ⇒ 全域性失敗**（紅色告警 + exit 1 + 不覆寫原檔） | MUST |
+| MUST NOT 靜默忽略該鍵 | MUST NOT |
+| MUST NOT 於 `save()` 時移除該鍵 | MUST NOT |
+
+> **理由**（spec Clarifications 2026-07-29、`docs/spec.md` §19）：人工編輯 `state.json` 是調整進度的
+> **官方方式**，打錯 Track 名稱代表維運者的意圖**完全沒有生效**——靜默忽略會讓這個手誤數日無人察覺，
+> 與「對**值**的手誤即判損毀」的既有裁決也不一致。且因中止點在逐 Track 迴圈之前、`save()` 不被呼叫，
+> 打錯的內容原封留在 `state` 分支上供修正，是唯一同時做到「fail loud」與「不動原檔」的處置。

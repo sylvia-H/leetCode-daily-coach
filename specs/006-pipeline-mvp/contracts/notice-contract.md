@@ -21,6 +21,7 @@ export function renderCompletionNotice(track: Track): DiscordEmbed[];
 | 函式 | 顏色 | 標題 | 內文 |
 | --- | --- | --- | --- |
 | `renderAlert(track, reason)` | `15158332`（紅） | `⚠️ 推播失敗 · {track}` | `redact(reason)` |
+| ↳ **部分推播**的 `reason` | 同上 | 同上 | MUST 明示「**本課進度已前進、不會補推**」（spec FR-012，F6 定案 2026-07-29）——避免維運者誤等自動補推 |
 | `renderAlert(null, reason)` | `15158332`（紅） | `⚠️ 推播失敗 · 全域` | `redact(reason)` |
 | `renderCompletionNotice(track)` | `3066993`（綠） | `🎉 課程完成 · {track}` | 固定文案（見 §2） |
 
@@ -70,6 +71,10 @@ export function renderCompletionNotice(track: Track): DiscordEmbed[];
 | `DRY_RUN=true` 下 MUST NOT 發送任何通知（告警亦然），只留日誌 | MUST |
 | 通知 MUST 走與課程訊息**相同**的 `WebhookClient`（含重試 / 退避） | MUST |
 | workflow 層的最後防線通知 MUST 為極簡純文字、MUST NOT 使用 embeds、MUST NOT 重述細節 | MUST |
+| 最後防線通知的**目標頻道 MUST 為第一個已設定的頻道**（與全域告警同規則）；三軌皆未設定時只留錯誤紀錄，MUST NOT 視為新的失敗（spec FR-019 / FR-020a） | MUST |
+| 最後防線通知與程式內全域告警**可能同時發出**，此重複為**可接受的取捨**（優於靜默），MUST NOT 為消除重複而移除任一道 | MUST |
+| 單一 Track 一次執行中 MUST 至多發出**一則**失敗告警（任一步驟失敗即結束該軌，spec FR-018） | MUST |
+| 某 Track **連續多日失敗**時 MUST 維持每日照常告警，MUST NOT 自動降頻或自動暫停（spec FR-022a） | MUST |
 
 ---
 
