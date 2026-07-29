@@ -12,6 +12,7 @@ import { redactWebhookUrls, renderAlert, renderCompletionNotice } from "./render
 import {
   advance,
   type AppState,
+  clearCompleted,
   load as loadState,
   markCompleted,
   save as saveState,
@@ -44,8 +45,17 @@ function compileLesson(track: Track, state: AppState, deps: CompilerDeps): Compi
 // F6 R1：完課判定的資料來源是課表本身（已載入的 deps.schedules[track]），MUST NOT 靠捕捉 compile()
 // 拋出的「超出課表範圍」錯誤字串做控制流——那樣會把錯誤訊息當控制流，且無法區分「課表中間缺號」
 // （仍是該軌失敗）與「真的走完課表」（完課）。
+//
+// 空課表（`sessions: []`）MUST 判為該軌失敗、MUST NOT 判為完課：`reduce` 的初始值 0 會讓任何
+// `currentSessionIndex ≥ 1` 都「超出最大 sessionIndex」，於是課表產物異常會靜默走進完課分支——發完課
+// 通知、寫 completedAt、exit 0，且修好課表後仍需人工清除 completedAt 才會恢復。空課表是生成物異常
+// （同「課表中間缺號」），一律 fail loud。
 function maxSessionIndex(track: Track, deps: CompilerDeps): number {
-  return deps.schedules[track].sessions.reduce((max, s) => Math.max(max, s.sessionIndex), 0);
+  const { sessions } = deps.schedules[track];
+  if (sessions.length === 0) {
+    throw new Error(`${track} 的課表為空（0 個 Session）：屬課表產物異常，MUST NOT 判為完課`);
+  }
+  return sessions.reduce((max, s) => Math.max(max, s.sessionIndex), 0);
 }
 
 /**
@@ -203,9 +213,25 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     try {
       // F6 完課檢查（R1）：置於 per-track guard 之後、compileLesson 之前。FORCE MUST NOT 繞過完課跳過
       // （F6 R4）——此檢查完全不看 config.force，故無論是否強制皆會先擋下已完課的 Track。
-      const isCompleted =
-        trackState?.completedAt !== null && trackState?.completedAt !== undefined;
-      const isBeyondSchedule = (trackState?.currentSessionIndex ?? 1) > maxSessionIndex(track, deps);
+      const currentSessionIndex = trackState?.currentSessionIndex ?? 1;
+      const maxIndex = maxSessionIndex(track, deps);
+      const isBeyondSchedule = currentSessionIndex > maxIndex;
+      let isCompleted = trackState?.completedAt !== null && trackState?.completedAt !== undefined;
+
+      // F6 FR-022b：完課狀態的自動解除。已記錄 completedAt 但進度仍落在目前課表範圍內 ⇒ 課表在完課後
+      // 被延長（例：F7 課綱由 13 課展開為約 180 課），此時完課狀態已違反不變式「completedAt 非空 ⇒
+      // currentSessionIndex 超出課表最大 sessionIndex」。不解除的話三軌會在課綱擴充後無限期靜默跳過，
+      // 且不發任何訊號。解除只刪 completedAt、不動其餘欄位，該軌當次即照常從既有進度續推。
+      if (isCompleted && !isBeyondSchedule) {
+        if (config.dryRun) {
+          // 預覽模式 MUST NOT 寫入狀態（F1 FR-021）：只輸出日誌，其後照常走預覽路徑。
+          console.log(`${track}: would clear completion (dry-run, schedule extended to ${maxIndex})`);
+        } else {
+          clearCompleted(state, track);
+          console.log(`${track}: completion cleared (schedule extended to ${maxIndex})`);
+        }
+        isCompleted = false;
+      }
 
       if (config.dryRun) {
         // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（F1 research R9）；

@@ -45,6 +45,35 @@ describe("renderAlert", () => {
     const embeds = renderAlert(null, reasonWithUrl);
     expect(JSON.stringify(embeds)).not.toMatch(/discordapp\.com\/api\/webhooks/);
   });
+
+  // §14.5：Discord 對單一 embed 的 description 硬限為 4,096。告警不經過 checkBudget，而 reason
+  // 長度無上限（例：素材載入失敗會把全部 violation 串成一條）；超限時 Discord 回 400 且不可重試，
+  // 告警等於發不出去——故截斷 MUST 由通知實作自行負責。
+  it("超長 reason 被截斷至 4,096 字元以內並標示已截斷", () => {
+    const embeds = renderAlert("foundation", "違規".repeat(5000));
+    const description = embeds[0]!.description!;
+    expect(Array.from(description).length).toBeLessThanOrEqual(4096);
+    expect(description).toContain("已截斷");
+    expect(description.startsWith("違規違規")).toBe(true);
+  });
+
+  it("恰好 4,096 字元的 reason 原樣保留（邊界為「大於才截斷」）", () => {
+    const exact = "a".repeat(4096);
+    expect(renderAlert("foundation", exact)[0]?.description).toBe(exact);
+  });
+
+  it("超長且夾帶 webhook URL 時，截斷後仍不含 URL（遮蔽先於截斷）", () => {
+    const reason = `${"x".repeat(4090)} https://discord.com/api/webhooks/123/token-abc`;
+    const description = renderAlert(null, reason)[0]!.description!;
+    expect(Array.from(description).length).toBeLessThanOrEqual(4096);
+    expect(description).not.toMatch(/discord(?:app)?\.com\/api\/webhooks/);
+  });
+
+  it("截斷不會切斷 surrogate pair（以 code point 計長）", () => {
+    const description = renderAlert("foundation", "🎉".repeat(5000))[0]!.description!;
+    expect(Array.from(description).length).toBeLessThanOrEqual(4096);
+    expect(description).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/);
+  });
 });
 
 describe("redactWebhookUrls", () => {

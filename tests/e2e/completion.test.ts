@@ -155,6 +155,50 @@ describe("完課終態（US3 / FR-022）", () => {
   // getSessionPlan() 拋錯而歸為該軌失敗——真實課表目前為密集序列（1..13 無缺號），無法在不竄改凍結
   // 課表產物的前提下於 e2e 建構真正的缺號案例，此分支已由 tests/unit/compile-errors.test.ts 對
   // getSessionPlan() 的單元測試涵蓋。
+  // FR-022b：完課狀態的自動解除。真實情境是課表在完課後被延長（F7 課綱展開），在 e2e 中以「殘留的
+  // completedAt + 仍在課表範圍內的進度」等價表達——判定看的就是這兩者的關係，而非課表如何變長。
+  it("殘留 completedAt 但進度仍在課表範圍內 → 自動刪除 completedAt、照常推課、exit 0", async () => {
+    writeSingleTrackState(stateFile, {
+      currentSessionIndex: 1,
+      lastPushAt: null,
+      completedConceptIds: [],
+      history: [],
+      completedAt: "2026-08-06T22:07:12Z",
+    });
+
+    const exitCode = await run(baseEnv(stateFile), { webhookOptions: fastRetry });
+    expect(exitCode).toBe(0);
+
+    // 收到的是課程訊息而非完課通知（顏色非綠色）。
+    const requests = recorder.requestsFor(WEBHOOK_URLS.foundation);
+    expect(requests.length).toBeGreaterThan(0);
+    expect(requests.some((r) => r.embeds.some((e) => e.color === 3066993))).toBe(false);
+
+    const saved = JSON.parse(readFileSync(stateFile, "utf-8")) as {
+      tracks: { foundation: Record<string, unknown> };
+    };
+    // MUST 刪鍵而非設為 null（state-schema.md §2.1）。
+    expect("completedAt" in saved.tracks.foundation).toBe(false);
+    expect(saved.tracks.foundation.currentSessionIndex).toBe(2);
+    expect(saved.tracks.foundation.lastPushAt).not.toBeNull();
+  });
+
+  it("DRY_RUN 下的自動解除：不發送、不寫入（completedAt 原樣保留），仍輸出預覽", async () => {
+    writeSingleTrackState(stateFile, {
+      currentSessionIndex: 1,
+      lastPushAt: null,
+      completedConceptIds: [],
+      history: [],
+      completedAt: "2026-08-06T22:07:12Z",
+    });
+    const before = readFileSync(stateFile);
+
+    const exitCode = await run(baseEnv(stateFile, { DRY_RUN: "true" }), { webhookOptions: fastRetry });
+    expect(exitCode).toBe(0);
+    expect(recorder.requests).toHaveLength(0);
+    expect(readFileSync(stateFile).equals(before)).toBe(true);
+  });
+
   it("判定式邊界：sessionIndex 恰為最大值時走正常推播路徑而非完課（MUST 為嚴格大於）", async () => {
     const deps = loadCompilerDeps();
     const maxIndex = deps.schedules.foundation.sessions.reduce((m, s) => Math.max(m, s.sessionIndex), 0);

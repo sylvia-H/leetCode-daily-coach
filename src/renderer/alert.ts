@@ -14,12 +14,28 @@ export function redactWebhookUrls(text: string): string {
   return text.replace(WEBHOOK_URL_PATTERN, "[redacted]");
 }
 
+// Discord 對單一 embed 的 description 硬限為 4,096 字元（§14.5）。告警不經過 checkBudget（它只檢查
+// 課程訊息），而 `reason` 長度無上限——例如 loadCompilerDeps() 失敗時會把全部 violation 串成一條訊息。
+// 超限時 Discord 回 400，且 400 不可重試（isRetryableStatus），紅色告警等於發不出去，只剩本機日誌：
+// 「Fail loud」在最需要它的場景反而失效。故 MUST 由通知實作自行截斷。
+const DESCRIPTION_LIMIT = 4096;
+const TRUNCATION_SUFFIX = "…（訊息過長，已截斷；完整內容見執行日誌）";
+
+// 以 code point 計長並切割（與 budget.ts 一致），避免把 surrogate pair 從中切斷。
+// MUST 在遮蔽之後才截斷：先截斷可能留下未被樣式命中的 URL 殘段。
+function truncateDescription(text: string): string {
+  const chars = Array.from(text);
+  if (chars.length <= DESCRIPTION_LIMIT) return text;
+  const keep = DESCRIPTION_LIMIT - Array.from(TRUNCATION_SUFFIX).length;
+  return chars.slice(0, keep).join("") + TRUNCATION_SUFFIX;
+}
+
 export function renderAlert(track: Track | null, reason: string): DiscordEmbed[] {
   const label = track ?? "全域";
   return [
     {
       title: `⚠️ 推播失敗 · ${label}`,
-      description: redactWebhookUrls(reason),
+      description: truncateDescription(redactWebhookUrls(reason)),
       color: ALERT_COLOR,
     },
   ];

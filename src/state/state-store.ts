@@ -183,6 +183,18 @@ export function markCompleted(state: AppState, track: Track, completedAt: Date):
   trackState.completedAt = completedAt.toISOString();
 }
 
+// F6 FR-022b：只在「該軌已記錄 completedAt，但 currentSessionIndex 仍在目前課表範圍內」時呼叫——
+// 課表被延長（例：F7 課綱展開）後，完課狀態即與不變式「completedAt 非空 ⇒ currentSessionIndex 超出
+// 課表最大 sessionIndex」矛盾，若不解除，該軌會無限期靜默跳過。**MUST 刪除鍵而非設為 null**：未完課的
+// Track MUST NOT 出現 completedAt 鍵（state-schema.md §1，避免無語意 diff）。其餘欄位一律不動。
+export function clearCompleted(state: AppState, track: Track): void {
+  const trackState = state.tracks[track];
+  if (!trackState) {
+    throw new Error(`clearCompleted 呼叫時找不到 Track「${track}」的既有進度（應已由 load() 自動補建）`);
+  }
+  delete trackState.completedAt;
+}
+
 // 只寫檔，不含任何 git 操作（F1 research R5）；git add/commit/push 由 daily.yml 的 workflow step 負責。
 export function save(stateFile: string, state: AppState): void {
   const orderedTracks: Partial<Record<Track, TrackState>> = {};
