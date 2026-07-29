@@ -16,6 +16,11 @@ export interface TrackState {
   lastPushAt: string | null;
   completedConceptIds: string[];
   history: HistoryEntry[];
+  /**
+   * F6 FR-022／R2：選填。該軌走完課表並成功發出完課通知的時間（ISO 8601）。
+   * 缺席或 null ⇒ 未完課。存在且非 null ⇒ 該軌其後每次執行一律靜默跳過。
+   */
+  completedAt?: string | null;
 }
 
 export interface AppState {
@@ -35,7 +40,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-// 欄位語意驗證（cli-contract.md §4、state-schema.md §2）：JSON 合法但欄位語意損毀時，**比照「JSON
+// 註解中的需求編號一律標明所屬 Feature（見 `src/main.ts` 檔頭說明：F1 與 F6 的編號空間已實際碰撞）。
+//
+// 欄位語意驗證（F1 cli-contract.md §4、F1 state-schema.md §2）：JSON 合法但欄位語意損毀時，**比照「JSON
 // 解析失敗」視為全域失敗**——拋錯後由 main.ts 發全域告警並 exit≠0，且因中止點在逐 Track 迴圈之前，
 // save() 不會被呼叫，原檔得以保全（MUST NOT 覆寫唯一權威狀態）。
 // 這是結構性驗證，非 zod 的型別／值域 schema 驗證（zod 屬 F2）。
@@ -66,6 +73,19 @@ function validateTrackState(track: Track, value: unknown): TrackState {
     throw new Error(`state.json 內容損毀：Track「${track}」的 history 必須是陣列`);
   }
 
+  // F6 FR-022／state-schema.md §1：completedAt 為選填欄位，缺席不算違反（向後相容）；
+  // 存在時 MUST 為 null 或 Date.parse 可解析的字串，否則比照欄位語意損毀。
+  if (
+    "completedAt" in value &&
+    value.completedAt !== null &&
+    value.completedAt !== undefined &&
+    (typeof value.completedAt !== "string" || Number.isNaN(Date.parse(value.completedAt)))
+  ) {
+    throw new Error(
+      `state.json 內容損毀：Track「${track}」的 completedAt 必須是 null 或可解析的 ISO 8601 字串（實際值：${JSON.stringify(value.completedAt)}）`,
+    );
+  }
+
   return value as unknown as TrackState;
 }
 
@@ -82,7 +102,16 @@ function validateAppState(parsed: unknown): AppState {
     throw new Error("state.json 內容損毀：tracks 必須是物件");
   }
 
-  // 未啟用（但已知）的 Track 一律原樣保留，MUST NOT 刪除（state-schema.md §2）。
+  // F6 FR-031：tracks 中出現不屬於三個已知 Track 的鍵（例如人工編輯打錯字）MUST 判為欄位語意損毀
+  // ⇒ 全域性失敗。現行實作原本會靜默丟棄未知鍵（下面迴圈只走訪 TRACK_ORDER），使維運者的手誤打錯
+  // Track 名稱完全沒有訊號、且 save() 時會被悄悄抹除；fail loud 才能讓這個手誤被立即看見。
+  const knownTracks = new Set<string>(TRACK_ORDER);
+  const unknownKeys = Object.keys(rawTracks).filter((key) => !knownTracks.has(key));
+  if (unknownKeys.length > 0) {
+    throw new Error(`state.json 內容損毀：tracks 含未知的 Track 鍵：${unknownKeys.join(", ")}`);
+  }
+
+  // 未啟用（但已知）的 Track 一律原樣保留，MUST NOT 刪除（F1 state-schema.md §2）。
   const tracks: Partial<Record<Track, TrackState>> = {};
   for (const track of TRACK_ORDER) {
     const entry = rawTracks[track];
@@ -118,8 +147,8 @@ export function load(stateFile: string, enabledTracks: readonly Track[]): AppSta
   return state;
 }
 
-// 只在該 Track 推播成功後呼叫（FR-013：漏跑不跳課）。就地修改傳入的 state 物件；
-// 呼叫方（main.ts）在全部 Track 處理完畢後負責單次呼叫 save()（FR-016）。
+// 只在該 Track 推播成功後呼叫（F1 FR-013：漏跑不跳課）。就地修改傳入的 state 物件；
+// 呼叫方（main.ts）在全部 Track 處理完畢後負責單次呼叫 save()（F1 FR-016）。
 export function advance(state: AppState, track: Track, lesson: Lesson, pushedAt: Date): void {
   const trackState = state.tracks[track];
   if (!trackState) {
@@ -143,7 +172,30 @@ export function advance(state: AppState, track: Track, lesson: Lesson, pushedAt:
   }
 }
 
-// 只寫檔，不含任何 git 操作（research R5）；git add/commit/push 由 daily.yml 的 workflow step 負責。
+// F6 FR-022／R2：只在「該軌 currentSessionIndex 超出課表最大 sessionIndex」且完課通知送出成功後呼叫。
+// 只設定 completedAt；MUST NOT 動 currentSessionIndex / lastPushAt / history / completedConceptIds
+// ——完課不是一次推播。就地修改 in-memory state，落盤由呼叫方單次 save() 負責。
+export function markCompleted(state: AppState, track: Track, completedAt: Date): void {
+  const trackState = state.tracks[track];
+  if (!trackState) {
+    throw new Error(`markCompleted 呼叫時找不到 Track「${track}」的既有進度（應已由 load() 自動補建）`);
+  }
+  trackState.completedAt = completedAt.toISOString();
+}
+
+// F6 FR-022b：只在「該軌已記錄 completedAt，但 currentSessionIndex 仍在目前課表範圍內」時呼叫——
+// 課表被延長（例：F7 課綱展開）後，完課狀態即與不變式「completedAt 非空 ⇒ currentSessionIndex 超出
+// 課表最大 sessionIndex」矛盾，若不解除，該軌會無限期靜默跳過。**MUST 刪除鍵而非設為 null**：未完課的
+// Track MUST NOT 出現 completedAt 鍵（state-schema.md §1，避免無語意 diff）。其餘欄位一律不動。
+export function clearCompleted(state: AppState, track: Track): void {
+  const trackState = state.tracks[track];
+  if (!trackState) {
+    throw new Error(`clearCompleted 呼叫時找不到 Track「${track}」的既有進度（應已由 load() 自動補建）`);
+  }
+  delete trackState.completedAt;
+}
+
+// 只寫檔，不含任何 git 操作（F1 research R5）；git add/commit/push 由 daily.yml 的 workflow step 負責。
 export function save(stateFile: string, state: AppState): void {
   const orderedTracks: Partial<Record<Track, TrackState>> = {};
   for (const track of TRACK_ORDER) {

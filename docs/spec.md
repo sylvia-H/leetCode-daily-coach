@@ -360,7 +360,8 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
 - 每日 MUST 由**同一個 workflow、單一 job** 依固定順序（`foundation → interviewReady → interviewMastery`）逐一處理啟用的 Track：各自做日期 guard → 編譯 → 渲染 → 推播至各自頻道 → 推進各自 state。
 - MUST NOT 以 Actions matrix 開多個平行 job 處理多 Track（多 job 同時 push `state` 分支會互相衝突；單一 job 依序執行、單次 commit 寫入全部 Track state）。
 - **失敗隔離（MUST）**：單一 Track 的編譯 / 推播失敗，MUST 記錄錯誤並繼續處理其餘 Track；全部處理完後若有任一失敗，MUST 發告警並以非零 exit code 結束（已成功的 Track 其 state 照常推進與保存）。
-- **告警的責任歸屬（MUST，F1 定案）**：告警版面的實作 MUST 唯一——單一 Track 失敗與全域性失敗（無任何 Webhook 設定、`STATE_FILE` 缺失、`state.json` 解析失敗、**`state.json` 欄位語意損毀**、**狀態存檔失敗**）皆 MUST 由**推播程式**以同一顆告警渲染函式（`src/renderer/alert.ts`）發出，全域性失敗發至**第一個已設定的頻道**。**MUST NOT** 由 `daily.yml` 另行拼組 Embed 告警——同一責任兩套實作會使版面隨時間漂移，與 §4-9 的「單一 Compiler、不得雙軌」同理。
+- **告警的責任歸屬（MUST，F1 定案）**：告警版面的實作 MUST 唯一——單一 Track 失敗與全域性失敗（無任何 Webhook 設定、`STATE_FILE` 缺失、`state.json` 解析失敗、**`state.json` 欄位語意損毀**、**狀態存檔失敗**、**課程素材載入失敗**）皆 MUST 由**推播程式**以同一顆告警渲染函式（`src/renderer/alert.ts`）發出，全域性失敗發至**第一個已設定的頻道**。**MUST NOT** 由 `daily.yml` 另行拼組 Embed 告警——同一責任兩套實作會使版面隨時間漂移，與 §4-9 的「單一 Compiler、不得雙軌」同理。
+  - **告警內文的祕密遮蔽（MUST，F6 定案 2026-07-24）**：告警的失敗原因（`reason`）多半直接來自底層例外訊息，而底層例外**不受本專案控制**（`fetch` / undici 的網路錯誤可能夾帶完整請求 URL）。故通知渲染函式 MUST 在組版時對 `reason` 做 **Discord webhook URL 樣式的遮蔽**（例如替換為 `[redacted]`），MUST NOT 依賴「呼叫端自律地不帶入 URL」。理由：Webhook URL 等同該頻道的寫入憑證（§4-14），一旦隨告警貼進頻道即等於公開外洩，且頻道歷史難以完全清除。此遮蔽 MUST 為通知實作的內建行為，適用於**全部**通知種類（Track 告警 / 全域告警 / 課程完成通知）。
   - workflow 層 MAY 保留一道 `if: failure()` 的**最後防線通知**，用於程式根本沒能啟動的情境（`npm ci` / `tsc` / checkout 失敗）。此通知 MUST 為**極簡純文字**（`{"content": "..."}`），MUST NOT 使用 `embeds`、MUST NOT 重述失敗原因細節。與程式告警重疊時使用者會多收一則純文字提示，屬可接受的取捨（優於靜默）。
   - 三個 Webhook 皆未設定時**無處可發**，MUST 僅留下錯誤紀錄並以非零 exit code 結束；此情況不構成「無聲失敗」。
 - **告警本身送不出去時（MUST）**：MUST 另記一筆錯誤紀錄、仍計為該次失敗，且 **MUST NOT 因告警失敗而中斷其餘 Track 的處理**——告警發送 MUST 包在自身的 try/catch 內且不重新拋出。
@@ -369,6 +370,9 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
   - **啟用（何時開始推）**：加上 Secret 後**不需其他設定**——下一次排程執行時，StateStore 對 state 中不存在的啟用 Track 自動補建初始進度（`currentSessionIndex: 1`、`lastPushAt` 為空），日期 guard 因而放行，當次即推 Session 1。想立即開始 MAY 手動觸發 `workflow_dispatch`。
   - **指定起點 / 跳課 / 重來**：直接編輯 `state` 分支的 `state.json`（修改該 Track 的 `currentSessionIndex`）並 commit；下一次執行即從該課開始。MUST NOT 為此新增額外設定項——課表是凍結的地圖，state 是唯一權威的「目前位置」。
   - **暫停 / 續播**：移除 Secret = 暫停（該 Track 被跳過，state 保留不動）；重新加回 Secret = 從原進度續播，MUST NOT 重置為 Session 1。
+  - **完課（課表走完）＝終態，非失敗（MUST，F6 定案 2026-07-24）**：某 Track 的 `currentSessionIndex` **超出該軌課表的最大 `sessionIndex`** 時，MUST 於**首次**偵測到時發一則**非紅色的課程完成通知**至該軌頻道，並於該 Track 進度記錄 `completedAt`（§19）；其後每次執行 MUST 一律**靜默跳過**該軌（不發訊息、不推進進度）。完課 MUST NOT 計入非零 exit code、MUST NOT 升級為全域失敗、MUST NOT 影響其他 Track。**判定式 MUST 為「超出最大 `sessionIndex`」，MUST NOT 用「課表長度」或「`find()` 找不到該課」代替**：課表**中間缺號**（找得到更大的 `sessionIndex`、卻找不到當前這一課）代表生成物異常，MUST 判為**該軌失敗**（紅色告警 + 非零 exit code），MUST NOT 誤判為完課。**理由**：走完課表是課程的正常結局；若沿用「視為該 Track 失敗」（F1 原裁決，此處**取代**之），每日排程會對已完課的頻道無限期重複發紅色告警並讓 job 天天失敗，使真正的故障淹沒在雜訊中。想重新開始 MAY 依「指定起點 / 跳課 / 重來」編輯 `state.json`（同時清除該軌 `completedAt`）。**空課表（該軌課表 `sessions` 為 0 個）MUST 判為該軌失敗**，MUST NOT 判為完課——它與「中間缺號」同屬生成物異常，若誤判為完課會靜默寫入 `completedAt`，即使課表修好也仍需人工清除才會恢復。
+  - **完課狀態的自動解除（MUST，F6 定案 2026-07-29）**：已記錄 `completedAt` 的 Track，若其 `currentSessionIndex` **仍落在目前課表範圍內**（未超出最大 `sessionIndex`），MUST 判定為「課表在完課後被延長」（例：課綱由 seed 課表展開為完整課綱），MUST **自動清除該軌 `completedAt`** 並於當次照常從既有進度續推；清除 MUST 只刪除該欄位、MUST NOT 更動 `currentSessionIndex` / `lastPushAt` / `history` / `completedConceptIds`，且 MUST 於執行記錄留下一筆可辨識的紀錄。預覽模式下 MUST NOT 寫入狀態（只留紀錄）。**理由**：`completedAt` 非空的不變式是「進度已超出課表最大 `sessionIndex`」（§19），課表延長後此不變式已被違反，該狀態不再代表「已完課」而是「殘留的舊終態」；不解除則所有已完課 Track 會在課綱擴充後**無限期靜默跳過且無任何訊號**，屬沉默失敗。此規則**取代**原「程式一律不自動清除 `completedAt`、僅由人工處理」的裁決。**連帶效果**：人工把已完課 Track 的 `currentSessionIndex` 調回課表範圍內卻忘記刪除 `completedAt` 時，該軌不再被靜默跳過（下次執行即自動解除並續推），故此情境**不再是沉默失敗**；runbook 仍 SHOULD 建議兩者一併處理以維持狀態檔語意一致，但 MUST NOT 再把它描述為「不做就完全不會生效」。
+- **通知的責任歸屬（MUST，F6 補充）**：課程完成通知 MUST 由**與告警相同的單一通知實作**產生（僅顏色與文案不同），MUST NOT 經過 Lesson Compiler / Renderer、MUST NOT 為此構造不存在於課表的 `Lesson`。理由同上一條的「單一實作」原則。
 
 ---
 
@@ -998,6 +1002,13 @@ leetcode-daily-coach/
 4. for track of enabledTracks：
    a. Idempotency guard：若該 Track 的 lastPushAt 換算 Asia/Taipei 日期 == 今天 → 跳過該 Track
       （雙 cron 去重；FORCE=true 或 DRY_RUN=true 皆可繞過，供補推 / 測試；見 §21.1）
+   a2. 完課檢查（§9.2）：該 Track 已有 completedAt 且 currentSessionIndex 仍未超出課表最大
+       sessionIndex（＝課表已被延長）→ 自動清除 completedAt、記錄一筆 log，照常往 b. 續推；
+       該 Track 已有 completedAt（且進度確實超出課表）→ 靜默跳過；
+       currentSessionIndex 超出該軌課表的最大 sessionIndex 且無 completedAt → 發非紅色完課通知、
+       寫入 completedAt、跳到下一個 Track（不計失敗、不推進 index）
+       ※ 課表中間缺號（未超出最大 sessionIndex 卻找不到該課）MUST 走 g. 的該軌失敗路徑
+       ※ 空課表（sessions 為 0 個）MUST 走 g. 的該軌失敗路徑，MUST NOT 判為完課
    b. LessonCompiler.compile(track, state.tracks[track].currentSessionIndex) → Lesson
       （與 CI Gate 同一顆 Compiler；Gate 已保證此步對凍結內容必然成功）
    c. DiscordRenderer.render(Lesson) → embeds（純函式）
@@ -1018,10 +1029,24 @@ leetcode-daily-coach/
   （`currentSessionIndex++` + `lastPushAt`），同時發紅色告警並計入非零 exit code。**理由**：Discord webhook
   不可撤回、也沒有 idempotency key；若維持「全部成功才前進」，06:37 補跑會重新編譯同一 `sessionIndex`
   並**再貼一次已送出的前段**。缺漏的後段由告警交人工處置，MUST NOT 用重複推播換取完整性。
+  - **剩餘則 MUST NOT 續送（MUST，F6 定案 2026-07-29）**：某則失敗（`WebhookClient.post` 的退避重試已耗盡）
+    即代表該頻道當下大機率不可用，該 Track 的**剩餘未送出訊息 MUST 立即中止、不再嘗試**（fail-fast），
+    直接走告警路徑。**理由**：續送多半只是重複失敗並吃掉整輪執行的時間預算（§24 要求單次 run ≤ 10 分鐘），
+    且會拖累尚未處理的 Track；分支確定亦使端到端驗證可斷言。
+  - **告警文案 MUST 明示「進度已前進、不會補推」（MUST，F6 定案 2026-07-29）**：部分推播的紅色告警
+    MUST 讓維運者知道這一課的 state 已前進、明日不會自動重推，否則會誤等補推而漏掉人工處置。
 - **推播 MUST 對暫時性失敗重試（MUST，F5 定案 2026-07-24）**：`WebhookClient.post` 對 429 與 5xx、以及
   `fetch` 本身丟出的網路錯誤 MUST 以指數退避 + jitter 重試（預設 3 次，尊重 `Retry-After` 標頭，單次等待
   有上限）；429 以外的 4xx MUST NOT 重試（請求本身有問題，重試只會重複失敗）。
-- 全域性失敗（無任何 webhook 設定、state 讀寫失敗）：直接以非零 exit code 結束。
+- **課表走完 MUST NOT 視為失敗（MUST，F6 定案 2026-07-24）**：`currentSessionIndex` **超出該軌課表的最大
+  `sessionIndex`** 時走 §9.2 的**完課終態**（首次發非紅色完課通知 + 記錄 `completedAt`，其後靜默跳過），
+  MUST NOT 發紅色告警、MUST NOT 計入非零 exit code。**課表中間缺號不適用本條**——未超出最大
+  `sessionIndex` 卻找不到當前這一課時 MUST 判為該軌失敗。
+- 全域性失敗（無任何 webhook 設定、state 讀寫失敗、**課程素材載入失敗**）：直接以非零 exit code 結束。
+  - **課程素材（DAG / 題庫 / 三份課表 / 三份 Overlay）載入失敗屬全域性失敗（MUST，F6 定案 2026-07-24）**：
+    素材是全部 Track 共用的基礎，缺任一項時**沒有任何 Track 能編譯**，逐 Track 重試只會把同一個錯誤
+    重複三次並發三則告警。故 MUST 在進入逐 Track 迴圈**之前**載入，失敗即比照 state 讀取失敗處理
+    （發全域告警至第一個已設定的頻道 → 非零 exit code → **MUST NOT 覆寫原狀態檔**）。
 - 流程中不存在 LLM 步驟，因此不存在「enhancement 降級」路徑；唯一的外部依賴是 Discord API。
 
 ---
@@ -1036,6 +1061,9 @@ leetcode-daily-coach/
     "foundation": {
       "currentSessionIndex": 87, // 該 Track 下一個要推的 Session（1-based）
       "lastPushAt": "2026-07-13T22:07:00Z",
+      // completedAt：選填；該 Track 走完課表並發出完課通知的時間（§9.2），例如 "2026-08-06T22:07:12Z"。
+      // 未完課時此鍵不存在（save() MUST NOT 憑空寫出，避免對既有 state.json 產生無語意 diff）；
+      // 缺席或 null 皆代表未完課。一旦存在且非 null，該 Track 於其後每次執行一律靜默跳過。
       "completedConceptIds": ["array-traversal", "left-right-pointer"],
       "history": [
         // 滾動保留最近 30 筆（MUST 設上限，避免無限成長），供未來 Web/RSS
@@ -1059,12 +1087,16 @@ leetcode-daily-coach/
 - 各 Track 的 `currentSessionIndex` 只在**該 Track 推播成功後**前進（+1），確保漏跑 / 失敗不會跳課；Track 之間互不影響。
 - 各 Track 的 `lastPushAt` 各自用於 idempotency guard（Asia/Taipei 日期判斷，§21.1）。
 - 狀態變更 MUST 在該 Track 推播成功後才寫入該 Track 的欄位；全部 Track 處理完後一次存檔、單次 commit（避免半套狀態與多次 commit）。
+  - **「單次 commit」的精確語意（MUST，F6 澄清 2026-07-24）**：指「一次執行**至多產生一個** state commit」，而非「每次執行都必須產生一個」。全部 Track 皆被 guard 跳過或完課跳過時，存檔會寫出**內容相同**的 `state.json`，此時 workflow 的提交步驟 MUST 偵測到無變更並**略過提交**（該次執行的 commit 數為 **0**），MUST NOT 製造空 commit 汙染 `state` 分支歷史。「恰好一個 commit」只適用於**該次執行確有進度變更**的情形。
 - 各 Track 的 `history` MUST 滾動保留（上限 30 筆）。
 - 未在 state 中出現的啟用 Track（例：日後新啟用），StateStore MUST 以初始值（`currentSessionIndex: 1`、`lastPushAt` 為空）自動補建；`lastPushAt` 為空 ⇒ 日期 guard 放行，下一次執行即推播 Session 1（Track 生命週期語意見 §9.2）。
 - **調整進度的官方方式**：人工編輯 `state` 分支的 `state.json`（改該 Track 的 `currentSessionIndex`）並 commit。MUST NOT 另設「起始課數」等設定項——state 即唯一權威。
-- **載入時的欄位語意驗證（MUST，F1 定案）**：StateStore 載入 `state.json` 後，MUST 驗證各 Track 進度的欄位語意，**任一項不合法即比照「JSON 解析失敗」視為全域性失敗**（發告警 → 非零 exit code → **MUST NOT 覆寫原檔**）：`currentSessionIndex` MUST 為 ≥ 1 的整數；`lastPushAt` MUST 為 `null` 或可解析的日期字串；`completedConceptIds` / `history` MUST 為陣列。
+- **`completedAt`（選填欄位；MUST，F6 定案 2026-07-24）**：某 Track 走完課表並發出完課通知後 MUST 寫入該欄位（見 §9.2 完課語意）；**其存在即代表該 Track 已完課，其後每次執行一律靜默跳過**。缺席或 `null` 皆代表未完課（向後相容既有 `state.json`，MUST NOT 因缺此欄位而判定損毀）。**不變式**：`completedAt` 非空 ⇒ 該軌 `currentSessionIndex` 超出目前課表的最大 `sessionIndex`；此不變式被違反（課表延長，或人工把進度調回範圍內）時，程式 MUST 依 §9.2「完課狀態的自動解除」清除該欄位並照常續推。人工把某軌 `currentSessionIndex` 調回課表範圍內以重新推播時 SHOULD 一併清除該軌的 `completedAt`（保持狀態檔語意一致；未清除亦會由自動解除處理）。DRY_RUN 下 MUST NOT 寫入、MUST NOT 清除。
+- **載入時的欄位語意驗證（MUST，F1 定案）**：StateStore 載入 `state.json` 後，MUST 驗證各 Track 進度的欄位語意，**任一項不合法即比照「JSON 解析失敗」視為全域性失敗**（發告警 → 非零 exit code → **MUST NOT 覆寫原檔**）：`currentSessionIndex` MUST 為 ≥ 1 的整數；`lastPushAt` MUST 為 `null` 或可解析的日期字串；`completedConceptIds` / `history` MUST 為陣列；`completedAt`（若存在）MUST 為 `null` 或可解析的日期字串。
   - **理由**：既然「調整進度的官方方式」就是人工編輯這份檔案，手誤是可預期的常態輸入而非例外。少了這道驗證，字串型的 `currentSessionIndex` 會在推進時被當成字串串接（`"3"` → `"31"`）並靜默寫回，毀掉唯一權威狀態；不可解析的 `lastPushAt` 則會讓日期 guard 的時區換算丟出例外而使整輪執行中止（失敗隔離失效）。
   - 此為**結構性驗證**，非 schema 型別 / 值域驗證（後者屬 F2 的 zod 範圍）。MUST 寬容接受執行環境可解析的日期格式，MUST NOT 僅因非嚴格 ISO 8601 就判定損毀。
+  - **`tracks` 中的未知鍵 MUST 判為損毀（MUST，F6 定案 2026-07-29）**：`tracks` 出現不屬於三個已知 Track 的鍵時 MUST 比照欄位語意損毀處置（全域失敗、不覆寫原檔），MUST NOT 靜默忽略、MUST NOT 於 `save()` 時移除。**理由**：既然人工編輯 `state.json` 就是調整進度的官方方式，把 Track 名稱打錯（如 `interviewready`）代表維運者的意圖**完全沒有生效**——靜默忽略會讓這個手誤數日無人察覺，與「對值的手誤即判損毀」的既有裁決也不一致。且因中止點在逐 Track 迴圈之前、`save()` 不會被呼叫，打錯的內容原封留在 `state` 分支上供修正，是唯一同時做到「fail loud」與「不動原檔」的處置。
+  - **「檔案不存在」是唯一的寬容入口（MUST，F6 定案 2026-07-29）**：`STATE_FILE` 指向的檔案**不存在**時 MUST 視為空狀態（`state` 分支初次使用），所有啟用 Track 以初始值補建、不算失敗；但檔案**存在**而內容為**空字串／純空白／非 JSON／不符結構**時 MUST 一律判為**解析失敗＝全域性失敗**（發告警 → 非零 exit code → **MUST NOT 覆寫原檔**），MUST NOT 退化為「視為空狀態」。**理由**：截斷的寫入或誤清空會產生零長度檔案，若當成空狀態處理，三軌進度會被靜默重置回 Session 1 並重推已上過的課——這是資料損失級別的後果，遠比 fail loud 後人工修復昂貴。
   - **狀態存檔本身失敗**（如路徑不可寫）亦 MUST 視為全域性失敗：發告警 + 非零 exit code，MUST NOT 讓例外逸出成為無告警的未捕捉錯誤（§4-15 Fail loud）。
 - workflow 對 `state` 分支的 push 衝突 MUST 以 `git pull --rebase --autostash` + 重試處理，**重試上限固定為 3 次**（F1 定案：衝突來源僅有相隔 30 分鐘的雙 cron 極罕見重疊，3 次已足夠）；耗盡即以非零狀態結束該 step，MUST NOT 無限重試，亦 MUST NOT 以 `--force` push 覆蓋他人變更（會毀掉唯一權威狀態）。
 - 任一分支的每日 commit 均可維持 repo 活動（避免 scheduled workflow 60 天無活動被停用）。
@@ -1147,6 +1179,7 @@ LLM MUST NOT
 free-tier infra：
 
 - **執行環境**：GitHub Actions 排程 workflow（public repo 無限分鐘 / private 每月 2,000 分鐘；本任務每次數秒～數分鐘，遠低於配額）。
+- **每日排程執行的分支（MUST，F6 定案 2026-07-24）**：GitHub 的 `schedule` 事件**只執行 repo 預設分支上的 workflow**。本專案的預設分支為 **`develop`**（＝日常整合分支），因此**程式與內容併入 `develop` 即生效於每日推播**；`main` 僅作為 `develop` 的驗收合併去處，不參與每日推播。MUST NOT 於 `daily.yml` 內另行 checkout 其他分支取用程式或內容（會使 workflow 定義與執行內容分屬不同分支，難以推理）。此事實 MUST 在維運文件中明示。
 - **狀態**：committed `state.json`（專用 `state` 分支；per-track 進度）。
 - **推播**：Discord Channel Webhook ×3（`DISCORD_WEBHOOK_URL_*` 走 Actions Secrets；設定即啟用該 Track，§9.2）。
 - **LLM**：Gemini 免費層，**僅 build-time**（`GEMINI_API_KEY` 走 Secrets，只給內容產線 workflow / 本機）。
@@ -1165,6 +1198,7 @@ free-tier infra：
   - `force`（boolean，預設 false）：繞過 idempotency guard 強制推播（仍會寫 state）。供補推 / 除錯，日常勿用。
 - **`dry_run` 與 idempotency guard 的關係（MUST）**：`dry_run=true` 時 **MUST 略過 guard**——即使該 Track 今天已推播過，仍照常 compile + render 並輸出至 log。guard 防的是「重複打擾使用者」，而 dry run 不推播亦不寫 state，該風險不存在；若讓 guard 擋下 dry run，會使版面調校工具在當天失效。
 - **`dry_run` 與 `force` 同時為 true（MUST）**：以 `dry_run` 為準——不推播、不寫 state，行為與單獨 `dry_run=true` 完全相同。MUST NOT 視為設定衝突而失敗。
+- **`force` 的語意 MUST 維持單一（MUST，F6 定案 2026-07-29）**：`force=true` 的效果**只有「繞過日期 guard」**，其餘行為（推播成功即 `currentSessionIndex++`、寫 state）一律照常。故**同一台北日期內多次 `force` 執行，該 Track 會連續前進多課**（同日跳課）。此後果 MUST 明確揭露並接受，MUST NOT 於程式內建「同日第二次不推進」之類的隱藏例外——那會讓 `force` 帶隱藏狀態，也會使「今天想一次補推兩課」這個正當維運需求變成不可能。回復路徑為依 §9.2「指定起點 / 跳課 / 重來」編輯 `state.json` 的 `currentSessionIndex`；維運 runbook MUST 以警示形式載明此風險與回復方式。
 
 ### 21.2 Workflow（骨架）
 
@@ -1187,7 +1221,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # 主分支：程式與凍結內容
+      - uses: actions/checkout@v4 # 預設分支（develop）：程式與凍結內容；schedule 事件本就跑此分支
       - uses: actions/checkout@v4 # state 分支：僅 state.json
         with: { ref: state, path: .state }
       - uses: actions/setup-node@v4

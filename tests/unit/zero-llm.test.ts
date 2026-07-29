@@ -58,6 +58,55 @@ describe("零 LLM 憲章驗證（憲章 VIII、SC-008）", () => {
     const content = readFileSync(workflowPath, "utf-8");
     expect(content).not.toMatch(/GEMINI_API_KEY/);
   });
+
+  // F6 SC-005：擴充為金鑰名稱清單掃描，而非單一字串比對。清單至少含現行唯一金鑰
+  // GEMINI_API_KEY，並預留未來其他供應商金鑰名稱（FR-005）。
+  const LLM_KEY_NAMES = ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"];
+
+  it("F6 SC-005：daily.yml 中金鑰名稱清單的出現次數皆為 0", () => {
+    const workflowPath = join(process.cwd(), ".github", "workflows", "daily.yml");
+    const content = readFileSync(workflowPath, "utf-8");
+    for (const keyName of LLM_KEY_NAMES) {
+      const occurrences = content.split(keyName).length - 1;
+      expect(occurrences, `daily.yml 不應出現 ${keyName}`).toBe(0);
+    }
+  });
+
+  // F6 FR-006 回歸守衛：多 Track MUST NOT 平行分派（會競爭 state 分支）。
+  it("F6 FR-006：daily.yml 不含 strategy: / matrix:（單一 job 單一執行序）", () => {
+    const workflowPath = join(process.cwd(), ".github", "workflows", "daily.yml");
+    const content = readFileSync(workflowPath, "utf-8");
+    expect(content).not.toMatch(/strategy:/);
+    expect(content).not.toMatch(/matrix:/);
+  });
+});
+
+// F6 T029a【驗證既有】：daily.yml 已實作 FR-015 / FR-016 / FR-019 的 workflow 層行為，本描述區塊
+// 只補回歸斷言，MUST NOT 改 workflow。
+describe("daily.yml workflow 層回歸斷言（F6 FR-015 / FR-016 / FR-019）", () => {
+  const workflowPath = join(process.cwd(), ".github", "workflows", "daily.yml");
+  const content = readFileSync(workflowPath, "utf-8");
+
+  it("FR-015：提交 step 含無變更偵測（git diff --cached --quiet 命中時 exit 0，不產生空 commit）", () => {
+    expect(content).toMatch(/git diff --cached --quiet/);
+    expect(content).toMatch(/state\.json 無變更，略過提交[\s\S]*?exit 0/);
+  });
+
+  it("FR-016：推送重試上限為 3（max_attempts=3）且以 git pull --rebase --autostash 重新同步", () => {
+    expect(content).toMatch(/max_attempts=3/);
+    expect(content).toMatch(/git pull --rebase --autostash origin state/);
+    // MUST NOT 使用強制覆寫的推送方式。
+    expect(content).not.toMatch(/git push --force/);
+    expect(content).not.toMatch(/\+HEAD:/);
+  });
+
+  it("FR-019：最後防線通知 step 的 payload 為極簡純文字（只含 content 鍵，不含 embeds）", () => {
+    const noticeStepMatch = content.match(/最後防線通知[\s\S]*$/);
+    expect(noticeStepMatch).not.toBeNull();
+    const noticeStep = noticeStepMatch![0];
+    expect(noticeStep).toMatch(/\\?"content\\?":/);
+    expect(noticeStep).not.toMatch(/embeds/);
+  });
 });
 
 describe("內容 Gate 可在無任何環境變數與 API key 下執行（SC-007 自動化把關）", () => {

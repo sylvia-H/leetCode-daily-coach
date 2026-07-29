@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 import { compile, loadCompilerDeps, type CompilerDeps } from "./compiler/lesson.js";
-import { type Config, type EnvLike, loadConfig, parseWebhooks, TRACK_ORDER } from "./config.js";
+import { type Config, type EnvLike, loadConfig, parseBool, parseWebhooks, TRACK_ORDER } from "./config.js";
 import {
   createWebhookClient,
   type WebhookClient,
@@ -8,8 +8,15 @@ import {
 } from "./discord/webhook-client.js";
 import { checkBudget, type BudgetReport } from "./renderer/budget.js";
 import { render } from "./renderer/discord.js";
-import { renderAlert } from "./renderer/alert.js";
-import { advance, type AppState, load as loadState, save as saveState } from "./state/state-store.js";
+import { redactWebhookUrls, renderAlert, renderCompletionNotice } from "./renderer/alert.js";
+import {
+  advance,
+  type AppState,
+  clearCompleted,
+  load as loadState,
+  markCompleted,
+  save as saveState,
+} from "./state/state-store.js";
 import type { Lesson, RenderedMessage, Track } from "./types/lesson.js";
 import { toTaipeiDateString } from "./util/taipei-date.js";
 
@@ -22,14 +29,33 @@ interface CompiledPush {
   reports: BudgetReport[];
 }
 
+// 註解中的需求編號一律標明所屬 Feature（`F1 FR-020`、`F6 FR-022`…）：F1 與 F6 的 FR / US / research
+// 編號空間各自獨立且已實際碰撞（例：F1 FR-020＝日期 guard，F6 FR-020＝告警自身失敗），不標會誤導。
+//
 // 純粹的 compile + render + checkBudget，**不因超限而拋錯**——DRY_RUN 需要在超限時仍完整輸出
-// 逐項明細（US4 Scenario 2），超限與否由呼叫方決定如何處置。
+// 逐項明細（F1 US4 Scenario 2），超限與否由呼叫方決定如何處置。
 function compileLesson(track: Track, state: AppState, deps: CompilerDeps): CompiledPush {
   const sessionIndex = state.tracks[track]?.currentSessionIndex ?? 1;
   const lesson = compile(track, sessionIndex, deps);
   const messages = render(lesson);
   const reports = messages.map((message) => checkBudget(message));
   return { lesson, messages, reports };
+}
+
+// F6 R1：完課判定的資料來源是課表本身（已載入的 deps.schedules[track]），MUST NOT 靠捕捉 compile()
+// 拋出的「超出課表範圍」錯誤字串做控制流——那樣會把錯誤訊息當控制流，且無法區分「課表中間缺號」
+// （仍是該軌失敗）與「真的走完課表」（完課）。
+//
+// 空課表（`sessions: []`）MUST 判為該軌失敗、MUST NOT 判為完課：`reduce` 的初始值 0 會讓任何
+// `currentSessionIndex ≥ 1` 都「超出最大 sessionIndex」，於是課表產物異常會靜默走進完課分支——發完課
+// 通知、寫 completedAt、exit 0，且修好課表後仍需人工清除 completedAt 才會恢復。空課表是生成物異常
+// （同「課表中間缺號」），一律 fail loud。
+function maxSessionIndex(track: Track, deps: CompilerDeps): number {
+  const { sessions } = deps.schedules[track];
+  if (sessions.length === 0) {
+    throw new Error(`${track} 的課表為空（0 個 Session）：屬課表產物異常，MUST NOT 判為完課`);
+  }
+  return sessions.reduce((max, s) => Math.max(max, s.sessionIndex), 0);
 }
 
 /**
@@ -44,9 +70,11 @@ export class PartialPushError extends Error {
     readonly totalCount: number,
     cause: Error,
   ) {
-    super(`推播中斷於第 ${postedCount + 1}/${totalCount} 則（前 ${postedCount} 則已送出）：${cause.message}`, {
-      cause,
-    });
+    super(
+      `推播中斷於第 ${postedCount + 1}/${totalCount} 則（前 ${postedCount} 則已送出）：${cause.message}` +
+        `；本課進度已前進、不會補推（F6 FR-012）`,
+      { cause },
+    );
     this.name = "PartialPushError";
   }
 }
@@ -84,7 +112,7 @@ async function defaultPushTrack(
   return lesson;
 }
 
-// US4：預覽模式輸出——完整 embeds（格式化 JSON）與 BudgetReport 逐項明細，逐則訊息各自輸出。
+// F1 US4：預覽模式輸出——完整 embeds（格式化 JSON）與 BudgetReport 逐項明細，逐則訊息各自輸出。
 function printDryRunPreview(track: Track, messages: RenderedMessage[], reports: BudgetReport[]): void {
   messages.forEach((message, i) => {
     const label = messages.length > 1 ? `${track} (${i + 1}/${messages.length})` : track;
@@ -101,7 +129,7 @@ async function sendGlobalAlert(client: WebhookClient, track: Track, reason: stri
   try {
     await client.post(track, renderAlert(null, reason));
   } catch (alertErr) {
-    console.error(`alert-failed: 全域: ${(alertErr as Error).message}`);
+    console.error(`alert-failed: 全域: ${redactWebhookUrls((alertErr as Error).message)}`);
   }
 }
 
@@ -115,13 +143,19 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   const webhooks = parseWebhooks(env);
   const firstConfiguredTrack = TRACK_ORDER.find((track) => webhooks[track]);
 
+  // F6 FR-009 修復：預覽模式下 MUST NOT 發送任何通知（含全域告警）——通知本身也是一次推播。此處
+  // config 尚未（或可能未）載入成功，dryRun 旗標 MUST 直接由 env 讀取，不能等 config.dryRun。
+  const previewOnly = parseBool(env.DRY_RUN);
+
   let config: Config;
   try {
     config = loadConfig(env);
   } catch (err) {
-    const reason = (err as Error).message;
+    // F6 FR-025a：執行記錄輸出 MUST 先經遮蔽再印出——底層例外訊息可能夾帶完整 webhook URL，
+    // 而實機驗收紀錄所附的 Actions 連結指向的是完整 log，log 洩漏等同驗收紀錄洩漏金鑰。
+    const reason = redactWebhookUrls((err as Error).message);
     console.error(reason);
-    if (firstConfiguredTrack) {
+    if (!previewOnly && firstConfiguredTrack) {
       const client = createWebhookClient(webhooks, options.webhookOptions);
       await sendGlobalAlert(client, firstConfiguredTrack, reason);
     }
@@ -134,9 +168,11 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   try {
     state = loadState(config.stateFile, config.enabledTracks);
   } catch (err) {
-    const reason = (err as Error).message;
+    const reason = redactWebhookUrls((err as Error).message);
     console.error(reason);
-    await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    if (!config.dryRun) {
+      await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    }
     return 1;
   }
 
@@ -146,9 +182,11 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   try {
     deps = loadCompilerDeps();
   } catch (err) {
-    const reason = `課程素材載入失敗：${(err as Error).message}`;
+    const reason = `課程素材載入失敗：${redactWebhookUrls((err as Error).message)}`;
     console.error(reason);
-    await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    if (!config.dryRun) {
+      await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
+    }
     return 1;
   }
 
@@ -165,19 +203,64 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       trackState?.lastPushAt !== undefined &&
       toTaipeiDateString(new Date(trackState.lastPushAt)) === toTaipeiDateString(new Date());
 
-    // per-track idempotency guard（FR-020）：置於逐 Track 流程最前。
-    // 略過條件為 dryRun || force（research R9）——DRY_RUN 與 FORCE 同時開啟時以 DRY_RUN 為準。
+    // per-track idempotency guard（F1 FR-020）：置於逐 Track 流程最前。
+    // 略過條件為 dryRun || force（F1 research R9）——DRY_RUN 與 FORCE 同時開啟時以 DRY_RUN 為準。
     if (alreadyPushedToday && !config.dryRun && !config.force) {
       console.log(`${track}: skipped (already pushed today)`);
       continue;
     }
 
     try {
+      // F6 完課檢查（R1）：置於 per-track guard 之後、compileLesson 之前。FORCE MUST NOT 繞過完課跳過
+      // （F6 R4）——此檢查完全不看 config.force，故無論是否強制皆會先擋下已完課的 Track。
+      const currentSessionIndex = trackState?.currentSessionIndex ?? 1;
+      const maxIndex = maxSessionIndex(track, deps);
+      const isBeyondSchedule = currentSessionIndex > maxIndex;
+      let isCompleted = trackState?.completedAt !== null && trackState?.completedAt !== undefined;
+
+      // F6 FR-022b：完課狀態的自動解除。已記錄 completedAt 但進度仍落在目前課表範圍內 ⇒ 課表在完課後
+      // 被延長（例：F7 課綱由 13 課展開為約 180 課），此時完課狀態已違反不變式「completedAt 非空 ⇒
+      // currentSessionIndex 超出課表最大 sessionIndex」。不解除的話三軌會在課綱擴充後無限期靜默跳過，
+      // 且不發任何訊號。解除只刪 completedAt、不動其餘欄位，該軌當次即照常從既有進度續推。
+      if (isCompleted && !isBeyondSchedule) {
+        if (config.dryRun) {
+          // 預覽模式 MUST NOT 寫入狀態（F1 FR-021）：只輸出日誌，其後照常走預覽路徑。
+          console.log(`${track}: would clear completion (dry-run, schedule extended to ${maxIndex})`);
+        } else {
+          clearCompleted(state, track);
+          console.log(`${track}: completion cleared (schedule extended to ${maxIndex})`);
+        }
+        isCompleted = false;
+      }
+
       if (config.dryRun) {
-        // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（research R9）；
-        // 不推播、不寫入狀態（FR-021）；即使超限仍完整輸出逐項明細，不因此視為失敗（US4 Scenario 2）。
+        // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（F1 research R9）；
+        // 不推播、不寫入狀態（F1 FR-021）；即使超限仍完整輸出逐項明細，不因此視為失敗
+        // （F1 US4 Scenario 2）。完課的兩種情境同樣只輸出日誌、不發送、不寫狀態（F6 R4）。
+        if (isCompleted) {
+          console.log(`${track}: completed (skipped, dry-run)`);
+          continue;
+        }
+        if (isBeyondSchedule) {
+          console.log(`${track}: would send completion notice (dry-run)`);
+          continue;
+        }
         const { messages, reports } = compileLesson(track, state, deps);
         printDryRunPreview(track, messages, reports);
+        continue;
+      }
+
+      if (isCompleted) {
+        console.log(`${track}: skipped (completed)`);
+        continue;
+      }
+
+      if (isBeyondSchedule) {
+        // 通知發送失敗會拋出並落入下方 catch：視為該軌失敗（紅色告警 + exit 1），MUST NOT 寫
+        // completedAt（F6 FR-019c／state-schema.md §2）——下次執行會重試發送。
+        await client.post(track, renderCompletionNotice(track));
+        markCompleted(state, track, new Date());
+        console.log(`${track}: completed`);
         continue;
       }
 
@@ -186,7 +269,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       console.log(`${track}: pushed`);
     } catch (err) {
       anyFailed = true;
-      const reason = (err as Error).message;
+      const reason = redactWebhookUrls((err as Error).message);
       console.error(`${track}: failed: ${reason}`);
       // 部分推播：state 照常前進，避免補跑 cron 重發已送出的前段（詳見 PartialPushError）。
       if (err instanceof PartialPushError) {
@@ -195,12 +278,12 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
           `${track}: partial push: 已送出 ${err.postedCount}/${err.totalCount} 則，state 仍前進以避免重複推播`,
         );
       }
-      // 預覽模式 MUST 完全不推播（cli-contract.md §3）——告警也是一次推播，故 DRY_RUN 下只留日誌。
+      // 預覽模式 MUST 完全不推播（F1 cli-contract.md §3）——告警也是一次推播，故 DRY_RUN 下只留日誌。
       if (!config.dryRun) {
         try {
           await client.post(track, renderAlert(track, reason));
         } catch (alertErr) {
-          console.error(`alert-failed: ${track}: ${(alertErr as Error).message}`);
+          console.error(`alert-failed: ${track}: ${redactWebhookUrls((alertErr as Error).message)}`);
         }
       }
     }
@@ -212,7 +295,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     try {
       saveState(config.stateFile, state);
     } catch (err) {
-      const reason = `狀態存檔失敗（${config.stateFile}）：${(err as Error).message}`;
+      const reason = `狀態存檔失敗（${config.stateFile}）：${redactWebhookUrls((err as Error).message)}`;
       console.error(reason);
       await sendGlobalAlert(client, config.enabledTracks[0] as Track, reason);
       return 1;
