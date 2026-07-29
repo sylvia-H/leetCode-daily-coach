@@ -1,4 +1,4 @@
-# Tasks: 每日 Pipeline 端到端、多 Track 失敗隔離與 MVP 驗收
+﻿# Tasks: 每日 Pipeline 端到端、多 Track 失敗隔離與 MVP 驗收
 
 **Input**: Design documents from `specs/006-pipeline-mvp/`
 
@@ -56,10 +56,12 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 **Purpose**: 確認動工前基線為綠燈，並讓 `tests/e2e/` 被既有工具鏈涵蓋（預期不需改設定）
 
-- [ ] T001 於 repo 根目錄執行 `npm run build`、`npm run typecheck`、`npm test`、`npm run validate:content`，
-      確認四項皆綠燈並記錄現況測試數，作為本 Feature 的回歸基準
-- [ ] T002 建立 `tests/e2e/` 目錄，並確認 `vitest.config.ts` 的 `include` 與 `tsconfig.test.json` 的
+- [x] T001 於 repo 根目錄執行 `npm run build`、`npm run typecheck`、`npm test`、`npm run validate:content`，
+      確認四項皆綠燈並記錄現況測試數，作為本 Feature 的回歸基準（基準：53 個測試檔、395 個測試；
+      39 筆 Lesson 全數通過內容 Gate）
+- [x] T002 建立 `tests/e2e/` 目錄，並確認 `vitest.config.ts` 的 `include` 與 `tsconfig.test.json` 的
       `include` 已涵蓋 `tests/e2e/**/*.test.ts`（plan.md 預期無需改設定；若實測未涵蓋才最小幅調整）
+      ——實測確認兩者的 `tests/**/*` 萬用字元已涵蓋，未調整設定
 
 **Checkpoint**: 基線綠燈、`tests/e2e/` 已納入 `npm test` 與 `npm run typecheck` 的掃描範圍
 
@@ -72,7 +74,7 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 **⚠️ CRITICAL**: 本階段完成前，任何 User Story 的 e2e 任務都無法開始
 
-- [ ] T003 依 [contracts/e2e-harness.md](./contracts/e2e-harness.md) §2 實作 `tests/helpers/fetch-recorder.ts`：
+- [x] T003 依 [contracts/e2e-harness.md](./contracts/e2e-harness.md) §2 實作 `tests/helpers/fetch-recorder.ts`：
       `RecordedRequest { url, embeds }`、`requests`、`requestsFor(url)`、`failFor(url, status?)`、`install()`；
       預設回應 `{ ok: true, status: 204 }` 且具備 `headers.get()`（`WebhookClient` 會讀 `Retry-After`）；
       依呼叫順序記錄；MUST NOT 解讀或重組 embeds 內容
@@ -94,7 +96,7 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 推播並攔截對外請求：恰好三組請求、各自打到對應 Track 的 webhook、內容對應各自 `sessionIndex`；
 `prefix-sum` 三軌正文逐字相同、題目難度帶不同
 
-- [ ] T005 [US1] 建立 `tests/e2e/three-tracks.test.ts` 的共用夾具：三軌 webhook 環境變數、`mkdtempSync`
+- [x] T005 [US1] 建立 `tests/e2e/three-tracks.test.ts` 的共用夾具：三軌 webhook 環境變數、`mkdtempSync`
       暫存目錄的真實 `state.json`、`fetch-recorder` 安裝、`webhookOptions` 注入 `sleep`／`random` 以消除
       等待與 jitter；斷言三軌各自的請求數與**目標 URL 完全對應**、無交叉錯送（FR-003 / SC-001）。
       **則數判準依 SC-001 為 1:1**——各軌的請求數 MUST **恰等於** `render()` 對該課產出的訊息則數
@@ -102,38 +104,43 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       **注入僅限消除耗時**（FR-002a）：MUST NOT 改變重試次數、錯誤分類或任何分支判斷。
       **暫存資源 MUST 於 `afterEach` 清理**（FR-002c）——`mkdtempSync` 目錄用畢即刪，MUST NOT 寫入 repo
       工作目錄、MUST NOT 殘留
-- [ ] T004 [US1] **（原 Phase 2，因排序缺陷移至此）**建立 `tests/unit/no-push-stub.test.ts`：掃描
+- [x] T004 [US1] **（原 Phase 2，因排序缺陷移至此）**建立 `tests/unit/no-push-stub.test.ts`：掃描
       `tests/e2e/**` 全部原始碼，斷言**不含** `pushTrack` 字樣（SC-006 機驗；e2e-harness §1 的守門測試），
       並斷言掃描到的檔案數 > 0 以防空掃過關。**本任務 MUST 在 T005 之後執行**——`tests/e2e/` 至少要有
       一支檔案，「檔案數 > 0」才可能成立。**守門測試 MUST NOT 放在 `tests/e2e/`**——它自身必須含有待掃描
       字樣，置於掃描範圍內會自我命中而必然紅燈；置於 `tests/unit/` 亦使 `tests/e2e/` 維持「五個端到端
       檔案」的宣告（plan.md／quickstart.md／e2e-harness §3 一致）
-- [ ] T006 [US1] 於 `tests/e2e/three-tracks.test.ts` 補「各軌訊息內容對應**自己的** `currentSessionIndex`」
+- [x] T006 [US1] 於 `tests/e2e/three-tracks.test.ts` 補「各軌訊息內容對應**自己的** `currentSessionIndex`」
       斷言：三軌設為 **3 / 5 / 8**（practice / challenge / concept 三種版面，research R7 修訂版），
       斷言三則訊息**版面類型互不相同**且各自通過預算檢查（US1-2 / US1-3）。
       **MUST NOT 在此情境斷言題目內容或難度帶**——seed 課表中這三個 Session 的 `problemIds` **皆為空集合**
       （`foundation@3` practice、`interviewReady@5` challenge、`interviewMastery@8` concept `in-place-operations`），
       難度帶的證據一律由 T007 的 `prefix-sum` 情境承擔
-- [ ] T007 [US1] 於 `tests/e2e/three-tracks.test.ts` 補 AC5 斷言：**`conceptId` 釘死為 `prefix-sum`**
+- [x] T007 [US1] 於 `tests/e2e/three-tracks.test.ts` 補 AC5 斷言：**`conceptId` 釘死為 `prefix-sum`**
       （research R6 的固定 fixture），在三份課表中**動態查出**它各自的 `sessionIndex`（MUST NOT 硬編 `9`），
       斷言三軌 `digest`／`tsTip`／`pyTip`／`takeaway`／`exitCriteria` **逐字相同**、`problems` 難度集合
       互不相同；三份課表中任一份找不到該 Concept 時 MUST 明確失敗而非靜默跳過。
       **MUST NOT 改為「取第一個三軌共有的 Concept」**——seed 素材中該候選為 `time-space-complexity`，
       三軌 `problemIds` 皆為空集合，難度斷言必然失敗（FR-004 / SC-007）
-- [ ] T008 [US1] 於 `tests/e2e/three-tracks.test.ts` 補「執行環境**無任何 LLM 金鑰**（含 `GEMINI_API_KEY`）
+- [x] T008 [US1] 於 `tests/e2e/three-tracks.test.ts` 補「執行環境**無任何 LLM 金鑰**（含 `GEMINI_API_KEY`）
       時端到端成功」斷言，並斷言被攔截請求的目標主機集合僅含 webhook 網域（FR-005 / AC6 / US1-5）
-- [ ] T009 [P] [US1] **【驗證既有】**於 `tests/unit/zero-llm.test.ts` 把既有的「`daily.yml` 不含
+- [x] T009 [P] [US1] **【驗證既有】**於 `tests/unit/zero-llm.test.ts` 把既有的「`daily.yml` 不含
       `GEMINI_API_KEY`」斷言（現行 `zero-llm.test.ts` 已有）**擴充為金鑰名稱清單掃描**，斷言清單中每個
       名稱在 `.github/workflows/daily.yml` 的出現次數為 **0**（SC-005；清單至少含 `GEMINI_API_KEY`，
       並預留未來其他供應商金鑰名稱）。本任務只擴充既有測試，MUST NOT 改程式
-- [ ] T009a [P] [US1] **【驗證既有】**補 FR-006 的兩項斷言（既有實作已滿足，本任務只補回歸測試）：
+- [x] T009a [P] [US1] **【驗證既有】**補 FR-006 的兩項斷言（既有實作已滿足，本任務只補回歸測試）：
       ① 於 `tests/e2e/three-tracks.test.ts` 斷言被攔截請求的 Track **處理順序**為
       `foundation → interviewReady → interviewMastery`（`fetch-recorder` 依呼叫順序記錄，直接比對即可）；
       **另補 FR-003 的則間順序斷言**：同一課被拆成多則時，其送出順序 MUST 與 `render()` 產出的順序
       一致（此為需求層要求，非攔截工具剛好具備的能力；若 seed 素材中無多則的課，MUST 於 T028 的部分
       推播情境一併斷言而非略過）；
       ② 於 `tests/unit/zero-llm.test.ts`（或 T009 同一檔）斷言 `.github/workflows/daily.yml`
-      **不含 `strategy:` / `matrix:`**——多 Track MUST NOT 平行分派（會競爭 `state` 分支，憲章與 FR-006）
+      **不含 `strategy:` / `matrix:`**——多 Track MUST NOT 平行分派（會競爭 `state` 分支，憲章與 FR-006）。
+      **2026-07-29 實測發現並經使用者裁決**：目前 39 筆真實 seed Lesson 的渲染總字數最大僅 1,201
+      （遠低於 5,500 拆訊息門檻），`render()` 從未把任何一課拆成 2 則，故「則間順序」該項在現行真實
+      素材下無法由唯一允許的 fetch 替身觸發；沿用 `tests/unit/run-tracks.test.ts` 既有的 `pushTrack`
+      替身案例覆蓋（見該檔案新增的理由註解），e2e 不為此人工湊出 2 則訊息。①與②已於
+      `tests/e2e/three-tracks.test.ts` 與 `tests/unit/zero-llm.test.ts` 完成
 
 **Checkpoint**: AC2 / AC5 / AC6 取得**自動化證據**（實機證據待 Phase 8）；US1 可獨立驗證
 
@@ -146,17 +153,17 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 **Independent Test**: 同一台北日期內對同一份 state 連續執行兩次，第二次對已推播 Track 零請求且
 `state.json` 位元組不變；把其中一軌 `lastPushAt` 改為昨天，第二次只有該軌被推播
 
-- [ ] T010 [US2] 建立 `tests/e2e/guard-and-modes.test.ts`：同一台北日期內連續執行兩次，斷言第二次
+- [x] T010 [US2] 建立 `tests/e2e/guard-and-modes.test.ts`：同一台北日期內連續執行兩次，斷言第二次
       **零請求**且 `state.json` **位元組相同**（SC-002；以 `readFileSync` 前後比對 Buffer）
-- [ ] T011 [US2] 於 `tests/e2e/guard-and-modes.test.ts` 補「三軌 `lastPushAt` 分別為今天／昨天／`null`」
+- [x] T011 [US2] 於 `tests/e2e/guard-and-modes.test.ts` 補「三軌 `lastPushAt` 分別為今天／昨天／`null`」
       情境，斷言只有後兩軌被推播、foundation 被跳過（US2-2，各軌獨立判斷）
-- [ ] T012 [US2] 於 `tests/e2e/guard-and-modes.test.ts` 補模式矩陣斷言：`FORCE=true` 繞過 guard 並**寫**
+- [x] T012 [US2] 於 `tests/e2e/guard-and-modes.test.ts` 補模式矩陣斷言：`FORCE=true` 繞過 guard 並**寫**
       狀態；`DRY_RUN=true` 不受 guard 阻擋、**零請求**、**不寫入狀態**；兩者同時開啟時以 **DRY_RUN 為準**
       （FR-009 / US2-3 / US2-5）。
       **「不寫入狀態」的斷言方式 MUST 依前提二選一**：① `STATE_FILE` 指向**該案例專屬、尚不存在**的暫存
       路徑時，斷言該檔**未被建立**；② 沿用 T010／T011 的既有 `state.json`（guard 情境本就要求檔案已存在，
       此時「不被建立」無從成立）時，斷言檔案內容**位元組相同**。MUST NOT 對已存在的夾具斷言「不被建立」
-- [ ] T013 [US2] 於 `tests/e2e/guard-and-modes.test.ts` 補跨日邊界：`lastPushAt` 落在台北當日凌晨
+- [x] T013 [US2] 於 `tests/e2e/guard-and-modes.test.ts` 補跨日邊界：`lastPushAt` 落在台北當日凌晨
       （對應 UTC 前一日）時 MUST 判定為「今天已推」而跳過（US2-4；時區換算以 Asia/Taipei 為準）
 
 **Checkpoint**: AC3 取得自動化證據；US2 可獨立驗證
@@ -176,32 +183,32 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 ### 狀態契約與通知實作
 
-- [ ] T014 [US3] 於 `src/state/state-store.ts` 為 `TrackState` 新增**選填** `completedAt?: string | null`，
+- [x] T014 [US3] 於 `src/state/state-store.ts` 為 `TrackState` 新增**選填** `completedAt?: string | null`，
       並延伸 `validateTrackState()`：欄位若存在 MUST 為 `null` 或 `Date.parse` 可解析的字串，違反即比照
       欄位語意損毀拋錯（全域失敗）；**欄位缺席不算違反**（向後相容，既有 `state` 分支不需遷移）；
       確認 `save()` 在未設定時 MUST NOT 憑空寫出該鍵（contracts/state-schema.md §1）
-- [ ] T015 [US3] 於 `src/state/state-store.ts` 新增 `markCompleted(state, track, completedAt: Date): void`：
+- [x] T015 [US3] 於 `src/state/state-store.ts` 新增 `markCompleted(state, track, completedAt: Date): void`：
       **只**設定 `completedAt`，MUST NOT 動 `currentSessionIndex`／`lastPushAt`／`history`／
       `completedConceptIds`；就地修改 in-memory state，落盤由既有單次 `save()` 負責（state-schema.md §2）
-- [ ] T015a [US3] 於 `src/state/state-store.ts` 的 `validateAppState()` 新增**未知 Track 鍵**檢查
+- [x] T015a [US3] 於 `src/state/state-store.ts` 的 `validateAppState()` 新增**未知 Track 鍵**檢查
       （FR-031、Edge Cases、`docs/spec.md` §19、state-schema.md §4）：`tracks` 中出現不屬於 `TRACK_ORDER`
       的鍵時 MUST **拋錯**（比照欄位語意損毀 ⇒ 全域性失敗：紅色告警 + exit 1 + **不覆寫原檔**）。
       **現行實作是靜默丟棄**——`validateAppState()` 只走訪 `TRACK_ORDER` 建表、`save()` 亦只寫出已知
       Track，故打錯的鍵會在存檔時被抹掉且維運者毫無訊號。錯誤訊息 MUST 指出實際的未知鍵名以利修正；
       MUST NOT 於 `save()` 端做任何移除或保留的特殊處理（中止點在迴圈之前，`save()` 本就不會被呼叫）
-- [ ] T016 [P] [US3] 於 `src/renderer/alert.ts` 新增 `renderCompletionNotice(track: Track): DiscordEmbed[]`：
+- [x] T016 [P] [US3] 於 `src/renderer/alert.ts` 新增 `renderCompletionNotice(track: Track): DiscordEmbed[]`：
       綠色 `3066993`、標題 `🎉 課程完成 · {track}`、固定文案（告知本 Track 課程已全部推播完畢、其後不再
       推播，並指出想重新開始請依 runbook 編輯 `state.json`）；**純函式、不含時間戳**、只 import 型別、
       回傳恰好 1 個 embed；MUST NOT 含 webhook URL／金鑰／檔案系統路徑（notice-contract.md §2、research R3）
 
 ### `main.ts` 完課檢查
 
-- [ ] T017 [US3] 於 `src/main.ts` 的逐 Track 迴圈中，**per-track 日期 guard 之後、`compileLesson` 之前**
+- [x] T017 [US3] 於 `src/main.ts` 的逐 Track 迴圈中，**per-track 日期 guard 之後、`compileLesson` 之前**
       插入完課檢查：判定式為 `currentSessionIndex > max(deps.schedules[track].sessions[].sessionIndex)`；
       已有 `completedAt` 者靜默跳過（`{track}: skipped (completed)`）；`FORCE` **不繞過**完課跳過；
       課表**中間缺號**（未超出最大值）MUST 仍走該軌失敗路徑，MUST NOT 誤判為完課（research R1、
       cli-contract.md §1）
-- [ ] T018 [US3] 於 `src/main.ts` 完成完課的三種結局處置：通知送出成功 → 呼叫 `markCompleted()` +
+- [x] T018 [US3] 於 `src/main.ts` 完成完課的三種結局處置：通知送出成功 → 呼叫 `markCompleted()` +
       日誌 `{track}: completed` + **不計入 `anyFailed`（exit 0）**；通知**發送失敗** → 轉入該軌失敗路徑
       （紅色告警 + 計入非零 exit code）且 **MUST NOT** 寫 `completedAt`（FR-019c）；`DRY_RUN` 下只輸出
       `{track}: would send completion notice (dry-run)` 或 `{track}: completed (skipped, dry-run)`，
@@ -209,23 +216,23 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 ### 單元與端到端驗證
 
-- [ ] T019 [P] [US3] 於 `tests/unit/state-load.test.ts` 與 `tests/unit/state-save.test.ts` 補 `completedAt`
+- [x] T019 [P] [US3] 於 `tests/unit/state-load.test.ts` 與 `tests/unit/state-save.test.ts` 補 `completedAt`
       單元測試：缺席／`null` 皆判為未完課、非法值視為語意損毀、未設定時序列化不寫出該鍵、未啟用 Track 的
       `completedAt` 原樣保留；另補 **FR-033 向後相容**斷言：以「不含 `completedAt` 的現行 `state.json`
       形狀」載入 MUST 成功且不需遷移
-- [ ] T019a [P] [US3] 於 `tests/unit/state-load.test.ts` 補 **T015a 的未知鍵**單元測試（FR-031）：
+- [x] T019a [P] [US3] 於 `tests/unit/state-load.test.ts` 補 **T015a 的未知鍵**單元測試（FR-031）：
       ① `tracks` 含未知鍵（如 `interviewready`）時 `load()` MUST 拋錯且錯誤訊息含該鍵名；
       ② 三個已知 Track 齊備時 MUST NOT 誤判；③ 拋錯後**原檔未被覆寫**（`save()` 未被呼叫）。
       並補 **FR-031 封閉清單**的邊界斷言：清單以外的內容差異（例如多餘的頂層鍵）MUST NOT 判為損毀
-- [ ] T020 [P] [US3] 於 `tests/unit/state-advance.test.ts` 補 `markCompleted()` 單元測試：只動 `completedAt`、
+- [x] T020 [P] [US3] 於 `tests/unit/state-advance.test.ts` 補 `markCompleted()` 單元測試：只動 `completedAt`、
       其餘四個欄位不變、完課 MUST NOT 產生 `history` 條目、MUST NOT 追加 `completedConceptIds`
       （data-model.md §1 不變式 3）
-- [ ] T021 [P] [US3] 於 `tests/unit/alert.test.ts` 補 `renderCompletionNotice()` 契約測試：同一 `track` →
+- [x] T021 [P] [US3] 於 `tests/unit/alert.test.ts` 補 `renderCompletionNotice()` 契約測試：同一 `track` →
       **deep-equal** 的 embeds（純函式、無時間戳）、恰好 1 個 embed、顏色為 `3066993`、總長遠低於 6,000；
       並補一條斷言：完課通知的 embeds 文字中 **webhook URL 與檔案系統路徑的出現次數為 0**
       （FR-019b 要求遮蔽「適用於**全部**通知種類」；完課通知無自由文字參數，屬空成立，但此斷言讓該推論
       被機器記錄下來，日後若為完課通知加上任何動態文字即會紅燈）
-- [ ] T022 [US3] 建立 `tests/e2e/state-advance.test.ts`：成功軌 `currentSessionIndex` **恰好 +1** 且
+- [x] T022 [US3] 建立 `tests/e2e/state-advance.test.ts`：成功軌 `currentSessionIndex` **恰好 +1** 且
       `lastPushAt` 更新，失敗軌 `currentSessionIndex`／`lastPushAt`／`history`／`completedConceptIds`
       **全部欄位變化量為 0**（SC-003）；`history` 上限 30；concept 類才追加 `completedConceptIds`；
       未知啟用 Track 自動補建為初始值；未啟用 Track 原樣保留；**`save()` 只發生一次**（以
@@ -233,10 +240,17 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       而非替身，MUST NOT 改寫回傳值或阻斷真實寫檔）。**MUST NOT 用 `vi.spyOn(fs, "writeFileSync")`**：
       `state-store.ts` 以具名匯入取用，而 ESM 的 `node:fs` namespace 唯讀，spy 裝不上也攔不到
       （e2e-harness §1）
-- [ ] T023 [US3] 建立 `tests/e2e/completion.test.ts`：`currentSessionIndex` 超出課表 → **恰好一則綠色**
+- [x] T023 [US3] 建立 `tests/e2e/completion.test.ts`：`currentSessionIndex` 超出課表 → **恰好一則綠色**
       通知、`completedAt` 寫入、`currentSessionIndex` **不變**、**exit 0**；**再次執行 → 零請求**（SC-011）；
       `DRY_RUN` 下不發送不寫入；通知發送失敗 → **不寫** `completedAt` 且 exit 1；課表**中間缺號**仍為
-      該軌失敗（不誤判完課）
+      該軌失敗（不誤判完課）。
+      **2026-07-29 實測補充**：真實課表目前為密集序列（3 軌各 1..13 無缺號），無法在不竄改凍結課表
+      產物的前提下於 e2e 建構真正的「中間缺號」案例；改以「`sessionIndex` 恰為最大值時走正常推播路徑
+      而非完課」的邊界測試佐證判定式為嚴格大於（`>` 而非 `>=`）。`getSessionPlan()` 對「缺號」與
+      「超出最大值」**走同一條 `find()` 落空即拋錯的程式路徑**（無特殊分支區分兩者），該路徑已由
+      `tests/unit/schedule.test.ts`（stub 課表，`sessionIndex=4` 落在陣列外）與
+      `tests/unit/lesson.test.ts`（真實課表，`sessionIndex=999`）既有單元測試涵蓋，故完課判定式的
+      「非完課 ⇒ 照常嘗試推播 ⇒ 找不到 Session 即失敗」這條因果鏈並未留下未驗證的分支
 
 **Checkpoint**: AC4 與完課終態取得自動化證據；`state` 契約增量向後相容且已驗證
 

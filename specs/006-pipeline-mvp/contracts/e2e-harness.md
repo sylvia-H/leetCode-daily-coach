@@ -89,7 +89,7 @@ SC-006 後半原為「`main` 流程的分支覆蓋無遺漏路徑」——無覆
 | 3 | `SUCCEEDED` | compile／render／budget／post 全數成功 → `advance()` | `three-tracks.test.ts`、`state-advance.test.ts` |
 | 4 | `COMPLETED`（首次完課） | `currentSessionIndex > max(sessionIndex)` 且通知送出成功 → `markCompleted()` | `completion.test.ts` |
 | 5 | `FAILED`（推播失敗） | post 於第 1 則即失敗 → 紅色告警、進度不動 | `isolation.test.ts` |
-| 6 | `FAILED`（部分推播） | 第 2 則以後失敗 → 紅色告警、進度**仍前進** | `isolation.test.ts` |
+| 6 | `FAILED`（部分推播） | 第 2 則以後失敗 → 紅色告警、進度**仍前進** | `tests/unit/run-tracks.test.ts`（2026-07-29 實測：真實 39 筆 seed Lesson 渲染總字數最大僅 1,201，`render()` 從未拆出第 2 則，此結局路徑無法由唯一允許的 fetch 替身於 e2e 觸發，經使用者確認沿用既有 `pushTrack` 替身案例，見該檔案的保留理由註解） |
 | 7 | 全域性失敗 | 素材／state 載入失敗或存檔失敗 → 單一全域告警、不覆寫原檔、exit 1 | `isolation.test.ts` |
 | 8 | `DRY_RUN` 預覽 | 不受 guard 阻擋、零請求、不寫狀態 | `guard-and-modes.test.ts`、`completion.test.ts` |
 

@@ -176,5 +176,103 @@ describe("state-store load", () => {
       writeFileSync(stateFile, JSON.stringify({ tracks: [] }));
       expect(() => load(stateFile, ["foundation"])).toThrow(/tracks/);
     });
+
+    // F6 FR-022／state-schema.md §1：completedAt 為選填欄位。
+    it("completedAt 缺席或 null 皆視為未完課，載入成功", () => {
+      const stateFile = join(dir, "state.json");
+      writeTrack(stateFile, validTrack);
+      expect(() => load(stateFile, ["foundation"])).not.toThrow();
+
+      writeTrack(stateFile, { ...validTrack, completedAt: null });
+      const state = load(stateFile, ["foundation"]);
+      expect(state.tracks.foundation?.completedAt).toBeNull();
+    });
+
+    it("completedAt 非法值（無法解析的字串）視為欄位語意損毀，且原檔未被改動", () => {
+      const stateFile = join(dir, "state.json");
+      const raw = writeTrack(stateFile, { ...validTrack, completedAt: "not-a-date" });
+      expect(() => load(stateFile, ["foundation"])).toThrow(/completedAt/);
+      expect(readFileSync(stateFile, "utf-8")).toBe(raw);
+    });
+
+    it("completedAt 為合法 ISO 字串時正常載入", () => {
+      const stateFile = join(dir, "state.json");
+      writeTrack(stateFile, { ...validTrack, completedAt: "2026-08-06T22:07:12Z" });
+      const state = load(stateFile, ["foundation"]);
+      expect(state.tracks.foundation?.completedAt).toBe("2026-08-06T22:07:12Z");
+    });
+
+    // FR-033：向後相容——現行不含 completedAt 的 state.json 形狀 MUST 能直接載入成功且不需遷移。
+    it("FR-033 向後相容：不含 completedAt 的既有 state.json 形狀載入成功", () => {
+      const stateFile = join(dir, "state.json");
+      writeTrack(stateFile, validTrack);
+      const state = load(stateFile, ["foundation"]);
+      expect(state.tracks.foundation).toEqual(validTrack);
+      expect("completedAt" in (state.tracks.foundation as object)).toBe(false);
+    });
+
+    it("未啟用 Track 的 completedAt 原樣保留", () => {
+      const stateFile = join(dir, "state.json");
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          tracks: { interviewMastery: { ...validTrack, completedAt: "2026-08-06T22:07:12Z" } },
+        }),
+      );
+      const state = load(stateFile, ["foundation"]);
+      expect(state.tracks.interviewMastery?.completedAt).toBe("2026-08-06T22:07:12Z");
+    });
+  });
+
+  // F6 FR-031（state-schema.md §4）：tracks 中出現不屬於三個已知 Track 的鍵 MUST 判為欄位語意損毀。
+  describe("未知 Track 鍵（FR-031）視為全域失敗", () => {
+    it("tracks 含未知鍵（如打錯字的 interviewready）時 load() 拋錯且錯誤訊息含該鍵名", () => {
+      const stateFile = join(dir, "state.json");
+      const raw = JSON.stringify({
+        tracks: {
+          interviewready: {
+            currentSessionIndex: 1,
+            lastPushAt: null,
+            completedConceptIds: [],
+            history: [],
+          },
+        },
+      });
+      writeFileSync(stateFile, raw);
+
+      expect(() => load(stateFile, ["foundation"])).toThrow(/interviewready/);
+      // 原檔未被覆寫（save() 未被呼叫）。
+      expect(readFileSync(stateFile, "utf-8")).toBe(raw);
+    });
+
+    it("三個已知 Track 齊備時 MUST NOT 誤判為未知鍵", () => {
+      const stateFile = join(dir, "state.json");
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          tracks: {
+            foundation: { currentSessionIndex: 1, lastPushAt: null, completedConceptIds: [], history: [] },
+            interviewReady: { currentSessionIndex: 1, lastPushAt: null, completedConceptIds: [], history: [] },
+            interviewMastery: { currentSessionIndex: 1, lastPushAt: null, completedConceptIds: [], history: [] },
+          },
+        }),
+      );
+      expect(() => load(stateFile, ["foundation"])).not.toThrow();
+    });
+
+    it("FR-031 封閉清單邊界：清單以外的內容差異（例如多餘的頂層鍵）MUST NOT 判為損毀", () => {
+      const stateFile = join(dir, "state.json");
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          tracks: {
+            foundation: { currentSessionIndex: 1, lastPushAt: null, completedConceptIds: [], history: [] },
+          },
+          // 頂層多餘的未知鍵：非本清單規範的對象，MUST NOT 觸發損毀判定。
+          someExtraTopLevelField: "不影響載入",
+        }),
+      );
+      expect(() => load(stateFile, ["foundation"])).not.toThrow();
+    });
   });
 });

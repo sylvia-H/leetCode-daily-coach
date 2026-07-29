@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advance, load, type AppState } from "../../src/state/state-store.js";
+import { advance, load, markCompleted, type AppState } from "../../src/state/state-store.js";
 import type { ConceptLesson } from "../../src/types/lesson.js";
 
 import { makeConceptLesson, makeLessonConcept } from "../helpers/lesson.js";
@@ -70,5 +70,37 @@ describe("advance", () => {
     const before = JSON.parse(JSON.stringify(state.tracks.foundation));
     // 模擬「不呼叫 advance」即代表失敗 / 跳過情境
     expect(state.tracks.foundation).toEqual(before);
+  });
+});
+
+// F6 data-model.md §1 不變式 3：完課只設定 completedAt，MUST NOT 動其餘四個欄位、MUST NOT 產生
+// history 條目、MUST NOT 追加 completedConceptIds——完課不是一次推播。
+describe("markCompleted", () => {
+  it("只設定 completedAt，其餘四個欄位（currentSessionIndex / lastPushAt / completedConceptIds / history）不變", () => {
+    const state = freshState();
+    const before = JSON.parse(JSON.stringify(state.tracks.foundation));
+    const completedAt = new Date("2026-08-06T22:07:12Z");
+
+    markCompleted(state, "foundation", completedAt);
+
+    const track = state.tracks.foundation!;
+    expect(track.completedAt).toBe(completedAt.toISOString());
+    expect(track.currentSessionIndex).toBe(before.currentSessionIndex);
+    expect(track.lastPushAt).toBe(before.lastPushAt);
+    expect(track.completedConceptIds).toEqual(before.completedConceptIds);
+    expect(track.history).toEqual(before.history);
+  });
+
+  it("MUST NOT 產生 history 條目、MUST NOT 追加 completedConceptIds", () => {
+    const state = freshState();
+    markCompleted(state, "foundation", new Date("2026-08-06T22:07:12Z"));
+
+    expect(state.tracks.foundation!.history).toHaveLength(0);
+    expect(state.tracks.foundation!.completedConceptIds).toHaveLength(0);
+  });
+
+  it("找不到既有進度時拋錯（應已由 load() 自動補建）", () => {
+    const state: AppState = { tracks: {} };
+    expect(() => markCompleted(state, "foundation", new Date())).toThrow(/foundation/);
   });
 });

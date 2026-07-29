@@ -16,6 +16,11 @@ export interface TrackState {
   lastPushAt: string | null;
   completedConceptIds: string[];
   history: HistoryEntry[];
+  /**
+   * F6 FR-022／R2：選填。該軌走完課表並成功發出完課通知的時間（ISO 8601）。
+   * 缺席或 null ⇒ 未完課。存在且非 null ⇒ 該軌其後每次執行一律靜默跳過。
+   */
+  completedAt?: string | null;
 }
 
 export interface AppState {
@@ -68,6 +73,19 @@ function validateTrackState(track: Track, value: unknown): TrackState {
     throw new Error(`state.json 內容損毀：Track「${track}」的 history 必須是陣列`);
   }
 
+  // F6 FR-022／state-schema.md §1：completedAt 為選填欄位，缺席不算違反（向後相容）；
+  // 存在時 MUST 為 null 或 Date.parse 可解析的字串，否則比照欄位語意損毀。
+  if (
+    "completedAt" in value &&
+    value.completedAt !== null &&
+    value.completedAt !== undefined &&
+    (typeof value.completedAt !== "string" || Number.isNaN(Date.parse(value.completedAt)))
+  ) {
+    throw new Error(
+      `state.json 內容損毀：Track「${track}」的 completedAt 必須是 null 或可解析的 ISO 8601 字串（實際值：${JSON.stringify(value.completedAt)}）`,
+    );
+  }
+
   return value as unknown as TrackState;
 }
 
@@ -82,6 +100,15 @@ function validateAppState(parsed: unknown): AppState {
   }
   if (!isPlainObject(rawTracks)) {
     throw new Error("state.json 內容損毀：tracks 必須是物件");
+  }
+
+  // F6 FR-031：tracks 中出現不屬於三個已知 Track 的鍵（例如人工編輯打錯字）MUST 判為欄位語意損毀
+  // ⇒ 全域性失敗。現行實作原本會靜默丟棄未知鍵（下面迴圈只走訪 TRACK_ORDER），使維運者的手誤打錯
+  // Track 名稱完全沒有訊號、且 save() 時會被悄悄抹除；fail loud 才能讓這個手誤被立即看見。
+  const knownTracks = new Set<string>(TRACK_ORDER);
+  const unknownKeys = Object.keys(rawTracks).filter((key) => !knownTracks.has(key));
+  if (unknownKeys.length > 0) {
+    throw new Error(`state.json 內容損毀：tracks 含未知的 Track 鍵：${unknownKeys.join(", ")}`);
   }
 
   // 未啟用（但已知）的 Track 一律原樣保留，MUST NOT 刪除（F1 state-schema.md §2）。
@@ -143,6 +170,17 @@ export function advance(state: AppState, track: Track, lesson: Lesson, pushedAt:
   if (trackState.history.length > HISTORY_LIMIT) {
     trackState.history = trackState.history.slice(trackState.history.length - HISTORY_LIMIT);
   }
+}
+
+// F6 FR-022／R2：只在「該軌 currentSessionIndex 超出課表最大 sessionIndex」且完課通知送出成功後呼叫。
+// 只設定 completedAt；MUST NOT 動 currentSessionIndex / lastPushAt / history / completedConceptIds
+// ——完課不是一次推播。就地修改 in-memory state，落盤由呼叫方單次 save() 負責。
+export function markCompleted(state: AppState, track: Track, completedAt: Date): void {
+  const trackState = state.tracks[track];
+  if (!trackState) {
+    throw new Error(`markCompleted 呼叫時找不到 Track「${track}」的既有進度（應已由 load() 自動補建）`);
+  }
+  trackState.completedAt = completedAt.toISOString();
 }
 
 // 只寫檔，不含任何 git 操作（F1 research R5）；git add/commit/push 由 daily.yml 的 workflow step 負責。

@@ -8,8 +8,14 @@ import {
 } from "./discord/webhook-client.js";
 import { checkBudget, type BudgetReport } from "./renderer/budget.js";
 import { render } from "./renderer/discord.js";
-import { renderAlert } from "./renderer/alert.js";
-import { advance, type AppState, load as loadState, save as saveState } from "./state/state-store.js";
+import { renderAlert, renderCompletionNotice } from "./renderer/alert.js";
+import {
+  advance,
+  type AppState,
+  load as loadState,
+  markCompleted,
+  save as saveState,
+} from "./state/state-store.js";
 import type { Lesson, RenderedMessage, Track } from "./types/lesson.js";
 import { toTaipeiDateString } from "./util/taipei-date.js";
 
@@ -33,6 +39,13 @@ function compileLesson(track: Track, state: AppState, deps: CompilerDeps): Compi
   const messages = render(lesson);
   const reports = messages.map((message) => checkBudget(message));
   return { lesson, messages, reports };
+}
+
+// F6 R1：完課判定的資料來源是課表本身（已載入的 deps.schedules[track]），MUST NOT 靠捕捉 compile()
+// 拋出的「超出課表範圍」錯誤字串做控制流——那樣會把錯誤訊息當控制流，且無法區分「課表中間缺號」
+// （仍是該軌失敗）與「真的走完課表」（完課）。
+function maxSessionIndex(track: Track, deps: CompilerDeps): number {
+  return deps.schedules[track].sessions.reduce((max, s) => Math.max(max, s.sessionIndex), 0);
 }
 
 /**
@@ -176,12 +189,40 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
     }
 
     try {
+      // F6 完課檢查（R1）：置於 per-track guard 之後、compileLesson 之前。FORCE MUST NOT 繞過完課跳過
+      // （F6 R4）——此檢查完全不看 config.force，故無論是否強制皆會先擋下已完課的 Track。
+      const isCompleted =
+        trackState?.completedAt !== null && trackState?.completedAt !== undefined;
+      const isBeyondSchedule = (trackState?.currentSessionIndex ?? 1) > maxSessionIndex(track, deps);
+
       if (config.dryRun) {
         // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（F1 research R9）；
         // 不推播、不寫入狀態（F1 FR-021）；即使超限仍完整輸出逐項明細，不因此視為失敗
-        // （F1 US4 Scenario 2）。
+        // （F1 US4 Scenario 2）。完課的兩種情境同樣只輸出日誌、不發送、不寫狀態（F6 R4）。
+        if (isCompleted) {
+          console.log(`${track}: completed (skipped, dry-run)`);
+          continue;
+        }
+        if (isBeyondSchedule) {
+          console.log(`${track}: would send completion notice (dry-run)`);
+          continue;
+        }
         const { messages, reports } = compileLesson(track, state, deps);
         printDryRunPreview(track, messages, reports);
+        continue;
+      }
+
+      if (isCompleted) {
+        console.log(`${track}: skipped (completed)`);
+        continue;
+      }
+
+      if (isBeyondSchedule) {
+        // 通知發送失敗會拋出並落入下方 catch：視為該軌失敗（紅色告警 + exit 1），MUST NOT 寫
+        // completedAt（F6 FR-019c／state-schema.md §2）——下次執行會重試發送。
+        await client.post(track, renderCompletionNotice(track));
+        markCompleted(state, track, new Date());
+        console.log(`${track}: completed`);
         continue;
       }
 
