@@ -426,20 +426,20 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       **執行結果**：本機預覽輸出正確、無對外請求、`STATE_FILE` 未建立。**過程中意外發現並修復第六處
       程式改動**：見上方實作紀律第 1 點——DRY_RUN 下三種全域性失敗原本仍會真的發出全域告警，違反
       FR-009，已修復並補上回歸測試
-- [ ] T038 依 [research.md](./research.md) R8 與 `docs/runbook.md`，把 `state` 分支的 `state.json`
+- [x] T038 依 [research.md](./research.md) R8 與 `docs/runbook.md`，把 `state` 分支的 `state.json`
       **人工重置為三軌初始值**（`currentSessionIndex: 1`、`lastPushAt: null`、`completedConceptIds: []`、
       `history: []`，且無 `completedAt`），以一次人工 commit 完成；此操作同時是 runbook「調整某軌進度」
       的第一次實地演練。**注意**：C 段中途的 **C7a 會再做一次相同的重置**（為了讓 AC10 得以在不帶
       `force` 的前提下取得證據），兩次重置是同一個正規操作、非重複工序
-- [ ] T039 確認 GitHub repo Settings 的 **Default branch = `develop`**，並把確認結果記入
+- [x] T039 確認 GitHub repo Settings 的 **Default branch = `develop`**，並把確認結果記入
       `specs/006-pipeline-mvp/acceptance.md`（FR-024 / quickstart C1）
-- [ ] T039a 確認 GitHub repo Settings → Secrets 中**三個 Track 的 webhook 皆已登錄**
+- [x] T039a 確認 GitHub repo Settings → Secrets 中**三個 Track 的 webhook 皆已登錄**
       （`DISCORD_WEBHOOK_URL_FOUNDATION` / `DISCORD_WEBHOOK_URL_INTERVIEW_READY` /
       `DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY`），勾選 `acceptance.md`「前置確認」的對應項；
       **MUST 只記錄「已登錄」的事實，MUST NOT 記錄任何 URL 或片段**。此為三軌實機驗收（AC2 / AC5 /
       AC10）的硬前提——缺任一項時 C2 只會有兩個頻道收到訊息，會被誤判為交叉錯送
       （FR-025 / quickstart C 段前置）
-- [ ] T040 依 [quickstart.md](./quickstart.md) **C 段**（C2–**C10**，含新增的 **C7a**）完成實機驗收，
+- [x] T040 依 [quickstart.md](./quickstart.md) **C 段**（C2–**C10**，含新增的 **C7a**）完成實機驗收，
       逐條把「實際觀察 + Actions run 連結」填入 `specs/006-pipeline-mvp/acceptance.md` 並勾選七條 AC
       （**C10 即 AC9 後半的證據來源：`dry_run=true` 觸發 → 零推播、`state` 分支無新 commit**）；
       一併記錄各次 run 的耗時，**每次 run MUST ≤ 10 分鐘**才得勾選該條（SC-009）；紀錄中
@@ -449,11 +449,27 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       故 MUST 先做 C7a 重置 `state` 分支讓日期 guard 放行（FR-027b）。
       另補 **SC-003 後半的查核**：以 `git log` 依 bot 提交者身分（`leetcode-daily-coach-bot`）篩選
       `main` 與 `develop`，確認**自本 Feature 分支建立之後**的 bot 狀態提交數為 **0**，並把該查核指令
-      與結果記入 `acceptance.md`（MUST NOT 僅以目視宣稱）
-- [ ] T041 依 [quickstart.md](./quickstart.md) **D 段**完成維運操作驗證：僅依 `docs/runbook.md`、
-      不看原始碼、不改程式完成五項操作（啟用／暫停／改進度／強制補推／預覽），五項全部成功（SC-008）
-- [ ] T042 [P] 回填 `specs/006-pipeline-mvp/checklists/` 四份需求品質 checklist 中因本階段實作而確認的
-      項目，並更新 `specs/006-pipeline-mvp/spec.md` 的 Status 為 Completed
+      與結果記入 `acceptance.md`（MUST NOT 僅以目視宣稱）。
+      **執行結果**：七條 AC 全數勾選並附 Actions run 連結與實際觀察，詳見
+      [acceptance.md](./acceptance.md)。AC10 驗收過程中意外發現一個邊界案例：刻意改壞的
+      `DISCORD_WEBHOOK_URL_FOUNDATION` 恰好是最後防線通知邏輯「依序找第一個已設定 webhook」的
+      第一順位，導致該通知也一併送失敗、`foundation` 頻道完全未收到任何訊息——已記入 acceptance.md
+      的 AC10 註記，不影響失敗隔離本身的判定（其餘軌不受影響、單次存檔、非零 exit code 皆正常）
+- [x] T041 依 [quickstart.md](./quickstart.md) **D 段**完成維運操作驗證：僅依 `docs/runbook.md`、
+      不看原始碼、不改程式完成五項操作（啟用／暫停／改進度／強制補推／預覽），五項全部成功（SC-008）。
+      **執行結果**：①②改進度、強制補推、預覽已於 T040 執行 C 段時以完全依照 runbook §2／§4／§5
+      記載的方式完成（手動編輯 `state.json` 兩次、`force=true` 觸發兩次、`dry_run=true` 觸發一次）；
+      ④暫停：使用者依 runbook §1 移除 `DISCORD_WEBHOOK_URL_FOUNDATION`，觸發後 log 確認 `foundation`
+      完全未出現（不同於 guard 跳過會印 `skipped`）、`state` 分支無新 commit，進度原樣保留；
+      ⑤續播：加回 Secret 後再次觸發，log 顯示 `foundation: skipped (already pushed today)`——
+      證實已重新識別該軌且沿用原進度（session 2），非重置為第 1 課。五項操作全數以真實
+      `workflow_dispatch` 觸發驗證，過程中使用者僅依 `docs/runbook.md` 操作、無需查閱原始碼
+- [x] T042 [P] 回填 `specs/006-pipeline-mvp/checklists/` 四份需求品質 checklist 中因本階段實作而確認的
+      項目，並更新 `specs/006-pipeline-mvp/spec.md` 的 Status 為 Completed。
+      **執行結果**：核對 `checklists/` 下五份檔案（`requirements.md`／`e2e.md`／`ops.md`／
+      `resilience.md`／`state.md`）——皆已於先前 `/speckit-analyze` 階段（2026-07-29）全數勾選完畢
+      （合計 142 項，未勾選數為 0），本階段實作未產生新的需求層缺口需回填；`spec.md` 的
+      **Status** 已由 `Draft` 改為 `Completed`
 
 **Checkpoint**: `acceptance.md` 七條 AC 全數勾選 → **F6 完成 ⇒ MVP 達成（M3）**
 
