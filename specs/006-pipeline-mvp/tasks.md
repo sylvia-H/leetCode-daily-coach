@@ -331,7 +331,7 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 **Independent Test**: 僅依 runbook、不看原始碼、不改程式完成五項操作（啟用／暫停／改進度／強制補推／預覽）
 
-- [ ] T030 [P] [US5] 建立 `docs/runbook.md`（research R9）：首段交叉連結 `docs/setup-guide.md` 並說明分工；
+- [x] T030 [P] [US5] 建立 `docs/runbook.md`（research R9）：首段交叉連結 `docs/setup-guide.md` 並說明分工；
       涵蓋啟用／暫停／續播一個 Track、調整某軌進度、手動補推（`force`）、預覽版面（`dry_run`）、
       `state` 分支的初始化與人工編輯方式、**每日排程實際執行於預設分支 `develop`（併入 `main` 不影響
       推播）**、推播失敗時的排查起點（Actions log → 告警 Embed → `state.json` diff）、以及各種結局日誌行
@@ -341,10 +341,10 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       當日是否已補推過；**（b）最後防線通知的觸發範圍**——`daily.yml` 的該 step 條件為 `if: failure()`，
       **單一 Track 失敗（exit 1）也會觸發**，故失敗當天第一個已設定的頻道會同時收到紅色告警 Embed 與
       一則純文字通知，此為刻意保留的兜底設計，非重複故障
-- [ ] T031 [US5] 於 `docs/runbook.md` 加入**沉默失敗警告**專節：讓已完課 Track 重新推播時，把
+- [x] T031 [US5] 於 `docs/runbook.md` 加入**沉默失敗警告**專節：讓已完課 Track 重新推播時，把
       `currentSessionIndex` 調回課表範圍內 **MUST 一併刪除該軌的 `completedAt`**，否則該軌仍會被靜默
       跳過；程式 MUST NOT 自動清除該欄位（狀態層不認識課表）（FR-023a、state-schema.md §3）
-- [ ] T031a [US5] 於 `docs/runbook.md` 補齊 **FR-023 於 2026-07-29 新增的六項涵蓋要求**（原 T030 未涵蓋）：
+- [x] T031a [US5] 於 `docs/runbook.md` 補齊 **FR-023 於 2026-07-29 新增的六項涵蓋要求**（原 T030 未涵蓋）：
       ① **權限前提**——編輯 `state` 分支需 repo 推送權限、增刪 Secret 需 repo 設定權限，缺權限時
       MUST NOT 誤判為程式故障；② **`state` 分支不存在時的初始化步驟**（Assumptions 的「分支已存在」
       若不成立時的補救）；③ **回復路徑**——改錯進度、誤刪 Secret、誤推狀態檔三種常見誤操作的回復方式；
@@ -354,14 +354,14 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       **不帶 `force`** 觸發 → 觀察後還原）；⑥ **預設分支變更的後果告知**——變更 GitHub Default branch
       會使每日推播改由新分支的 workflow 執行（本專案刻意不加偵測防呆，FR-024）。
       另 MUST 遵守 **FR-023「示範值為佔位示意」**：全篇 Secret／webhook URL 示範 MUST NOT 使用真實值
-- [ ] T031b [US5] 於 `docs/runbook.md` 的「未知 Track 鍵」說明中，明示**手誤打錯 Track 名稱會使整次執行
+- [x] T031b [US5] 於 `docs/runbook.md` 的「未知 Track 鍵」說明中，明示**手誤打錯 Track 名稱會使整次執行
       以全域性失敗中止**（FR-031／T015a）——這是刻意的 fail-loud 設計，原檔不會被覆寫，修正該鍵後
       重跑即可；MUST 與「調整某軌進度」小節相鄰，因為那是唯一會產生此手誤的操作
-- [ ] T032 [P] [US5] 修改 `.github/workflows/daily.yml`：把 `Checkout main` step 更名為
+- [x] T032 [P] [US5] 修改 `.github/workflows/daily.yml`：把 `Checkout main` step 更名為
       `Checkout default branch (develop)` 並加註解說明「`schedule` 事件只執行預設分支上的 workflow；
       本 repo 預設分支為 `develop`」；**MUST NOT 加 `ref:` 參數**（會讓手動觸發與正式行為分歧）
       （FR-024、research R10、cli-contract.md §4）
-- [ ] T033 [P] [US5] 建立 `specs/006-pipeline-mvp/acceptance.md` **空白模板**（research R11）：每條 AC 一個
+- [x] T033 [P] [US5] 建立 `specs/006-pipeline-mvp/acceptance.md` **空白模板**（research R11）：每條 AC 一個
       小節，欄位為「操作步驟／預期結果／實際觀察／Actions run 連結／**run 耗時**／`- [ ]` 勾選」，涵蓋
       **AC2 / AC3 / AC4 / AC5 / AC6 / AC9（後半：`dry_run` 不推播、不寫 state；對應 quickstart C10）/
       AC10 共七條**，並註明同一次 run 可同時佐證多條；「run 耗時」欄位供 SC-009 佐證，且模板 MUST 明列
@@ -373,7 +373,7 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       （FR-027a）**。另 **AC10 條目 MUST 附兩個確認欄位**：「已先執行 C7a 重置 `state` 分支」與
       「本次觸發**未帶 `force`**」（FR-027b；兩者缺一則該條證據不成立）
       （FR-025 / FR-027 / FR-027a / FR-027b / SC-009 / SC-010）
-- [ ] T034 [P] [US5] 新增祕密掃描測試（放入 `tests/unit/zero-llm.test.ts` 或新建
+- [x] T034 [P] [US5] 新增祕密掃描測試（放入 `tests/unit/zero-llm.test.ts` 或新建
       `tests/unit/docs-secrets.test.ts`）：斷言 `docs/runbook.md` 與 `specs/006-pipeline-mvp/acceptance.md`
       中 Discord webhook URL 與金鑰值的出現次數為 **0**（FR-025 / FR-027 / SC-010）
 

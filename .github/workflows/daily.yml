@@ -26,7 +26,11 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
+      # `schedule` 事件只執行「repo 設定的預設分支」上的 workflow 定義與程式碼；本 repo 預設分支為
+      # `develop`（F6 FR-024）。MUST NOT 加 `ref:` 參數——加了會讓 `workflow_dispatch` 手動觸發時
+      # 固定抓 `develop`，使測試分支與正式行為分歧；不加 `ref:` 則 checkout 觸發此次 workflow 的
+      # 那個 ref，兩種觸發方式（schedule／workflow_dispatch）皆行為一致。
+      - name: Checkout default branch (develop)
         uses: actions/checkout@v4
 
       - name: Checkout state branch
