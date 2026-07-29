@@ -35,7 +35,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-// 欄位語意驗證（cli-contract.md §4、state-schema.md §2）：JSON 合法但欄位語意損毀時，**比照「JSON
+// 註解中的需求編號一律標明所屬 Feature（見 `src/main.ts` 檔頭說明：F1 與 F6 的編號空間已實際碰撞）。
+//
+// 欄位語意驗證（F1 cli-contract.md §4、F1 state-schema.md §2）：JSON 合法但欄位語意損毀時，**比照「JSON
 // 解析失敗」視為全域失敗**——拋錯後由 main.ts 發全域告警並 exit≠0，且因中止點在逐 Track 迴圈之前，
 // save() 不會被呼叫，原檔得以保全（MUST NOT 覆寫唯一權威狀態）。
 // 這是結構性驗證，非 zod 的型別／值域 schema 驗證（zod 屬 F2）。
@@ -82,7 +84,7 @@ function validateAppState(parsed: unknown): AppState {
     throw new Error("state.json 內容損毀：tracks 必須是物件");
   }
 
-  // 未啟用（但已知）的 Track 一律原樣保留，MUST NOT 刪除（state-schema.md §2）。
+  // 未啟用（但已知）的 Track 一律原樣保留，MUST NOT 刪除（F1 state-schema.md §2）。
   const tracks: Partial<Record<Track, TrackState>> = {};
   for (const track of TRACK_ORDER) {
     const entry = rawTracks[track];
@@ -118,8 +120,8 @@ export function load(stateFile: string, enabledTracks: readonly Track[]): AppSta
   return state;
 }
 
-// 只在該 Track 推播成功後呼叫（FR-013：漏跑不跳課）。就地修改傳入的 state 物件；
-// 呼叫方（main.ts）在全部 Track 處理完畢後負責單次呼叫 save()（FR-016）。
+// 只在該 Track 推播成功後呼叫（F1 FR-013：漏跑不跳課）。就地修改傳入的 state 物件；
+// 呼叫方（main.ts）在全部 Track 處理完畢後負責單次呼叫 save()（F1 FR-016）。
 export function advance(state: AppState, track: Track, lesson: Lesson, pushedAt: Date): void {
   const trackState = state.tracks[track];
   if (!trackState) {
@@ -143,7 +145,7 @@ export function advance(state: AppState, track: Track, lesson: Lesson, pushedAt:
   }
 }
 
-// 只寫檔，不含任何 git 操作（research R5）；git add/commit/push 由 daily.yml 的 workflow step 負責。
+// 只寫檔，不含任何 git 操作（F1 research R5）；git add/commit/push 由 daily.yml 的 workflow step 負責。
 export function save(stateFile: string, state: AppState): void {
   const orderedTracks: Partial<Record<Track, TrackState>> = {};
   for (const track of TRACK_ORDER) {

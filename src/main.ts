@@ -22,8 +22,11 @@ interface CompiledPush {
   reports: BudgetReport[];
 }
 
+// 註解中的需求編號一律標明所屬 Feature（`F1 FR-020`、`F6 FR-022`…）：F1 與 F6 的 FR / US / research
+// 編號空間各自獨立且已實際碰撞（例：F1 FR-020＝日期 guard，F6 FR-020＝告警自身失敗），不標會誤導。
+//
 // 純粹的 compile + render + checkBudget，**不因超限而拋錯**——DRY_RUN 需要在超限時仍完整輸出
-// 逐項明細（US4 Scenario 2），超限與否由呼叫方決定如何處置。
+// 逐項明細（F1 US4 Scenario 2），超限與否由呼叫方決定如何處置。
 function compileLesson(track: Track, state: AppState, deps: CompilerDeps): CompiledPush {
   const sessionIndex = state.tracks[track]?.currentSessionIndex ?? 1;
   const lesson = compile(track, sessionIndex, deps);
@@ -84,7 +87,7 @@ async function defaultPushTrack(
   return lesson;
 }
 
-// US4：預覽模式輸出——完整 embeds（格式化 JSON）與 BudgetReport 逐項明細，逐則訊息各自輸出。
+// F1 US4：預覽模式輸出——完整 embeds（格式化 JSON）與 BudgetReport 逐項明細，逐則訊息各自輸出。
 function printDryRunPreview(track: Track, messages: RenderedMessage[], reports: BudgetReport[]): void {
   messages.forEach((message, i) => {
     const label = messages.length > 1 ? `${track} (${i + 1}/${messages.length})` : track;
@@ -165,8 +168,8 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
       trackState?.lastPushAt !== undefined &&
       toTaipeiDateString(new Date(trackState.lastPushAt)) === toTaipeiDateString(new Date());
 
-    // per-track idempotency guard（FR-020）：置於逐 Track 流程最前。
-    // 略過條件為 dryRun || force（research R9）——DRY_RUN 與 FORCE 同時開啟時以 DRY_RUN 為準。
+    // per-track idempotency guard（F1 FR-020）：置於逐 Track 流程最前。
+    // 略過條件為 dryRun || force（F1 research R9）——DRY_RUN 與 FORCE 同時開啟時以 DRY_RUN 為準。
     if (alreadyPushedToday && !config.dryRun && !config.force) {
       console.log(`${track}: skipped (already pushed today)`);
       continue;
@@ -174,8 +177,9 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
 
     try {
       if (config.dryRun) {
-        // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（research R9）；
-        // 不推播、不寫入狀態（FR-021）；即使超限仍完整輸出逐項明細，不因此視為失敗（US4 Scenario 2）。
+        // 預覽模式：compile + render + checkBudget 之後、post 之前 continue（F1 research R9）；
+        // 不推播、不寫入狀態（F1 FR-021）；即使超限仍完整輸出逐項明細，不因此視為失敗
+        // （F1 US4 Scenario 2）。
         const { messages, reports } = compileLesson(track, state, deps);
         printDryRunPreview(track, messages, reports);
         continue;
@@ -195,7 +199,7 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
           `${track}: partial push: 已送出 ${err.postedCount}/${err.totalCount} 則，state 仍前進以避免重複推播`,
         );
       }
-      // 預覽模式 MUST 完全不推播（cli-contract.md §3）——告警也是一次推播，故 DRY_RUN 下只留日誌。
+      // 預覽模式 MUST 完全不推播（F1 cli-contract.md §3）——告警也是一次推播，故 DRY_RUN 下只留日誌。
       if (!config.dryRun) {
         try {
           await client.post(track, renderAlert(track, reason));
