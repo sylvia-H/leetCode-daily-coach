@@ -11,9 +11,12 @@ F6 不新增元件，而是把 F1～F5 的既有元件**在真實素材上接成
 **（c）維運 runbook 與實機驗收紀錄**。程式改動刻意保持小幅：
 
 - **US1/US2/US3/US4（端到端驗收）**：新增 `tests/e2e/`，唯一替身是**全域 `fetch`**（Clarification 3）。
-  三軌同時啟用、各自不同 `currentSessionIndex`、跳過／成功／完課／失敗四種結局、DRY_RUN，皆在真實
+  三軌同時啟用、各自不同 `currentSessionIndex`、**`main` 流程的 8 條結局路徑**（`SKIPPED`／
+  `SKIPPED (completed)`／`SUCCEEDED`／`COMPLETED`／`FAILED` 推播失敗／`FAILED` 部分推播／全域性失敗／
+  `DRY_RUN` 預覽，清單見 [contracts/e2e-harness.md](./contracts/e2e-harness.md) §3.1），皆在真實
   `compile → render → checkBudget → WebhookClient（含重試/退避）→ advance → save` 鏈路上斷言。
-  AC5 以 `prefix-sum`（三軌皆為 sessionIndex 9）作為固定 fixture：教學正文逐字相同、題目難度帶不同。
+  AC5 以 **`conceptId` = `prefix-sum`** 作為固定 fixture，其各軌 `sessionIndex` MUST **由課表動態查得**
+  （MUST NOT 硬編，FR-004）：教學正文逐字相同、題目難度帶不同。
 - **完課終態（FR-022 / FR-019a）**：`TrackState` 增一個選填 `completedAt`；`run()` 在 per-track guard
   之後、compile 之前插入完課檢查；完課通知由 `src/renderer/alert.ts` **同一顆通知實作**產生（非紅色），
   不經過 Compiler / Renderer，不計入非零 exit code。
@@ -79,7 +82,7 @@ Node 內建 `fetch`。測試為 `vitest` 2.x。
 | XII. Deterministic & Reproducible Delivery | ✅ PASS | 完課通知內容只依 `track`，無隨機、無 LLM。時間僅寫入 state，不進訊息內容（可重現）。 |
 | XIII. Generated Artifacts Frozen | ✅ PASS | 不重跑生成器、不手改 `schedules/**` 與 `articles/**`。 |
 | XIV. Secrets Never in Repo | ✅ PASS | 三個 webhook 全走 Actions Secrets；`acceptance.md` / `runbook.md` MUST NOT 含 URL 或金鑰（FR-025 / FR-027，並以測試掃描守住）。 |
-| XV. Fault Isolation & Fail Loud | ✅ PASS | 本 Feature 的核心命題（US4）。**完課改判為非失敗**不違反本條——它不是故障；把正常終局持續報成紅色告警反而會淹沒真故障，屬「Fail loud」的正確適用而非豁免。 |
+| XV. Fault Isolation & Fail Loud | ✅ PASS | 本 Feature 的核心命題（US4）。**完課改判為非失敗**不違反本條——它不是故障；把正常終局持續報成紅色告警反而會淹沒真故障，屬「Fail loud」的正確適用而非豁免。**2026-07-29 新增的兩項應用同向強化本條**：`tracks` 未知鍵判為語意損毀（FR-031，防人工編輯手誤靜默失效）、連續多日失敗 MUST NOT 自動暫停（FR-022a，防斷課變無聲）。 |
 | XVI. Free-tier Only | ✅ PASS | 無新增服務、無新增相依；E2E 不起本機 server（Clarification 3 已排除 C 案）。 |
 | XVII. One Human Checkpoint | ✅ PASS | 實機驗收紀錄（FR-027）是 **F6 上線的一次性驗收**，非內容產線的常態審核關卡，不牴觸本條。 |
 
@@ -115,10 +118,13 @@ specs/006-pipeline-mvp/
 ```text
 src/
 ├── main.ts                    # ✏️ 逐 Track 迴圈插入完課檢查；完課不計 anyFailed
+│                              #    ＋ 部分推播告警文案明示「進度已前進、不會補推」（FR-012）
+│                              #    ＋ 日誌輸出套用 webhook URL 遮蔽（FR-025a）
 ├── config.ts                  # 不變
 ├── state/state-store.ts       # ✏️ TrackState 增選填 completedAt；驗證放行；新增 markCompleted()
+│                              #    ＋ validateAppState() 對 tracks 未知鍵判為語意損毀（FR-031）
 ├── renderer/alert.ts          # ✏️ 同檔新增 renderCompletionNotice()（非紅色；單一通知實作）
-│                              #    ＋ reason 的 webhook URL 遮蔽（FR-019b，純函式可單測）
+│                              #    ＋ reason 的 webhook URL 遮蔽（FR-019b，純函式可單測、供 main.ts 共用）
 ├── compiler/**                # 不變（F5）
 ├── discord/webhook-client.ts  # 不變（F1/F5）
 └── renderer/{discord,budget}.ts # 不變（F5）

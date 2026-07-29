@@ -25,8 +25,14 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 ## ⚠️ 本 Feature 的實作紀律（開工前必讀）
 
-1. **程式改動刻意極小**：F1／F5 已定案且已驗證的行為 **MUST NOT 重寫**。本 Feature 的程式增量只有三處
-   （`state-store.ts` 的 `completedAt`／`markCompleted`、`alert.ts` 的完課通知＋遮蔽、`main.ts` 的完課檢查）。
+1. **程式改動刻意極小**：F1／F5 已定案且已驗證的行為 **MUST NOT 重寫**。本 Feature 的程式增量為
+   **下列五處**（2026-07-29 `/speckit-clarify` 與 `/speckit-analyze` 後由三處修訂為五處）：
+   ① `state-store.ts` 的 `completedAt`／`markCompleted`（T014／T015）；
+   ② `state-store.ts` 的 **`tracks` 未知鍵判為語意損毀**（T015a，FR-031）；
+   ③ `alert.ts` 的完課通知＋webhook URL 遮蔽（T016／T024）；
+   ④ `main.ts` 的完課檢查（T017／T018）；
+   ⑤ `main.ts` 的**部分推播告警文案**（T028a，FR-012）與**日誌遮蔽**（T024a，FR-025a）。
+   除此之外一律只補測試與文件。
 2. **既有實作已滿足的需求只補測試與文件，不改程式**：FR-021a（素材載入失敗＝全域失敗）已由
    [main.ts:143-153](../../src/main.ts#L143-L153) 實作；FR-015 的「無變更不提交」與 FR-016 的「重試 3 次
    不強制覆寫」已由 [daily.yml](../../.github/workflows/daily.yml) 實作（T029a 補回歸測試）；
@@ -90,7 +96,12 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 - [ ] T005 [US1] 建立 `tests/e2e/three-tracks.test.ts` 的共用夾具：三軌 webhook 環境變數、`mkdtempSync`
       暫存目錄的真實 `state.json`、`fetch-recorder` 安裝、`webhookOptions` 注入 `sleep`／`random` 以消除
-      等待與 jitter；斷言三軌各自的請求數與**目標 URL 完全對應**、無交叉錯送（FR-003 / SC-001）
+      等待與 jitter；斷言三軌各自的請求數與**目標 URL 完全對應**、無交叉錯送（FR-003 / SC-001）。
+      **則數判準依 SC-001 為 1:1**——各軌的請求數 MUST **恰等於** `render()` 對該課產出的訊息則數
+      （直接以 `render(lesson).length` 為期望值，MUST NOT 硬編數字或回讀實作推導）。
+      **注入僅限消除耗時**（FR-002a）：MUST NOT 改變重試次數、錯誤分類或任何分支判斷。
+      **暫存資源 MUST 於 `afterEach` 清理**（FR-002c）——`mkdtempSync` 目錄用畢即刪，MUST NOT 寫入 repo
+      工作目錄、MUST NOT 殘留
 - [ ] T004 [US1] **（原 Phase 2，因排序缺陷移至此）**建立 `tests/unit/no-push-stub.test.ts`：掃描
       `tests/e2e/**` 全部原始碼，斷言**不含** `pushTrack` 字樣（SC-006 機驗；e2e-harness §1 的守門測試），
       並斷言掃描到的檔案數 > 0 以防空掃過關。**本任務 MUST 在 T005 之後執行**——`tests/e2e/` 至少要有
@@ -118,6 +129,9 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 - [ ] T009a [P] [US1] **【驗證既有】**補 FR-006 的兩項斷言（既有實作已滿足，本任務只補回歸測試）：
       ① 於 `tests/e2e/three-tracks.test.ts` 斷言被攔截請求的 Track **處理順序**為
       `foundation → interviewReady → interviewMastery`（`fetch-recorder` 依呼叫順序記錄，直接比對即可）；
+      **另補 FR-003 的則間順序斷言**：同一課被拆成多則時，其送出順序 MUST 與 `render()` 產出的順序
+      一致（此為需求層要求，非攔截工具剛好具備的能力；若 seed 素材中無多則的課，MUST 於 T028 的部分
+      推播情境一併斷言而非略過）；
       ② 於 `tests/unit/zero-llm.test.ts`（或 T009 同一檔）斷言 `.github/workflows/daily.yml`
       **不含 `strategy:` / `matrix:`**——多 Track MUST NOT 平行分派（會競爭 `state` 分支，憲章與 FR-006）
 
@@ -169,6 +183,12 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 - [ ] T015 [US3] 於 `src/state/state-store.ts` 新增 `markCompleted(state, track, completedAt: Date): void`：
       **只**設定 `completedAt`，MUST NOT 動 `currentSessionIndex`／`lastPushAt`／`history`／
       `completedConceptIds`；就地修改 in-memory state，落盤由既有單次 `save()` 負責（state-schema.md §2）
+- [ ] T015a [US3] 於 `src/state/state-store.ts` 的 `validateAppState()` 新增**未知 Track 鍵**檢查
+      （FR-031、Edge Cases、`docs/spec.md` §19、state-schema.md §4）：`tracks` 中出現不屬於 `TRACK_ORDER`
+      的鍵時 MUST **拋錯**（比照欄位語意損毀 ⇒ 全域性失敗：紅色告警 + exit 1 + **不覆寫原檔**）。
+      **現行實作是靜默丟棄**——`validateAppState()` 只走訪 `TRACK_ORDER` 建表、`save()` 亦只寫出已知
+      Track，故打錯的鍵會在存檔時被抹掉且維運者毫無訊號。錯誤訊息 MUST 指出實際的未知鍵名以利修正；
+      MUST NOT 於 `save()` 端做任何移除或保留的特殊處理（中止點在迴圈之前，`save()` 本就不會被呼叫）
 - [ ] T016 [P] [US3] 於 `src/renderer/alert.ts` 新增 `renderCompletionNotice(track: Track): DiscordEmbed[]`：
       綠色 `3066993`、標題 `🎉 課程完成 · {track}`、固定文案（告知本 Track 課程已全部推播完畢、其後不再
       推播，並指出想重新開始請依 runbook 編輯 `state.json`）；**純函式、不含時間戳**、只 import 型別、
@@ -191,7 +211,12 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 
 - [ ] T019 [P] [US3] 於 `tests/unit/state-load.test.ts` 與 `tests/unit/state-save.test.ts` 補 `completedAt`
       單元測試：缺席／`null` 皆判為未完課、非法值視為語意損毀、未設定時序列化不寫出該鍵、未啟用 Track 的
-      `completedAt` 原樣保留
+      `completedAt` 原樣保留；另補 **FR-033 向後相容**斷言：以「不含 `completedAt` 的現行 `state.json`
+      形狀」載入 MUST 成功且不需遷移
+- [ ] T019a [P] [US3] 於 `tests/unit/state-load.test.ts` 補 **T015a 的未知鍵**單元測試（FR-031）：
+      ① `tracks` 含未知鍵（如 `interviewready`）時 `load()` MUST 拋錯且錯誤訊息含該鍵名；
+      ② 三個已知 Track 齊備時 MUST NOT 誤判；③ 拋錯後**原檔未被覆寫**（`save()` 未被呼叫）。
+      並補 **FR-031 封閉清單**的邊界斷言：清單以外的內容差異（例如多餘的頂層鍵）MUST NOT 判為損毀
 - [ ] T020 [P] [US3] 於 `tests/unit/state-advance.test.ts` 補 `markCompleted()` 單元測試：只動 `completedAt`、
       其餘四個欄位不變、完課 MUST NOT 產生 `history` 條目、MUST NOT 追加 `completedConceptIds`
       （data-model.md §1 不變式 3）
@@ -231,21 +256,43 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       `renderAlert()` 的 `reason`：組進 Embed **之前**把 webhook URL 樣式替換為 `[redacted]`；MUST 為通知
       實作的**內建行為**，MUST NOT 依賴呼叫端自律；MUST NOT 依賴特定錯誤來源的訊息格式
       （FR-019b、notice-contract.md §1.1、憲章 XIV）
+- [ ] T024a [US4] 於 `src/main.ts` 把 T024 的遮蔽純函式**同時套用到執行記錄輸出**（FR-025a）：
+      所有 `console.error` / `console.log` 印出的失敗原因 MUST 先經遮蔽再輸出——底層 `fetch` 例外訊息
+      可能夾帶完整請求 URL，而**實機驗收紀錄所附的 Actions 連結指向的是完整 log**，log 洩漏等同驗收
+      紀錄洩漏金鑰。遮蔽函式 MUST 由 `alert.ts` 匯出供 `main.ts` 共用，**MUST NOT 複製第二份實作**
+      （FR-019「單一實作」）
 - [ ] T025 [P] [US4] 於 `tests/unit/alert.test.ts` 補遮蔽單元測試：`reason` 內含完整 webhook URL 時，
       產出的 embeds 文字中 URL 出現次數為 **0**；遮蔽為純函式（同輸入 → 同輸出）；非 URL 文字不受影響
+- [ ] T025a [P] [US4] 於 `tests/e2e/isolation.test.ts` 補 **T024a 的日誌遮蔽**斷言（FR-025a）：以
+      `failFor()` 製造夾帶 webhook URL 的錯誤，攔截 `console.error` / `console.log` 輸出，斷言
+      **webhook URL 在全部日誌文字中的出現次數為 0**
 - [ ] T026 [US4] 建立 `tests/e2e/isolation.test.ts`：以 `failFor()` 令單軌請求固定失敗，斷言其餘兩軌
-      成功率 100% 且進度保存、失敗軌收到**紅色**（`15158332`）告警且進度不變、exit code 為 **1**（SC-004）
+      成功率 100% 且進度保存、失敗軌收到**紅色**（`15158332`）告警且進度不變、exit code 為 **1**（SC-004）。
+      **成功率的分母**依 SC-004 定義為「除被注入失敗者外、實際進入推播處理的 Track 數」（不含 guard／
+      完課跳過者）。另補 **FR-018「每軌至多一則告警」**斷言：失敗軌收到的紅色告警則數**恰為 1**
+      （任一步驟失敗即結束該軌，MUST NOT 出現兩則以上同軌告警）
 - [ ] T027 [US4] 於 `tests/e2e/isolation.test.ts` 補「**告警本身也送不出去**」情境：斷言記錄
       `alert-failed: {track}: …`、其餘 Track 處理**不被中斷**、整體仍 exit 1，且告警失敗 MUST NOT 逸出
       成未捕捉例外（US4-2 / FR-020）
 - [ ] T028 [US4] 於 `tests/e2e/isolation.test.ts` 補「**部分推播**」情境（第 2 則失敗、第 1 則已送達）：
-      斷言該軌進度**照常前進**、發出紅色告警、exit 1（US4-3 / FR-012）
+      斷言該軌進度**照常前進**、發出紅色告警、exit 1（US4-3 / FR-012）。另補兩項 FR-012 的新增斷言：
+      ① **剩餘則 MUST NOT 續送**——該軌的**課程訊息**請求數恰為「失敗那一則為止」（其後只剩告警那一則
+      請求），MUST NOT 出現第 3 則以後的課程請求；② 告警內文**明示「進度已前進、不會補推」**（見 T028a）
+- [ ] T028a [US4] 於 `src/main.ts` 調整 `PartialPushError` 的訊息（FR-012、notice-contract.md §1）：
+      除既有的「推播中斷於第 X/Y 則」外，MUST **明示「本課進度已前進、不會補推」**——維運者若不知道
+      state 已前進，會誤等明日自動補推而漏掉人工處置。**MUST NOT** 為此新增第二種告警版面或第二個通知
+      函式（FR-019 單一實作）；只改 `reason` 文字
 - [ ] T029 [US4] 於 `tests/e2e/isolation.test.ts` 補**全域性失敗**情境：以 `process.chdir()` 切換至缺少
       `schedules/` 的暫存目錄執行（`loadCompilerDeps()` 的 `DEFAULT_PATHS` 為 cwd 相對路徑，故此法可觸發），
       斷言 exit 1、**只發出一則**全域告警至第一個已設定的頻道（證明未降級為逐 Track 的三則同因告警）、
       且原 `state.json` **未被覆寫**（FR-021 / FR-021a **【驗證既有】**，main.ts 已實作，本任務只補回歸測試）。
       **cwd 是行程全域狀態**：MUST 在 `afterEach`（或 `try/finally`）還原原始 cwd，避免污染同檔其他案例；
       並確認 vitest 執行於 `pool: "forks"`（vitest 2.x 預設值——`worker_threads` 下 `process.chdir()` 不可用）
+- [ ] T029b [US4] 於 `tests/e2e/isolation.test.ts` 補另兩種全域性失敗情境：
+      ① **存檔失敗**（FR-013a／FR-021）——令 `STATE_FILE` 指向不可寫路徑，斷言 exit 1、發出全域告警、
+      且**已成功推播的 Track 進度未落盤**（揭露「下次執行會重推同一課」的既定後果，MUST NOT 為此加入
+      補償機制）；② **無任何已設定頻道**（FR-020a）——三軌 webhook 皆未設定時斷言 exit 1、**零對外請求**
+      （告警無處可發）、且執行記錄留有錯誤訊息，MUST NOT 因無法發送而改變結束狀態
 - [ ] T029a [P] [US4] **【驗證既有】**補 FR-015 / FR-016 的 workflow 層回歸斷言（`daily.yml` 已實作，
       本任務只補測試，MUST NOT 改 workflow）：於 `tests/unit/` 掃描 `.github/workflows/daily.yml`，斷言
       ① 提交 step 含**無變更偵測**（`git diff --cached --quiet` 且命中時 `exit 0`）——三軌皆跳過時
@@ -279,6 +326,19 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 - [ ] T031 [US5] 於 `docs/runbook.md` 加入**沉默失敗警告**專節：讓已完課 Track 重新推播時，把
       `currentSessionIndex` 調回課表範圍內 **MUST 一併刪除該軌的 `completedAt`**，否則該軌仍會被靜默
       跳過；程式 MUST NOT 自動清除該欄位（狀態層不認識課表）（FR-023a、state-schema.md §3）
+- [ ] T031a [US5] 於 `docs/runbook.md` 補齊 **FR-023 於 2026-07-29 新增的六項涵蓋要求**（原 T030 未涵蓋）：
+      ① **權限前提**——編輯 `state` 分支需 repo 推送權限、增刪 Secret 需 repo 設定權限，缺權限時
+      MUST NOT 誤判為程式故障；② **`state` 分支不存在時的初始化步驟**（Assumptions 的「分支已存在」
+      若不成立時的補救）；③ **回復路徑**——改錯進度、誤刪 Secret、誤推狀態檔三種常見誤操作的回復方式；
+      ④ **webhook URL 輪換與外洩處置**——於 Discord 重建 webhook → 更新對應 Secret → 確認下次執行成功；
+      外洩時 MUST 以「重建並輪換」處理，**MUST NOT 只刪除訊息**；⑤ **AC10 失敗隔離演練程序**
+      （FR-027b／quickstart C7a–C9：當日推播前或先重置 `state` 分支 → 暫改一軌 Secret 為無效值 →
+      **不帶 `force`** 觸發 → 觀察後還原）；⑥ **預設分支變更的後果告知**——變更 GitHub Default branch
+      會使每日推播改由新分支的 workflow 執行（本專案刻意不加偵測防呆，FR-024）。
+      另 MUST 遵守 **FR-023「示範值為佔位示意」**：全篇 Secret／webhook URL 示範 MUST NOT 使用真實值
+- [ ] T031b [US5] 於 `docs/runbook.md` 的「未知 Track 鍵」說明中，明示**手誤打錯 Track 名稱會使整次執行
+      以全域性失敗中止**（FR-031／T015a）——這是刻意的 fail-loud 設計，原檔不會被覆寫，修正該鍵後
+      重跑即可；MUST 與「調整某軌進度」小節相鄰，因為那是唯一會產生此手誤的操作
 - [ ] T032 [P] [US5] 修改 `.github/workflows/daily.yml`：把 `Checkout main` step 更名為
       `Checkout default branch (develop)` 並加註解說明「`schedule` 事件只執行預設分支上的 workflow；
       本 repo 預設分支為 `develop`」；**MUST NOT 加 `ref:` 參數**（會讓手動觸發與正式行為分歧）
@@ -290,8 +350,11 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       **判定門檻為 ≤ 10 分鐘**（超過即該條不得勾選）。另 MUST 於模板開頭加一節「前置確認」，含三個
       獨立勾選項：**① 三個 webhook Secret 皆已登錄（`DISCORD_WEBHOOK_URL_FOUNDATION` /
       `_INTERVIEW_READY` / `_INTERVIEW_MASTERY`，只記「已登錄」，MUST NOT 記錄值）**、
-      ② Default branch = `develop`（T039）、③ `state` 分支已重置為三軌初始值（T038）
-      （FR-025 / FR-027 / SC-009 / SC-010）
+      ② Default branch = `develop`（T039）、③ `state` 分支已重置為三軌初始值（T038）、
+      **④ 本次驗收全程以 `workflow_dispatch` 指定 ref = `006-pipeline-mvp`，尚未 merge 回 `develop`
+      （FR-027a）**。另 **AC10 條目 MUST 附兩個確認欄位**：「已先執行 C7a 重置 `state` 分支」與
+      「本次觸發**未帶 `force`**」（FR-027b；兩者缺一則該條證據不成立）
+      （FR-025 / FR-027 / FR-027a / FR-027b / SC-009 / SC-010）
 - [ ] T034 [P] [US5] 新增祕密掃描測試（放入 `tests/unit/zero-llm.test.ts` 或新建
       `tests/unit/docs-secrets.test.ts`）：斷言 `docs/runbook.md` 與 `specs/006-pipeline-mvp/acceptance.md`
       中 Discord webhook URL 與金鑰值的出現次數為 **0**（FR-025 / FR-027 / SC-010）
@@ -312,6 +375,12 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       `main` 流程的 **8 條結局路徑**（`SKIPPED`／`SKIPPED (completed)`／`SUCCEEDED`／`COMPLETED`／
       `FAILED` 推播失敗／`FAILED` 部分推播／全域性失敗／`DRY_RUN` 預覽）**各有至少 1 個 e2e 案例**，
       未覆蓋數為 **0**；若 §3.1 的「覆蓋檔案」欄與實際落地的測試不符 MUST 更新該表（SC-006）
+- [ ] T035b [P] 補兩項**可稽核性**核對（皆為 review 型，不新增相依）：
+      ① **FR-002d**——確認 `tests/e2e/**` 匯入的 `compile`／`render`／`checkBudget` 與 `src/main.ts`
+      為**同一組實作**（憲章 IX），MUST NOT 存在測試專用的平行解析或渲染路徑；
+      ② **FR-019「單一實作」**——確認全部通知（Track 告警／全域告警／完課通知）皆由
+      `src/renderer/alert.ts` **單一檔案**匯出的函式族產生，且 `.github/workflows/daily.yml` 內
+      **未另行拼組 Embed**；核對結果記入本任務勾選即可，無須另建測試
 - [ ] T036 執行 [quickstart.md](./quickstart.md) **A 段**全套（`npm run build`／`npm run typecheck`／
       `npm test`／`npm run validate:content`），確認四項綠燈且 `npm test` 已包含 `tests/e2e/` 的全部檔案
 - [ ] T037 執行 [quickstart.md](./quickstart.md) **B 段**本機預覽（`DRY_RUN=true`、webhook 一律用
@@ -320,7 +389,8 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 - [ ] T038 依 [research.md](./research.md) R8 與 `docs/runbook.md`，把 `state` 分支的 `state.json`
       **人工重置為三軌初始值**（`currentSessionIndex: 1`、`lastPushAt: null`、`completedConceptIds: []`、
       `history: []`，且無 `completedAt`），以一次人工 commit 完成；此操作同時是 runbook「調整某軌進度」
-      的第一次實地演練
+      的第一次實地演練。**注意**：C 段中途的 **C7a 會再做一次相同的重置**（為了讓 AC10 得以在不帶
+      `force` 的前提下取得證據），兩次重置是同一個正規操作、非重複工序
 - [ ] T039 確認 GitHub repo Settings 的 **Default branch = `develop`**，並把確認結果記入
       `specs/006-pipeline-mvp/acceptance.md`（FR-024 / quickstart C1）
 - [ ] T039a 確認 GitHub repo Settings → Secrets 中**三個 Track 的 webhook 皆已登錄**
@@ -329,11 +399,17 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       **MUST 只記錄「已登錄」的事實，MUST NOT 記錄任何 URL 或片段**。此為三軌實機驗收（AC2 / AC5 /
       AC10）的硬前提——缺任一項時 C2 只會有兩個頻道收到訊息，會被誤判為交叉錯送
       （FR-025 / quickstart C 段前置）
-- [ ] T040 依 [quickstart.md](./quickstart.md) **C 段**（C2–**C10**）完成實機驗收，逐條把「實際觀察 +
-      Actions run 連結」填入 `specs/006-pipeline-mvp/acceptance.md` 並勾選七條 AC（**C10 即 AC9 後半的
-      證據來源：`dry_run=true` 觸發 → 零推播、`state` 分支無新 commit**）；一併記錄各次 run 的耗時，
-      **每次 run MUST ≤ 10 分鐘**才得勾選該條（SC-009）；紀錄中 **MUST NOT 出現任何 webhook URL 或金鑰**
-      （FR-027 / SC-009 / SC-010）
+- [ ] T040 依 [quickstart.md](./quickstart.md) **C 段**（C2–**C10**，含新增的 **C7a**）完成實機驗收，
+      逐條把「實際觀察 + Actions run 連結」填入 `specs/006-pipeline-mvp/acceptance.md` 並勾選七條 AC
+      （**C10 即 AC9 後半的證據來源：`dry_run=true` 觸發 → 零推播、`state` 分支無新 commit**）；
+      一併記錄各次 run 的耗時，**每次 run MUST ≤ 10 分鐘**才得勾選該條（SC-009）；紀錄中
+      **MUST NOT 出現任何 webhook URL 或金鑰**（FR-027 / SC-009 / SC-010）。
+      **兩項執行約束（MUST）**：① 全部觸發以 `workflow_dispatch` 指定 **ref = `006-pipeline-mvp`**，
+      **MUST NOT 為取得證據而先 merge 回 `develop`**（FR-027a）；② **C8（AC10）MUST NOT 帶 `force`**，
+      故 MUST 先做 C7a 重置 `state` 分支讓日期 guard 放行（FR-027b）。
+      另補 **SC-003 後半的查核**：以 `git log` 依 bot 提交者身分（`leetcode-daily-coach-bot`）篩選
+      `main` 與 `develop`，確認**自本 Feature 分支建立之後**的 bot 狀態提交數為 **0**，並把該查核指令
+      與結果記入 `acceptance.md`（MUST NOT 僅以目視宣稱）
 - [ ] T041 依 [quickstart.md](./quickstart.md) **D 段**完成維運操作驗證：僅依 `docs/runbook.md`、
       不看原始碼、不改程式完成五項操作（啟用／暫停／改進度／強制補推／預覽），五項全部成功（SC-008）
 - [ ] T042 [P] 回填 `specs/006-pipeline-mvp/checklists/` 四份需求品質 checklist 中因本階段實作而確認的
@@ -366,16 +442,19 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
 | --- | --- | --- |
 | `src/renderer/alert.ts` | T016（US3 完課通知）、T024（US4 遮蔽） | **MUST 序列**，建議先 T016 再 T024 |
 | `tests/unit/alert.test.ts` | T021（US3）、T025（US4） | **MUST 序列**，或分別置於不同 `describe` 後合併 |
-| `src/main.ts` | T017、T018（皆 US3） | 同 Story 內序列 |
-| `src/state/state-store.ts` | T014、T015（皆 US3） | 同 Story 內序列 |
+| `src/main.ts` | T017、T018（US3）、T024a、T028a（US4） | **MUST 序列**；T024a 依賴 T024 的遮蔽函式先匯出 |
+| `src/state/state-store.ts` | T014、T015、T015a（皆 US3） | 同 Story 內序列 |
+| `tests/unit/state-load.test.ts` | T019、T019a（皆 US3） | 同 Story 內序列，或分置不同 `describe` |
+| `tests/e2e/isolation.test.ts` | T026–T029b（皆 US4） | 同 Story 內序列（同一檔案） |
+| `docs/runbook.md` | T030、T031、T031a、T031b（皆 US5） | 同 Story 內序列（同一檔案） |
 
 ### 平行機會
 
 - **Phase 3–6 可四線同時進行**（四個 P1 Story 各自一支 e2e 檔案，互不衝突），僅需注意上表的
   `alert.ts` / `alert.test.ts` 衝突
 - **Phase 7 全程可與 Phase 3–6 平行**（純文件與 workflow）
-- 標 [P] 的任務：T009、T009a、T016、T019、T020、T021、T025、T029a、T030、T032、T033、T034、T035、
-  T035a、T042
+- 標 [P] 的任務：T009、T009a、T016、T019、T019a、T020、T021、T025、T025a、T029a、T030、T032、T033、
+  T034、T035、T035a、T035b、T042
 - **T004 例外**：雖屬 US1，但 MUST 在 T005 之後執行（需 `tests/e2e/` 至少有一支檔案），不可與 T005 平行
 
 ---
@@ -433,5 +512,9 @@ type 依該段主要性質（e2e 測試段用 `test`、狀態契約與完課行�
 - **[P] = 不同檔案、無未完成相依**；跨 Story 平行時務必先看〈跨 Story 的檔案衝突〉表
 - **標【驗證既有】的任務只補測試與文件，MUST NOT 改程式**（T029 的 FR-021a、以及 daily.yml 既有的
   無變更不提交邏輯）
+- **2026-07-29 `/speckit-analyze` 後新增的任務**：T015a／T019a（未知 Track 鍵，FR-031）、
+  T024a／T025a（執行記錄遮蔽，FR-025a）、T028a（部分推播告警文案，FR-012）、T029b（存檔失敗與
+  無頻道可發，FR-013a／FR-020a）、T031a／T031b（runbook 六項新增要求，FR-023）、T035b（FR-002d／
+  FR-019 可稽核性核對）。其中 **T015a、T024a、T028a 為程式改動**，其餘為測試與文件
 - 每個 User Story 皆可獨立完成與驗證；任一 Checkpoint 都可停下來單獨驗證該 Story
 - 本 Feature 的完成判定不在「程式寫完」，而在 `acceptance.md` **七條 AC 全數勾選**（FR-027）

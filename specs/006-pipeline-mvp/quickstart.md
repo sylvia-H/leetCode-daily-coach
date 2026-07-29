@@ -64,7 +64,12 @@ Remove-Item Env:DRY_RUN, Env:STATE_FILE, Env:DISCORD_WEBHOOK_URL_FOUNDATION, `
 
 前置：三個 Discord 頻道與 webhook 已建立、三個 Secrets 已登錄（步驟見
 [docs/setup-guide.md](../../docs/setup-guide.md)）、`state` 分支已依
-[research.md](./research.md) R8 重置為三軌初始值、程式與內容已併入**預設分支 `develop`**。
+[research.md](./research.md) R8 重置為三軌初始值。
+
+> **執行分支（FR-027a，MUST）**：C 段全部以 `workflow_dispatch` 觸發，且 **ref 指定為本 Feature 分支
+> `006-pipeline-mvp`**——**MUST NOT 為了取得驗收證據而先 merge 回 `develop`**。七條 AC 全數勾選後才
+> merge（`workflow_dispatch` 可在任意分支上執行，故不需要等預設分支的 cron）。
+> 唯一與預設分支有關的檢查是 C1，它只是**文件化確認**當下的 Default branch 設定。
 
 | # | 操作 | 預期 | 對應 AC |
 | --- | --- | --- | --- |
@@ -75,10 +80,19 @@ Remove-Item Env:DRY_RUN, Env:STATE_FILE, Env:DISCORD_WEBHOOK_URL_FOUNDATION, `
 | C5 | 同日再次 `workflow_dispatch`（`force=false`） | 三軌皆 `skipped (already pushed today)`；`state.json` 無新 commit | **AC3** |
 | C6 | 同日以 `force=true` 觸發 | 三軌照常推播並寫狀態 | **AC3** |
 | C7 | 比對三軌某個共同 Concept（如 `prefix-sum`）的訊息 | 教學正文逐字相同、題目難度帶不同 | **AC5** |
-| C8 | 暫時把某軌 Secret 改為無效值後觸發 | 其餘兩軌正常推播並推進；失敗軌收到**紅色**告警且進度不變；job **紅燈**；**第一個已設定的頻道另收到一則純文字的最後防線通知（預期行為，見下方註）** | **AC10** |
+| **C7a** | **把 `state` 分支的 `state.json` 重置為三軌初始值**（`currentSessionIndex: 1`、`lastPushAt: null`、空陣列、無 `completedAt`），以一次人工 commit 完成 | 三軌 `lastPushAt` 皆為 `null` ⇒ 日期 guard 對三軌**全部放行** | **C8 的前置**（見下方註） |
+| C8 | 暫時把某軌 Secret 改為無效值後觸發（**`force=false`、`dry_run=false`**） | 其餘兩軌正常推播並推進（`currentSessionIndex` → 2）；失敗軌收到**紅色**告警且進度**維持 1**；job **紅燈**；**第一個已設定的頻道另收到一則純文字的最後防線通知（預期行為，見下方註）** | **AC10** |
 | C9 | 還原該軌 Secret | 下次執行從原進度續播（非重置為 1） | FR-023 / SC-008 |
 | C10 | 同日以 `dry_run=true` 觸發 | 三軌照常編譯／渲染並輸出至 Actions log；**零推播**（頻道無新訊息）；`state` 分支**無新 commit** | **AC9（後半）** |
 
+> **為何需要 C7a（FR-027b，MUST）**：AC10 的實機演練 **MUST NOT 帶 `force`**——帶了會讓兩個健康軌
+> 重推當日已推過的課並各前進一課（同日跳課，`docs/spec.md` §21.1）。但 C2 / C6 當天已經推過，日期
+> guard 會把三軌全部跳過而**取不到任何隔離證據**。重置 `state` 分支使 `lastPushAt` 回到 `null`，即可讓
+> guard 放行、C8 在不帶 `force` 的前提下取得證據，**副作用為零**：失敗軌進度不變、還原 Secret 後
+> （C9）下次執行自動補推，不需要人工修進度。此重置即 runbook 的「調整某軌進度」正規操作
+> （與 [research.md](./research.md) R8 的初始化為同一動作），**MUST NOT** 視為為驗收硬湊的手段。
+> 代價僅是三個頻道會再收到一次 Session 1，與 C6 的 `force` 重推同性質，屬可接受的驗收噪音。
+>
 > **C8 的最後防線通知說明**：`daily.yml` 的最後防線 step 條件為 `if: failure()`，只要 job 任一步驟失敗
 > 就會觸發——包含「單軌失敗導致 `main.ts` exit 1」。因此 AC10 情境下，使用者會同時收到
 > **失敗軌的紅色告警 Embed** 與**第一個已設定頻道的純文字通知**。這是刻意保留的兜底設計
@@ -87,7 +101,8 @@ Remove-Item Env:DRY_RUN, Env:STATE_FILE, Env:DISCORD_WEBHOOK_URL_FOUNDATION, `
 
 每一列的實際觀察與 Actions run 連結 MUST 填入 [acceptance.md](./acceptance.md) 並勾選；
 **全部勾選才視為本 Feature 完成**（FR-027）。紀錄中 MUST NOT 貼上 webhook URL。
-**順帶記錄各次 run 的耗時**（Actions run 頁面即有）以佐證 SC-009「數分鐘內結束」。
+**順帶記錄各次 run 的耗時**（Actions run 頁面即有）以佐證 SC-009——判定門檻為 **≤ 10 分鐘**，
+超過即該條不得勾選。
 
 ---
 
