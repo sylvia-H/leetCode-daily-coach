@@ -346,9 +346,10 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       當日是否已補推過；**（b）最後防線通知的觸發範圍**——`daily.yml` 的該 step 條件為 `if: failure()`，
       **單一 Track 失敗（exit 1）也會觸發**，故失敗當天第一個已設定的頻道會同時收到紅色告警 Embed 與
       一則純文字通知，此為刻意保留的兜底設計，非重複故障
-- [x] T031 [US5] 於 `docs/runbook.md` 加入**沉默失敗警告**專節：讓已完課 Track 重新推播時，把
-      `currentSessionIndex` 調回課表範圍內 **MUST 一併刪除該軌的 `completedAt`**，否則該軌仍會被靜默
-      跳過；程式 MUST NOT 自動清除該欄位（狀態層不認識課表）（FR-023a、state-schema.md §3）
+- [x] T031 [US5] 於 `docs/runbook.md` 加入**已完課 Track 的重新推播**專節（FR-023a、state-schema.md §3）
+      > **2026-07-29 修訂（FR-022b，code review 後）**：本節原為「沉默失敗警告」——要求人工調進度時
+      > MUST 一併刪 `completedAt`，程式不自動清除。改為**不變式被違反即自動解除**後該沉默失敗已不存在，
+      > runbook §3 已改寫為「重新啟動已完課的 Track」並說明自動解除（含課表延長情境）。
 - [x] T031a [US5] 於 `docs/runbook.md` 補齊 **FR-023 於 2026-07-29 新增的六項涵蓋要求**（原 T030 未涵蓋）：
       ① **權限前提**——編輯 `state` 分支需 repo 推送權限、增刪 Secret 需 repo 設定權限，缺權限時
       MUST NOT 誤判為程式故障；② **`state` 分支不存在時的初始化步驟**（Assumptions 的「分支已存在」

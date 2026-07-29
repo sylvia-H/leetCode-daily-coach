@@ -30,6 +30,7 @@
 | --- | --- |
 | 欄位**缺席**或值為 `null` ⇒ 該軌**未完課** | MUST |
 | 值存在且非 `null` ⇒ 該軌**已完課**，其後每次執行一律靜默跳過 | MUST |
+| **不變式**：值存在且非 `null` ⇒ 該軌 `currentSessionIndex` **超出**目前課表最大 `sessionIndex`；不變式被違反（課表延長）時 MUST 依 §2.1 自動解除 | MUST |
 | 值 MUST 為 `null` 或 `Date.parse` 可解析的字串；違反 ⇒ 比照欄位語意損毀（全域失敗、不覆寫原檔） | MUST |
 | 未設定時 `save()` MUST NOT 寫出此鍵 | MUST |
 | 未啟用 Track 的 `completedAt` MUST 原樣保留 | MUST |
@@ -56,17 +57,35 @@ markCompleted(state: AppState, track: Track, completedAt: Date): void
 
 ---
 
+## 2.1 解除契約（FR-022b，2026-07-29 新增）
+
+```ts
+clearCompleted(state: AppState, track: Track): void
+```
+
+| 要求 | 等級 |
+| --- | --- |
+| 只在「該軌已有 `completedAt`」且「`currentSessionIndex` **未超出**目前課表最大 `sessionIndex`」時呼叫 | MUST |
+| **刪除**該鍵（`delete`），MUST NOT 改設為 `null`——未完課的 Track MUST NOT 出現此鍵（§1） | MUST |
+| MUST NOT 動 `currentSessionIndex` / `lastPushAt` / `history` / `completedConceptIds` | MUST |
+| 解除後該軌於**當次執行**即照常編譯並推播（不等到下一天） | MUST |
+| `DRY_RUN=true` 時 MUST NOT 呼叫（只輸出日誌） | MUST |
+| 呼叫時 MUST 於執行記錄留下可辨識的紀錄（見 [cli-contract.md](./cli-contract.md) §1） | MUST |
+
+---
+
 ## 3. 人工編輯契約（runbook 對應）
 
 | 維運意圖 | 操作 |
 | --- | --- |
-| 讓已完課的 Track 重新推播 | 把 `currentSessionIndex` 改回課表範圍內，**並刪除該軌的 `completedAt`** |
+| 讓已完課的 Track 重新推播 | 把 `currentSessionIndex` 改回課表範圍內；SHOULD 一併刪除該軌的 `completedAt`（未刪亦會由 §2.1 自動解除） |
 | 只想暫停（保留進度） | 移除該軌 webhook Secret（不動 `state.json`） |
 | 指定起點 / 跳課 | 只改 `currentSessionIndex` |
 
-> 只改 `currentSessionIndex` 而未刪 `completedAt` ⇒ 該軌仍會被靜默跳過。程式 MUST NOT 自動清除
-> `completedAt`（狀態層不認識課表，見 [research.md](../research.md) R1），故此規則 MUST 在
-> `docs/runbook.md` 明示。
+> **2026-07-29 修訂**：原契約要求「程式 MUST NOT 自動清除 `completedAt`」，故「只改
+> `currentSessionIndex` 而未刪 `completedAt`」是一個沉默失敗陷阱。FR-022b 起改為
+> **不變式被違反即自動解除**，該陷阱不再存在；`docs/runbook.md` MUST 同步改寫，MUST NOT 繼續把
+> 它描述為沉默失敗。自動解除的觸發條件僅此一項，MUST NOT 擴大為其他形式的進度自動修正。
 
 ---
 

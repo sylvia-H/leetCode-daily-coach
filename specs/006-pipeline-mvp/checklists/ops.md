@@ -8,7 +8,7 @@
 ## Runbook 需求完整性（Requirement Completeness）
 
 - [x] CHK001 FR-023 的 runbook 涵蓋清單是否包含「**讓已完課 Track 重新推播**」（需同時改 `currentSessionIndex` 並刪除 `completedAt`）？[Gap, Spec §FR-023 vs Contract state-schema §3] — ✅ 2026-07-24 已補：新增 FR-023a
-- [x] CHK002 runbook 是否被要求說明「只改 `currentSessionIndex` 而未刪 `completedAt` ⇒ 該軌仍會被靜默跳過」這個**沉默失敗**陷阱？[Gap, Contract state-schema §3] — ✅ 2026-07-24 已補：FR-023a 明訂 MUST 以「沉默失敗警告」形式寫入 runbook
+- [x] CHK002 runbook 是否被要求說明「只改 `currentSessionIndex` 而未刪 `completedAt` ⇒ 該軌仍會被靜默跳過」這個**沉默失敗**陷阱？[Gap, Contract state-schema §3] — ✅ 2026-07-24 已補：FR-023a 明訂 MUST 以「沉默失敗警告」形式寫入 runbook；⚠️ **2026-07-29 修訂**：FR-022b 改為「不變式被違反即自動解除 `completedAt`」，此沉默失敗已不存在，FR-023a 與 runbook §3 同步改寫
 - [x] CHK003 runbook 需求是否涵蓋「如何判讀執行記錄中的各種結局」（`pushed` / `skipped` / `completed` / `failed` / `alert-failed`）？[Gap, Spec §FR-023, Contract cli-contract §3] — ✅ 2026-07-29 已補：FR-023 新增「執行結局的判讀對照」——MUST 列出各結局字樣的意義與應對動作，使維運者不需讀原始碼即可判讀一次執行
 - [x] CHK004 「推播失敗時的排查起點」是否有可驗收的最小內容定義（看哪裡、找什麼、下一步做什麼），還是僅為一句概括要求？[Clarity, Spec §FR-023] — ✅ 2026-07-29 已補：FR-023 新增「排查起點的最小內容」——MUST 具體到「看哪裡／找什麼／下一步做什麼」三段，MUST NOT 只寫一句概括要求
 - [x] CHK005 runbook 的**存放位置**是否已在需求中指定，還是只存在於 plan？[Gap, Spec §FR-023 vs plan.md §Project Structure] — ✅ 2026-07-29 已補：FR-023 明訂存放於 `docs/runbook.md`

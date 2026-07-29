@@ -19,7 +19,10 @@ F6 不新增元件，而是把 F1～F5 的既有元件**在真實素材上接成
   （MUST NOT 硬編，FR-004）：教學正文逐字相同、題目難度帶不同。
 - **完課終態（FR-022 / FR-019a）**：`TrackState` 增一個選填 `completedAt`；`run()` 在 per-track guard
   之後、compile 之前插入完課檢查；完課通知由 `src/renderer/alert.ts` **同一顆通知實作**產生（非紅色），
-  不經過 Compiler / Renderer，不計入非零 exit code。
+  不經過 Compiler / Renderer，不計入非零 exit code。**空課表 MUST 判為該軌失敗**（同中間缺號）。
+- **完課狀態的自動解除（FR-022b，2026-07-29 code review 後新增）**：`completedAt` 存在但進度仍在課表
+  範圍內 ⇒ 課表已被延長，`run()` 呼叫 `clearCompleted()`（只刪鍵）後照常續推。避免 F7 課綱展開後
+  三軌因殘留終態而每日靜默跳過；取代原「程式一律不自動清除」的裁決（見 research.md R2 修訂）。
 - **通知的祕密遮蔽（FR-019b，2026-07-24 checklist 後新增）**：`alert.ts` 於組版前對 `reason` 做
   Discord webhook URL 樣式遮蔽——底層 `fetch` 例外訊息可能夾帶完整請求 URL，而該 URL 等同頻道寫入
   憑證（憲章 XIV）。遮蔽為純函式、單獨可測，放在**唯一出口**而非依賴呼叫端自律。

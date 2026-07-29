@@ -370,7 +370,8 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
   - **啟用（何時開始推）**：加上 Secret 後**不需其他設定**——下一次排程執行時，StateStore 對 state 中不存在的啟用 Track 自動補建初始進度（`currentSessionIndex: 1`、`lastPushAt` 為空），日期 guard 因而放行，當次即推 Session 1。想立即開始 MAY 手動觸發 `workflow_dispatch`。
   - **指定起點 / 跳課 / 重來**：直接編輯 `state` 分支的 `state.json`（修改該 Track 的 `currentSessionIndex`）並 commit；下一次執行即從該課開始。MUST NOT 為此新增額外設定項——課表是凍結的地圖，state 是唯一權威的「目前位置」。
   - **暫停 / 續播**：移除 Secret = 暫停（該 Track 被跳過，state 保留不動）；重新加回 Secret = 從原進度續播，MUST NOT 重置為 Session 1。
-  - **完課（課表走完）＝終態，非失敗（MUST，F6 定案 2026-07-24）**：某 Track 的 `currentSessionIndex` **超出該軌課表的最大 `sessionIndex`** 時，MUST 於**首次**偵測到時發一則**非紅色的課程完成通知**至該軌頻道，並於該 Track 進度記錄 `completedAt`（§19）；其後每次執行 MUST 一律**靜默跳過**該軌（不發訊息、不推進進度）。完課 MUST NOT 計入非零 exit code、MUST NOT 升級為全域失敗、MUST NOT 影響其他 Track。**判定式 MUST 為「超出最大 `sessionIndex`」，MUST NOT 用「課表長度」或「`find()` 找不到該課」代替**：課表**中間缺號**（找得到更大的 `sessionIndex`、卻找不到當前這一課）代表生成物異常，MUST 判為**該軌失敗**（紅色告警 + 非零 exit code），MUST NOT 誤判為完課。**理由**：走完課表是課程的正常結局；若沿用「視為該 Track 失敗」（F1 原裁決，此處**取代**之），每日排程會對已完課的頻道無限期重複發紅色告警並讓 job 天天失敗，使真正的故障淹沒在雜訊中。想重新開始 MAY 依「指定起點 / 跳課 / 重來」編輯 `state.json`（同時清除該軌 `completedAt`）。
+  - **完課（課表走完）＝終態，非失敗（MUST，F6 定案 2026-07-24）**：某 Track 的 `currentSessionIndex` **超出該軌課表的最大 `sessionIndex`** 時，MUST 於**首次**偵測到時發一則**非紅色的課程完成通知**至該軌頻道，並於該 Track 進度記錄 `completedAt`（§19）；其後每次執行 MUST 一律**靜默跳過**該軌（不發訊息、不推進進度）。完課 MUST NOT 計入非零 exit code、MUST NOT 升級為全域失敗、MUST NOT 影響其他 Track。**判定式 MUST 為「超出最大 `sessionIndex`」，MUST NOT 用「課表長度」或「`find()` 找不到該課」代替**：課表**中間缺號**（找得到更大的 `sessionIndex`、卻找不到當前這一課）代表生成物異常，MUST 判為**該軌失敗**（紅色告警 + 非零 exit code），MUST NOT 誤判為完課。**理由**：走完課表是課程的正常結局；若沿用「視為該 Track 失敗」（F1 原裁決，此處**取代**之），每日排程會對已完課的頻道無限期重複發紅色告警並讓 job 天天失敗，使真正的故障淹沒在雜訊中。想重新開始 MAY 依「指定起點 / 跳課 / 重來」編輯 `state.json`（同時清除該軌 `completedAt`）。**空課表（該軌課表 `sessions` 為 0 個）MUST 判為該軌失敗**，MUST NOT 判為完課——它與「中間缺號」同屬生成物異常，若誤判為完課會靜默寫入 `completedAt`，即使課表修好也仍需人工清除才會恢復。
+  - **完課狀態的自動解除（MUST，F6 定案 2026-07-29）**：已記錄 `completedAt` 的 Track，若其 `currentSessionIndex` **仍落在目前課表範圍內**（未超出最大 `sessionIndex`），MUST 判定為「課表在完課後被延長」（例：課綱由 seed 課表展開為完整課綱），MUST **自動清除該軌 `completedAt`** 並於當次照常從既有進度續推；清除 MUST 只刪除該欄位、MUST NOT 更動 `currentSessionIndex` / `lastPushAt` / `history` / `completedConceptIds`，且 MUST 於執行記錄留下一筆可辨識的紀錄。預覽模式下 MUST NOT 寫入狀態（只留紀錄）。**理由**：`completedAt` 非空的不變式是「進度已超出課表最大 `sessionIndex`」（§19），課表延長後此不變式已被違反，該狀態不再代表「已完課」而是「殘留的舊終態」；不解除則所有已完課 Track 會在課綱擴充後**無限期靜默跳過且無任何訊號**，屬沉默失敗。此規則**取代**原「程式一律不自動清除 `completedAt`、僅由人工處理」的裁決。**連帶效果**：人工把已完課 Track 的 `currentSessionIndex` 調回課表範圍內卻忘記刪除 `completedAt` 時，該軌不再被靜默跳過（下次執行即自動解除並續推），故此情境**不再是沉默失敗**；runbook 仍 SHOULD 建議兩者一併處理以維持狀態檔語意一致，但 MUST NOT 再把它描述為「不做就完全不會生效」。
 - **通知的責任歸屬（MUST，F6 補充）**：課程完成通知 MUST 由**與告警相同的單一通知實作**產生（僅顏色與文案不同），MUST NOT 經過 Lesson Compiler / Renderer、MUST NOT 為此構造不存在於課表的 `Lesson`。理由同上一條的「單一實作」原則。
 
 ---
@@ -1001,10 +1002,13 @@ leetcode-daily-coach/
 4. for track of enabledTracks：
    a. Idempotency guard：若該 Track 的 lastPushAt 換算 Asia/Taipei 日期 == 今天 → 跳過該 Track
       （雙 cron 去重；FORCE=true 或 DRY_RUN=true 皆可繞過，供補推 / 測試；見 §21.1）
-   a2. 完課檢查（§9.2）：該 Track 已有 completedAt → 靜默跳過；
+   a2. 完課檢查（§9.2）：該 Track 已有 completedAt 且 currentSessionIndex 仍未超出課表最大
+       sessionIndex（＝課表已被延長）→ 自動清除 completedAt、記錄一筆 log，照常往 b. 續推；
+       該 Track 已有 completedAt（且進度確實超出課表）→ 靜默跳過；
        currentSessionIndex 超出該軌課表的最大 sessionIndex 且無 completedAt → 發非紅色完課通知、
        寫入 completedAt、跳到下一個 Track（不計失敗、不推進 index）
        ※ 課表中間缺號（未超出最大 sessionIndex 卻找不到該課）MUST 走 g. 的該軌失敗路徑
+       ※ 空課表（sessions 為 0 個）MUST 走 g. 的該軌失敗路徑，MUST NOT 判為完課
    b. LessonCompiler.compile(track, state.tracks[track].currentSessionIndex) → Lesson
       （與 CI Gate 同一顆 Compiler；Gate 已保證此步對凍結內容必然成功）
    c. DiscordRenderer.render(Lesson) → embeds（純函式）
@@ -1087,7 +1091,7 @@ leetcode-daily-coach/
 - 各 Track 的 `history` MUST 滾動保留（上限 30 筆）。
 - 未在 state 中出現的啟用 Track（例：日後新啟用），StateStore MUST 以初始值（`currentSessionIndex: 1`、`lastPushAt` 為空）自動補建；`lastPushAt` 為空 ⇒ 日期 guard 放行，下一次執行即推播 Session 1（Track 生命週期語意見 §9.2）。
 - **調整進度的官方方式**：人工編輯 `state` 分支的 `state.json`（改該 Track 的 `currentSessionIndex`）並 commit。MUST NOT 另設「起始課數」等設定項——state 即唯一權威。
-- **`completedAt`（選填欄位；MUST，F6 定案 2026-07-24）**：某 Track 走完課表並發出完課通知後 MUST 寫入該欄位（見 §9.2 完課語意）；**其存在即代表該 Track 已完課，其後每次執行一律靜默跳過**。缺席或 `null` 皆代表未完課（向後相容既有 `state.json`，MUST NOT 因缺此欄位而判定損毀）。人工把某軌 `currentSessionIndex` 調回課表範圍內以重新推播時，MUST 一併清除該軌的 `completedAt`。DRY_RUN 下 MUST NOT 寫入。
+- **`completedAt`（選填欄位；MUST，F6 定案 2026-07-24）**：某 Track 走完課表並發出完課通知後 MUST 寫入該欄位（見 §9.2 完課語意）；**其存在即代表該 Track 已完課，其後每次執行一律靜默跳過**。缺席或 `null` 皆代表未完課（向後相容既有 `state.json`，MUST NOT 因缺此欄位而判定損毀）。**不變式**：`completedAt` 非空 ⇒ 該軌 `currentSessionIndex` 超出目前課表的最大 `sessionIndex`；此不變式被違反（課表延長，或人工把進度調回範圍內）時，程式 MUST 依 §9.2「完課狀態的自動解除」清除該欄位並照常續推。人工把某軌 `currentSessionIndex` 調回課表範圍內以重新推播時 SHOULD 一併清除該軌的 `completedAt`（保持狀態檔語意一致；未清除亦會由自動解除處理）。DRY_RUN 下 MUST NOT 寫入、MUST NOT 清除。
 - **載入時的欄位語意驗證（MUST，F1 定案）**：StateStore 載入 `state.json` 後，MUST 驗證各 Track 進度的欄位語意，**任一項不合法即比照「JSON 解析失敗」視為全域性失敗**（發告警 → 非零 exit code → **MUST NOT 覆寫原檔**）：`currentSessionIndex` MUST 為 ≥ 1 的整數；`lastPushAt` MUST 為 `null` 或可解析的日期字串；`completedConceptIds` / `history` MUST 為陣列；`completedAt`（若存在）MUST 為 `null` 或可解析的日期字串。
   - **理由**：既然「調整進度的官方方式」就是人工編輯這份檔案，手誤是可預期的常態輸入而非例外。少了這道驗證，字串型的 `currentSessionIndex` 會在推進時被當成字串串接（`"3"` → `"31"`）並靜默寫回，毀掉唯一權威狀態；不可解析的 `lastPushAt` 則會讓日期 guard 的時區換算丟出例外而使整輪執行中止（失敗隔離失效）。
   - 此為**結構性驗證**，非 schema 型別 / 值域驗證（後者屬 F2 的 zod 範圍）。MUST 寬容接受執行環境可解析的日期格式，MUST NOT 僅因非嚴格 ISO 8601 就判定損毀。

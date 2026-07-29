@@ -12,18 +12,25 @@
 
 | `DRY_RUN` | `FORCE` | 該軌狀態 | 行為 | 日誌行 | exit 影響 |
 | --- | --- | --- | --- | --- | --- |
-| false | false | 已有 `completedAt` | 靜默跳過 | `{track}: skipped (completed)` | 無 |
-| false | **true** | 已有 `completedAt` | **仍跳過**（force 只繞過日期 guard） | `{track}: skipped (completed)` | 無 |
+| false | false | 已有 `completedAt`（且進度確實超出課表） | 靜默跳過 | `{track}: skipped (completed)` | 無 |
+| false | **true** | 已有 `completedAt`（同上） | **仍跳過**（force 只繞過日期 guard） | `{track}: skipped (completed)` | 無 |
+| false | any | 已有 `completedAt`，但進度**未超出**課表（課表已延長） | **自動解除**：刪除 `completedAt` 後照常推播 | `{track}: completion cleared (schedule extended to {max})` ＋ `{track}: pushed` | 無（**exit 0**） |
 | false | any | 超出課表、無 `completedAt` | 發完課通知 + 寫 `completedAt` | `{track}: completed` | 無（**exit 0**） |
 | false | any | 超出課表、通知發送失敗 | 視為該軌失敗，**不寫** `completedAt` | `{track}: failed: {reason}` | **exit 1** |
-| **true** | any | 已有 `completedAt` | 只輸出日誌 | `{track}: completed (skipped, dry-run)` | 無 |
+| any | any | 該軌課表為**空**（0 個 Session） | 視為該軌失敗，**MUST NOT** 判為完課 | `{track}: failed: {reason}` | **exit 1** |
+| **true** | any | 已有 `completedAt`（且進度確實超出課表） | 只輸出日誌 | `{track}: completed (skipped, dry-run)` | 無 |
+| **true** | any | 已有 `completedAt`，但進度未超出課表 | 只輸出日誌，**不寫狀態**，其後照常輸出預覽 | `{track}: would clear completion (dry-run, schedule extended to {max})` ＋ 預覽 | 無 |
 | **true** | any | 超出課表、無 `completedAt` | 只輸出日誌，**不發送、不寫狀態** | `{track}: would send completion notice (dry-run)` | 無 |
 
 **判定條件（MUST）**：`currentSessionIndex > max(schedule.sessions[].sessionIndex)`。
 課表**中間缺號**（`find()` 失敗但未超出最大值）MUST 仍為**該軌失敗**（紅色告警 + exit 1），
-MUST NOT 誤判為完課。
+MUST NOT 誤判為完課。**課表為空時 `max(...)` 無定義**，MUST 直接判為該軌失敗（FR-022），
+MUST NOT 以 `0` 之類的預設值代入判定式。
 
-**檢查順序（MUST）**：per-track 日期 guard → 完課檢查 → compile / render / budget → post。
+**自動解除（FR-022b）**：`completedAt` 存在但判定條件**不成立**時，該狀態已違反其不變式
+（見 [state-schema.md](./state-schema.md) §1），MUST 刪除 `completedAt` 後照常續推。
+
+**檢查順序（MUST）**：per-track 日期 guard → 完課檢查（含自動解除）→ compile / render / budget → post。
 
 ---
 
@@ -59,7 +66,8 @@ MUST NOT 誤判為完課。
 | --- | --- |
 | `{track}: completed` | 首次完課且通知送出成功 |
 | `{track}: skipped (completed)` | 已有 `completedAt` |
-| `{track}: completed (skipped, dry-run)` / `{track}: would send completion notice (dry-run)` | DRY_RUN 下的兩種完課情境 |
+| `{track}: completion cleared (schedule extended to {max})` | 課表延長 ⇒ 自動解除完課狀態（FR-022b） |
+| `{track}: completed (skipped, dry-run)` / `{track}: would send completion notice (dry-run)` / `{track}: would clear completion (dry-run, schedule extended to {max})` | DRY_RUN 下的三種完課情境 |
 
 既有行（`pushed` / `skipped (already pushed today)` / `failed: {reason}` / `alert-failed: …`）不變。
 所有日誌 MUST NOT 印出 webhook URL（憲章 XIV）。

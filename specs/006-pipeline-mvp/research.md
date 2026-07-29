@@ -21,6 +21,10 @@ Technical Context 無 NEEDS CLARIFICATION（技術選型已由憲章「技術與
 - 用 `max(sessionIndex)` 而非 `sessions.length` 或 `find()` 失敗：**課表中間缺號**（生成器產出異常）
   MUST 仍是該軌的失敗（紅色告警），只有「走過終點」才是完課。`length` 在缺號時會誤判，`find()` 失敗
   則無法區分兩者。
+- **空課表 MUST 先於判定式擋下**（2026-07-29 code review 後補）：`sessions` 為空時 `max(...)` 無定義，
+  以 `reduce(..., 0)` 的初始值 `0` 代入會讓任何 `currentSessionIndex ≥ 1` 都「超出最大值」，使課表
+  產物異常靜默走進完課終態並寫入 `completedAt`（修好課表後仍需人工清狀態）。空課表與中間缺號同屬
+  生成物異常，MUST 一致地判為該軌失敗。
 
 **Alternatives considered**：
 
@@ -48,6 +52,14 @@ Technical Context 無 NEEDS CLARIFICATION（技術選型已由憲章「技術與
 **Alternatives considered**：以 `currentSessionIndex === length + 1` 隱式推導完課（否決：無法表達「已通知」
 這個一次性事實，補跑時會重複發送）；新增 `status: "active" | "completed"` 列舉（否決：多一個與
 `completedAt` 重疊的真相來源，且不向後相容）。
+
+**2026-07-29 修訂（FR-022b，code review 後）**：`completedAt` 存在但 `currentSessionIndex` **未超出**
+課表最大 `sessionIndex` 時，MUST 自動清除該欄位（`clearCompleted()`，只刪鍵）並照常續推。原設計要求
+「程式一律不自動清除、僅由 runbook 要求人工處理」，但三軌在 F7 課綱進來前必然完課，而 F7 把課表由
+各 13 課延長到約 180 課後，殘留的 `completedAt` 會讓三軌**每天靜默跳過、exit 0、零訊息**——沉默失敗
+（憲章 XV）。原理由「狀態層不認識課表」只適用於 `state-store.ts`：判定發生在 `main.ts`，該處本就持有
+`deps.schedules[track]`，`clearCompleted()` 仍只負責刪鍵。自動解除的觸發條件僅限「不變式已被違反」，
+MUST NOT 擴大為其他進度自動修正；停用某軌的正規手段仍是移除 webhook 設定，故不會誤傷刻意停課。
 
 ---
 
@@ -214,8 +226,8 @@ Default branch 為 `develop`（`origin/HEAD` 現況即指向 `develop`），此�
 
 | # | 決策 | 影響檔案 |
 | --- | --- | --- |
-| R1 | 完課判定 = `currentSessionIndex > max(sessionIndex)`，置於 guard 後、compile 前 | `src/main.ts` |
-| R2 | `completedAt?: string \| null`；通知成功才寫；不動 `lastPushAt` / `history` | `src/state/state-store.ts` |
+| R1 | 完課判定 = `currentSessionIndex > max(sessionIndex)`，置於 guard 後、compile 前；**空課表 MUST 判為該軌失敗** | `src/main.ts` |
+| R2 | `completedAt?: string \| null`；通知成功才寫；不動 `lastPushAt` / `history`；**課表延長 ⇒ 自動 `clearCompleted()`（FR-022b）** | `src/state/state-store.ts`、`src/main.ts` |
 | R3 | `renderCompletionNotice()` 與 `renderAlert()` 同檔，綠色 `3066993` | `src/renderer/alert.ts` |
 | R4 | force 不繞過完課；dry-run 不寫 `completedAt` | `src/main.ts` |
 | R5 | E2E 唯一替身 = 全域 `fetch`；掃描測試禁止 `pushTrack` | `tests/e2e/**`、`tests/helpers/fetch-recorder.ts` |

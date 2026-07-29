@@ -8,7 +8,7 @@
 ## 需求完整性（Requirement Completeness）
 
 - [x] CHK001 「完課 MUST NOT 更新 `lastPushAt`」這條規則是否寫進了 spec，還是只存在於 data-model／契約文件？[Gap, data-model §1 vs Spec §FR-022] — ✅ 2026-07-29 已補：FR-022 新增「完課的狀態不變式」——只寫完課時間，MUST NOT 更新 `lastPushAt`、MUST NOT 前進 `currentSessionIndex`
-- [x] CHK002 「人工把 `currentSessionIndex` 調回範圍內時 MUST 一併清除 `completedAt`」這條**維運陷阱**是否已在 spec 需求層留下要求（而非僅在契約與 runbook）？[Gap, Contract state-schema §3 vs Spec §FR-022] — ✅ 2026-07-24：`docs/spec.md` §9.2 / §19 原本即有，F6 spec 補上 FR-023a（runbook MUST 以「沉默失敗警告」形式明示）
+- [x] CHK002 「人工把 `currentSessionIndex` 調回範圍內時 MUST 一併清除 `completedAt`」這條**維運陷阱**是否已在 spec 需求層留下要求（而非僅在契約與 runbook）？[Gap, Contract state-schema §3 vs Spec §FR-022] — ✅ 2026-07-24：`docs/spec.md` §9.2 / §19 原本即有，F6 spec 補上 FR-023a（runbook MUST 以「沉默失敗警告」形式明示）；⚠️ **2026-07-29 修訂**：改由 FR-022b 的自動解除處理（`completedAt` 與課表矛盾時程式自刪），人工清除降為 SHOULD
 - [x] CHK003 完課 MUST NOT 產生 `history` 條目、MUST NOT 追加 `completedConceptIds` 的不變式，是否已在 spec 的 FR 或 Key Entities 中表述？[Gap, data-model §1] — ✅ 2026-07-29 已補：FR-022「完課的狀態不變式」明列此兩項，並說明理由（完課不是一次推播）
 - [x] CHK004 **全部 Track 都被跳過**（零推播）時，是否仍執行存檔與提交，需求是否有明確裁決？[Ambiguity, Spec §FR-013, §SC-002] — ✅ 2026-07-24 已裁決：照常存檔（寫出內容相同的檔案），由提交步驟偵測無變更而略過提交；寫入 FR-015、`docs/spec.md` §19、cli-contract §4
 - [x] CHK005 承上：SC-003 要求「恰好 1 個 commit」、SC-002 要求「狀態檔內容完全不變」——**無內容變更時 commit 數應為 0 還是 1**，兩條 SC 是否已對齊？[Conflict, Spec §SC-002 vs §SC-003] — ✅ 2026-07-24 已對齊：SC-002 明列 commit 數為 0，SC-003 加上「確有進度變更」的前提，FR-015 改為「至多一個 commit」

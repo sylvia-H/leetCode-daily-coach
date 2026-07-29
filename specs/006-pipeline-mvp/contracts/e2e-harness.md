@@ -71,7 +71,8 @@ interface FetchRecorder {
 | `guard-and-modes.test.ts` | 同日第二次執行 **零請求**且 `state.json` 位元組不變（SC-002）；三軌 `lastPushAt` 分別為今天 / 昨天 / `null` 時只推後兩軌；`FORCE` 繞過 guard 並寫狀態；`DRY_RUN` 不受 guard 阻擋、零請求、不建檔；台北凌晨（UTC 前一日）判為「今天已推」 |
 | `state-advance.test.ts` | 成功軌 `currentSessionIndex` **恰好 +1**、失敗軌**變化量 0**；`history` 上限 30；concept 類才追加 `completedConceptIds`；未知啟用 Track 自動補建；未啟用 Track 原樣保留；**`save()` 只發生一次**（以 `vi.mock("node:fs")` 的 passthrough 包裝計數佐證，見 §1） |
 | `isolation.test.ts` | 單軌固定失敗 → 其餘兩軌成功率 100% 且進度保存、失敗軌收到**紅色**告警且進度不變、exit code 1（SC-004）；告警本身失敗仍不中斷；部分推播（第 2 則失敗）→ 進度**照常前進** + 告警 + exit 1 |
-| `completion.test.ts` | 超出課表 → **恰好一則綠色**通知、`completedAt` 寫入、`currentSessionIndex` 不變、**exit 0**；再次執行 → 零請求；`DRY_RUN` 下不發送不寫入；通知發送失敗 → 不寫 `completedAt` 且 exit 1；課表**中間缺號**仍為失敗（不誤判完課） |
+| `completion.test.ts` | 超出課表 → **恰好一則綠色**通知、`completedAt` 寫入、`currentSessionIndex` 不變、**exit 0**；再次執行 → 零請求；`DRY_RUN` 下不發送不寫入；通知發送失敗 → 不寫 `completedAt` 且 exit 1；課表**中間缺號**仍為失敗（不誤判完課）；**殘留 `completedAt` 但進度仍在課表範圍內 → 自動刪鍵（非設 `null`）並照常推課、exit 0，`DRY_RUN` 下不寫入**（FR-022b） |
+| `tests/unit/completion-guard.test.ts` | **課表為空**（0 個 Session）→ 該軌失敗、紅色告警、進度不變、不寫 `completedAt`（FR-022；空課表無法由三軌密集序列的凍結課表構造，故以替換 `loadCompilerDeps` 回傳值於單元層驗證）；`clearCompleted()` 只刪鍵且不動其餘欄位 |
 
 ---
 
@@ -85,7 +86,8 @@ SC-006 後半原為「`main` 流程的分支覆蓋無遺漏路徑」——無覆
 | # | 結局路徑 | 觸發條件 | 覆蓋檔案 |
 | --- | --- | --- | --- |
 | 1 | `SKIPPED`（日期 guard 命中） | `lastPushAt` 的台北日期＝今天，且非 dry-run／force | `guard-and-modes.test.ts` |
-| 2 | `SKIPPED (completed)` | 該軌已有 `completedAt` | `completion.test.ts` |
+| 2 | `SKIPPED (completed)` | 該軌已有 `completedAt` 且進度確實超出課表 | `completion.test.ts` |
+| 2a | 完課狀態**自動解除**（非結局，解除後續走 3 / 5 / 6） | 有 `completedAt` 但進度未超出課表（課表已延長，FR-022b） | `completion.test.ts` |
 | 3 | `SUCCEEDED` | compile／render／budget／post 全數成功 → `advance()` | `three-tracks.test.ts`、`state-advance.test.ts` |
 | 4 | `COMPLETED`（首次完課） | `currentSessionIndex > max(sessionIndex)` 且通知送出成功 → `markCompleted()` | `completion.test.ts` |
 | 5 | `FAILED`（推播失敗） | post 於第 1 則即失敗 → 紅色告警、進度不動 | `isolation.test.ts` |

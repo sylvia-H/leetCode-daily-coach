@@ -13,7 +13,7 @@ Discord 頻道與 Webhook 取得、GitHub Actions Secrets 登錄）請見
 
 1. [啟用 / 暫停 / 續播一個 Track](#1-啟用--暫停--續播一個-track)
 2. [調整某軌進度](#2-調整某軌進度)
-3. [沉默失敗警告：重新啟動已完課的 Track](#3-沉默失敗警告重新啟動已完課的-track)
+3. [重新啟動已完課的 Track](#3-重新啟動已完課的-track)
 4. [手動補推（force）](#4-手動補推force)
 5. [預覽版面（dry_run）](#5-預覽版面dry_run)
 6. [`state` 分支的初始化與人工編輯](#6-state-分支的初始化與人工編輯)
@@ -73,22 +73,25 @@ git checkout develop
 > ——這是刻意的 fail-loud 設計，不是程式故障。修正拼字後重跑即可，打錯的內容仍完整保留在
 > `state` 分支上供你核對。
 
-若該軌**已經完課**（見 [§3](#3-沉默失敗警告重新啟動已完課的-track)），調整進度時 MUST 額外處理
-`completedAt` 欄位，否則會遇到下一節描述的陷阱。
+若該軌**已經完課**（見 [§3](#3-重新啟動已完課的-track)），調整進度時建議一併刪除 `completedAt` 欄位
+（未刪也會由程式自動解除，見下一節）。
 
 ---
 
-## 3. 沉默失敗警告：重新啟動已完課的 Track
+## 3. 重新啟動已完課的 Track
 
 某軌走完課表後，`state.json` 會多出一個 `completedAt` 欄位（完課通知成功送出的時間）。**只要這個欄位
-存在，該軌其後每次執行都會被靜默跳過**（log 顯示 `{track}: skipped (completed)`），無論你把
-`currentSessionIndex` 改成什麼。
+存在、且該軌進度確實已超出課表**，該軌其後每次執行都會被靜默跳過（log 顯示
+`{track}: skipped (completed)`）。
 
-> **⚠️ 陷阱**：如果你只改了 `currentSessionIndex`（例如想讓 `foundation` 從第 5 課重新開始）
-> **卻忘記刪除 `completedAt`**，該軌會繼續被靜默跳過——`currentSessionIndex` 的變更完全不會生效，
-> 而且**不會有任何錯誤訊息**，因為程式不認為這是故障。你只會發現「怎麼一直沒收到課程」。
+> **自動解除（不需人工介入的情況）**：`completedAt` 的成立前提是「進度已超出課表最大 `sessionIndex`」。
+> 一旦這個前提不再成立——**課表被延長**（例：課綱由種子課表展開為完整課綱），或你把
+> `currentSessionIndex` 改回課表範圍內——程式會在下次執行時**自動刪除 `completedAt` 並照常續推**，
+> log 顯示 `{track}: completion cleared (schedule extended to {最大課次})`，接著就是正常的
+> `{track}: pushed`。**課綱擴充後不需要人工去清狀態**；擴充後的第一次執行請看這行 log 確認三軌都已恢復。
 
-正確做法：兩件事**一起做**（缺一不可）：
+因此「重新開始」只需要改 `currentSessionIndex` 一件事。不過**建議**把 `completedAt` 一併刪掉，讓狀態檔
+不留下已失效的欄位（兩者效果相同，差別只在狀態檔是否乾淨）：
 
 ```jsonc
 {
@@ -104,8 +107,9 @@ git checkout develop
 }
 ```
 
-程式**故意不自動清除**這個欄位——狀態層本身不認識課表，無法自行判斷「調整後的進度是否仍在完課狀態」，
-這個判斷只有維運者知道意圖，所以刻意留給人工處理。
+**自動解除只在「`completedAt` 與課表已互相矛盾」時觸發**，不會做其他形式的進度自動修正：進度確實
+超出課表的已完課 Track 仍會靜默跳過（包含 `force=true`）。想暫停某軌請移除該軌的 webhook Secret
+（見 [§1](#1-啟用--暫停--續播一個-track)），**MUST NOT** 拿 `completedAt` 當暫停開關——它會被自動解除。
 
 ---
 
@@ -114,7 +118,7 @@ git checkout develop
 `workflow_dispatch` 手動觸發時勾選 `force`（或直接設定環境變數 `FORCE=true`）會**繞過同日去重 guard**，
 讓已在今天推播過的 Track 立即再推一次並前進一課。
 
-- **`force` 不會繞過完課跳過**——已完課的 Track 即使 `force=true` 仍會被跳過（見 [§3](#3-沉默失敗警告重新啟動已完課的-track)，若想重新開始必須先按該節步驟編輯 `state.json`）。
+- **`force` 不會繞過完課跳過**——已完課的 Track 即使 `force=true` 仍會被跳過（見 [§3](#3-重新啟動已完課的-track)，若想重新開始必須先按該節步驟編輯 `state.json`）。
 - **`force` 不會繞過「無效設定」等全域性失敗**（例如三個 webhook 都沒設定）。
 
 > **⚠️ 同日重複使用 `force` 的後果**：`force` 每次都會讓 `currentSessionIndex` **再 +1**。如果你今天已經
@@ -205,10 +209,12 @@ workflow 定義與程式碼——這是 GitHub Actions 的行為，不可由 wor
 | --- | --- | --- |
 | `{track}: pushed` | 該軌今天成功推播一課，進度已前進 | 否 |
 | `{track}: skipped (already pushed today)` | 該軌今天已經推播過，本次略過（正常去重） | 否 |
-| `{track}: skipped (completed)` | 該軌已完課，靜默略過 | 否（除非你正打算重新啟動它，見 [§3](#3-沉默失敗警告重新啟動已完課的-track)） |
+| `{track}: skipped (completed)` | 該軌已完課，靜默略過 | 否（除非你正打算重新啟動它，見 [§3](#3-重新啟動已完課的-track)） |
 | `{track}: completed` | 該軌**首次**走完課表，已發出完課通知並記錄完課時間 | 否，這是正常終局 |
+| `{track}: completion cleared (schedule extended to N)` | 課表已延長到第 N 課，該軌殘留的完課狀態已自動解除，本次照常續推 | 否，這是課綱擴充後的預期行為（見 [§3](#3-重新啟動已完課的-track)） |
 | `{track}: completed (skipped, dry-run)` | 預覽模式下，該軌本應顯示已完課 | 否 |
 | `{track}: would send completion notice (dry-run)` | 預覽模式下，該軌本應觸發完課通知 | 否 |
+| `{track}: would clear completion (dry-run, schedule extended to N)` | 預覽模式下，該軌本應自動解除完課狀態（預覽不寫狀態） | 否 |
 | `{track}: failed: {reason}` | 該軌本次推播失敗（進度不變，除非是部分推播） | 視情況，見 [§8](#8-推播失敗時的排查起點) |
 | `alert-failed: {track}: ...` | 該軌的紅色告警本身也送不出去（連告警都失敗） | 是，該軌目前沒有任何使用者可見的失敗訊號，需主動查 Actions log |
 | `alert-failed: 全域: ...` | 全域告警送不出去 | 是，同上 |

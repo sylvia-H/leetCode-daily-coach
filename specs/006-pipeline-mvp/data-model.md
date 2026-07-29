@@ -21,10 +21,12 @@
 
 **不變式（invariants）**：
 
-1. `completedAt` 非空 ⇒ 該軌於其後每次執行一律靜默跳過（不編譯、不推播、不推進）。
-2. `completedAt` 非空 ⇒ `currentSessionIndex > max(schedule.sessions[].sessionIndex)`。人工把
-   `currentSessionIndex` 調回範圍內時 MUST 一併清除 `completedAt`（runbook 明示；程式不自動修正，
-   避免狀態層依賴課表）。
+1. `completedAt` 非空**且不變式 2 成立** ⇒ 該軌於其後每次執行一律靜默跳過（不編譯、不推播、不推進）。
+2. `completedAt` 非空 ⇒ `currentSessionIndex > max(schedule.sessions[].sessionIndex)`。
+   **不變式被違反時（課表在完課後被延長，或人工把 `currentSessionIndex` 調回範圍內）MUST 由
+   `run()` 自動清除 `completedAt` 並照常續推**（FR-022b，2026-07-29 修訂，取代原「程式不自動修正」的
+   裁決）。判定與清除都發生在 `main.ts`（手上已有課表），狀態層本身仍不認識課表：`clearCompleted()`
+   只負責刪鍵。
 3. 完課 MUST NOT 產生 `history` 條目、MUST NOT 追加 `completedConceptIds`——它不是一次推播。
 4. 未啟用但已存在的 Track，其 `completedAt` 與其他欄位一樣**原樣保留**，MUST NOT 於 `save()` 時刪除。
 
@@ -53,8 +55,11 @@
 ```text
                     ┌─ guard 命中（今日已推，且非 dry-run/force） ──→ SKIPPED
                     │
-                    ├─ completedAt 已存在 ─────────────────────────→ SKIPPED (completed)
-  Track 進入迴圈 ───┤
+                    ├─ 課表為空（0 個 Session）───────────────────→ FAILED（MUST NOT 判為完課）
+                    │
+                    ├─ completedAt 已存在 ┬ 進度仍未超出課表 ─────→ 清除 completedAt ─→ 續往下判定
+  Track 進入迴圈 ───┤                     └ 進度確實超出課表 ─────→ SKIPPED (completed)
+                    │
                     ├─ currentSessionIndex > max(sessionIndex) ───→ COMPLETED ─→ 寫 completedAt
                     │                                                 └ 通知失敗 ─→ FAILED
                     ├─ compile/render/budget/post 成功 ───────────→ SUCCEEDED ─→ advance()
@@ -71,8 +76,9 @@
 | `SUCCEEDED` | `currentSessionIndex++`、`lastPushAt`、`history`、`completedConceptIds` | 課程訊息 1–2 則 | ❌ |
 | `FAILED` | 無（**部分推播**例外：照常前進） | 紅色告警（可能連告警都失敗） | ✅ |
 
-**狀態轉移的唯一寫入點**：`SUCCEEDED` / 部分推播 → `advance()`；`COMPLETED` → `markCompleted()`。
-兩者皆**就地修改** in-memory state，由迴圈結束後的**單次** `save()` 落盤（DRY_RUN 不落盤）。
+**狀態轉移的唯一寫入點**：`SUCCEEDED` / 部分推播 → `advance()`；`COMPLETED` → `markCompleted()`；
+完課狀態自動解除（FR-022b）→ `clearCompleted()`（不是一種結局，解除後該軌當次仍會走到上表任一結局）。
+三者皆**就地修改** in-memory state，由迴圈結束後的**單次** `save()` 落盤（DRY_RUN 不落盤）。
 
 ---
 
