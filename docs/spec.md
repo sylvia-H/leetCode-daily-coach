@@ -520,6 +520,11 @@ Skeleton（`concepts/**`）是內容的來源真相，MUST 只含兩部分：
 - `patterns` MUST 對應到 Curriculum 內的 Topic / Concept key，讓「Concept → Problem」可逆向查找。
 - `url` 的 slug MUST 與 `slug` 欄位一致（Gate 檢查，避免死鏈；§20.3）。
 - 題庫 MUST 涵蓋三個 Track 難度帶所需的 Easy / Medium / Hard 題目（三軌全量交付）。
+- **題庫建置方式（MUST，F7 定案 2026-07-30）**：全量題庫由 F7 內容產線於 build-time 建置——Stage 1 的 LLM
+  只**提出候選題號**（策展「哪一題適合此 Pattern」），題目的事實 metadata（`id / slug / title / url /
+  difficulty`）MUST 由 `scripts/` 的 build-time 步驟從**權威來源驗證題號存在後填入**，MUST NOT 由 LLM 生成
+  （憲章第 XIV 條 / §5）；且 MUST NOT 抓取或轉載題目描述（§5，只取 metadata）。填入後 commit 凍結，Stage 1
+  結構 Gate 以此 bank 檢查題號存在性、查無 / 錯號 MUST 擋下並觸發 Stage 1 重生。詳見 §20.3 Stage 1。
 - **題數合法性的唯一權威守門點（MUST，F1 定案；F3 澄清）**：對**宣告 ≥1 題**的 Concept，其對應題數 MUST 為 1～3 題；對應題號在題庫中不存在、宣告超過 3 題、或**同一 Concept 內重複引用同一題號**（`leetcode` 陣列 MUST NOT 含重複元素——重複幾乎必為填寫失誤，靜默去重會讓「本想排兩題卻只出一題」永不被發現），一律 MUST 在**題目查找階段**（`src/compiler/problem.ts`）拋出可辨識且訊息指名成因的錯誤（fail loud），MUST NOT 靜默截斷題數、略過缺漏題目或靜默去重。**合法宣告 `leetcode: []` 的「無題目觀念課」為一等合法狀態**（如 Programming Mindset 的複雜度分析、讀題等基礎觀念，本質上無單一對應 LeetCode 題）：前向查找對其 MUST 回傳空清單、MUST NOT 因題數 0 而報錯，1～3 守門不對其生效。渲染後的字元預算檢查雖亦含題數上限，但僅為 defense-in-depth，MUST NOT 被當作主要判準，也 MUST NOT 在查找階段之外另行定義題數的錯誤型態與訊息——避免兩處各說各話。
 
 ### 12.2 教材依源（借鑑知識架構，不轉載內容）
@@ -1136,7 +1141,8 @@ LLM MUST NOT
 
 **Stage 1：課綱與 Skeleton 起草（`scripts/generate-curriculum.ts`）**
 
-1. LLM 依 §8 的 Module 骨架與規範（Topic 5～12 Concept、Module 10～30 Concept、總數 ≥150）批次起草：完整 Concept 清單（frontmatter：id、依賴、對應題號…）與每個 Concept 的 Author Hints。
+1. LLM 依 §8 的 Module 骨架與規範（Topic 5～12 Concept、Module 10～30 Concept、總數 ≥150）批次起草：完整 Concept 清單（frontmatter：id、依賴、對應題號…）與每個 Concept 的 Author Hints。LLM 對「對應題目」**只提出候選題號**，MUST NOT 生成題目 metadata（§12）。
+1b. **題庫擴充（build-time，F7 定案 2026-07-30）**：以 `scripts/` 步驟驗證 Stage 1 提出的每個候選題號**真實存在**並從權威來源填入 `id / slug / title / url / difficulty` 至 `data/problem-bank.json`（**只取 metadata、不抓題目描述**，§5 / §12），commit 凍結；查無 / 錯號回報以驅動 Stage 1 重生。metadata 來源（即時抓取 vs. 靜態快照）為實作細節。
 2. **結構 Gate（自動）**：DAG 驗證（無環、無前向依賴、無孤兒）、顆粒度規則（Topic / Module 的 Concept 數範圍）、frontmatter schema（zod）、`leetcode` 題號存在於 Problem Bank、id 全域唯一。
 3. 產出**課綱大綱表**（`curriculum/outline.md`：Module / Topic / Concept 清單、順序、依賴、對應題目一覽）。
 4. **唯一人工檢查點**：你審閱大綱表（約 1～2 小時，只看方向：顆粒度、順序、依賴是否合理），核可後 Skeleton 凍結 commit。修改意見以「調整參數 / 提示 → 重跑 Stage 1」處理，不逐篇手改。
@@ -1145,14 +1151,14 @@ LLM MUST NOT
 
 讀凍結的 Skeleton → LLM 依 Author Hints 展開 Full Article（含 Digest / Tips / Hints）→ 通過下列 Gate → 凍結至 `articles/` 與 `data/`：
 
-1. **程式碼實測（最強把關）**：TS Corner / TS Tip 的程式碼 MUST `tsc` 編譯通過且可執行（`tsx`/`vitest`）；Python Corner / Tip MUST 可執行（`python`/`pytest`）。跑不過 ⇒ 這關擋生成。
-2. **結構 / schema 檢查**：§10 固定區塊（含 Digest / Tips）都在、frontmatter schema（zod）符合、觀念本體 ≤ 2,000 字（§10.3）。
+1. **程式碼實測（最強把關；編譯 + 內嵌斷言，F7 定案 2026-07-30）**：TS Corner / TS Tip MUST `tsc` 編譯通過且以 `vitest`/`tsx` 執行**內嵌斷言**、Python Corner / Tip MUST 以 `pytest` 執行**內嵌斷言**；每個程式碼片段 MUST 自帶最小測試（呼叫函式並斷言預期輸出），**編譯通過且斷言成功**才過關——僅編譯通過、或僅「執行不拋例外」均不足。跑不過 ⇒ 這關擋生成。
+2. **結構 / schema 檢查**：§10 固定區塊（含 Digest / Tips）都在、frontmatter schema（zod）符合、觀念本體 ≤ 2,000 字（§10.3）；**繁中機器可驗（F7 定案 2026-07-30）**：全文無簡體字、CJK 字元佔比達門檻（程式碼區塊與行內英文術語排除在分母外），違反 ⇒ 擋生成。
 3. **字元預算檢查**：Digest / Tips / Exit Criteria / Takeaway 各自符合 §14.5 預算。
 4. **DAG 驗證**：`prerequisite` / `next` 無環 / 無前向依賴 / 參照完整（§8.3）。
 5. **題目正確性**：`leetcode` 題號 MUST 存在於 Problem Bank；`url` slug 與 bank 一致；題號 / 連結 / 難度由程式帶入、不讓 LLM 生。
 6. **完整編譯與 render 檢查**：呼叫 Lesson Compiler（§7.1）對所有 Track × 所有 Session 編譯並 render，驗證 Discord 限制（§14.5）全數通過。
 7. **LLM 二次 self-check**：生成後再讓模型針對「複雜度是否正確、Pattern 適用性是否成立、是否有前後矛盾」做一次批判；不合格 ⇒ 重生成。
-8. **（例外）人工介入**：僅當 Gate 反覆擋下、或 self-check 標記低信心時才需使用者看一眼；正常者直接凍結入庫。
+8. **（例外）人工介入**：Gate 擋下或 self-check 低信心時 MUST 自動重生成、**每篇上限 3 次**（F7 定案 2026-07-30，取 §20.4 的 2～4 次緩衝內）；3 次仍不過才標記「待人工檢視」並記錄（fail loud），單篇升級 MUST NOT 阻斷其餘 Concept、MUST NOT 靜默凍結不合格產物；正常者直接凍結入庫。
 
 > 風險披露：課綱與解說文字未逐篇人工審核，仍可能有幻覺（尤其複雜度推導、Pattern 適用性、學習順序合理性這類**無法由編譯器擋出的錯誤**）。上列 Gate + 大綱定稿能消除大部分**結構 / 程式碼 / 參照 / 版面**類錯誤與方向性偏差，但不保證教學敘述 100% 正確；純自用場景下屬可接受的風險權衡——上線後邊用邊修（改 Skeleton → 重跑該篇展開）即可。
 
