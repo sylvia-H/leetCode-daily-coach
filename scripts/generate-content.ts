@@ -14,8 +14,10 @@ import { checkTraditionalChinese } from "../src/compiler/traditional-chinese.js"
 import { parseArticle } from "../src/compiler/content.js";
 import type { ConceptNode } from "../src/types/curriculum.js";
 import {
+  DEFAULT_MANIFEST_PATH,
   hashContent,
   loadManifest,
+  rebuildManifest,
   saveManifest,
   shouldSkip,
   upsertConcept,
@@ -28,7 +30,7 @@ import { checkCodeBlocks, createRealExecutor, extractCodeBlocks } from "./run-co
 
 const MODULES_PATH = "curriculum/modules.json";
 const CONCEPTS_DIR = "concepts";
-const MAX_REGEN = 3;
+export const MAX_REGEN = 3;
 
 export interface SkeletonFrontmatterForArticle {
   id: string;
@@ -248,7 +250,7 @@ async function runSelfCheck(llmClient: LlmClient, node: ConceptNode, markdown: s
   return undefined;
 }
 
-async function generateOneConcept(
+export async function generateOneConcept(
   llmClient: LlmClient,
   node: ConceptNode,
   authorHints: string,
@@ -327,7 +329,18 @@ async function main(): Promise<void> {
   }
 
   const { graph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
-  let manifest: Manifest = loadManifest();
+
+  // manifest 遺失（.cache/ 為 gitignored 快取，換機器/清快取後即不存在）：由掃描現存
+  // concepts/** + articles/** 重建，避免把已凍結產物誤判為缺漏而重工（R4、FR-019/020）。
+  let manifest: Manifest = existsSync(DEFAULT_MANIFEST_PATH)
+    ? loadManifest()
+    : rebuildManifest(
+        [...graph.concepts.values()].map((node) => ({
+          conceptId: node.id,
+          skeletonContent: readFileSync(node.skeletonPath, "utf-8"),
+          productExists: existsSync(node.articlePath),
+        })),
+      );
   let anyNeedsHumanReview = false;
 
   for (const node of graph.concepts.values()) {
