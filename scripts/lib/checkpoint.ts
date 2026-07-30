@@ -3,7 +3,7 @@
 // 凍結產物本身）。純判斷（shouldSkip/rebuildManifest/upsertConcept）與檔案 I/O（load/saveManifest、
 // hashFile）分離，前者可在無檔案系統下單測。
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 export const MANIFEST_VERSION = 1;
@@ -37,23 +37,41 @@ export function hashFile(path: string): string {
   return hashContent(readFileSync(path, "utf-8"));
 }
 
-/** manifest 遺失 / 損毀時回傳空 manifest（非真實來源，容許重建），不 throw。 */
-export function loadManifest(path: string = DEFAULT_MANIFEST_PATH): Manifest {
-  if (!existsSync(path)) return emptyManifest();
+/**
+ * 讀取 manifest 檔；**遺失或損毀一律回 `undefined`**，讓呼叫端能區分兩者以外的第三種狀態消失：
+ * 只有「讀得到且形狀合法」才回傳內容。
+ *
+ * 呼叫端 MUST 以此區分「manifest 不可用」與「manifest 可用但沒有任何 entry」——若把損毀當成
+ * 空 manifest，`shouldSkip` 會對每一篇都判定「無 manifestEntry ⇒ 不跳過」，把全部已凍結 Article
+ * 重新生成並覆蓋，違反 FR-019/020 的冪等承諾。損毀時正確做法是走 `rebuildManifest` 由現存產物反推。
+ */
+export function readManifestFile(path: string = DEFAULT_MANIFEST_PATH): Manifest | undefined {
+  if (!existsSync(path)) return undefined;
   try {
     const parsed = JSON.parse(readFileSync(path, "utf-8")) as Manifest;
-    if (typeof parsed !== "object" || parsed === null || typeof parsed.concepts !== "object") {
-      return emptyManifest();
+    if (typeof parsed !== "object" || parsed === null || typeof parsed.concepts !== "object" || parsed.concepts === null) {
+      return undefined;
     }
     return { version: parsed.version ?? MANIFEST_VERSION, concepts: parsed.concepts };
   } catch {
-    return emptyManifest();
+    return undefined;
   }
 }
 
+/** manifest 遺失 / 損毀時回傳空 manifest（非真實來源，容許重建），不 throw。 */
+export function loadManifest(path: string = DEFAULT_MANIFEST_PATH): Manifest {
+  return readManifestFile(path) ?? emptyManifest();
+}
+
+/**
+ * 原子寫入（先寫同目錄暫存檔再 rename）：Stage 2 每處理完一篇就存一次檔，若在 `writeFileSync`
+ * 寫到一半被 Ctrl-C／crash 打斷，就地覆蓋會留下半截 JSON，下次續跑時整份 manifest 不可用。
+ */
 export function saveManifest(manifest: Manifest, path: string = DEFAULT_MANIFEST_PATH): void {
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`, "utf-8");
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, `${JSON.stringify(manifest, null, 2)}\n`, "utf-8");
+  renameSync(tmp, path);
 }
 
 /** 覆蓋式寫入單一 Concept 的 checkpoint（immutable：回傳新 manifest，不就地改動）。 */

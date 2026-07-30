@@ -3,7 +3,7 @@
 // （唯一 I/O 與 exit 位置在 scripts/validate.ts）。Gate 與每日 runtime import 同一顆
 // compile / render / checkBudget（憲章 IX），不另寫平行的編譯或版面邏輯。
 import { TRACK_ORDER } from "../config.js";
-import { compile, type CompilerDeps } from "./lesson.js";
+import { compile, readArticleCached, type CompilerDeps } from "./lesson.js";
 import { checkBudget } from "../renderer/budget.js";
 import { render } from "../renderer/discord.js";
 import { checkTraditionalChinese } from "./traditional-chinese.js";
@@ -110,30 +110,45 @@ export function runContentGate(input: GateInput): GateResult {
         const articlePath = lesson.concept.articlePath;
         if (!checkedArticlePaths.has(articlePath)) {
           checkedArticlePaths.add(articlePath);
-          const article = deps.articleCache?.get(articlePath);
-          if (article) {
-            const tc = checkTraditionalChinese(article.rawContent);
-            for (const v of tc.violations) {
-              violations.push({
-                rule: "traditional-chinese",
-                severity: "error",
-                track,
-                sessionIndex,
-                subject: article.meta.id,
-                message: v.message,
-              });
-            }
-            const bodyChars = countConceptBodyChars(article.conceptBody);
-            if (bodyChars > CONCEPT_BODY_MAX_CHARS) {
-              violations.push({
-                rule: "concept-body-too-long",
-                severity: "error",
-                track,
-                sessionIndex,
-                subject: article.meta.id,
-                message: `觀念本體約 ${bodyChars} 字，超過上限 ${CONCEPT_BODY_MAX_CHARS} 字（§10.3）`,
-              });
-            }
+          // MUST NOT 直接讀 `deps.articleCache?.get()`：`articleCache` 是**可選**相依，缺席時
+          // 這兩項教材檢查會被無聲跳過、不回報任何違規——守門點在可選相依缺席時默默放行。
+          // 一律走 Compiler 同一顆 readArticleCached（有快取就命中、沒有就當場解析）。
+          let article;
+          try {
+            article = readArticleCached(articlePath, lesson.concept.id, deps);
+          } catch (err) {
+            violations.push({
+              rule: "compile-error",
+              severity: "error",
+              track,
+              sessionIndex,
+              subject: lesson.concept.id,
+              message: `教材無法載入以進行內容檢查：${(err as Error).message}`,
+            });
+            continue;
+          }
+
+          const tc = checkTraditionalChinese(article.rawContent);
+          for (const v of tc.violations) {
+            violations.push({
+              rule: "traditional-chinese",
+              severity: "error",
+              track,
+              sessionIndex,
+              subject: article.meta.id,
+              message: v.message,
+            });
+          }
+          const bodyChars = countConceptBodyChars(article.conceptBody);
+          if (bodyChars > CONCEPT_BODY_MAX_CHARS) {
+            violations.push({
+              rule: "concept-body-too-long",
+              severity: "error",
+              track,
+              sessionIndex,
+              subject: article.meta.id,
+              message: `觀念本體約 ${bodyChars} 字，超過上限 ${CONCEPT_BODY_MAX_CHARS} 字（§10.3）`,
+            });
           }
         }
       }

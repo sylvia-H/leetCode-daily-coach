@@ -7,6 +7,7 @@ import {
   emptyManifest,
   hashContent,
   loadManifest,
+  readManifestFile,
   rebuildManifest,
   saveManifest,
   shouldSkip,
@@ -108,6 +109,41 @@ describe("checkpoint（scripts/lib/checkpoint.ts，R4 / FR-019/020）", () => {
       const manifest = upsertConcept(emptyManifest(), "array-traversal", frozenEntry(hash));
       saveManifest(manifest, path);
       expect(loadManifest(path)).toEqual(manifest);
+    });
+  });
+
+  // 損毀與遺失 MUST 可被呼叫端區分於「可用但為空」：三者都回空 manifest 的話，Stage 2 會把已凍結
+  // Article 全部重生覆蓋（FR-019/020）。
+  describe("readManifestFile（區分「不可用」與「可用但空」）", () => {
+    let dir: string;
+    afterEach(() => {
+      if (dir) rmSync(dir, { recursive: true, force: true });
+    });
+
+    it("檔案不存在 → undefined", () => {
+      dir = mkdtempSync(join(tmpdir(), "checkpoint-test-"));
+      expect(readManifestFile(join(dir, "nonexistent.json"))).toBeUndefined();
+    });
+
+    it("檔案損毀（壞 JSON）→ undefined（呼叫端據此走 rebuildManifest，而非全量重生）", () => {
+      dir = mkdtempSync(join(tmpdir(), "checkpoint-test-"));
+      const path = join(dir, "manifest.json");
+      writeFileSync(path, '{ "version": 1, "concepts": { "a"', "utf-8");
+      expect(readManifestFile(path)).toBeUndefined();
+    });
+
+    it("形狀不符（concepts 非物件）→ undefined", () => {
+      dir = mkdtempSync(join(tmpdir(), "checkpoint-test-"));
+      const path = join(dir, "manifest.json");
+      writeFileSync(path, '{ "version": 1, "concepts": null }', "utf-8");
+      expect(readManifestFile(path)).toBeUndefined();
+    });
+
+    it("可用但沒有任何 entry → 回傳空 manifest 本身（非 undefined）", () => {
+      dir = mkdtempSync(join(tmpdir(), "checkpoint-test-"));
+      const path = join(dir, "manifest.json");
+      saveManifest(emptyManifest(), path);
+      expect(readManifestFile(path)).toEqual(emptyManifest());
     });
   });
 });

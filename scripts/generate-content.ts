@@ -14,9 +14,8 @@ import { checkTraditionalChinese } from "../src/compiler/traditional-chinese.js"
 import { parseArticle } from "../src/compiler/content.js";
 import type { ConceptNode } from "../src/types/curriculum.js";
 import {
-  DEFAULT_MANIFEST_PATH,
   hashContent,
-  loadManifest,
+  readManifestFile,
   rebuildManifest,
   saveManifest,
   shouldSkip,
@@ -24,7 +23,11 @@ import {
   type Manifest,
 } from "./lib/checkpoint.js";
 import { createLlmClient, type LlmClient } from "./lib/llm-client.js";
-import { buildStage2Prompt, type DraftArticleResponse } from "./lib/prompts/stage2-content.js";
+import {
+  buildStage2Prompt,
+  type DraftArticleResponse,
+  type DraftChallengeEntry,
+} from "./lib/prompts/stage2-content.js";
 import { buildSelfCheckPrompt, type SelfCheckResponse } from "./lib/prompts/self-check.js";
 import { checkCodeBlocks, createRealExecutor, extractCodeBlocks } from "./run-code-blocks.js";
 
@@ -43,23 +46,75 @@ export interface SkeletonFrontmatterForArticle {
   leetcode: number[];
 }
 
-/** 剝除 ``` fence 後解析為 DraftArticleResponse；形狀不符即具名 throw。 */
-export function parseDraftArticleResponse(raw: string): DraftArticleResponse {
-  const cleaned = raw
+/** 剝除 LLM 回應可能夾帶的 ``` fence 後取 JSON 字面（Stage 2 各處共用）。 */
+function stripJsonFence(raw: string): string {
+  return raw
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/```\s*$/, "")
     .trim();
+}
+
+/** DraftArticleResponse 中每個 MUST 為非空字串的區塊欄位（結構欄位不在此，一律由 Skeleton 帶入）。 */
+const REQUIRED_ARTICLE_TEXT_FIELDS = [
+  "concept",
+  "thinking",
+  "patternRecognition",
+  "commonMistakes",
+  "complexity",
+  "tsCorner",
+  "pyCorner",
+  "tomorrowPreview",
+  "digest",
+  "tsTip",
+  "pyTip",
+  "takeaway",
+] as const satisfies readonly (keyof DraftArticleResponse)[];
+
+/**
+ * 剝除 ``` fence 後解析為 DraftArticleResponse；形狀不符即具名 throw（由 generateOneConcept 接住、
+ * 算成一次重生）。
+ *
+ * 逐欄驗證（而非只驗 challenge 後整包 cast）是必要的：`assembleArticleMarkdown` 會把欄位直接
+ * 字串插值進文章，缺欄位時插進去的是字面字串 `undefined`——`requireSection` 找得到區塊、字數與
+ * 繁中判準也全部放行，最後真的會推上 Discord。與 Stage 1 `normalizeDraftConcept` 的 fail loud
+ * 標準一致。
+ */
+export function parseDraftArticleResponse(raw: string): DraftArticleResponse {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = JSON.parse(stripJsonFence(raw));
   } catch (err) {
     throw new Error(`stage2-parse-error：LLM 回應非合法 JSON：${(err as Error).message}`);
   }
-  const obj = parsed as Partial<DraftArticleResponse>;
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new Error("stage2-parse-error：LLM 回應不是 JSON 物件");
+  }
+  const obj = parsed as Partial<DraftArticleResponse> & Record<string, unknown>;
+
+  const missing = REQUIRED_ARTICLE_TEXT_FIELDS.filter(
+    (field) => typeof obj[field] !== "string" || (obj[field] as string).trim() === "",
+  );
+  if (missing.length > 0) {
+    throw new Error(`stage2-parse-error：LLM 回應缺少必要區塊欄位（或為空字串）：${missing.join(", ")}`);
+  }
+
   if (!Array.isArray(obj.challenge)) {
     throw new Error("stage2-parse-error：LLM 回應缺少 challenge 陣列");
   }
+  obj.challenge.forEach((entry, i) => {
+    const e = entry as Partial<DraftChallengeEntry> | null;
+    if (typeof e?.id !== "number" || !Number.isInteger(e.id)) {
+      throw new Error(`stage2-parse-error：challenge 第 ${i + 1} 筆的 id 不是整數：${JSON.stringify(entry)}`);
+    }
+    if (typeof e.whyThisPattern !== "string" || e.whyThisPattern.trim() === "") {
+      throw new Error(`stage2-parse-error：challenge 第 ${i + 1} 筆（題號 ${e.id}）缺少 whyThisPattern`);
+    }
+    if (e.hint !== undefined && typeof e.hint !== "string") {
+      throw new Error(`stage2-parse-error：challenge 第 ${i + 1} 筆（題號 ${e.id}）的 hint 不是字串`);
+    }
+  });
+
   return obj as DraftArticleResponse;
 }
 
@@ -229,6 +284,31 @@ async function runPerArticleGate(
   return undefined;
 }
 
+/**
+ * 剝除 ``` fence 後解析 self-check 回應；形狀不符即具名 throw。
+ *
+ * 不可對 `JSON.parse` 的結果直接 cast 後取 `response.issues.length`：LLM 回非 JSON、或回了 JSON
+ * 但漏掉 `issues`，都會在此炸出例外；`runSelfCheck` 又是整批產線迴圈裡的一次呼叫，未接住就是整批
+ * Stage 2 以 unhandled rejection 中止（連批次末 Gate 都不會跑到）。解析失敗語意上等同「這次審稿
+ * 不可信」，應算成一次重生，而非讓產線死掉。
+ */
+export function parseSelfCheckResponse(raw: string): SelfCheckResponse {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stripJsonFence(raw));
+  } catch (err) {
+    throw new Error(`self-check-parse-error：LLM 回應非合法 JSON：${(err as Error).message}`);
+  }
+  const obj = parsed as Partial<SelfCheckResponse> | null;
+  if (typeof obj !== "object" || obj === null || typeof obj.confident !== "boolean") {
+    throw new Error("self-check-parse-error：LLM 回應缺少布林欄位 confident");
+  }
+  if (!Array.isArray(obj.issues) || obj.issues.some((i) => typeof i !== "string")) {
+    throw new Error("self-check-parse-error：LLM 回應缺少字串陣列欄位 issues");
+  }
+  return { confident: obj.confident, issues: obj.issues };
+}
+
 async function runSelfCheck(llmClient: LlmClient, node: ConceptNode, markdown: string): Promise<GateFailure | undefined> {
   const prompt = buildSelfCheckPrompt({
     conceptId: node.id,
@@ -237,13 +317,15 @@ async function runSelfCheck(llmClient: LlmClient, node: ConceptNode, markdown: s
     complexityLabel: node.complexityLabel,
     articleMarkdown: markdown,
   });
-  const raw = await llmClient.generate(prompt);
-  const cleaned = raw
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/```\s*$/, "")
-    .trim();
-  const response = JSON.parse(cleaned) as SelfCheckResponse;
+
+  let response: SelfCheckResponse;
+  try {
+    response = parseSelfCheckResponse(await llmClient.generate(prompt));
+  } catch (err) {
+    // LLM 呼叫本身失敗（額度耗盡、網路）或回應形狀不符：一律降級為一次 Gate 失敗，交給重生迴圈。
+    return { reason: `self-check：${(err as Error).message}` };
+  }
+
   if (!response.confident || response.issues.length > 0) {
     return { reason: `self-check：${response.issues.join("; ") || "低信心"}` };
   }
@@ -330,17 +412,19 @@ async function main(): Promise<void> {
 
   const { graph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
 
-  // manifest 遺失（.cache/ 為 gitignored 快取，換機器/清快取後即不存在）：由掃描現存
-  // concepts/** + articles/** 重建，避免把已凍結產物誤判為缺漏而重工（R4、FR-019/020）。
-  let manifest: Manifest = existsSync(DEFAULT_MANIFEST_PATH)
-    ? loadManifest()
-    : rebuildManifest(
-        [...graph.concepts.values()].map((node) => ({
-          conceptId: node.id,
-          skeletonContent: readFileSync(node.skeletonPath, "utf-8"),
-          productExists: existsSync(node.articlePath),
-        })),
-      );
+  // manifest 遺失（.cache/ 為 gitignored 快取，換機器/清快取後即不存在）**或損毀**（寫入中途被
+  // 打斷留下半截 JSON）：兩者都由掃描現存 concepts/** + articles/** 重建，避免把已凍結產物誤判為
+  // 缺漏而重工（R4、FR-019/020）。此處 MUST 用 readManifestFile 而非 loadManifest——後者把損毀
+  // 一併降級為空 manifest，會讓全部已凍結 Article 被重新生成並覆蓋。
+  let manifest: Manifest =
+    readManifestFile() ??
+    rebuildManifest(
+      [...graph.concepts.values()].map((node) => ({
+        conceptId: node.id,
+        skeletonContent: readFileSync(node.skeletonPath, "utf-8"),
+        productExists: existsSync(node.articlePath),
+      })),
+    );
   let anyNeedsHumanReview = false;
 
   for (const node of graph.concepts.values()) {

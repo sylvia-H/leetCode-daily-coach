@@ -189,7 +189,12 @@ export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDe
   return deps;
 }
 
-function readArticleCached(articlePath: string, conceptId: string, deps: CompilerDeps): ArticleContent {
+/**
+ * 取得（並在有快取時填充快取）某 Concept 的 Article。匯出供 Gate 重用同一顆解析路徑：
+ * `articleCache` 是**可選**相依，Gate 若改以 `deps.articleCache?.get()` 自行取用，快取缺席時
+ * 會無聲跳過教材檢查（守門點在可選相依缺席時默默放行）——一律走這裡就沒有這條漏縫（憲章 IX）。
+ */
+export function readArticleCached(articlePath: string, conceptId: string, deps: CompilerDeps): ArticleContent {
   const cached = deps.articleCache?.get(articlePath);
   if (cached) {
     // 快取以 articlePath 為鍵，故命中時 parseArticle 的 article-id-mismatch 檢查不會執行。
