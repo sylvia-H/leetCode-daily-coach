@@ -122,8 +122,9 @@ US5（CI）為 P2。
 
 **Independent Test**: 連跑兩次生成器 → `git diff schedules/` 無差異；三份課表通過拓樸子序列驗證、~180 Session
 
-- [ ] T031 [US3] 更新 [curriculum/track-params.json](../../curriculum/track-params.json)：三軌 `maxLevel` 由 `1` → `15`（全量涵蓋）；`problemDifficulties`/`challengeDifficulty`/`rhythm` 維持三軌分歧（R11、FR-014）　**⚠️ 待 T021 完成後執行**：現行 DAG 只有 5 個 stub Concept，提前調高 `maxLevel` 無意義且可能誤導其他測試
-- [ ] T032 [US3] 執行 [scripts/generate-schedule.ts](../../scripts/generate-schedule.ts) 對凍結 DAG 產 `schedules/{track}.json` × 3；驗證兩次執行 byte-identical、通過生成器內建拓樸子序列/`reviewRange`/參照驗證、長度 ~180 Session（FR-014/015、SC-008）　**⚠️ 待手動執行**（依賴 T021/T030 真實內容）
+- [x] T031 [US3] 更新 [curriculum/track-params.json](../../curriculum/track-params.json)：`problemDifficulties`/`challengeDifficulty`/`rhythm`/`maxLevel` 三軌分歧（R11、FR-014）　**已於 2026-07-31 定案**（原描述「三軌 `maxLevel` 一律 → 15」經實測**否決**：三軌若同為 15，課表的 Concept 序一字不差，§322「涵蓋深度不同」等同失效）。定案值見 spec §13.5：Foundation 9 / InterviewReady 12 / InterviewMastery 15，搭配節奏與難度帶差異。另**放寬 Foundation 的 `problemDifficulties` 為 `Easy+Medium`**——Easy-only 實測有 60% 的 concept Session 無題可練（LeetCode 上 backtracking/heap/graph/DP 等主題不存在 Easy 題）
+- [x] T032 [US3] 執行 [scripts/generate-schedule.ts](../../scripts/generate-schedule.ts) 對凍結 DAG 產 `schedules/{track}.json` × 3；驗證兩次執行 byte-identical、通過生成器內建拓樸子序列/`reviewRange`/參照驗證（FR-014/015、SC-008）　**已於 2026-07-31 完成**：243 / 236 / 291 Session，byte-identical 已驗證，零 error 違規。原驗收條件「長度 ~180 Session」**經實測否決並修訂 spec**——165 個 Concept 在「每週 3 個 concept 槽」的節奏下必然攤成 385 個 Session，與「150+ Concept」數學上不相容；課表長度已改為導出值（spec §13.5），MUST NOT 寫死
+- [x] T031a [US3] **前置修補**：執行補題 pass（[scripts/supplement-problems.ts](../../scripts/supplement-problems.ts)）補齊 Concept 的跨難度帶候選題　**已於 2026-07-31 完成**：51 筆寫入 47 個 Concept（11 筆因難度帶標示不符被驗證退回）。**MUST 在 T030 之前執行**——`leetcode` 一改則 Skeleton hash 改變，Stage 2 會判定該篇需重生
 - [ ] T033 [US3] commit 三份課表取代 F4 種子；若 Session 數顯著偏離 ~180，經 track-params 節奏參數微調後**重跑生成器**（MUST NOT 手改產物）再 commit（R11 note）　**⚠️ 待手動執行**
 
 **Checkpoint**: 三份正式課表凍結，觸發 F6 完課狀態自動解除（FR-022b）
