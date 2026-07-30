@@ -62,6 +62,12 @@ describe("hasAssertion（缺斷言判準，R6）", () => {
   it("TypeScript：無 throw/assert → 不通過", () => {
     expect(hasAssertion("typescript", "const x = 1 + 1; console.log(x);")).toBe(false);
   });
+  it("TypeScript：只有 console.assert → 不通過（Node 下不 throw、exit 0，不算有效斷言）", () => {
+    expect(hasAssertion("typescript", "const x = 1 + 1;\nconsole.assert(x === 3, 'boom');")).toBe(false);
+  });
+  it("TypeScript：裸 assert( 呼叫 → 通過", () => {
+    expect(hasAssertion("typescript", "assert(1 + 1 === 2);")).toBe(true);
+  });
   it("Python：含 assert → 通過", () => {
     expect(hasAssertion("python", "assert 1 + 1 == 2")).toBe(true);
   });

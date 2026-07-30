@@ -5,6 +5,7 @@
 // （外部呼叫以 mock 測，教材程式碼實測只在 Gate/CI 跑）。
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import matter from "gray-matter";
@@ -44,9 +45,17 @@ export function extractCodeBlocks(articleMarkdown: string): CodeBlock[] {
   return blocks;
 }
 
-/** 缺斷言即失敗判準（R6）：TS 認 `throw` 或 `node:assert`；Python 認 `assert`。 */
+/**
+ * 缺斷言即失敗判準（R6）：TS 認 `throw` 或 `node:assert`；Python 認 `assert`。
+ *
+ * `assert(` 前的 `(?<![.\w])` 是刻意的：`console.assert(false, …)` 在 Node **不會 throw**、程序仍以
+ * exit 0 結束（本 repo 實測），若把它算成有效斷言，斷言為假的錯誤教材程式碼會直接通過關卡 3。
+ * 同理排除 `foo.assert(` / `myassert(` 這類名稱相近但語意不明的呼叫。
+ */
 export function hasAssertion(lang: CodeLang, code: string): boolean {
-  if (lang === "typescript") return /\bthrow\b/.test(code) || /\bnode:assert\b/.test(code) || /\bassert\(/.test(code);
+  if (lang === "typescript") {
+    return /\bthrow\b/.test(code) || /\bnode:assert\b/.test(code) || /(?<![.\w])assert\(/.test(code);
+  }
   return /\bassert\b/.test(code);
 }
 
@@ -116,6 +125,15 @@ function runCommand(command: string, args: string[]): ExecResult {
   }
 }
 
+// MUST NOT 透過 `npx` 呼叫 tsc/tsx：`npx` 在 Windows 實際上是 `npx.cmd`，`execFileSync` 未帶
+// `shell: true` 會直接 ENOENT（本 repo 實測），而本專案宣告的主要環境就是 Windows；一旦 ENOENT，
+// 每個 TypeScript 區塊都會被誤判為 `execution-failed`，Stage 2 白燒重生額度、`gate:code` 恆綠不了。
+// 改為以 `process.execPath`（node 本身，跨平台皆為真正的執行檔）直接跑 node_modules 內已安裝的
+// 進入點：不經 shell、無引號跳脫問題、也不會在 CI 觸發額外的套件下載。
+const require_ = createRequire(import.meta.url);
+const TSC_ENTRY = require_.resolve("typescript/bin/tsc");
+const TSX_ENTRY = require_.resolve("tsx/cli");
+
 /** 真實 executor：TS 以 `tsc --noEmit --strict` 型別檢查 + `tsx` 執行；Python 以 `python` 執行。 */
 export function createRealExecutor(): CodeExecutor {
   return {
@@ -123,9 +141,9 @@ export function createRealExecutor(): CodeExecutor {
       return withTempDir("f7-code-block-ts-", (dir) => {
         const file = join(dir, "snippet.ts");
         writeFileSync(file, code, "utf-8");
-        const typeCheck = runCommand("npx", ["--yes", "tsc", "--noEmit", "--strict", file]);
+        const typeCheck = runCommand(process.execPath, [TSC_ENTRY, "--noEmit", "--strict", file]);
         if (!typeCheck.ok) return typeCheck;
-        return runCommand("npx", ["--yes", "tsx", file]);
+        return runCommand(process.execPath, [TSX_ENTRY, file]);
       });
     },
     async runPython(code: string): Promise<ExecResult> {
