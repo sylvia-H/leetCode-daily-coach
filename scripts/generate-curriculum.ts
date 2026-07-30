@@ -1,7 +1,7 @@
 // F7 Stage 1 入口（contracts/stage1-curriculum.md）：LLM 批次起草 Skeleton → populate-problem-bank
 // → 結構 Gate（重用 F2，全量模式）→ 產 curriculum/outline.md。process.exit / 檔案寫入 / LLM 呼叫
 // 只在本檔與 scripts/lib/；純函式（parseDraftResponse/conceptToMarkdown）供單測，其餘為 I/O 邊界。
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import matter from "gray-matter";
 import { loadCurriculum, stripLeadingComment, validateCurriculum } from "../src/compiler/curriculum.js";
@@ -200,6 +200,36 @@ function listExistingConceptFiles(dir: string): string[] {
     .sort();
 }
 
+/**
+ * 讀出某 Topic 目錄下既有 Skeleton 的 concept id（frontmatter 的 `id`；讀不動的殘檔退回以
+ * 檔名 `NNN-slug.md` 推得的 slug）。只讀不刪，供「起草前先把它們排除在 prior 之外、起草成功後
+ * 才真的刪除」兩個時機共用同一份清單。
+ */
+function readTopicConceptIds(dir: string): string[] {
+  return listExistingConceptFiles(dir).map((fname) => {
+    try {
+      const { data } = matter(stripLeadingComment(readFileSync(join(dir, fname), "utf-8")));
+      if (typeof data.id === "string") return data.id;
+    } catch {
+      // 忽略：frontmatter 讀不動的殘檔照樣要納入清單（等一下要刪掉），id 退回檔名推得。
+    }
+    return fname.replace(/^\d+-/, "").replace(/\.md$/, "");
+  });
+}
+
+/**
+ * 重新起草某 Topic 前清空該 Topic 目錄下的既有 Skeleton（replace 語意，不是 append）。
+ *
+ * 為何 MUST 清空：起草一律從 001 重新編號，若不先刪除，
+ * (a) 新草稿篇數較少時，舊的高編號檔會殘留在 graph 裡，帶著已不存在的 id 造成 dangling-ref；
+ * (b) 舊檔 slug 與新檔不同時會變成沒有任何人指向的孤兒 Concept；
+ * (c) `--only` 若改以 `existingFiles.length + 1` 續編號，同一 Topic 的 Concept 數量會默默翻倍。
+ * 三者都要整輪跑完才在結構 Gate 爆出來，白費一輪 LLM 額度。
+ */
+function clearTopicConcepts(dir: string): void {
+  for (const fname of listExistingConceptFiles(dir)) rmSync(join(dir, fname));
+}
+
 function readJson<T>(path: string, fallback: T): T {
   return existsSync(path) ? (JSON.parse(readFileSync(path, "utf-8")) as T) : fallback;
 }
@@ -383,11 +413,28 @@ async function main(): Promise<void> {
   }
   const modulesFile = JSON.parse(readFileSync(MODULES_PATH, "utf-8")) as ModulesFile;
 
-  // 種子（seed：以既存 concept 的宣告序位置初始化 known，而非從空 Map 開始）：若目錄下已有既存
-  // Concept（F2 stub 種子，或前次部分執行留下的產物），LLM 完全不知道它們存在，會把自己起草的
-  // 第一篇當成整個 Topic 的起點（prerequisite 留空），使新篇與既存篇斷鏈，被結構 Gate 判定孤兒
-  // ——實測 --only programming-mindset 已踩到這個情境。記錄宣告序位置供 filterPriorConceptIds
+  // Stage 1 的 --only 比對的是 **Topic id**（起草最小單位是一個 Topic），Stage 2 才是 Concept id。
+  // 填錯（例如照著混淆的說明填了 Concept id）時若不擋，會一個 Topic 都不起草卻仍改寫 outline.md、
+  // 印「✓ Stage 1 完成」並 exit 0——workflow 綠燈但什麼也沒做，是最難察覺的失敗模式。
+  if (only) {
+    const topicIds = new Set(modulesFile.modules.flatMap((m) => m.topics.map((t) => t.id)));
+    const unknown = [...only].filter((id) => !topicIds.has(id));
+    if (unknown.length > 0) {
+      console.error(
+        `✗ --only 指定了不存在的 Topic id：${unknown.join(", ")}（Stage 1 比對 ${MODULES_PATH} 的 topics[].id，非 Concept id）`,
+      );
+      process.exit(1);
+      return;
+    }
+  }
+
+  // 種子（seed：以既存 concept 的宣告序位置初始化 known，而非從空 Map 開始）：若**其他 Topic**
+  // 已有既存 Concept（F2 stub 種子，或前次執行留下的產物），LLM 完全不知道它們存在，會把自己
+  // 起草的第一篇當成整條課綱的起點（prerequisite 留空），使新篇與既存篇斷鏈，被結構 Gate 判定
+  // 孤兒——實測 --only programming-mindset 已踩到這個情境。記錄宣告序位置供 filterPriorConceptIds
   // 排除宣告序更晚的 Module/Topic，避免另一個實測踩到的 forward-dependency。
+  // 注意：**本次要重新起草的 Topic 自己的既存 Concept 不算 prior**（replace 語意下它們會被刪除），
+  // 由迴圈內的 readTopicConceptIds + known.delete 在起草前先剔除。
   const known = new Map<string, KnownConceptPosition>();
   {
     const { graph: existingGraph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
@@ -406,6 +453,12 @@ async function main(): Promise<void> {
       const shouldDraft = only ? only.has(topic.id) : force || existingFiles.length === 0;
       if (!shouldDraft) continue;
 
+      // replace 語意下，本 Topic 的既有 Skeleton 起草成功後就會被整批刪除，故 MUST 先從 known
+      // 移除，否則它們會以 prior 身分餵給 LLM（誘導新篇把即將消失的 id 列為 prerequisite），
+      // 也會殘留成後續 Topic 眼中的合法 prerequisite，整輪跑完才在結構 Gate 爆 dangling-ref。
+      const staleIds = readTopicConceptIds(dir);
+      for (const id of staleIds) known.delete(id);
+
       const priorConceptIds = filterPriorConceptIds(known, moduleIndex, topicIndex);
 
       let concepts: DraftConcept[];
@@ -417,10 +470,11 @@ async function main(): Promise<void> {
         return;
       }
 
+      // 起草成功後才動既有檔案：失敗已在上面 exit，不會留下被清空的目錄。
       mkdirSync(dir, { recursive: true });
-      const startOrder = force ? 1 : existingFiles.length + 1;
+      clearTopicConcepts(dir);
       concepts.forEach((concept, i) => {
-        const nnn = String(startOrder + i).padStart(3, "0");
+        const nnn = String(i + 1).padStart(3, "0");
         writeFileSync(join(dir, `${nnn}-${concept.slug}.md`), conceptToMarkdown(concept, module.id, topic.id), "utf-8");
         known.set(concept.slug, { moduleIndex, topicIndex });
       });
@@ -449,11 +503,18 @@ async function main(): Promise<void> {
   const bank = readJson<ProblemBankFile>(BANK_PATH, {});
   const index = readJson<LeetcodeIndex>(INDEX_PATH, {});
   const idsToResolve = [...byId.keys()].filter((id) => !bank[String(id)]);
-  const { index: updatedIndex, resolved, violations: resolveViolations } = await resolveMetadata(
-    idsToResolve,
-    index,
-    fetchLeetCodeMetadata,
-  );
+  // fetchLeetCodeMetadata 在 HTTP 非 2xx 時 throw（網路中斷、LeetCode 改版/限流）；未接住的話
+  // 整支腳本會以 unhandled rejection 收場，與 main() 其餘「印 ✗ + exit 1」的 fail-loud 慣例不一致
+  // （憲章 XII），也讓使用者看不出是產線邏輯錯還是外部 API 掛掉。
+  let resolveResult: Awaited<ReturnType<typeof resolveMetadata>>;
+  try {
+    resolveResult = await resolveMetadata(idsToResolve, index, fetchLeetCodeMetadata);
+  } catch (err) {
+    console.error(`✗ 題目 metadata 解析失敗（LeetCode API 不可用）：${(err as Error).message}`);
+    process.exit(1);
+    return;
+  }
+  const { index: updatedIndex, resolved, violations: resolveViolations } = resolveResult;
   if (resolveViolations.length > 0) {
     for (const v of resolveViolations) console.error(`✗ [${v.rule}] ${v.message}`);
     process.exit(1);

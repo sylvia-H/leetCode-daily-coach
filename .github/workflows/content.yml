@@ -18,7 +18,10 @@ on:
         type: boolean
         default: false
       only:
-        description: "只處理指定 Concept id（逗號分隔，留空 = 全部）"
+        # 兩個 stage 的比對單位不同，填錯不會報錯、只會「一個都沒處理」卻仍 exit 0（綠燈但空跑）：
+        # curriculum（Stage 1）比對 curriculum/modules.json 的 topics[].id；
+        # content（Stage 2）比對 Skeleton frontmatter 的 Concept id。
+        description: "只處理指定項目，逗號分隔，留空 = 全部（stage=curriculum 填 Topic id；stage=content 填 Concept id）"
         type: string
         default: ""
 

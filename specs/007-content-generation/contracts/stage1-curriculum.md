@@ -5,8 +5,12 @@
 ## 1. 呼叫
 
 ```
-npm run generate:curriculum -- [--force] [--only <conceptId,...>]
+npm run generate:curriculum -- [--force] [--only <topicId,...>]
 ```
+
+`--only` 的比對單位是 **Topic id**（`curriculum/modules.json` 的 `topics[].id`），不是 Concept id：
+Stage 1 的起草最小單位就是一個 Topic（一次 LLM 呼叫產出該 Topic 的全部 Concept）。Stage 2
+（`generate:content`）的 `--only` 才是 Concept id。
 
 **環境變數**：`GEMINI_API_KEY`（必要，缺 ⇒ 建構期 fail-fast，exit 1）、`RPM_LIMIT`（可選，預設 10）。
 
@@ -20,7 +24,11 @@ npm run generate:curriculum -- [--force] [--only <conceptId,...>]
 
 1. 建構 `LlmClient`（模型 `gemini-3.5-flash-lite`；節流/退避見 R3）。缺金鑰即 exit 1。
 2. 對每個 Module/Topic 批次起草 Concept：frontmatter（`leetcode` **只候選題號**）+ Author Hints。
-   - 冪等：Skeleton 已存在且結構 Gate 通過的 Concept 跳過（除非 `--force`；`--only` 限定範圍）。
+   - 冪等：已有 Skeleton 的 Topic 跳過（除非 `--force`；`--only` 限定範圍）。
+   - 重新起草某 Topic（`--force` / `--only` 命中）為 **replace 語意**：MUST 先清空該 Topic 目錄下
+     既有的 `*.md` 再從 `001` 重新編號，MUST NOT 續編號附加——否則篇數翻倍、或舊的高編號檔殘留
+     成 dangling-ref / 孤兒 Concept。被清除的 Concept id MUST 同步排除於後續 Topic 的
+     `priorConceptIds` 之外。
 3. 呼叫 `populate-problem-bank.ts` 流程驗證候選題號並填入 metadata（見對應契約）。
 4. **結構 Gate**（重用 F2 `src/compiler/curriculum.ts` + `schema.ts`）：
    - DAG：無環、無前向依賴、無孤兒（合法起點除外）、`prerequisite`/`next` 雙向一致、參照完整。
