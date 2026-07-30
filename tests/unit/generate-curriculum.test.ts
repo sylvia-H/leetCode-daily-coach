@@ -13,6 +13,7 @@ import {
   ordinalIsBefore,
   parseDraftResponse,
   patchConceptEdgeField,
+  pruneStaleEdges,
   repairReciprocalEdges,
   type KnownConceptPosition,
 } from "../../scripts/generate-curriculum.js";
@@ -51,6 +52,14 @@ function sampleDraft(overrides: Partial<DraftConcept> = {}): DraftConcept {
   };
 }
 
+/**
+ * 產生 n 篇 slug 互異的合法草稿。draftTopic 對「篇數 < TOPIC_MIN_CONCEPTS(10)」會 throw 觸發重試，
+ * 故凡是走完整 draftTopic 路徑的測試都 MUST 餵滿 10 篇，否則測到的是篇數守門而非該測試的意圖。
+ */
+function sampleDrafts(n: number): DraftConcept[] {
+  return Array.from({ length: n }, (_, i) => sampleDraft({ slug: `array-concept-${i + 1}`, next: [] }));
+}
+
 describe("parseDraftResponse（Stage 1 LLM 回應解析）", () => {
   it("解析合法 JSON（含 concepts 陣列）", () => {
     const raw = JSON.stringify({ concepts: [sampleDraft()] });
@@ -79,7 +88,7 @@ describe("draftTopicWithRetry（同 Topic 內重試，實測「string」Topic �
   }
 
   it("第一次就成功 → 不重試，回傳 concepts", async () => {
-    const validRaw = JSON.stringify({ concepts: [sampleDraft()] });
+    const validRaw = JSON.stringify({ concepts: sampleDrafts(10) });
     let calls = 0;
     const llmClient = createLlmClient(
       { GEMINI_API_KEY: "key" },
@@ -95,13 +104,13 @@ describe("draftTopicWithRetry（同 Topic 內重試，實測「string」Topic �
 
     const result = await draftTopicWithRetry(llmClient, "array", "Array", "array", "Array", []);
 
-    expect(result.concepts).toHaveLength(1);
+    expect(result.concepts).toHaveLength(10);
     expect(result.error).toBeUndefined();
     expect(calls).toBe(1);
   });
 
   it("前兩次回應是壞掉的 JSON，第三次才合法 → 重試後成功（同一 Topic 內解決，不需整批重跑）", async () => {
-    const validRaw = JSON.stringify({ concepts: [sampleDraft()] });
+    const validRaw = JSON.stringify({ concepts: sampleDrafts(10) });
     let calls = 0;
     const llmClient = createLlmClient(
       { GEMINI_API_KEY: "key" },
@@ -117,8 +126,151 @@ describe("draftTopicWithRetry（同 Topic 內重試，實測「string」Topic �
 
     const result = await draftTopicWithRetry(llmClient, "array", "Array", "array", "Array", []);
 
-    expect(result.concepts).toHaveLength(1);
+    expect(result.concepts).toHaveLength(10);
     expect(calls).toBe(3);
+  });
+
+  it("啟用結構化輸出：每次起草皆帶上 responseSchema（difficulty enum 由 API 層強制）", async () => {
+    const calls: { config?: { responseMimeType: string; responseSchema: unknown } }[] = [];
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async (args) => {
+            calls.push(args);
+            return { text: JSON.stringify({ concepts: sampleDrafts(10) }) };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    await draftTopicWithRetry(llmClient, "array", "Array", "array", "Array", []);
+
+    const schema = calls[0]?.config?.responseSchema as {
+      properties: { concepts: { items: { properties: { difficulty: { enum: string[] } } } } };
+    };
+    expect(calls[0]?.config?.responseMimeType).toBe("application/json");
+    expect(schema.properties.concepts.items.properties.difficulty.enum).toEqual(["easy", "medium"]);
+  });
+
+  it("concepts 陣列 MUST NOT 帶 minItems/maxItems（實測會讓 API 整包 400 INVALID_ARGUMENT）", async () => {
+    // 迴歸測試：曾對 concepts 加 minItems 以求 API 層強制 10 篇，導致每個 Topic 每次呼叫都被拒收。
+    // 簡單陣列（leetcode_candidates: INTEGER）的 maxItems 實測可用，故 MUST 保留。
+    const calls: { config?: { responseSchema: unknown } }[] = [];
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async (args) => {
+            calls.push(args);
+            return { text: JSON.stringify({ concepts: sampleDrafts(10) }) };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    await draftTopicWithRetry(llmClient, "array", "Array", "array", "Array", []);
+
+    const concepts = (
+      calls[0]?.config?.responseSchema as {
+        properties: { concepts: Record<string, unknown> & { items: { properties: Record<string, unknown> } } };
+      }
+    ).properties.concepts;
+    expect(concepts).not.toHaveProperty("minItems");
+    expect(concepts).not.toHaveProperty("maxItems");
+    expect(concepts.items.properties.leetcode_candidates).toMatchObject({ maxItems: "3" });
+  });
+
+  it("prompt MUST 告知「前面已教過的題號」（否則後面 Module 無從得知而必然重複選題）", async () => {
+    // 實測：two-pointer 模組把 26/27/283/344 又教一次（題 27 全課綱被教 4 次），因為 array 模組
+    // 早就用過那批題，但起草 two-pointer 時完全看不到這個事實。
+    const prompts: string[] = [];
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async (args) => {
+            prompts.push(args.contents);
+            return { text: JSON.stringify({ concepts: sampleDrafts(10) }) };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    await draftTopicWithRetry(
+      llmClient,
+      "two-pointer",
+      "Two Pointer",
+      "two-pointer",
+      "Two Pointer",
+      ["array-move-zeroes"],
+      [283, 27, 26],
+    );
+
+    expect(prompts[0]).toContain("已經教過的 LeetCode 題號");
+    // 排序後輸出，讓同一組題號不因來源順序而產生不同 prompt（利於重現與快取）
+    expect(prompts[0]).toContain("26, 27, 283");
+  });
+
+  it("重試時 MUST 把上次的失敗原因回饋進 prompt（否則只是重擲同一顆骰子）", async () => {
+    const prompts: string[] = [];
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async (args) => {
+            prompts.push(args.contents);
+            // 第一次只給 9 篇（系統性偏差），第二次補滿。
+            return { text: JSON.stringify({ concepts: sampleDrafts(prompts.length < 2 ? 9 : 10) }) };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    await draftTopicWithRetry(llmClient, "hash-table", "Hash Table", "hash-table", "Hash Table", []);
+
+    expect(prompts).toHaveLength(2);
+    expect(prompts[0]).not.toContain("上一次的產出不合格");
+    expect(prompts[1]).toContain("上一次的產出不合格");
+    expect(prompts[1]).toContain("stage1-granularity");
+    expect(prompts[1]).toContain("9");
+  });
+
+  it("篇數不足（9 < 下限 10）→ 立刻在該 Topic 內重試，MUST NOT 留到整批跑完才被結構 Gate 擋", async () => {
+    let calls = 0;
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async () => {
+            calls++;
+            // 前兩次只給 9 篇（實測最常見的失敗），第三次補滿 10 篇。
+            return { text: JSON.stringify({ concepts: sampleDrafts(calls < 3 ? 9 : 10) }) };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    const result = await draftTopicWithRetry(llmClient, "hash-table", "Hash Table", "hash-table", "Hash Table", []);
+
+    expect(result.concepts).toHaveLength(10);
+    expect(calls).toBe(3);
+  });
+
+  it("篇數始終不足 → 重試耗盡並回傳具名 stage1-granularity（單篇隔離，不 throw）", async () => {
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () => fakeGenAi(async () => ({ text: JSON.stringify({ concepts: sampleDrafts(9) }) })),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    const result = await draftTopicWithRetry(llmClient, "hash-table", "Hash Table", "hash-table", "Hash Table", []);
+
+    expect(result.concepts).toBeUndefined();
+    expect(result.error).toContain("stage1-granularity");
+    expect(result.error).toContain("9");
   });
 
   it("重試耗盡（MAX_DRAFT_ATTEMPTS 次皆失敗）→ 回傳 error，不 throw（供呼叫端單篇隔離）", async () => {
@@ -409,6 +561,69 @@ describe("repairReciprocalEdges（雙向邊補齊：實測全量跑 15 個 Topic
     expect(readConceptData(conceptsDir, "001", "concept-g").next).toEqual(["concept-h"]);
     expect(readConceptData(conceptsDir, "002", "concept-h").prerequisite).toEqual(["concept-g"]);
   });
+
+  describe("pruneStaleEdges（--only 重跑後清除指向已刪除 Concept 的殘留邊）", () => {
+    it("未被重新起草的 Topic：清除指向已不存在 Concept 的邊，有效的邊原樣保留", () => {
+      // 實測情境：--only two-pointer 重跑換了新 slug，array 模組檔案裡由 repairReciprocalEdges
+      // 當初反向補進去的 next 指向舊 slug，變成 dangling-ref 讓整輪無法定稿。
+      dir = mkdtempSync(join(tmpdir(), "prune-edges-test-"));
+      const modulesPath = join(dir, "modules.json");
+      const conceptsDir = join(dir, "concepts");
+      writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+      writeMinimalConcept(conceptsDir, "001", "concept-a", [], ["old-removed-concept", "concept-b"]);
+      writeMinimalConcept(conceptsDir, "002", "concept-b", ["old-removed-concept"], []);
+
+      // 本輪沒有重新起草 programming-mindset → 其殘留邊屬簿記殘渣，清除
+      pruneStaleEdges(modulesPath, conceptsDir, new Set());
+
+      expect(readConceptData(conceptsDir, "001", "concept-a").next).toEqual(["concept-b"]);
+      expect(readConceptData(conceptsDir, "002", "concept-b").prerequisite).toEqual([]);
+    });
+
+    it("清除的判準是「邊在誰的檔案裡」，而非「本輪刪了哪些 id」（殘留邊常源自更早的某一輪）", () => {
+      // 迴歸測試：初版以「本輪刪除的 id」為判準，實測完全無效——殘留邊指向的是**上一輪**
+      // 就已刪除的 slug，與本輪讀到的 stale id 完全對不上，同樣 3 個 dangling-ref 一字未變。
+      dir = mkdtempSync(join(tmpdir(), "prune-edges-test-"));
+      const modulesPath = join(dir, "modules.json");
+      const conceptsDir = join(dir, "concepts");
+      writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+      writeMinimalConcept(conceptsDir, "001", "concept-a", [], ["deleted-two-runs-ago"]);
+
+      pruneStaleEdges(modulesPath, conceptsDir, new Set());
+
+      expect(readConceptData(conceptsDir, "001", "concept-a").next).toEqual([]);
+    });
+
+    it("本輪重新起草的 Topic：MUST NOT 清除其 dangling 邊（可能是 LLM 幻想的 id，屬真實錯誤）", () => {
+      dir = mkdtempSync(join(tmpdir(), "prune-edges-test-"));
+      const modulesPath = join(dir, "modules.json");
+      const conceptsDir = join(dir, "concepts");
+      writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+      writeMinimalConcept(conceptsDir, "001", "concept-a", [], ["hallucinated-concept"]);
+
+      // programming-mindset 是本輪重新起草的 → 原樣保留，讓 Gate 報 dangling-ref
+      pruneStaleEdges(modulesPath, conceptsDir, new Set(["programming-mindset"]));
+
+      expect(readConceptData(conceptsDir, "001", "concept-a").next).toEqual(["hallucinated-concept"]);
+    });
+
+    it("指向仍存在的 Concept → 邊有效，MUST NOT 清除", () => {
+      dir = mkdtempSync(join(tmpdir(), "prune-edges-test-"));
+      const modulesPath = join(dir, "modules.json");
+      const conceptsDir = join(dir, "concepts");
+      writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+      writeMinimalConcept(conceptsDir, "001", "concept-a", [], ["concept-b"]);
+      writeMinimalConcept(conceptsDir, "002", "concept-b", [], []);
+
+      pruneStaleEdges(modulesPath, conceptsDir, new Set());
+
+      expect(readConceptData(conceptsDir, "001", "concept-a").next).toEqual(["concept-b"]);
+    });
+  });
 });
 
 describe("normalizeDraftConcept：實測 Gemini 回應形態（真實踩過的兩個偏差）", () => {
@@ -474,6 +689,26 @@ describe("normalizeDraftConcept（防禦 LLM 回應漏欄位，避免 conceptToM
   it("difficulty 不是 easy/medium → 具名 stage1-parse-error", () => {
     const raw = { ...sampleDraft(), difficulty: "hard" };
     expect(() => normalizeDraftConcept(raw, "array", 0)).toThrow(/stage1-parse-error.*difficulty/);
+  });
+
+  it("slug 非 kebab-case（實測踩過的 `stack-core-concept-and- LIFO`：夾帶空格與大寫）→ 具名 stage1-slug-format", () => {
+    // 為何 MUST 在此擋：壞 slug 會直接成為檔名寫入磁碟，先被 F2 schema Gate 以 schema-id-format 打回，
+    // 再讓所有引用它的 Concept 全變 dangling-ref——實測單一顆壞 slug 一次引爆 13 筆違規。
+    const raw = { ...sampleDraft(), slug: "stack-core-concept-and- LIFO" };
+    expect(() => normalizeDraftConcept(raw, "stack", 0)).toThrow(/stage1-slug-format.*slug/);
+
+    for (const bad of ["Array-Traversal", "array_traversal", "array--traversal", "-array", "array-"]) {
+      expect(() => normalizeDraftConcept({ ...sampleDraft(), slug: bad }, "stack", 0)).toThrow("stage1-slug-format");
+    }
+  });
+
+  it("prerequisite/next 內含非 kebab-case 元素 → 具名 stage1-slug-format（同類連鎖的另一半）", () => {
+    expect(() => normalizeDraftConcept({ ...sampleDraft(), prerequisite: ["ok-slug", "Bad Slug"] }, "queue", 0)).toThrow(
+      /stage1-slug-format.*prerequisite/,
+    );
+    expect(() => normalizeDraftConcept({ ...sampleDraft(), next: ["Bad Slug"] }, "queue", 0)).toThrow(
+      /stage1-slug-format.*next/,
+    );
   });
 
   it("estimated_minutes 缺漏或非正數 → 具名 stage1-parse-error", () => {

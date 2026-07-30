@@ -4,6 +4,7 @@ import {
   MissingApiKeyError,
   createLlmClient,
   type GenAiLike,
+  type ResponseSchema,
 } from "../../scripts/lib/llm-client.js";
 import { Throttle } from "../../scripts/lib/throttle.js";
 
@@ -33,6 +34,37 @@ describe("createLlmClient（scripts/lib/llm-client.ts，R1 / FR-021/022/025）",
     await client.generate("some prompt");
     expect(generateContent).toHaveBeenCalledWith({ model: GEMINI_MODEL, contents: "some prompt" });
     expect(GEMINI_MODEL).toBe("gemini-3.5-flash-lite");
+  });
+
+  it("未傳 responseSchema → MUST NOT 帶 config（Stage 2 輸出 Markdown，不可被 application/json 綁住）", async () => {
+    const generateContent = vi.fn(async () => ({ text: "hello" }));
+    const client = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      { genAiFactory: () => fakeGenAi(generateContent), throttle: new Throttle() },
+    );
+    await client.generate("some prompt");
+    expect(generateContent.mock.calls[0]?.[0]).not.toHaveProperty("config");
+  });
+
+  it("傳入 responseSchema → 帶上 responseMimeType=application/json 與該 schema（結構化輸出）", async () => {
+    const generateContent = vi.fn(async () => ({ text: "{}" }));
+    const client = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      { genAiFactory: () => fakeGenAi(generateContent), throttle: new Throttle() },
+    );
+    const schema: ResponseSchema = {
+      type: "OBJECT",
+      properties: { difficulty: { type: "STRING", enum: ["easy", "medium"] } },
+      required: ["difficulty"],
+    };
+
+    await client.generate("some prompt", schema);
+
+    expect(generateContent).toHaveBeenCalledWith({
+      model: GEMINI_MODEL,
+      contents: "some prompt",
+      config: { responseMimeType: "application/json", responseSchema: schema },
+    });
   });
 
   it("呼叫確實經過 throttle：schedule 被呼叫、節流間隔生效", async () => {
