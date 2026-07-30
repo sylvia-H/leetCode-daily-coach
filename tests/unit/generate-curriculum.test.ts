@@ -1,6 +1,6 @@
 import matter from "gray-matter";
 import { describe, expect, it } from "vitest";
-import { conceptToMarkdown, parseDraftResponse } from "../../scripts/generate-curriculum.js";
+import { conceptToMarkdown, normalizeDraftConcept, normalizeDraftConcepts, parseDraftResponse } from "../../scripts/generate-curriculum.js";
 import type { DraftConcept } from "../../scripts/lib/prompts/stage1-curriculum.js";
 
 function sampleDraft(overrides: Partial<DraftConcept> = {}): DraftConcept {
@@ -52,6 +52,82 @@ describe("parseDraftResponse（Stage 1 LLM 回應解析）", () => {
 
   it("缺 concepts 陣列 → 具名 stage1-parse-error", () => {
     expect(() => parseDraftResponse(JSON.stringify({ foo: "bar" }))).toThrow("stage1-parse-error");
+  });
+});
+
+describe("normalizeDraftConcept（防禦 LLM 回應漏欄位，避免 conceptToMarkdown/gray-matter 對 undefined 崩潰）", () => {
+  it("完整且合法的回應：原樣通過（不遺失任何欄位）", () => {
+    const raw = sampleDraft();
+    const result = normalizeDraftConcept(raw, "array", 0);
+    expect(result).toEqual(raw);
+  });
+
+  it("缺少必要純量欄位（如 pattern_label）→ 具名 stage1-parse-error（觸發該 Topic 重新起草）", () => {
+    const raw = { ...sampleDraft(), pattern_label: undefined };
+    expect(() => normalizeDraftConcept(raw, "array", 2)).toThrow(/stage1-parse-error.*array.*第 3 個.*pattern_label/);
+  });
+
+  it("difficulty 不是 easy/medium → 具名 stage1-parse-error", () => {
+    const raw = { ...sampleDraft(), difficulty: "hard" };
+    expect(() => normalizeDraftConcept(raw, "array", 0)).toThrow(/stage1-parse-error.*difficulty/);
+  });
+
+  it("estimated_minutes 缺漏或非正數 → 具名 stage1-parse-error", () => {
+    expect(() => normalizeDraftConcept({ ...sampleDraft(), estimated_minutes: undefined }, "array", 0)).toThrow(
+      /stage1-parse-error.*estimated_minutes/,
+    );
+    expect(() => normalizeDraftConcept({ ...sampleDraft(), estimated_minutes: -1 }, "array", 0)).toThrow(
+      /stage1-parse-error.*estimated_minutes/,
+    );
+  });
+
+  it("prerequisite/next/tags/learning_goal/exit_criteria/leetcode_candidates 缺漏 → 安全預設為空陣列（不崩潰，語意上合法為空）", () => {
+    const raw = sampleDraft() as unknown as Record<string, unknown>;
+    delete raw.prerequisite;
+    delete raw.next;
+    delete raw.tags;
+    delete raw.learning_goal;
+    delete raw.exit_criteria;
+    delete raw.leetcode_candidates;
+    const result = normalizeDraftConcept(raw, "array", 0);
+    expect(result.prerequisite).toEqual([]);
+    expect(result.next).toEqual([]);
+    expect(result.tags).toEqual([]);
+    expect(result.learning_goal).toEqual([]);
+    expect(result.exit_criteria).toEqual([]);
+    expect(result.leetcode_candidates).toEqual([]);
+    // 正規化後可安全序列化（原本這正是造成 YAMLException 的實測崩潰情境）
+    expect(() => conceptToMarkdown(result, "array", "array")).not.toThrow();
+  });
+
+  it("author_hints 整段缺漏 → 安全預設為空字串/空陣列（不崩潰）", () => {
+    const raw = { ...sampleDraft(), author_hints: undefined };
+    const result = normalizeDraftConcept(raw, "array", 0);
+    expect(result.author_hints).toEqual({
+      core_idea: "",
+      pattern_recognition: "",
+      thinking: "",
+      common_mistakes: "",
+      ts_notes: "",
+      py_notes: "",
+      leetcode_hints: [],
+    });
+    expect(() => conceptToMarkdown(result, "array", "array")).not.toThrow();
+  });
+
+  it("author_hints 內單一欄位缺漏（如 core_idea）→ 該欄位預設空字串，其餘保留", () => {
+    const raw = sampleDraft();
+    const hints = { ...raw.author_hints } as Record<string, unknown>;
+    delete hints.core_idea;
+    const result = normalizeDraftConcept({ ...raw, author_hints: hints }, "array", 0);
+    expect(result.author_hints.core_idea).toBe("");
+    expect(result.author_hints.thinking).toBe(raw.author_hints.thinking);
+  });
+
+  it("normalizeDraftConcepts：整批處理，保留順序，任一筆缺必要欄位即整批 throw（該 Topic 不寫入任何檔案）", () => {
+    const good = sampleDraft({ slug: "a" });
+    const bad = { ...sampleDraft({ slug: "b" }), title: undefined };
+    expect(() => normalizeDraftConcepts([good, bad], "array")).toThrow("stage1-parse-error");
   });
 });
 

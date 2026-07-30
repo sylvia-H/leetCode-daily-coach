@@ -55,6 +55,91 @@ export function parseDraftResponse(raw: string): DraftConceptResponse {
   return { concepts: obj.concepts as DraftConcept[] };
 }
 
+function requireString(value: unknown, topicId: string, index: number, field: string): string {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`stage1-parse-error：Topic「${topicId}」第 ${index + 1} 個 concept 缺少必要欄位 ${field}`);
+  }
+  return value;
+}
+
+function requireEnum<T extends string>(value: unknown, topicId: string, index: number, field: string, allowed: readonly T[]): T {
+  if (typeof value !== "string" || !(allowed as readonly string[]).includes(value)) {
+    throw new Error(
+      `stage1-parse-error：Topic「${topicId}」第 ${index + 1} 個 concept 的 ${field} 不是合法值（${allowed.join("/")}）：${JSON.stringify(value)}`,
+    );
+  }
+  return value as T;
+}
+
+function requirePositiveNumber(value: unknown, topicId: string, index: number, field: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    throw new Error(`stage1-parse-error：Topic「${topicId}」第 ${index + 1} 個 concept 的 ${field} 不是正數：${JSON.stringify(value)}`);
+  }
+  return value;
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+}
+
+function asNumberArray(value: unknown): number[] {
+  return Array.isArray(value) ? value.filter((v): v is number => typeof v === "number") : [];
+}
+
+function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+/**
+ * 把 LLM 回應的單一 concept 正規化為 DraftConcept：必要純量欄位（slug/title/difficulty/
+ * estimated_minutes/pattern_label/complexity_label）缺漏或型別不符即具名 throw（fail loud，
+ * 觸發該 Topic 重新起草，不進一步往下污染檔案）；陣列欄位（prerequisite/next/learning_goal/
+ * exit_criteria/leetcode_candidates/tags/author_hints.leetcode_hints）與 author_hints 各文字
+ * 欄位在缺漏/型別不符時安全預設為空陣列/空字串——這些欄位語意上可合法為空（例如 Topic 首個
+ * Concept 沒有 prerequisite），真的留白會被下游 F2 zod Gate 以 `schema-missing-field` 報出，
+ * 不需要在此提前擋下；此處只需保證 `conceptToMarkdown`／`matter.stringify` 不會因為收到
+ * `undefined` 而以難以理解的 YAML dump 例外崩潰（研究 R-fix：實測 Gemini 偶爾漏欄位）。
+ */
+export function normalizeDraftConcept(raw: unknown, topicId: string, index: number): DraftConcept {
+  const obj = (raw ?? {}) as Partial<DraftConcept> & Record<string, unknown>;
+  const hintsRaw = (obj.author_hints ?? {}) as Partial<DraftConcept["author_hints"]> & Record<string, unknown>;
+
+  return {
+    slug: requireString(obj.slug, topicId, index, "slug"),
+    title: requireString(obj.title, topicId, index, "title"),
+    difficulty: requireEnum(obj.difficulty, topicId, index, "difficulty", ["easy", "medium"] as const),
+    estimated_minutes: requirePositiveNumber(obj.estimated_minutes, topicId, index, "estimated_minutes"),
+    pattern_label: requireString(obj.pattern_label, topicId, index, "pattern_label"),
+    complexity_label: requireString(obj.complexity_label, topicId, index, "complexity_label"),
+    prerequisite: asStringArray(obj.prerequisite),
+    next: asStringArray(obj.next),
+    learning_goal: asStringArray(obj.learning_goal),
+    exit_criteria: asStringArray(obj.exit_criteria),
+    leetcode_candidates: asNumberArray(obj.leetcode_candidates),
+    tags: asStringArray(obj.tags),
+    author_hints: {
+      core_idea: asString(hintsRaw.core_idea),
+      pattern_recognition: asString(hintsRaw.pattern_recognition),
+      thinking: asString(hintsRaw.thinking),
+      common_mistakes: asString(hintsRaw.common_mistakes),
+      ts_notes: asString(hintsRaw.ts_notes),
+      py_notes: asString(hintsRaw.py_notes),
+      leetcode_hints: Array.isArray(hintsRaw.leetcode_hints)
+        ? hintsRaw.leetcode_hints.filter(
+            (h): h is DraftConcept["author_hints"]["leetcode_hints"][number] =>
+              typeof (h as { id?: unknown } | null)?.id === "number" &&
+              typeof (h as { whyThisPattern?: unknown } | null)?.whyThisPattern === "string",
+          )
+        : [],
+    },
+  };
+}
+
+/** 正規化整批回應（保留原陣列順序，逐一 throw 具名錯誤而非攔截後靜默丟棄壞資料）。 */
+export function normalizeDraftConcepts(concepts: unknown[], topicId: string): DraftConcept[] {
+  return concepts.map((c, i) => normalizeDraftConcept(c, topicId, i));
+}
+
 /** DraftConcept → Skeleton markdown（frontmatter + Author Hints，§10.1/§10.4）。純函式，可單測。 */
 export function conceptToMarkdown(draft: DraftConcept, moduleId: string, topicId: string): string {
   const frontmatter = {
@@ -128,7 +213,12 @@ async function draftTopic(
     priorConceptIds,
   });
   const raw = await llmClient.generate(prompt);
-  return parseDraftResponse(raw).concepts;
+  const response = parseDraftResponse(raw);
+  // 正規化在此（draftTopic 而非 parseDraftResponse）進行：需要 topicId 組出具名錯誤訊息，
+  // 且必須在 main() 迴圈寫檔前**完成於同一個 try/catch 保護範圍內**——若驗證延後到寫檔迴圈才做，
+  // 前面幾個 concept 已寫入磁碟、才在寫到第 N 個時 throw，會讓該 Topic 目錄留下不完整的殘檔，
+  // 且因目錄已非空，續跑判斷會誤以為此 Topic 已起草完成而跳過重試。
+  return normalizeDraftConcepts(response.concepts, topicId);
 }
 
 function formatViolation(v: Violation): string {
