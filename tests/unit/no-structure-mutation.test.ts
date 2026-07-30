@@ -117,3 +117,15 @@ describe("Stage 2 MUST NOT 寫入 concepts/**（只讀凍結 Skeleton、只寫 a
     }
   });
 });
+
+describe("assembleArticleMarkdown — 無題目觀念課（leetcode: []）", () => {
+  it("MUST NOT 生出帶題號的假條目，改為說明散文（舊版 `- **1** ·` 會被讀成題號 1 Two Sum）", () => {
+    const skeleton = sampleSkeleton({ leetcode: [] });
+    const markdown = assembleArticleMarkdown(skeleton, sampleDraft({ challenge: [] }));
+    const challengeSection = markdown.slice(markdown.indexOf("## Today's Challenge"));
+
+    expect(challengeSection).not.toMatch(/^\s*-\s*\*\*\d+\*\*/m); // 無任何 `- **題號**` 條目
+    expect(challengeSection).toContain("觀念課");
+    expect(challengeSection.replace("## Today's Challenge", "").trim()).not.toBe(""); // 區塊非空
+  });
+});

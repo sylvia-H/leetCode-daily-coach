@@ -177,10 +177,17 @@ function parseChallengeEntries(markdown: string, articlePath: string): Map<numbe
   const tokens = marked.lexer(markdown) as Token[];
   // 段落或子標題會把條目切成**多個**頂層 list token；只讀第一個會讓後面的題目無聲消失，
   // 失敗會遠遠延後成「課表題號在 Article 條目中缺漏」（甚至在 practice/review 路徑下完全不報錯）。
+  // 無 list 條目 ⇒ 回傳空 Map，MUST NOT 視為格式錯誤。
+  //
+  // 「無題目觀念課」（`leetcode: []`，spec §12.1 一等合法狀態，如 Programming Mindset 的讀題、
+  // 複雜度直覺）本來就沒有題目可列，其 Today's Challenge 只會是一句說明散文。此處若硬性要求
+  // 至少一個條目，產線就得為這 27 個 Concept 生出假的佔位條目（實測舊版寫死
+  // `- **1** · 佔位條目`，「1」會被讀成題號 1 Two Sum，對讀者是誤導）。
+  //
+  // 放寬不會讓真正的缺漏溜過：「宣告了題目卻沒有對應條目」由兩道更精準的檢查擋下——
+  // 生成期 per-article Gate 的「Today's Challenge 缺少題號 N 的條目」，以及 compileConcept 的
+  // 「課表題號在 Article 條目中缺漏」（皆 throw）。那兩則訊息也比本處的泛用訊息更有指向性。
   const listTokens = tokens.filter(isListToken);
-  if (listTokens.length === 0) {
-    throw new Error(`article-challenge-format：Today's Challenge 沒有可解析的條目（${articlePath}）`);
-  }
 
   const entries = new Map<number, ArticleChallengeEntry>();
 

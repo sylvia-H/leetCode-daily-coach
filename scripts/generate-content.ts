@@ -153,7 +153,10 @@ export function assembleArticleMarkdown(skeleton: SkeletonFrontmatterForArticle,
             return `- **${id}** · ${entry.whyThisPattern}${hintLine}`;
           })
           .join("\n")
-      : "- **1** · 佔位條目（本篇未涵蓋任何課表題號）";
+      // 「無題目觀念課」（spec §12.1）：MUST NOT 生出假的條目。舊版寫死 `- **1** · 佔位條目`，
+      // 「1」會被讀者當成題號 1（Two Sum）——27 個 Concept 都會有這個誤導。改為一句說明散文：
+      // requireSection 只要求區塊非空，parseChallengeEntries 對「有內容但無 list 條目」回傳空 Map。
+      : "本篇為觀念課，沒有對應的 LeetCode 練習題。請把時間花在把上面的觀念想透。";
 
   const body = [
     "## Concept",
