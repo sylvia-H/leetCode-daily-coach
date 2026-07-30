@@ -55,6 +55,54 @@ describe("parseDraftResponse（Stage 1 LLM 回應解析）", () => {
   });
 });
 
+describe("normalizeDraftConcept：實測 Gemini 回應形態（真實踩過的兩個偏差）", () => {
+  it("識別欄位用 \"id\" 而非 prompt 要求的 \"slug\" → 仍能正確解析為 slug", () => {
+    const raw = { ...sampleDraft(), slug: undefined, id: "mindset-divide-and-conquer" } as Record<string, unknown>;
+    delete raw.slug;
+    const result = normalizeDraftConcept(raw, "programming-mindset", 0);
+    expect(result.slug).toBe("mindset-divide-and-conquer");
+  });
+
+  it("next 回傳單一字串（非陣列）→ 正規化為單元素陣列，不悄悄丟棄依賴", () => {
+    const raw = { ...sampleDraft(), next: "mindset-brute-force" };
+    const result = normalizeDraftConcept(raw, "programming-mindset", 0);
+    expect(result.next).toEqual(["mindset-brute-force"]);
+  });
+
+  it("prerequisite 回傳單一字串（非陣列）→ 正規化為單元素陣列", () => {
+    const raw = { ...sampleDraft(), prerequisite: "some-prior-concept" };
+    const result = normalizeDraftConcept(raw, "programming-mindset", 0);
+    expect(result.prerequisite).toEqual(["some-prior-concept"]);
+  });
+
+  it("leetcode_candidates 回傳單一數字（非陣列）→ 正規化為單元素陣列", () => {
+    const raw = { ...sampleDraft(), leetcode_candidates: 42 };
+    const result = normalizeDraftConcept(raw, "programming-mindset", 0);
+    expect(result.leetcode_candidates).toEqual([42]);
+  });
+
+  it("重現實測案例：只有 id/title/prerequisite/next/difficulty/leetcode_candidates/author_hints（缺 estimated_minutes 等）→ 具名 stage1-parse-error 指名第一個缺漏的必要欄位", () => {
+    const minimal = {
+      id: "mindset-divide-and-conquer",
+      title: "Divide and Conquer: Breaking Down Complexity",
+      prerequisite: [],
+      next: "mindset-brute-force",
+      difficulty: "easy",
+      leetcode_candidates: [],
+      author_hints: {
+        core_idea: "將複雜問題拆解為可解決的子問題。",
+        pattern_recognition: "問題規模龐大且無法一眼看出解答時。",
+        thinking: "思考如何將問題一分為二或多個獨立的小部分。",
+        common_mistakes: "試圖一次解決所有細節，導致邏輯混亂。",
+        ts_notes: "善用 Interface 定義子任務的輸入輸出。",
+        py_notes: "利用函數模組化拆解邏輯。",
+        leetcode_hints: [],
+      },
+    };
+    expect(() => normalizeDraftConcept(minimal, "programming-mindset", 0)).toThrow(/stage1-parse-error.*estimated_minutes/);
+  });
+});
+
 describe("normalizeDraftConcept（防禦 LLM 回應漏欄位，避免 conceptToMarkdown/gray-matter 對 undefined 崩潰）", () => {
   it("完整且合法的回應：原樣通過（不遺失任何欄位）", () => {
     const raw = sampleDraft();

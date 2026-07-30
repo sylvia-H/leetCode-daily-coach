@@ -78,12 +78,19 @@ function requirePositiveNumber(value: unknown, topicId: string, index: number, f
   return value;
 }
 
+// LLM 偶爾把「只有一個元素」的陣列欄位（如 next）直接回傳成單一純量（"foo" 而非 ["foo"]），
+// 即使 prompt 已明講 MUST 為陣列——這裡多容忍一層，把純量包成單元素陣列，而非直接視為空陣列
+// 悄悄丟棄這筆依賴（實測踩過：漏收 next 會讓 DAG 少一條邊卻不易察覺，直到很後面才報 orphan）。
 function asStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === "string");
+  if (typeof value === "string" && value.trim() !== "") return [value];
+  return [];
 }
 
 function asNumberArray(value: unknown): number[] {
-  return Array.isArray(value) ? value.filter((v): v is number => typeof v === "number") : [];
+  if (Array.isArray(value)) return value.filter((v): v is number => typeof v === "number");
+  if (typeof value === "number") return [value];
+  return [];
 }
 
 function asString(value: unknown): string {
@@ -104,9 +111,14 @@ export function normalizeDraftConcept(raw: unknown, topicId: string, index: numb
   const obj = (raw ?? {}) as Partial<DraftConcept> & Record<string, unknown>;
   const hintsRaw = (obj.author_hints ?? {}) as Partial<DraftConcept["author_hints"]> & Record<string, unknown>;
 
+  // LLM 有時仍會把識別欄位命名為 "id"（貼近最終 frontmatter 欄位名）而非 prompt 要求的
+  // "slug"——與其每次都靠加強措辭賭它聽話，不如在解析邊界多接受這個別名，兩者對本檔而言
+  // 語意完全等價（都是這個 concept 的 kebab-case 識別碼）。
+  const slugRaw = typeof obj.slug === "string" ? obj.slug : obj.id;
+
   try {
     return {
-      slug: requireString(obj.slug, topicId, index, "slug"),
+      slug: requireString(slugRaw, topicId, index, "slug"),
       title: requireString(obj.title, topicId, index, "title"),
       difficulty: requireEnum(obj.difficulty, topicId, index, "difficulty", ["easy", "medium"] as const),
       estimated_minutes: requirePositiveNumber(obj.estimated_minutes, topicId, index, "estimated_minutes"),
