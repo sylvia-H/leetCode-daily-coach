@@ -104,35 +104,42 @@ export function normalizeDraftConcept(raw: unknown, topicId: string, index: numb
   const obj = (raw ?? {}) as Partial<DraftConcept> & Record<string, unknown>;
   const hintsRaw = (obj.author_hints ?? {}) as Partial<DraftConcept["author_hints"]> & Record<string, unknown>;
 
-  return {
-    slug: requireString(obj.slug, topicId, index, "slug"),
-    title: requireString(obj.title, topicId, index, "title"),
-    difficulty: requireEnum(obj.difficulty, topicId, index, "difficulty", ["easy", "medium"] as const),
-    estimated_minutes: requirePositiveNumber(obj.estimated_minutes, topicId, index, "estimated_minutes"),
-    pattern_label: requireString(obj.pattern_label, topicId, index, "pattern_label"),
-    complexity_label: requireString(obj.complexity_label, topicId, index, "complexity_label"),
-    prerequisite: asStringArray(obj.prerequisite),
-    next: asStringArray(obj.next),
-    learning_goal: asStringArray(obj.learning_goal),
-    exit_criteria: asStringArray(obj.exit_criteria),
-    leetcode_candidates: asNumberArray(obj.leetcode_candidates),
-    tags: asStringArray(obj.tags),
-    author_hints: {
-      core_idea: asString(hintsRaw.core_idea),
-      pattern_recognition: asString(hintsRaw.pattern_recognition),
-      thinking: asString(hintsRaw.thinking),
-      common_mistakes: asString(hintsRaw.common_mistakes),
-      ts_notes: asString(hintsRaw.ts_notes),
-      py_notes: asString(hintsRaw.py_notes),
-      leetcode_hints: Array.isArray(hintsRaw.leetcode_hints)
-        ? hintsRaw.leetcode_hints.filter(
-            (h): h is DraftConcept["author_hints"]["leetcode_hints"][number] =>
-              typeof (h as { id?: unknown } | null)?.id === "number" &&
-              typeof (h as { whyThisPattern?: unknown } | null)?.whyThisPattern === "string",
-          )
-        : [],
-    },
-  };
+  try {
+    return {
+      slug: requireString(obj.slug, topicId, index, "slug"),
+      title: requireString(obj.title, topicId, index, "title"),
+      difficulty: requireEnum(obj.difficulty, topicId, index, "difficulty", ["easy", "medium"] as const),
+      estimated_minutes: requirePositiveNumber(obj.estimated_minutes, topicId, index, "estimated_minutes"),
+      pattern_label: requireString(obj.pattern_label, topicId, index, "pattern_label"),
+      complexity_label: requireString(obj.complexity_label, topicId, index, "complexity_label"),
+      prerequisite: asStringArray(obj.prerequisite),
+      next: asStringArray(obj.next),
+      learning_goal: asStringArray(obj.learning_goal),
+      exit_criteria: asStringArray(obj.exit_criteria),
+      leetcode_candidates: asNumberArray(obj.leetcode_candidates),
+      tags: asStringArray(obj.tags),
+      author_hints: {
+        core_idea: asString(hintsRaw.core_idea),
+        pattern_recognition: asString(hintsRaw.pattern_recognition),
+        thinking: asString(hintsRaw.thinking),
+        common_mistakes: asString(hintsRaw.common_mistakes),
+        ts_notes: asString(hintsRaw.ts_notes),
+        py_notes: asString(hintsRaw.py_notes),
+        leetcode_hints: Array.isArray(hintsRaw.leetcode_hints)
+          ? hintsRaw.leetcode_hints.filter(
+              (h): h is DraftConcept["author_hints"]["leetcode_hints"][number] =>
+                typeof (h as { id?: unknown } | null)?.id === "number" &&
+                typeof (h as { whyThisPattern?: unknown } | null)?.whyThisPattern === "string",
+            )
+          : [],
+      },
+    };
+  } catch (err) {
+    // 診斷輔助（不改變錯誤語意，只附加原始物件實際長什麼樣）：LLM 若用了不同的欄位命名
+    // （例如把 slug 取名 id），光看「缺少欄位 X」猜不出實際命名為何，須看到原始 keys 才好對症下藥。
+    const preview = JSON.stringify(obj).slice(0, 500);
+    throw new Error(`${(err as Error).message}\n  收到的原始物件（前 500 字）：${preview}`);
+  }
 }
 
 /** 正規化整批回應（保留原陣列順序，逐一 throw 具名錯誤而非攔截後靜默丟棄壞資料）。 */
