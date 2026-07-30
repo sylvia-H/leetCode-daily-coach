@@ -208,6 +208,16 @@ function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf-8");
 }
 
+/**
+ * 既存 Concept id 清單（供種子 priorConceptIds，見 main() 註解）：純粹重用 F2 `loadCurriculum`
+ * 建圖結果，不另寫平行讀檔邏輯。抽成具名函式供單測驗證「既存 Concept 會被納入」，不需要跑
+ * 整個 main()。
+ */
+export function loadExistingConceptIds(modulesPath: string, conceptsDir: string): string[] {
+  const { graph } = loadCurriculum({ modulesPath, conceptsDir });
+  return [...graph.concepts.keys()];
+}
+
 function parseOnlyFlag(argv: string[]): Set<string> | undefined {
   const idx = argv.indexOf("--only");
   if (idx < 0 || !argv[idx + 1]) return undefined;
@@ -266,7 +276,12 @@ async function main(): Promise<void> {
   }
   const modulesFile = JSON.parse(readFileSync(MODULES_PATH, "utf-8")) as ModulesFile;
 
-  const draftedConceptIds: string[] = [];
+  // 種子（seed：以既存 concept id 作為 priorConceptIds 的起點，而非從空陣列開始）：若目錄下
+  // 已有既存 Concept（F2 stub 種子，或前次部分執行留下的產物），LLM 完全不知道它們存在，會把
+  // 自己起草的第一篇當成整個 Topic 的起點（prerequisite 留空），使新篇與既存篇斷鏈，被結構
+  // Gate 判定孤兒——實測 --only programming-mindset 已踩到這個情境（既存 2 篇 stub + 新起草
+  // 10 篇，新篇的第一篇未接回既存鏈）。
+  const draftedConceptIds: string[] = loadExistingConceptIds(MODULES_PATH, CONCEPTS_DIR);
   for (const module of modulesFile.modules) {
     for (const topic of module.topics) {
       const dir = join(CONCEPTS_DIR, topic.id);

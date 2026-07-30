@@ -1,6 +1,15 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import matter from "gray-matter";
-import { describe, expect, it } from "vitest";
-import { conceptToMarkdown, normalizeDraftConcept, normalizeDraftConcepts, parseDraftResponse } from "../../scripts/generate-curriculum.js";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  conceptToMarkdown,
+  loadExistingConceptIds,
+  normalizeDraftConcept,
+  normalizeDraftConcepts,
+  parseDraftResponse,
+} from "../../scripts/generate-curriculum.js";
 import type { DraftConcept } from "../../scripts/lib/prompts/stage1-curriculum.js";
 
 function sampleDraft(overrides: Partial<DraftConcept> = {}): DraftConcept {
@@ -52,6 +61,65 @@ describe("parseDraftResponse（Stage 1 LLM 回應解析）", () => {
 
   it("缺 concepts 陣列 → 具名 stage1-parse-error", () => {
     expect(() => parseDraftResponse(JSON.stringify({ foo: "bar" }))).toThrow("stage1-parse-error");
+  });
+});
+
+describe("loadExistingConceptIds（種子 priorConceptIds，實測踩過的孤兒 bug）", () => {
+  let dir: string;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("回傳既存 concepts/** 內全部 Concept id，供 draftTopic 的 priorConceptIds 種子", () => {
+    dir = mkdtempSync(join(tmpdir(), "generate-curriculum-test-"));
+    const modulesPath = join(dir, "modules.json");
+    const conceptsDir = join(dir, "concepts");
+    writeFileSync(
+      modulesPath,
+      JSON.stringify({ version: 1, modules: [{ id: "m", title: "M", level: 0, topics: [{ id: "t", title: "T" }] }] }),
+      "utf-8",
+    );
+    mkdirSync(join(conceptsDir, "t"), { recursive: true });
+    // 模擬實測情境：topic 內已有既存 Concept（如 F2 stub 種子），本次只是「還沒告訴 LLM 它們存在」。
+    writeFileSync(
+      join(conceptsDir, "t", "001-existing-one.md"),
+      [
+        "---",
+        "id: existing-one",
+        "title: Existing One",
+        "module: m",
+        "topic: t",
+        "difficulty: easy",
+        "estimated_minutes: 10",
+        "pattern_label: P",
+        "complexity_label: O(n)",
+        "prerequisite: []",
+        "next: []",
+        "learning_goal:\n  - g",
+        "exit_criteria:\n  - e",
+        "leetcode: []",
+        "tags: []",
+        "---",
+        "",
+        "## Author Hints",
+        "",
+        "- x",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    expect(loadExistingConceptIds(modulesPath, conceptsDir)).toEqual(["existing-one"]);
+  });
+
+  it("concepts 目錄不存在（全新課綱起草）→ 回傳空陣列，不 throw", () => {
+    dir = mkdtempSync(join(tmpdir(), "generate-curriculum-test-"));
+    const modulesPath = join(dir, "modules.json");
+    writeFileSync(
+      modulesPath,
+      JSON.stringify({ version: 1, modules: [{ id: "m", title: "M", level: 0, topics: [{ id: "t", title: "T" }] }] }),
+      "utf-8",
+    );
+    expect(loadExistingConceptIds(modulesPath, join(dir, "concepts"))).toEqual([]);
   });
 });
 
