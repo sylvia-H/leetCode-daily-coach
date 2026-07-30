@@ -20,6 +20,7 @@ exit_criteria:
   - Can handle remaining nodes when one list exhausts before the other
 leetcode:
   - 21
+  - 23
 tags:
   - linked-list
   - merge
@@ -35,3 +36,4 @@ tags:
 - TypeScript 重點：Maintain tail pointer to append new nodes efficiently in O(1) per step.
 - Python 重點：Direct pointer attachment avoids manual garbage collection concerns.
 - 題號 21 為何適合此 Pattern：Direct merging of two sorted linked lists using a sentinel dummy head.
+- 題號 23 為何適合此 Pattern：此題將雙指標合併的觀念擴展至多個已排序鏈結串列，常搭配最小堆積進行高效合併。

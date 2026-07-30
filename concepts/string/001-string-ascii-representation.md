@@ -21,6 +21,7 @@ exit_criteria:
     TypeScript.
 leetcode:
   - 387
+  - 8
 tags:
   - string
   - ascii
@@ -36,3 +37,4 @@ tags:
 - TypeScript 重點：Use charCodeAt() and String.fromCharCode().
 - Python 重點：Use ord() and chr().
 - 題號 387 為何適合此 Pattern：Uses direct character frequency counting via ASCII offsets.
+- 題號 8 為何適合此 Pattern：將字串轉為整數牽涉到字元 ASCII 碼的加減運算與位數處理，是字元對映的進階應用。

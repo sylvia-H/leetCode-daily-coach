@@ -21,6 +21,7 @@ exit_criteria:
     2.
 leetcode:
   - 374
+  - 33
 tags:
   - binary-search
   - math
@@ -35,3 +36,4 @@ tags:
 - TypeScript 重點：Essential for strict type environments or very large arrays.
 - Python 重點：Python handles large ints automatically, but it is good practice.
 - 題號 374 為何適合此 Pattern：Helps practice safe midpoint calculation.
+- 題號 33 為何適合此 Pattern：旋轉排序陣列的搜尋需要嚴謹的中間點計算來避免溢位。

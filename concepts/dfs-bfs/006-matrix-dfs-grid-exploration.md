@@ -19,6 +19,7 @@ exit_criteria:
   - 能正確處理網格邊界檢查（Boundary Check）
 leetcode:
   - 695
+  - 463
 tags:
   - dfs
   - matrix
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：善用常數陣列定義方向以維持程式碼簡潔。
 - Python 重點：Python 中可直接用迴圈走訪 directions = [(-1,0), (1,0), (0,-1), (0,1)]。
 - 題號 695 為何適合此 Pattern：島嶼的最大面積需要透過 DFS 遍歷每個連通區塊並累加計數。
+- 題號 463 為何適合此 Pattern：使用遞迴 DFS 在二維網格上探訪相鄰的陸地格子以計算周長。

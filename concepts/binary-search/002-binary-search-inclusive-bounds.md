@@ -20,6 +20,7 @@ exit_criteria:
   - Use correct termination condition.
 leetcode:
   - 704
+  - 34
 tags:
   - binary-search
   - pointers
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Ensure loop condition handles equality correctly.
 - Python 重點：Ensure while left <= right is properly bounded.
 - 題號 704 為何適合此 Pattern：Fits the standard inclusive bounds template perfectly.
+- 題號 34 為何適合此 Pattern：此題利用包含邊界的二分搜尋邏輯來尋找陣列中左右邊界。

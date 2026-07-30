@@ -20,6 +20,7 @@ exit_criteria:
   - 理解空間換取時間的概念
 leetcode:
   - 1480
+  - 560
 tags:
   - array
   - prefix-sum
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：初始化指定大小的數字陣列時確保型別安全。
 - Python 重點：可使用 itertools.accumulate 簡化前綴和的建立過程。
 - 題號 1480 為何適合此 Pattern：經典的一維陣列執行前綴和累加。
+- 題號 560 為何適合此 Pattern：結合前綴和與雜湊表，在線性時間內找出和為目標值的子陣列數量。

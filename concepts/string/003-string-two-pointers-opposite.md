@@ -22,6 +22,7 @@ exit_criteria:
   - Can implement palindrome checks efficiently using two pointers.
 leetcode:
   - 125
+  - 151
 tags:
   - string
   - two-pointers
@@ -36,3 +37,4 @@ tags:
 - TypeScript 重點：Use while(left < right) loops.
 - Python 重點：Use while left < right idioms.
 - 題號 125 為何適合此 Pattern：Validates palindromes by comparing characters from both ends inward.
+- 題號 151 為何適合此 Pattern：利用雙指標從兩端向內或反向處理字串中的單字反轉與空白過濾。

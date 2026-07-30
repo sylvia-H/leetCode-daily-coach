@@ -20,6 +20,7 @@ exit_criteria:
 leetcode:
   - 1143
   - 583
+  - 392
 tags:
   - string-dp
   - lcs
@@ -35,3 +36,4 @@ tags:
 - Python 重點：利用 zip 或雙陣列交替更新狀態
 - 題號 1143 為何適合此 Pattern：最長共同子序列的標準題型
 - 題號 583 為何適合此 Pattern：兩個字串的刪除操作步數可轉化為 LCS 問題來求解
+- 題號 392 為何適合此 Pattern：最簡單的雙序列匹配與子序列判定問題，適合作為 LCS 的入門暖身題。

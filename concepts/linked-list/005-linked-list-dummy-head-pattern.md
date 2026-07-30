@@ -21,6 +21,7 @@ exit_criteria:
 leetcode:
   - 203
   - 83
+  - 2
 tags:
   - linked-list
   - dummy-head
@@ -37,3 +38,4 @@ tags:
 - Python 重點：Dummy = ListNode(0), dummy.next = head is the standard idiom.
 - 題號 203 為何適合此 Pattern：Simplifies removal when the target value appears at the very head of the list.
 - 題號 83 為何適合此 Pattern：Removes duplicates from a sorted list cleanly using standard traversal.
+- 題號 2 為何適合此 Pattern：在處理兩數相加時，使用虛擬頭節點能極大化簡化進位與新節點串接的邊界條件。

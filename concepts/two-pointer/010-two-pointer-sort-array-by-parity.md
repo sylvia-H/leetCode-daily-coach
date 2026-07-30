@@ -18,6 +18,7 @@ exit_criteria:
   - 理解指標交會時迴圈即告結束的原則
 leetcode:
   - 905
+  - 75
 tags:
   - two-pointers
   - array
@@ -33,3 +34,4 @@ tags:
 - TypeScript 重點：使用解構賦值進行快速元素交換 [arr[left], arr[right]] = [arr[right], arr[left]]。
 - Python 重點：Python 同樣支援 tuple unpacking 進行元素交換。
 - 題號 905 為何適合此 Pattern：最基礎的雙指標條件分割與交換應用。
+- 題號 75 為何適合此 Pattern：使用分區雙指標將陣列元素依照規則重新排列，是基礎 Partitioning 的進階延伸。

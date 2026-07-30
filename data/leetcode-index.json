@@ -1,4 +1,14 @@
 {
+  "1": {
+    "slug": "two-sum",
+    "title": "Two Sum",
+    "difficulty": "Easy"
+  },
+  "2": {
+    "slug": "add-two-numbers",
+    "title": "Add Two Numbers",
+    "difficulty": "Medium"
+  },
   "3": {
     "slug": "longest-substring-without-repeating-characters",
     "title": "Longest Substring Without Repeating Characters",
@@ -89,6 +99,11 @@
     "title": "Reverse Nodes in k-Group",
     "difficulty": "Hard"
   },
+  "26": {
+    "slug": "remove-duplicates-from-sorted-array",
+    "title": "Remove Duplicates from Sorted Array",
+    "difficulty": "Easy"
+  },
   "28": {
     "slug": "find-the-index-of-the-first-occurrence-in-a-string",
     "title": "Find the Index of the First Occurrence in a String",
@@ -97,6 +112,11 @@
   "30": {
     "slug": "substring-with-concatenation-of-all-words",
     "title": "Substring with Concatenation of All Words",
+    "difficulty": "Hard"
+  },
+  "32": {
+    "slug": "longest-valid-parentheses",
+    "title": "Longest Valid Parentheses",
     "difficulty": "Hard"
   },
   "33": {
@@ -399,6 +419,11 @@
     "title": "Path Sum II",
     "difficulty": "Medium"
   },
+  "114": {
+    "slug": "flatten-binary-tree-to-linked-list",
+    "title": "Flatten Binary Tree to Linked List",
+    "difficulty": "Medium"
+  },
   "120": {
     "slug": "triangle",
     "title": "Triangle",
@@ -624,6 +649,11 @@
     "title": "Invert Binary Tree",
     "difficulty": "Easy"
   },
+  "230": {
+    "slug": "kth-smallest-element-in-a-bst",
+    "title": "Kth Smallest Element in a BST",
+    "difficulty": "Medium"
+  },
   "232": {
     "slug": "implement-queue-using-stacks",
     "title": "Implement Queue using Stacks",
@@ -724,6 +754,11 @@
     "title": "Expression Add Operators",
     "difficulty": "Hard"
   },
+  "283": {
+    "slug": "move-zeroes",
+    "title": "Move Zeroes",
+    "difficulty": "Easy"
+  },
   "286": {
     "slug": "walls-and-gates",
     "title": "Walls and Gates",
@@ -757,6 +792,11 @@
   "300": {
     "slug": "longest-increasing-subsequence",
     "title": "Longest Increasing Subsequence",
+    "difficulty": "Medium"
+  },
+  "304": {
+    "slug": "range-sum-query-2d-immutable",
+    "title": "Range Sum Query 2D - Immutable",
     "difficulty": "Medium"
   },
   "310": {
@@ -929,6 +969,11 @@
     "title": "Longest Repeating Character Replacement",
     "difficulty": "Medium"
   },
+  "430": {
+    "slug": "flatten-a-multilevel-doubly-linked-list",
+    "title": "Flatten a Multilevel Doubly Linked List",
+    "difficulty": "Medium"
+  },
   "433": {
     "slug": "minimum-genetic-mutation",
     "title": "Minimum Genetic Mutation",
@@ -1049,6 +1094,11 @@
     "title": "Number of Provinces",
     "difficulty": "Medium"
   },
+  "560": {
+    "slug": "subarray-sum-equals-k",
+    "title": "Subarray Sum Equals K",
+    "difficulty": "Medium"
+  },
   "567": {
     "slug": "permutation-in-string",
     "title": "Permutation in String",
@@ -1127,6 +1177,11 @@
   "684": {
     "slug": "redundant-connection",
     "title": "Redundant Connection",
+    "difficulty": "Medium"
+  },
+  "686": {
+    "slug": "repeated-string-match",
+    "title": "Repeated String Match",
     "difficulty": "Medium"
   },
   "695": {
@@ -1349,6 +1404,11 @@
     "title": "Maximum Sum Circular Subarray",
     "difficulty": "Medium"
   },
+  "921": {
+    "slug": "minimum-add-to-make-parentheses-valid",
+    "title": "Minimum Add to Make Parentheses Valid",
+    "difficulty": "Medium"
+  },
   "922": {
     "slug": "sort-array-by-parity-ii",
     "title": "Sort Array By Parity II",
@@ -1429,6 +1489,11 @@
     "title": "Remove All Adjacent Duplicates In String",
     "difficulty": "Easy"
   },
+  "1052": {
+    "slug": "grumpy-bookstore-owner",
+    "title": "Grumpy Bookstore Owner",
+    "difficulty": "Medium"
+  },
   "1091": {
     "slug": "shortest-path-in-binary-matrix",
     "title": "Shortest Path in Binary Matrix",
@@ -1447,6 +1512,16 @@
   "1162": {
     "slug": "as-far-from-land-as-possible",
     "title": "As Far from Land as Possible",
+    "difficulty": "Medium"
+  },
+  "1209": {
+    "slug": "remove-all-adjacent-duplicates-in-string-ii",
+    "title": "Remove All Adjacent Duplicates in String II",
+    "difficulty": "Medium"
+  },
+  "1245": {
+    "slug": "tree-diameter",
+    "title": "Tree Diameter",
     "difficulty": "Medium"
   },
   "1248": {
@@ -1574,6 +1649,11 @@
     "title": "Min Cost to Connect All Points",
     "difficulty": "Medium"
   },
+  "1598": {
+    "slug": "crawler-log-folder",
+    "title": "Crawler Log Folder",
+    "difficulty": "Easy"
+  },
   "1672": {
     "slug": "richest-customer-wealth",
     "title": "Richest Customer Wealth",
@@ -1619,6 +1699,11 @@
     "title": "Kth Distinct String in an Array",
     "difficulty": "Easy"
   },
+  "2090": {
+    "slug": "k-radius-subarray-averages",
+    "title": "K Radius Subarray Averages",
+    "difficulty": "Medium"
+  },
   "2187": {
     "slug": "minimum-time-to-complete-trips",
     "title": "Minimum Time to Complete Trips",
@@ -1634,9 +1719,19 @@
     "title": "Minimize the Maximum of Two Arrays",
     "difficulty": "Medium"
   },
+  "2668": {
+    "slug": "find-latest-salaries",
+    "title": "Find Latest Salaries",
+    "difficulty": "Easy"
+  },
   "2685": {
     "slug": "count-the-number-of-complete-components",
     "title": "Count the Number of Complete Components",
+    "difficulty": "Medium"
+  },
+  "3034": {
+    "slug": "number-of-subarrays-that-match-a-pattern-i",
+    "title": "Number of Subarrays That Match a Pattern I",
     "difficulty": "Medium"
   },
   "3425": {

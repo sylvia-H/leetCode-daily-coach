@@ -20,6 +20,7 @@ exit_criteria:
   - Can reconstruct the resulting string from the stack.
 leetcode:
   - 1047
+  - 1209
 tags:
   - stack
   - string
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Accumulate characters in an array and join them at the end.
 - Python 重點：Use a list as a stack and ''.join(stack) to return the result.
 - 題號 1047 為何適合此 Pattern：Adjacent matching characters cancel each other out like a LIFO sequence.
+- 題號 1209 為何適合此 Pattern：使用堆疊記錄字元與連續出現次數，是相鄰重複消除 Pattern 的中等難度擴充。

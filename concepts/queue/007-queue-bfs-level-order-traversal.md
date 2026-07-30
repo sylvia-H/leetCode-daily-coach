@@ -21,6 +21,7 @@ exit_criteria:
   - Store child nodes into the queue for subsequent levels.
 leetcode:
   - 102
+  - 104
 tags:
   - queue
   - bfs
@@ -36,3 +37,4 @@ tags:
 - TypeScript 重點：Push children into array queue and shift parent out.
 - Python 重點：Use collections.deque and popleft for O(1) queue extraction.
 - 題號 102 為何適合此 Pattern：Canonical BFS problem requiring level-order grouping using a queue.
+- 題號 104 為何適合此 Pattern：透過層序遍歷樹的高度，是最經典的簡易 BFS 實作題。

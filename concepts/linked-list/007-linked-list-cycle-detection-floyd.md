@@ -22,6 +22,7 @@ exit_criteria:
     exists
 leetcode:
   - 141
+  - 142
 tags:
   - linked-list
   - cycle-detection
@@ -37,3 +38,4 @@ tags:
 - TypeScript 重點：Ensure strict null checks on fast pointer jumps.
 - Python 重點：Keep loop conditions robust against linear terminal lists.
 - 題號 141 為何適合此 Pattern：Direct application of Floyd's tortoise and hare algorithm to detect circular references.
+- 題號 142 為何適合此 Pattern：此題進一步在Floyd循環偵測的基礎上，找出環的起始點，加深指標追蹤的應用。

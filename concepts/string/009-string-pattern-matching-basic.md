@@ -20,6 +20,7 @@ exit_criteria:
   - Can implement indexOf or find a needle in a haystack using nested loops.
 leetcode:
   - 28
+  - 686
 tags:
   - string
   - matching
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Can use built-in indexOf or manual loop for practice.
 - Python 重點：Can use find() or slice comparisons.
 - 題號 28 為何適合此 Pattern：Implements basic substring search.
+- 題號 686 為何適合此 Pattern：透過重複字串來檢查子字串匹配，考驗基礎字串搜尋與線性掃描邏輯。

@@ -20,6 +20,7 @@ exit_criteria:
   - 理解在進入節點前與離開節點時標記狀態的時機差異
 leetcode:
   - 733
+  - 130
 tags:
   - dfs
   - visited
@@ -35,3 +36,4 @@ tags:
 - TypeScript 重點：使用 Set<string> 記錄座標或數字 ID 的已造訪狀態。
 - Python 重點：使用集合 set() 儲存已造訪的節點或座標 tuple。
 - 題號 733 為何適合此 Pattern：著色問題需要精準記錄已填色的像素以免無限迴圈。
+- 題號 130 為何適合此 Pattern：需要在網格邊界上利用 DFS 走訪並透過狀態標記來區分被包圍與未被包圍的區域。

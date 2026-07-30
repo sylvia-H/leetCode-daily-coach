@@ -19,6 +19,7 @@ exit_criteria:
 leetcode:
   - 509
   - 70
+  - 198
 tags:
   - memoization
   - recursion
@@ -34,3 +35,4 @@ tags:
 - Python 重點：使用 @functools.cache 簡化程式碼
 - 題號 509 為何適合此 Pattern：可直接套用陣列快取優化費波那契計算
 - 題號 70 為何適合此 Pattern：爬樓梯可透過記憶化避免重複走訪相同高度
+- 題號 198 為何適合此 Pattern：使用記憶化遞迴（Top-Down）來避免重複計算重疊子問題。

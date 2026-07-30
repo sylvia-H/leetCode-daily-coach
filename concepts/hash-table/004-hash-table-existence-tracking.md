@@ -24,6 +24,7 @@ exit_criteria:
 leetcode:
   - 217
   - 219
+  - 128
 tags:
   - hash-table
   - hash-set
@@ -39,3 +40,4 @@ tags:
 - Python 重點：Use set() for O(1) average time membership queries.
 - 題號 217 為何適合此 Pattern：Contains Duplicate checks if an element is already in the set.
 - 題號 219 為何適合此 Pattern：Contains Duplicate II checks set membership within a fixed window size.
+- 題號 128 為何適合此 Pattern：使用雜湊集合追蹤數字存在性，以 O(n) 時間完成連續區間的尋找。

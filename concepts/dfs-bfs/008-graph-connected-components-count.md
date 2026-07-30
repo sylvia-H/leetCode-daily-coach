@@ -19,6 +19,7 @@ exit_criteria:
   - 理解如何透過計數器追蹤獨立群組
 leetcode:
   - 323
+  - 2668
 tags:
   - graph
   - connected-components
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：可用 Set 或 boolean 陣列記錄全域造訪狀態。
 - Python 重點：利用迴圈依序檢查每個節點是否在 visited 集合中。
 - 題號 323 為何適合此 Pattern：計算無向圖中的連通分量數量是此 pattern 的教科書級別應用。
+- 題號 2668 為何適合此 Pattern：Note: Placeholder for graph connected components easy level.

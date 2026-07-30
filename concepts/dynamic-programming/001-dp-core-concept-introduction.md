@@ -19,6 +19,7 @@ exit_criteria:
 leetcode:
   - 509
   - 70
+  - 198
 tags:
   - dynamic-programming
   - recursion
@@ -34,3 +35,4 @@ tags:
 - Python 重點：善用 lru_cache 裝飾器來自動化記憶化過程
 - 題號 509 為何適合此 Pattern：費波那契數列是展示重複子問題的最佳範例
 - 題號 70 為何適合此 Pattern：爬樓梯問題展現了如何將問題拆解為前兩項的組合
+- 題號 198 為何適合此 Pattern：透過遞迴與重疊子問題的特性，展示如何將樸素遞迴優化為動態規劃的核心概念。

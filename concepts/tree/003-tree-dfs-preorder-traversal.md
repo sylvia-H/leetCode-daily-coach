@@ -19,6 +19,7 @@ exit_criteria:
     then right.
 leetcode:
   - 144
+  - 114
 tags:
   - tree
   - dfs
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Handle null checks cleanly with optional chaining or explicit guards.
 - Python 重點：Use helper functions or default list arguments carefully to collect results.
 - 題號 144 為何適合此 Pattern：Directly evaluates the standard Preorder traversal order.
+- 題號 114 為何適合此 Pattern：使用前序遍歷的概念將二元樹原地展開為鏈結串列。

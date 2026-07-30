@@ -5,12 +5,12 @@
     {
       "sessionIndex": 1,
       "type": "concept",
-      "conceptId": "time-space-complexity"
+      "conceptId": "computational-thinking-basics"
     },
     {
       "sessionIndex": 2,
       "type": "concept",
-      "conceptId": "reading-the-problem"
+      "conceptId": "input-output-contract"
     },
     {
       "sessionIndex": 3,
@@ -19,19 +19,11 @@
     {
       "sessionIndex": 4,
       "type": "concept",
-      "conceptId": "array-traversal",
-      "problemIds": [
-        1,
-        26,
-        27
-      ]
+      "conceptId": "mental-model-variables"
     },
     {
       "sessionIndex": 5,
-      "type": "challenge",
-      "problemIds": [
-        1
-      ]
+      "type": "challenge"
     },
     {
       "sessionIndex": 6,
@@ -48,46 +40,1705 @@
     {
       "sessionIndex": 8,
       "type": "concept",
-      "conceptId": "in-place-operations",
-      "problemIds": [
-        27,
-        283
-      ]
+      "conceptId": "tracing-execution-flow"
     },
     {
       "sessionIndex": 9,
       "type": "concept",
-      "conceptId": "prefix-sum",
-      "problemIds": [
-        303
-      ]
+      "conceptId": "conditional-branching-logic"
     },
     {
       "sessionIndex": 10,
+      "type": "practice"
+    },
+    {
+      "sessionIndex": 11,
+      "type": "concept",
+      "conceptId": "loop-invariant-thinking"
+    },
+    {
+      "sessionIndex": 12,
+      "type": "challenge"
+    },
+    {
+      "sessionIndex": 13,
+      "type": "review",
+      "reviewRange": [
+        8,
+        12
+      ]
+    },
+    {
+      "sessionIndex": 14,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 15,
+      "type": "concept",
+      "conceptId": "problem-simplification-strategy"
+    },
+    {
+      "sessionIndex": 16,
+      "type": "concept",
+      "conceptId": "edge-case-enumeration"
+    },
+    {
+      "sessionIndex": 17,
+      "type": "practice"
+    },
+    {
+      "sessionIndex": 18,
+      "type": "concept",
+      "conceptId": "spacetime-tradeoff-awareness"
+    },
+    {
+      "sessionIndex": 19,
+      "type": "challenge"
+    },
+    {
+      "sessionIndex": 20,
+      "type": "review",
+      "reviewRange": [
+        15,
+        19
+      ]
+    },
+    {
+      "sessionIndex": 21,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 22,
+      "type": "concept",
+      "conceptId": "error-driven-refinement"
+    },
+    {
+      "sessionIndex": 23,
+      "type": "concept",
+      "conceptId": "array-memory-layout"
+    },
+    {
+      "sessionIndex": 24,
+      "type": "practice"
+    },
+    {
+      "sessionIndex": 25,
+      "type": "concept",
+      "conceptId": "array-linear-scan",
+      "problemIds": [
+        1480,
+        1929,
+        238
+      ]
+    },
+    {
+      "sessionIndex": 26,
+      "type": "challenge",
+      "problemIds": [
+        1480
+      ]
+    },
+    {
+      "sessionIndex": 27,
+      "type": "review",
+      "reviewRange": [
+        22,
+        26
+      ]
+    },
+    {
+      "sessionIndex": 28,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 29,
+      "type": "concept",
+      "conceptId": "array-prefix-sum-basic",
+      "problemIds": [
+        1480,
+        560
+      ]
+    },
+    {
+      "sessionIndex": 30,
+      "type": "concept",
+      "conceptId": "array-range-sum-query",
+      "problemIds": [
+        303,
+        560,
+        304
+      ]
+    },
+    {
+      "sessionIndex": 31,
       "type": "practice",
       "problemIds": [
-        27,
-        283,
+        303,
+        304,
+        560
+      ]
+    },
+    {
+      "sessionIndex": 32,
+      "type": "concept",
+      "conceptId": "array-two-pointers-opposite",
+      "problemIds": [
+        344,
+        977,
+        15
+      ]
+    },
+    {
+      "sessionIndex": 33,
+      "type": "challenge",
+      "problemIds": [
         303
       ]
     },
     {
-      "sessionIndex": 11,
+      "sessionIndex": 34,
+      "type": "review",
+      "reviewRange": [
+        29,
+        33
+      ]
+    },
+    {
+      "sessionIndex": 35,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 36,
+      "type": "concept",
+      "conceptId": "array-two-pointers-sliding",
+      "problemIds": [
+        643,
+        1052,
+        1456
+      ]
+    },
+    {
+      "sessionIndex": 37,
+      "type": "concept",
+      "conceptId": "array-two-pointers-variable",
+      "problemIds": [
+        209
+      ]
+    },
+    {
+      "sessionIndex": 38,
+      "type": "practice",
+      "problemIds": [
+        209,
+        643,
+        1052
+      ]
+    },
+    {
+      "sessionIndex": 39,
+      "type": "concept",
+      "conceptId": "array-in-place-removal",
+      "problemIds": [
+        27,
+        80
+      ]
+    },
+    {
+      "sessionIndex": 40,
+      "type": "challenge",
+      "problemIds": [
+        27
+      ]
+    },
+    {
+      "sessionIndex": 41,
+      "type": "review",
+      "reviewRange": [
+        36,
+        40
+      ]
+    },
+    {
+      "sessionIndex": 42,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 43,
+      "type": "concept",
+      "conceptId": "array-in-place-deduplication",
+      "problemIds": [
+        26,
+        80
+      ]
+    },
+    {
+      "sessionIndex": 44,
+      "type": "concept",
+      "conceptId": "array-move-zeroes",
+      "problemIds": [
+        283
+      ]
+    },
+    {
+      "sessionIndex": 45,
+      "type": "practice",
+      "problemIds": [
+        26,
+        80,
+        283
+      ]
+    },
+    {
+      "sessionIndex": 46,
+      "type": "concept",
+      "conceptId": "hash-table-concept-introduction",
+      "problemIds": [
+        1,
+        217,
+        128
+      ]
+    },
+    {
+      "sessionIndex": 47,
+      "type": "challenge",
+      "problemIds": [
+        1
+      ]
+    },
+    {
+      "sessionIndex": 48,
+      "type": "review",
+      "reviewRange": [
+        43,
+        47
+      ]
+    },
+    {
+      "sessionIndex": 49,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 50,
+      "type": "concept",
+      "conceptId": "hash-table-frequency-counting",
+      "problemIds": [
+        387,
+        383,
+        451
+      ]
+    },
+    {
+      "sessionIndex": 51,
+      "type": "concept",
+      "conceptId": "hash-table-complement-lookup",
+      "problemIds": [
+        1,
+        1679
+      ]
+    },
+    {
+      "sessionIndex": 52,
+      "type": "practice",
+      "problemIds": [
+        1,
+        383,
+        387
+      ]
+    },
+    {
+      "sessionIndex": 53,
+      "type": "concept",
+      "conceptId": "hash-table-existence-tracking",
+      "problemIds": [
+        217,
+        219,
+        128
+      ]
+    },
+    {
+      "sessionIndex": 54,
       "type": "challenge",
       "problemIds": [
         26
       ]
     },
     {
-      "sessionIndex": 12,
+      "sessionIndex": 55,
       "type": "review",
       "reviewRange": [
-        8,
-        11
+        50,
+        54
       ]
     },
     {
-      "sessionIndex": 13,
+      "sessionIndex": 56,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 57,
+      "type": "concept",
+      "conceptId": "hash-table-sliding-window-distinct",
+      "problemIds": [
+        3,
+        219
+      ]
+    },
+    {
+      "sessionIndex": 58,
+      "type": "concept",
+      "conceptId": "hash-table-sliding-window-frequency",
+      "problemIds": [
+        438
+      ]
+    },
+    {
+      "sessionIndex": 59,
+      "type": "practice",
+      "problemIds": [
+        3,
+        219,
+        438
+      ]
+    },
+    {
+      "sessionIndex": 60,
+      "type": "concept",
+      "conceptId": "hash-table-grouping-anagrams",
+      "problemIds": [
+        49,
+        249
+      ]
+    },
+    {
+      "sessionIndex": 61,
+      "type": "challenge",
+      "problemIds": [
+        217
+      ]
+    },
+    {
+      "sessionIndex": 62,
+      "type": "review",
+      "reviewRange": [
+        57,
+        61
+      ]
+    },
+    {
+      "sessionIndex": 63,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 64,
+      "type": "concept",
+      "conceptId": "hash-table-prefix-sum-frequency",
+      "problemIds": [
+        560,
+        525
+      ]
+    },
+    {
+      "sessionIndex": 65,
+      "type": "concept",
+      "conceptId": "hash-table-longest-consecutive-sequence",
+      "problemIds": [
+        128,
+        217
+      ]
+    },
+    {
+      "sessionIndex": 66,
+      "type": "practice",
+      "problemIds": [
+        128,
+        217,
+        525
+      ]
+    },
+    {
+      "sessionIndex": 67,
+      "type": "concept",
+      "conceptId": "hash-table-design-lru-cache",
+      "problemIds": [
+        146
+      ]
+    },
+    {
+      "sessionIndex": 68,
+      "type": "challenge",
+      "problemIds": [
+        219
+      ]
+    },
+    {
+      "sessionIndex": 69,
+      "type": "review",
+      "reviewRange": [
+        64,
+        68
+      ]
+    },
+    {
+      "sessionIndex": 70,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 71,
+      "type": "concept",
+      "conceptId": "string-ascii-representation",
+      "problemIds": [
+        387,
+        8
+      ]
+    },
+    {
+      "sessionIndex": 72,
+      "type": "concept",
+      "conceptId": "string-linear-scan",
+      "problemIds": [
+        387,
+        242,
+        3
+      ]
+    },
+    {
+      "sessionIndex": 73,
+      "type": "practice",
+      "problemIds": [
+        3,
+        8,
+        242
+      ]
+    },
+    {
+      "sessionIndex": 74,
+      "type": "concept",
+      "conceptId": "string-two-pointers-opposite",
+      "problemIds": [
+        125,
+        151
+      ]
+    },
+    {
+      "sessionIndex": 75,
+      "type": "challenge",
+      "problemIds": [
+        125
+      ]
+    },
+    {
+      "sessionIndex": 76,
+      "type": "review",
+      "reviewRange": [
+        71,
+        75
+      ]
+    },
+    {
+      "sessionIndex": 77,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 78,
+      "type": "concept",
+      "conceptId": "string-two-pointers-filtering",
+      "problemIds": [
+        125,
+        680
+      ]
+    },
+    {
+      "sessionIndex": 79,
+      "type": "concept",
+      "conceptId": "string-sliding-window-fixed",
+      "problemIds": [
+        438,
+        567
+      ]
+    },
+    {
+      "sessionIndex": 80,
+      "type": "practice",
+      "problemIds": [
+        125,
+        438,
+        567
+      ]
+    },
+    {
+      "sessionIndex": 81,
+      "type": "concept",
+      "conceptId": "string-sliding-window-variable",
+      "problemIds": [
+        3,
+        424,
+        1876
+      ]
+    },
+    {
+      "sessionIndex": 82,
+      "type": "challenge",
+      "problemIds": [
+        242
+      ]
+    },
+    {
+      "sessionIndex": 83,
+      "type": "review",
+      "reviewRange": [
+        78,
+        82
+      ]
+    },
+    {
+      "sessionIndex": 84,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 85,
+      "type": "concept",
+      "conceptId": "string-anagram-grouping",
+      "problemIds": [
+        49
+      ]
+    },
+    {
+      "sessionIndex": 86,
+      "type": "concept",
+      "conceptId": "string-palindrome-expansion",
+      "problemIds": [
+        5
+      ]
+    },
+    {
+      "sessionIndex": 87,
+      "type": "practice",
+      "problemIds": [
+        5,
+        49
+      ]
+    },
+    {
+      "sessionIndex": 88,
+      "type": "concept",
+      "conceptId": "string-pattern-matching-basic",
+      "problemIds": [
+        28,
+        686
+      ]
+    },
+    {
+      "sessionIndex": 89,
+      "type": "challenge",
+      "problemIds": [
+        28
+      ]
+    },
+    {
+      "sessionIndex": 90,
+      "type": "review",
+      "reviewRange": [
+        85,
+        89
+      ]
+    },
+    {
+      "sessionIndex": 91,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 92,
+      "type": "concept",
+      "conceptId": "string-parsing-simulation",
+      "problemIds": [
+        8,
+        14,
+        151
+      ]
+    },
+    {
+      "sessionIndex": 93,
+      "type": "concept",
+      "conceptId": "two-pointer-three-sum-basic",
+      "problemIds": [
+        15,
+        1
+      ]
+    },
+    {
+      "sessionIndex": 94,
+      "type": "practice",
+      "problemIds": [
+        1,
+        8,
+        14
+      ]
+    },
+    {
+      "sessionIndex": 95,
+      "type": "concept",
+      "conceptId": "two-pointer-three-sum-closest",
+      "problemIds": [
+        16
+      ]
+    },
+    {
+      "sessionIndex": 96,
+      "type": "challenge",
+      "problemIds": [
+        14
+      ]
+    },
+    {
+      "sessionIndex": 97,
+      "type": "review",
+      "reviewRange": [
+        92,
+        96
+      ]
+    },
+    {
+      "sessionIndex": 98,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 99,
+      "type": "concept",
+      "conceptId": "two-pointer-four-sum-extension",
+      "problemIds": [
+        18
+      ]
+    },
+    {
+      "sessionIndex": 100,
+      "type": "concept",
+      "conceptId": "two-pointer-container-water",
+      "problemIds": [
+        11,
+        344
+      ]
+    },
+    {
+      "sessionIndex": 101,
+      "type": "practice",
+      "problemIds": [
+        11,
+        18,
+        344
+      ]
+    },
+    {
+      "sessionIndex": 102,
+      "type": "concept",
+      "conceptId": "two-pointer-trapping-rain-water"
+    },
+    {
+      "sessionIndex": 103,
+      "type": "challenge",
+      "problemIds": [
+        283
+      ]
+    },
+    {
+      "sessionIndex": 104,
+      "type": "review",
+      "reviewRange": [
+        99,
+        103
+      ]
+    },
+    {
+      "sessionIndex": 105,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 106,
+      "type": "concept",
+      "conceptId": "two-pointer-boats-to-save-people",
+      "problemIds": [
+        881
+      ]
+    },
+    {
+      "sessionIndex": 107,
+      "type": "concept",
+      "conceptId": "two-pointer-interval-merging-check",
+      "problemIds": [
+        56
+      ]
+    },
+    {
+      "sessionIndex": 108,
+      "type": "practice",
+      "problemIds": [
+        56,
+        881
+      ]
+    },
+    {
+      "sessionIndex": 109,
+      "type": "concept",
+      "conceptId": "two-pointer-backspace-string-compare",
+      "problemIds": [
+        844
+      ]
+    },
+    {
+      "sessionIndex": 110,
+      "type": "challenge",
+      "problemIds": [
+        344
+      ]
+    },
+    {
+      "sessionIndex": 111,
+      "type": "review",
+      "reviewRange": [
+        106,
+        110
+      ]
+    },
+    {
+      "sessionIndex": 112,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 113,
+      "type": "concept",
+      "conceptId": "two-pointer-valid-palindrome-ii",
+      "problemIds": [
+        680
+      ]
+    },
+    {
+      "sessionIndex": 114,
+      "type": "concept",
+      "conceptId": "two-pointer-sort-array-by-parity",
+      "problemIds": [
+        905,
+        75
+      ]
+    },
+    {
+      "sessionIndex": 115,
+      "type": "practice",
+      "problemIds": [
+        75,
+        680,
+        905
+      ]
+    },
+    {
+      "sessionIndex": 116,
+      "type": "concept",
+      "conceptId": "binary-search-core-concept",
+      "problemIds": [
+        704,
+        34
+      ]
+    },
+    {
+      "sessionIndex": 117,
+      "type": "challenge",
+      "problemIds": [
+        383
+      ]
+    },
+    {
+      "sessionIndex": 118,
+      "type": "review",
+      "reviewRange": [
+        113,
+        117
+      ]
+    },
+    {
+      "sessionIndex": 119,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 120,
+      "type": "concept",
+      "conceptId": "binary-search-inclusive-bounds",
+      "problemIds": [
+        704,
+        34
+      ]
+    },
+    {
+      "sessionIndex": 121,
+      "type": "concept",
+      "conceptId": "binary-search-overflow-prevention",
+      "problemIds": [
+        374,
+        33
+      ]
+    },
+    {
+      "sessionIndex": 122,
+      "type": "practice",
+      "problemIds": [
+        33,
+        34,
+        374
+      ]
+    },
+    {
+      "sessionIndex": 123,
+      "type": "concept",
+      "conceptId": "binary-search-exclusive-bounds",
+      "problemIds": [
+        35,
+        34
+      ]
+    },
+    {
+      "sessionIndex": 124,
+      "type": "challenge",
+      "problemIds": [
+        35
+      ]
+    },
+    {
+      "sessionIndex": 125,
+      "type": "review",
+      "reviewRange": [
+        120,
+        124
+      ]
+    },
+    {
+      "sessionIndex": 126,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 127,
+      "type": "concept",
+      "conceptId": "binary-search-lower-bound",
+      "problemIds": [
+        34
+      ]
+    },
+    {
+      "sessionIndex": 128,
+      "type": "concept",
+      "conceptId": "binary-search-upper-bound",
+      "problemIds": [
+        34
+      ]
+    },
+    {
+      "sessionIndex": 129,
+      "type": "practice",
+      "problemIds": [
+        34
+      ]
+    },
+    {
+      "sessionIndex": 130,
+      "type": "concept",
+      "conceptId": "binary-search-rotated-array",
+      "problemIds": [
+        33,
+        153
+      ]
+    },
+    {
+      "sessionIndex": 131,
+      "type": "challenge",
+      "problemIds": [
+        374
+      ]
+    },
+    {
+      "sessionIndex": 132,
+      "type": "review",
+      "reviewRange": [
+        127,
+        131
+      ]
+    },
+    {
+      "sessionIndex": 133,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 134,
+      "type": "concept",
+      "conceptId": "binary-search-rotated-duplicates",
+      "problemIds": [
+        81
+      ]
+    },
+    {
+      "sessionIndex": 135,
+      "type": "concept",
+      "conceptId": "binary-search-find-minimum-rotated",
+      "problemIds": [
+        153
+      ]
+    },
+    {
+      "sessionIndex": 136,
+      "type": "practice",
+      "problemIds": [
+        81,
+        153
+      ]
+    },
+    {
+      "sessionIndex": 137,
+      "type": "concept",
+      "conceptId": "binary-search-matrix-search",
+      "problemIds": [
+        74
+      ]
+    },
+    {
+      "sessionIndex": 138,
+      "type": "challenge",
+      "problemIds": [
+        387
+      ]
+    },
+    {
+      "sessionIndex": 139,
+      "type": "review",
+      "reviewRange": [
+        134,
+        138
+      ]
+    },
+    {
+      "sessionIndex": 140,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 141,
+      "type": "concept",
+      "conceptId": "sliding-window-concept-intro"
+    },
+    {
+      "sessionIndex": 142,
+      "type": "concept",
+      "conceptId": "sliding-window-fixed-size",
+      "problemIds": [
+        643,
+        1343,
+        2090
+      ]
+    },
+    {
+      "sessionIndex": 143,
+      "type": "practice",
+      "problemIds": [
+        643,
+        1343,
+        2090
+      ]
+    },
+    {
+      "sessionIndex": 144,
+      "type": "concept",
+      "conceptId": "sliding-window-variable-size-expansion"
+    },
+    {
+      "sessionIndex": 145,
+      "type": "challenge",
+      "problemIds": [
+        643
+      ]
+    },
+    {
+      "sessionIndex": 146,
+      "type": "review",
+      "reviewRange": [
+        141,
+        145
+      ]
+    },
+    {
+      "sessionIndex": 147,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 148,
+      "type": "concept",
+      "conceptId": "sliding-window-variable-size-contraction",
+      "problemIds": [
+        209
+      ]
+    },
+    {
+      "sessionIndex": 149,
+      "type": "concept",
+      "conceptId": "sliding-window-longest-substring-no-repeat",
+      "problemIds": [
+        3
+      ]
+    },
+    {
+      "sessionIndex": 150,
+      "type": "practice",
+      "problemIds": [
+        3,
+        209
+      ]
+    },
+    {
+      "sessionIndex": 151,
+      "type": "concept",
+      "conceptId": "sliding-window-max-consecutive-ones",
+      "problemIds": [
+        1004
+      ]
+    },
+    {
+      "sessionIndex": 152,
+      "type": "challenge",
+      "problemIds": [
+        680
+      ]
+    },
+    {
+      "sessionIndex": 153,
+      "type": "review",
+      "reviewRange": [
+        148,
+        152
+      ]
+    },
+    {
+      "sessionIndex": 154,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 155,
+      "type": "concept",
+      "conceptId": "sliding-window-fruit-into-baskets",
+      "problemIds": [
+        904
+      ]
+    },
+    {
+      "sessionIndex": 156,
+      "type": "concept",
+      "conceptId": "sliding-window-permutation-in-string",
+      "problemIds": [
+        567
+      ]
+    },
+    {
+      "sessionIndex": 157,
+      "type": "practice",
+      "problemIds": [
+        567,
+        904
+      ]
+    },
+    {
+      "sessionIndex": 158,
+      "type": "concept",
+      "conceptId": "sliding-window-find-all-anagrams",
+      "problemIds": [
+        438
+      ]
+    },
+    {
+      "sessionIndex": 159,
+      "type": "challenge",
+      "problemIds": [
+        704
+      ]
+    },
+    {
+      "sessionIndex": 160,
+      "type": "review",
+      "reviewRange": [
+        155,
+        159
+      ]
+    },
+    {
+      "sessionIndex": 161,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 162,
+      "type": "concept",
+      "conceptId": "sliding-window-minimum-window-substring"
+    },
+    {
+      "sessionIndex": 163,
+      "type": "concept",
+      "conceptId": "stack-core-concept-introduction"
+    },
+    {
+      "sessionIndex": 164,
+      "type": "practice"
+    },
+    {
+      "sessionIndex": 165,
+      "type": "concept",
+      "conceptId": "stack-array-implementation",
+      "problemIds": [
+        155
+      ]
+    },
+    {
+      "sessionIndex": 166,
+      "type": "challenge",
+      "problemIds": [
+        844
+      ]
+    },
+    {
+      "sessionIndex": 167,
+      "type": "review",
+      "reviewRange": [
+        162,
+        166
+      ]
+    },
+    {
+      "sessionIndex": 168,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 169,
+      "type": "concept",
+      "conceptId": "stack-valid-parentheses",
+      "problemIds": [
+        20,
+        921
+      ]
+    },
+    {
+      "sessionIndex": 170,
+      "type": "concept",
+      "conceptId": "stack-asteroid-collision",
+      "problemIds": [
+        735
+      ]
+    },
+    {
+      "sessionIndex": 171,
+      "type": "practice",
+      "problemIds": [
+        20,
+        735,
+        921
+      ]
+    },
+    {
+      "sessionIndex": 172,
+      "type": "concept",
+      "conceptId": "stack-evaluate-reverse-polish-notation",
+      "problemIds": [
+        150
+      ]
+    },
+    {
+      "sessionIndex": 173,
+      "type": "challenge",
+      "problemIds": [
+        20
+      ]
+    },
+    {
+      "sessionIndex": 174,
+      "type": "review",
+      "reviewRange": [
+        169,
+        173
+      ]
+    },
+    {
+      "sessionIndex": 175,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 176,
+      "type": "concept",
+      "conceptId": "stack-remove-adjacent-duplicates",
+      "problemIds": [
+        1047,
+        1209
+      ]
+    },
+    {
+      "sessionIndex": 177,
+      "type": "concept",
+      "conceptId": "stack-daily-temperatures",
+      "problemIds": [
+        739
+      ]
+    },
+    {
+      "sessionIndex": 178,
+      "type": "practice",
+      "problemIds": [
+        739,
+        1047,
+        1209
+      ]
+    },
+    {
+      "sessionIndex": 179,
+      "type": "concept",
+      "conceptId": "stack-next-greater-element-ii",
+      "problemIds": [
+        503
+      ]
+    },
+    {
+      "sessionIndex": 180,
+      "type": "challenge",
+      "problemIds": [
+        905
+      ]
+    },
+    {
+      "sessionIndex": 181,
+      "type": "review",
+      "reviewRange": [
+        176,
+        180
+      ]
+    },
+    {
+      "sessionIndex": 182,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 183,
+      "type": "concept",
+      "conceptId": "stack-online-stock-span",
+      "problemIds": [
+        901
+      ]
+    },
+    {
+      "sessionIndex": 184,
+      "type": "concept",
+      "conceptId": "stack-sum-of-subarray-minimums",
+      "problemIds": [
+        907
+      ]
+    },
+    {
+      "sessionIndex": 185,
+      "type": "practice",
+      "problemIds": [
+        901,
+        907
+      ]
+    },
+    {
+      "sessionIndex": 186,
+      "type": "concept",
+      "conceptId": "stack-maximal-rectangle-foundation"
+    },
+    {
+      "sessionIndex": 187,
+      "type": "challenge",
+      "problemIds": [
+        977
+      ]
+    },
+    {
+      "sessionIndex": 188,
+      "type": "review",
+      "reviewRange": [
+        183,
+        187
+      ]
+    },
+    {
+      "sessionIndex": 189,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 190,
+      "type": "concept",
+      "conceptId": "queue-core-concept-introduction"
+    },
+    {
+      "sessionIndex": 191,
+      "type": "concept",
+      "conceptId": "queue-array-implementation"
+    },
+    {
+      "sessionIndex": 192,
+      "type": "practice"
+    },
+    {
+      "sessionIndex": 193,
+      "type": "concept",
+      "conceptId": "queue-linked-list-implementation"
+    },
+    {
+      "sessionIndex": 194,
+      "type": "challenge",
+      "problemIds": [
+        1047
+      ]
+    },
+    {
+      "sessionIndex": 195,
+      "type": "review",
+      "reviewRange": [
+        190,
+        194
+      ]
+    },
+    {
+      "sessionIndex": 196,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 197,
+      "type": "concept",
+      "conceptId": "queue-circular-buffer",
+      "problemIds": [
+        622
+      ]
+    },
+    {
+      "sessionIndex": 198,
+      "type": "concept",
+      "conceptId": "queue-using-stacks",
+      "problemIds": [
+        232
+      ]
+    },
+    {
+      "sessionIndex": 199,
+      "type": "practice",
+      "problemIds": [
+        232,
+        622
+      ]
+    },
+    {
+      "sessionIndex": 200,
+      "type": "concept",
+      "conceptId": "stack-using-queues",
+      "problemIds": [
+        225
+      ]
+    },
+    {
+      "sessionIndex": 201,
+      "type": "challenge",
+      "problemIds": [
+        225
+      ]
+    },
+    {
+      "sessionIndex": 202,
+      "type": "review",
+      "reviewRange": [
+        197,
+        201
+      ]
+    },
+    {
+      "sessionIndex": 203,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 204,
+      "type": "concept",
+      "conceptId": "queue-bfs-level-order-traversal",
+      "problemIds": [
+        102,
+        104
+      ]
+    },
+    {
+      "sessionIndex": 205,
+      "type": "concept",
+      "conceptId": "queue-shortest-path-unweighted",
+      "problemIds": [
+        111,
+        934
+      ]
+    },
+    {
+      "sessionIndex": 206,
+      "type": "practice",
+      "problemIds": [
+        102,
+        104,
+        111
+      ]
+    },
+    {
+      "sessionIndex": 207,
+      "type": "concept",
+      "conceptId": "queue-matrix-multi-source-bfs",
+      "problemIds": [
+        542,
+        994
+      ]
+    },
+    {
+      "sessionIndex": 208,
+      "type": "challenge",
+      "problemIds": [
+        104
+      ]
+    },
+    {
+      "sessionIndex": 209,
+      "type": "review",
+      "reviewRange": [
+        204,
+        208
+      ]
+    },
+    {
+      "sessionIndex": 210,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 211,
+      "type": "concept",
+      "conceptId": "queue-sliding-window-maximum"
+    },
+    {
+      "sessionIndex": 212,
+      "type": "concept",
+      "conceptId": "linked-list-node-memory-model"
+    },
+    {
+      "sessionIndex": 213,
+      "type": "practice"
+    },
+    {
+      "sessionIndex": 214,
+      "type": "concept",
+      "conceptId": "linked-list-traversal-basics",
+      "problemIds": [
+        876,
+        430
+      ]
+    },
+    {
+      "sessionIndex": 215,
+      "type": "challenge",
+      "problemIds": [
+        111
+      ]
+    },
+    {
+      "sessionIndex": 216,
+      "type": "review",
+      "reviewRange": [
+        211,
+        215
+      ]
+    },
+    {
+      "sessionIndex": 217,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 218,
+      "type": "concept",
+      "conceptId": "linked-list-insertion-head-tail",
+      "problemIds": [
+        707
+      ]
+    },
+    {
+      "sessionIndex": 219,
+      "type": "concept",
+      "conceptId": "linked-list-deletion-by-value-or-index",
+      "problemIds": [
+        237,
+        203
+      ]
+    },
+    {
+      "sessionIndex": 220,
+      "type": "practice",
+      "problemIds": [
+        203,
+        237,
+        707
+      ]
+    },
+    {
+      "sessionIndex": 221,
+      "type": "concept",
+      "conceptId": "linked-list-dummy-head-pattern",
+      "problemIds": [
+        203,
+        83,
+        2
+      ]
+    },
+    {
+      "sessionIndex": 222,
+      "type": "challenge",
+      "problemIds": [
+        83
+      ]
+    },
+    {
+      "sessionIndex": 223,
+      "type": "review",
+      "reviewRange": [
+        218,
+        222
+      ]
+    },
+    {
+      "sessionIndex": 224,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 225,
+      "type": "concept",
+      "conceptId": "linked-list-two-pointers-slow-fast",
+      "problemIds": [
+        876,
+        19
+      ]
+    },
+    {
+      "sessionIndex": 226,
+      "type": "concept",
+      "conceptId": "linked-list-cycle-detection-floyd",
+      "problemIds": [
+        141,
+        142
+      ]
+    },
+    {
+      "sessionIndex": 227,
+      "type": "practice",
+      "problemIds": [
+        19,
+        141,
+        142
+      ]
+    },
+    {
+      "sessionIndex": 228,
+      "type": "concept",
+      "conceptId": "linked-list-cycle-start-node",
+      "problemIds": [
+        142
+      ]
+    },
+    {
+      "sessionIndex": 229,
+      "type": "challenge",
+      "problemIds": [
+        141
+      ]
+    },
+    {
+      "sessionIndex": 230,
+      "type": "review",
+      "reviewRange": [
+        225,
+        229
+      ]
+    },
+    {
+      "sessionIndex": 231,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 232,
+      "type": "concept",
+      "conceptId": "linked-list-reversal-iterative",
+      "problemIds": [
+        206,
+        92
+      ]
+    },
+    {
+      "sessionIndex": 233,
+      "type": "concept",
+      "conceptId": "linked-list-reversal-recursive",
+      "problemIds": [
+        206
+      ]
+    },
+    {
+      "sessionIndex": 234,
+      "type": "practice",
+      "problemIds": [
+        92,
+        206
+      ]
+    },
+    {
+      "sessionIndex": 235,
+      "type": "concept",
+      "conceptId": "linked-list-merge-two-sorted",
+      "problemIds": [
+        21
+      ]
+    },
+    {
+      "sessionIndex": 236,
+      "type": "challenge",
+      "problemIds": [
+        21
+      ]
+    },
+    {
+      "sessionIndex": 237,
+      "type": "review",
+      "reviewRange": [
+        232,
+        236
+      ]
+    },
+    {
+      "sessionIndex": 238,
+      "type": "rest"
+    },
+    {
+      "sessionIndex": 239,
+      "type": "concept",
+      "conceptId": "linked-list-palindrome-check",
+      "problemIds": [
+        234,
+        143
+      ]
+    },
+    {
+      "sessionIndex": 240,
+      "type": "practice",
+      "problemIds": [
+        143,
+        234
+      ]
+    },
+    {
+      "sessionIndex": 241,
+      "type": "challenge",
+      "problemIds": [
+        203
+      ]
+    },
+    {
+      "sessionIndex": 242,
+      "type": "review",
+      "reviewRange": [
+        239,
+        241
+      ]
+    },
+    {
+      "sessionIndex": 243,
       "type": "rest"
     }
   ]

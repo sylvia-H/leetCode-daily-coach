@@ -22,6 +22,7 @@ exit_criteria:
   - Can correctly handle empty list conditions
 leetcode:
   - 876
+  - 430
 tags:
   - linked-list
   - traversal
@@ -37,3 +38,4 @@ tags:
 - TypeScript 重點：Ensure type guards or explicit checks ensure current is not null before accessing properties.
 - Python 重點：A standard 'while curr:' loop handles traversal cleanly.
 - 題號 876 為何適合此 Pattern：Requires traversing the entire list to count nodes or finding the middle via sequential scanning.
+- 題號 430 為何適合此 Pattern：此題需要透過多層次的鏈結串列遍歷與指標追蹤，展現線性掃描的核心技巧。

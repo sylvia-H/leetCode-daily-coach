@@ -21,6 +21,7 @@ exit_criteria:
   - Can explain why O(1) space requires structural modification
 leetcode:
   - 234
+  - 143
 tags:
   - linked-list
   - palindrome
@@ -36,3 +37,4 @@ tags:
 - TypeScript 重點：Structure helper functions cleanly or break the problem into clear phases.
 - Python 重點：Pointers make half-list traversal and comparison straightforward.
 - 題號 234 為何適合此 Pattern：Requires O(1) space palindrome validation, combining midpoint finding and list reversal.
+- 題號 143 為何適合此 Pattern：需要結合尋找中點、反轉後半部鏈結串列以及合併的綜合性複合模式。

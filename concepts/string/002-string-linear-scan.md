@@ -27,6 +27,7 @@ exit_criteria:
 leetcode:
   - 387
   - 242
+  - 3
 tags:
   - string
   - linear-scan
@@ -42,3 +43,4 @@ tags:
 - Python 重點：Iterate directly over string items or use enumerate().
 - 題號 387 為何適合此 Pattern：Requires scanning characters to count frequencies.
 - 題號 242 為何適合此 Pattern：Scans both strings to verify identical character counts.
+- 題號 3 為何適合此 Pattern：透過線性掃描與雜湊表記錄字元位置，尋找不含有重複字元的最長子字串。

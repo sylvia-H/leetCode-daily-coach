@@ -19,6 +19,7 @@ exit_criteria:
   - 能夠正確計算每次移動時的容量並更新最大值
 leetcode:
   - 11
+  - 344
 tags:
   - two-pointers
   - greedy
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：使用 Math.min 與 Math.max 簡化計算。
 - Python 重點：利用簡潔的賦值語法更新最大面積。
 - 題號 11 為何適合此 Pattern：經典的雙指標夾擊且依賴貪婪策略決定移動方向的代表題。
+- 題號 344 為何適合此 Pattern：利用左右雙指標向內收斂的貪婪策略來處理陣列邊界問題。

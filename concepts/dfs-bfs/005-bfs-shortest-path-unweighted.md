@@ -18,6 +18,7 @@ exit_criteria:
   - 理解為什麼 BFS 在邊權均等時必然找到最短路徑
 leetcode:
   - 111
+  - 127
 tags:
   - bfs
   - shortest-path
@@ -33,3 +34,4 @@ tags:
 - TypeScript 重點：可以利用物件或額外的 Map 記錄起點到各節點的距離。
 - Python 重點：使用字典或 distance 陣列記錄每個節點的訪問距離。
 - 題號 111 為何適合此 Pattern：求二元樹的最小深度即是尋找根節點到最近葉子節點的最短路徑。
+- 題號 127 為何適合此 Pattern：在未加權的單字圖中使用 BFS 尋找從起點到終點的最短轉換序列長度。

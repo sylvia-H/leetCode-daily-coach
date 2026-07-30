@@ -21,6 +21,8 @@ exit_criteria:
   - Can correctly slide the window across the rest of the array in O(n) time.
 leetcode:
   - 643
+  - 1343
+  - 2090
 tags:
   - sliding-window
   - array
@@ -35,3 +37,5 @@ tags:
 - TypeScript 重點：Ensure loop bounds correctly handle arrays of length less than k.
 - Python 重點：Use slice summation for the initial window if appropriate, then transition to incremental updates.
 - 題號 643 為何適合此 Pattern：Requires finding the maximum average of a contiguous subarray of fixed length k.
+- 題號 1343 為何適合此 Pattern：同樣使用固定長度為 k 的視窗來計算子陣列平均值大於或等於閾值的數量。
+- 題號 2090 為何適合此 Pattern：利用固定大小的滑動視窗計算半徑為 k 的子陣列平均值。

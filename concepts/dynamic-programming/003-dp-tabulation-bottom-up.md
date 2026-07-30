@@ -20,6 +20,7 @@ exit_criteria:
 leetcode:
   - 70
   - 746
+  - 198
 tags:
   - tabulation
   - iteration
@@ -35,3 +36,4 @@ tags:
 - Python 重點：使用串列生成式快速初始化 DP 表格
 - 題號 70 為何適合此 Pattern：以迴圈從小到大計算每一階的方法數
 - 題號 746 為何適合此 Pattern：使用最小花費爬樓梯練習狀態轉移與表格填空
+- 題號 198 為何適合此 Pattern：使用表格法（Bottom-Up）由底向上迭代計算，完美體現 Tabulation 的精神。

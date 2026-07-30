@@ -21,6 +21,7 @@ exit_criteria:
     processing the root.
 leetcode:
   - 145
+  - 1245
 tags:
   - tree
   - dfs
@@ -36,3 +37,4 @@ tags:
 - TypeScript 重點：Ideal for clean cleanup tasks or computing node heights/sizes.
 - Python 重點：Great for recursive destruction or aggregating child metrics.
 - 題號 145 為何適合此 Pattern：Directly evaluates standard Postorder traversal.
+- 題號 1245 為何適合此 Pattern：利用後序遍歷自底向上收集子樹資訊來計算樹的直徑。

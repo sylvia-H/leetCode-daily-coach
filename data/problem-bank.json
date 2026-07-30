@@ -10,6 +10,16 @@
       "hash-table"
     ]
   },
+  "2": {
+    "id": 2,
+    "slug": "add-two-numbers",
+    "title": "Add Two Numbers",
+    "url": "https://leetcode.com/problems/add-two-numbers/",
+    "difficulty": "Medium",
+    "patterns": [
+      "linked-list"
+    ]
+  },
   "3": {
     "id": 3,
     "slug": "longest-substring-without-repeating-characters",
@@ -245,6 +255,16 @@
     "difficulty": "Hard",
     "patterns": [
       "sliding-window"
+    ]
+  },
+  "32": {
+    "id": 32,
+    "slug": "longest-valid-parentheses",
+    "title": "Longest Valid Parentheses",
+    "url": "https://leetcode.com/problems/longest-valid-parentheses/",
+    "difficulty": "Hard",
+    "patterns": [
+      "stack"
     ]
   },
   "33": {
@@ -850,6 +870,16 @@
       "tree"
     ]
   },
+  "114": {
+    "id": 114,
+    "slug": "flatten-binary-tree-to-linked-list",
+    "title": "Flatten Binary Tree to Linked List",
+    "url": "https://leetcode.com/problems/flatten-binary-tree-to-linked-list/",
+    "difficulty": "Medium",
+    "patterns": [
+      "tree"
+    ]
+  },
   "120": {
     "id": 120,
     "slug": "triangle",
@@ -1325,6 +1355,16 @@
       "tree"
     ]
   },
+  "230": {
+    "id": 230,
+    "slug": "kth-smallest-element-in-a-bst",
+    "title": "Kth Smallest Element in a BST",
+    "url": "https://leetcode.com/problems/kth-smallest-element-in-a-bst/",
+    "difficulty": "Medium",
+    "patterns": [
+      "tree"
+    ]
+  },
   "232": {
     "id": 232,
     "slug": "implement-queue-using-stacks",
@@ -1617,6 +1657,16 @@
     "patterns": [
       "array",
       "prefix-sum"
+    ]
+  },
+  "304": {
+    "id": 304,
+    "slug": "range-sum-query-2d-immutable",
+    "title": "Range Sum Query 2D - Immutable",
+    "url": "https://leetcode.com/problems/range-sum-query-2d-immutable/",
+    "difficulty": "Medium",
+    "patterns": [
+      "array"
     ]
   },
   "310": {
@@ -1960,6 +2010,16 @@
     "difficulty": "Medium",
     "patterns": [
       "sliding-window"
+    ]
+  },
+  "430": {
+    "id": 430,
+    "slug": "flatten-a-multilevel-doubly-linked-list",
+    "title": "Flatten a Multilevel Doubly Linked List",
+    "url": "https://leetcode.com/problems/flatten-a-multilevel-doubly-linked-list/",
+    "difficulty": "Medium",
+    "patterns": [
+      "linked-list"
     ]
   },
   "433": {
@@ -2374,6 +2434,16 @@
     "difficulty": "Medium",
     "patterns": [
       "dfs-bfs"
+    ]
+  },
+  "686": {
+    "id": 686,
+    "slug": "repeated-string-match",
+    "title": "Repeated String Match",
+    "url": "https://leetcode.com/problems/repeated-string-match/",
+    "difficulty": "Medium",
+    "patterns": [
+      "string"
     ]
   },
   "695": {
@@ -2818,6 +2888,16 @@
       "sliding-window"
     ]
   },
+  "921": {
+    "id": 921,
+    "slug": "minimum-add-to-make-parentheses-valid",
+    "title": "Minimum Add to Make Parentheses Valid",
+    "url": "https://leetcode.com/problems/minimum-add-to-make-parentheses-valid/",
+    "difficulty": "Medium",
+    "patterns": [
+      "stack"
+    ]
+  },
   "922": {
     "id": 922,
     "slug": "sort-array-by-parity-ii",
@@ -2981,6 +3061,16 @@
       "string"
     ]
   },
+  "1052": {
+    "id": 1052,
+    "slug": "grumpy-bookstore-owner",
+    "title": "Grumpy Bookstore Owner",
+    "url": "https://leetcode.com/problems/grumpy-bookstore-owner/",
+    "difficulty": "Medium",
+    "patterns": [
+      "array"
+    ]
+  },
   "1091": {
     "id": 1091,
     "slug": "shortest-path-in-binary-matrix",
@@ -3019,6 +3109,26 @@
     "difficulty": "Medium",
     "patterns": [
       "queue"
+    ]
+  },
+  "1209": {
+    "id": 1209,
+    "slug": "remove-all-adjacent-duplicates-in-string-ii",
+    "title": "Remove All Adjacent Duplicates in String II",
+    "url": "https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string-ii/",
+    "difficulty": "Medium",
+    "patterns": [
+      "stack"
+    ]
+  },
+  "1245": {
+    "id": 1245,
+    "slug": "tree-diameter",
+    "title": "Tree Diameter",
+    "url": "https://leetcode.com/problems/tree-diameter/",
+    "difficulty": "Medium",
+    "patterns": [
+      "tree"
     ]
   },
   "1248": {
@@ -3361,6 +3471,16 @@
       "array"
     ]
   },
+  "2090": {
+    "id": 2090,
+    "slug": "k-radius-subarray-averages",
+    "title": "K Radius Subarray Averages",
+    "url": "https://leetcode.com/problems/k-radius-subarray-averages/",
+    "difficulty": "Medium",
+    "patterns": [
+      "sliding-window"
+    ]
+  },
   "2187": {
     "id": 2187,
     "slug": "minimum-time-to-complete-trips",
@@ -3389,6 +3509,16 @@
     "difficulty": "Medium",
     "patterns": [
       "binary-search"
+    ]
+  },
+  "2668": {
+    "id": 2668,
+    "slug": "find-latest-salaries",
+    "title": "Find Latest Salaries",
+    "url": "https://leetcode.com/problems/find-latest-salaries/",
+    "difficulty": "Easy",
+    "patterns": [
+      "dfs-bfs"
     ]
   },
   "2685": {

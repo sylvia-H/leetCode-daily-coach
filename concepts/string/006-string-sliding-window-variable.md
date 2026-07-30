@@ -20,6 +20,7 @@ exit_criteria:
 leetcode:
   - 3
   - 424
+  - 1876
 tags:
   - string
   - sliding-window
@@ -35,3 +36,4 @@ tags:
 - Python 重點：Use dictionaries to track character indices or frequencies.
 - 題號 3 為何適合此 Pattern：Finds longest substring without repeating characters.
 - 題號 424 為何適合此 Pattern：Finds longest repeating character replacement with variable window.
+- 題號 1876 為何適合此 Pattern：固定長度為 3 的滑動視窗可用於檢查子字串是否所有字元都相異。

@@ -18,6 +18,7 @@ exit_criteria:
   - 理解遞迴基底條件與遞迴呼叫的關係
 leetcode:
   - 200
+  - 104
 tags:
   - dfs
   - recursion
@@ -33,3 +34,4 @@ tags:
 - TypeScript 重點：注意 JavaScript/TypeScript 的最大呼叫堆疊限制，避免過深遞迴造成 Stack Overflow。
 - Python 重點：Python 預設的遞迴深度限制較小，必要時可用 sys.setrecursionlimit。
 - 題號 200 為何適合此 Pattern：島嶼數量問題可完美利用遞迴 DFS 尋找並標記相連的陸地。
+- 題號 104 為何適合此 Pattern：透過遞迴直接走訪二元樹的左右子樹，是學習基礎 DFS 遞迴實作的經典入門題。

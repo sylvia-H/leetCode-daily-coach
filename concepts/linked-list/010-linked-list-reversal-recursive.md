@@ -22,6 +22,7 @@ exit_criteria:
   - Can identify base cases for recursion
 leetcode:
   - 206
+  - 25
 tags:
   - linked-list
   - reversal
@@ -37,3 +38,4 @@ tags:
 - TypeScript 重點：Watch out for call stack size limits on very long linked lists.
 - Python 重點：Ensure proper return of the new head propagated from the deep tail call.
 - 題號 206 為何適合此 Pattern：Can be solved elegantly using recursive stack unwinding to reverse links.
+- 題號 25 為何適合此 Pattern：以遞迴方式每k個節點一組進行反轉，完美體現遞迴處理鏈結結構的思維。

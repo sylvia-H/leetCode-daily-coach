@@ -20,6 +20,7 @@ exit_criteria:
   - 能在不使用額外記憶體下完成陣列壓縮
 leetcode:
   - 27
+  - 80
 tags:
   - array
   - two-pointers
@@ -35,3 +36,4 @@ tags:
 - TypeScript 重點：原地修改後記得回傳有效長度 slow。
 - Python 重點：切記 Python 的 list 原地修改後，函式外也能直接看到變動。
 - 題號 27 為何適合此 Pattern：移除指定元素並返回新長度，標準的快慢指標原地修改題。
+- 題號 80 為何適合此 Pattern：利用快慢指標在原地進行元素的保留與移除，允許元素最多重複兩次。

@@ -19,6 +19,7 @@ exit_criteria:
   - 理解為何外層迴圈配合內層雙指標能達到 O(n^2) 複雜度
 leetcode:
   - 15
+  - 1
 tags:
   - two-pointers
   - sorting
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：注意 JavaScript 排序數字時必須提供比較函式 (a, b) => a - b。
 - Python 重點：Python 中可利用排序後的陣列搭配 while 迴圈與條件判斷安全地跳過重複值。
 - 題號 15 為何適合此 Pattern：經典的三數之和題目，完美展示排序結合相向雙指標的應用。
+- 題號 1 為何適合此 Pattern：使用相向雙指標尋找兩數之和，是 Three Sum 基礎邏輯的簡化版本。

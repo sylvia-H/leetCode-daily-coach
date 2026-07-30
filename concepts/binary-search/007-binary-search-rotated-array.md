@@ -20,6 +20,7 @@ exit_criteria:
   - Check if target falls within the sorted half range.
 leetcode:
   - 33
+  - 153
 tags:
   - binary-search
   - rotated-array
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Handle strict inequalities carefully.
 - Python 重點：Use clean conditional blocks for readability.
 - 題號 33 為何適合此 Pattern：Classic search problem in a rotated sorted array.
+- 題號 153 為何適合此 Pattern：此題為旋轉排序陣列的變形題，需透過二分搜尋找出最小值。

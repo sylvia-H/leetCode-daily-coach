@@ -20,6 +20,7 @@ exit_criteria:
   - Can identify sorted array precondition.
 leetcode:
   - 704
+  - 34
 tags:
   - binary-search
   - array
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Use Math.floor for midpoint calculation to avoid fractional indices.
 - Python 重點：Use integer division // for midpoint calculation.
 - 題號 704 為何適合此 Pattern：A textbook example of standard binary search on a sorted array.
+- 題號 34 為何適合此 Pattern：此題需要使用二分搜尋的核心觀念在排序陣列中尋找目標值的範圍。

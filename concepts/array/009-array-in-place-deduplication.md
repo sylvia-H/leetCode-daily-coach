@@ -18,6 +18,7 @@ exit_criteria:
   - 能正確維護不重複區間的寫入指標
 leetcode:
   - 26
+  - 80
 tags:
   - array
   - two-pointers
@@ -33,3 +34,4 @@ tags:
 - TypeScript 重點：回傳值為去重後的有效長度 (slow + 1)。
 - Python 重點：注意邏輯判斷時不要發生索引越界。
 - 題號 26 為何適合此 Pattern：已排序陣列的原地去重，完美對應快慢指標法。
+- 題號 80 為何適合此 Pattern：利用快慢指標在已排序陣列中進行更具彈性的原地去重複處理。

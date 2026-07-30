@@ -25,6 +25,7 @@ exit_criteria:
 leetcode:
   - 1
   - 217
+  - 128
 tags:
   - hash-table
   - basics
@@ -40,3 +41,4 @@ tags:
 - Python 重點：Use standard dictionary structures dict() for average O(1) lookups.
 - 題號 1 為何適合此 Pattern：Two Sum uses a hash map to check for the complement in O(1) time.
 - 題號 217 為何適合此 Pattern：Contains Duplicate utilizes hash sets to track seen elements efficiently.
+- 題號 128 為何適合此 Pattern：利用雜湊表以 O(n) 時間尋找連續序列，展示了雜湊對映在快速查找上的核心應用。

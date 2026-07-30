@@ -20,6 +20,7 @@ exit_criteria:
   - Update bounds correctly using right = mid.
 leetcode:
   - 35
+  - 34
 tags:
   - binary-search
   - bounds
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Be careful with right = mid vs right = mid - 1.
 - Python 重點：Keep track of open vs closed interval semantics.
 - 題號 35 為何適合此 Pattern：Can be solved elegantly using exclusive upper bounds for insertion.
+- 題號 34 為何適合此 Pattern：此題可應用互斥邊界的二分搜尋策略尋找目標區間。

@@ -20,6 +20,7 @@ exit_criteria:
   - Can return the new head correctly
 leetcode:
   - 206
+  - 92
 tags:
   - linked-list
   - reversal
@@ -35,3 +36,4 @@ tags:
 - TypeScript 重點：Use temporary variables to hold reference types safely during swapping.
 - Python 重點：Python tuple assignment (prev, curr, curr.next) = (curr, curr.next, prev) simplifies the swaps.
 - 題號 206 為何適合此 Pattern：The canonical problem for reversing a singly linked list.
+- 題號 92 為何適合此 Pattern：此題為部分反轉鏈結串列，考驗反覆迭代時指標精準翻轉與接合的控制能力。

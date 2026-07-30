@@ -27,6 +27,7 @@ exit_criteria:
 leetcode:
   - 1480
   - 1929
+  - 238
 tags:
   - array
   - traversal
@@ -43,3 +44,4 @@ tags:
 - Python 重點：優先使用 for x in arr 或 enumerate(arr) 進行 Pythonic 走訪。
 - 題號 1480 為何適合此 Pattern：需要線性掃描陣列來累加前綴和。
 - 題號 1929 為何適合此 Pattern：透過兩次線性掃描或直接走訪建構串接陣列。
+- 題號 238 為何適合此 Pattern：透過兩次線性掃描分別計算左右兩側的乘積陣列，是經典的陣列線性掃描應用。

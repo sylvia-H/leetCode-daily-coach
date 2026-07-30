@@ -19,6 +19,7 @@ exit_criteria:
     right subtree.
 leetcode:
   - 94
+  - 230
 tags:
   - tree
   - dfs
@@ -34,3 +35,4 @@ tags:
 - TypeScript 重點：Accumulate results in an array passed down or scoped externally.
 - Python 重點：Return lists by combining results from left and right recursive calls.
 - 題號 94 為何適合此 Pattern：Directly implements standard Inorder traversal.
+- 題號 230 為何適合此 Pattern：利用中序遍歷二元搜尋樹會產生遞增序列的特性來尋找第 K 小的元素。

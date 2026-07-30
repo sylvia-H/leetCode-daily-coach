@@ -25,6 +25,7 @@ exit_criteria:
 leetcode:
   - 387
   - 383
+  - 451
 tags:
   - hash-table
   - counting
@@ -40,3 +41,4 @@ tags:
 - Python 重點：Use collections.Counter for concise frequency counting.
 - 題號 387 為何適合此 Pattern：First Unique Character requires counting character frequencies first.
 - 題號 383 為何適合此 Pattern：Ransom Note checks if magazine character counts satisfy ransom note requirements.
+- 題號 451 為何適合此 Pattern：透過頻率對映統計字元出現次數，再依頻率排序，是頻率雜湊表應用的進階延伸。
