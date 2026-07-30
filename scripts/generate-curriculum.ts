@@ -2,11 +2,11 @@
 // → 結構 Gate（重用 F2，全量模式）→ 產 curriculum/outline.md。process.exit / 檔案寫入 / LLM 呼叫
 // 只在本檔與 scripts/lib/；純函式（parseDraftResponse/conceptToMarkdown）供單測，其餘為 I/O 邊界。
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import matter from "gray-matter";
 import { loadCurriculum, stripLeadingComment, validateCurriculum } from "../src/compiler/curriculum.js";
 import { loadProblemBank, makeProblemExists } from "../src/compiler/problem.js";
-import type { Violation } from "../src/types/curriculum.js";
+import type { Ordinal, Violation } from "../src/types/curriculum.js";
 import type { ProblemBankFile } from "../src/types/problem.js";
 import { createLlmClient, type LlmClient } from "./lib/llm-client.js";
 import { serializeOutline } from "./lib/outline.js";
@@ -240,12 +240,8 @@ export function filterPriorConceptIds(
 }
 
 /**
- * 雙向邊補齊（reciprocal edge repair，I/O 邊界）：某 Concept 的 prerequisite 引用「本批次之前
- * 就已存在」的 Concept 時，那個既存檔案不會自動反映對應的 next——因為每次 LLM 呼叫只能寫入
- * 「這次正在起草的 Topic」的檔案。這是同一條邊的另一端，資訊已由來源（prerequisite 清單）
- * 完全決定、無歧義，故在 Stage 1 產線內部機械式補上；F2 `curriculum.ts` 的 Gate 本身仍刻意
- * 不自動補齊雙向一致（見其 FR-017 註解），用以攔截「人工手改一側卻忘了改另一側」的真實錯誤。
- * 只在此新增 `next`（若已存在則不重複新增），不觸碰其餘欄位與 Author Hints 正文。
+ * 對既存檔案的 `next` 或 `prerequisite` 欄位新增缺漏的 id（若已存在則不重複新增），
+ * 不觸碰其餘欄位與 Author Hints 正文（I/O 邊界，供 repairReciprocalEdges 呼叫）。
  *
  * MUST 先套用 `stripLeadingComment`（與 F2 `loadCurriculum` 同一套）才能交給 gray-matter：
  * F2 stub 種子檔案帶有 frontmatter **之前**的 `<!-- ... -->` 註解，若直接對 raw 呼叫
@@ -253,14 +249,80 @@ export function filterPriorConceptIds(
  * content，寫回時就會在檔案最上面生成第二層假 frontmatter、把原本的 frontmatter 整包
  * 降級為內文——實測踩過，把 001/002 兩篇 F2 stub 種子的 frontmatter 整個弄壞。
  */
-export function patchConceptNextIfMissing(filePath: string, newConceptId: string): void {
+export function patchConceptEdgeField(filePath: string, field: "next" | "prerequisite", idsToAdd: readonly string[]): void {
+  if (idsToAdd.length === 0) return;
   const raw = readFileSync(filePath, "utf-8");
   const { data, content } = matter(stripLeadingComment(raw));
-  const currentNext = Array.isArray(data.next)
-    ? (data.next as unknown[]).filter((v): v is string => typeof v === "string")
+  const current = Array.isArray(data[field])
+    ? (data[field] as unknown[]).filter((v): v is string => typeof v === "string")
     : [];
-  if (currentNext.includes(newConceptId)) return;
-  writeFileSync(filePath, matter.stringify(content, { ...data, next: [...currentNext, newConceptId] }), "utf-8");
+  const missing = idsToAdd.filter((id) => !current.includes(id));
+  if (missing.length === 0) return;
+  writeFileSync(filePath, matter.stringify(content, { ...data, [field]: [...current, ...missing] }), "utf-8");
+}
+
+/** 純函式版本的 Ordinal 嚴格早於比較（與 F2 curriculum.ts 的 cmpOrdinal 同語意，只需布林結果）。 */
+export function ordinalIsBefore(a: Ordinal, b: Ordinal): boolean {
+  if (a.moduleIndex !== b.moduleIndex) return a.moduleIndex < b.moduleIndex;
+  if (a.topicIndex !== b.topicIndex) return a.topicIndex < b.topicIndex;
+  if (a.localOrder !== b.localOrder) return a.localOrder < b.localOrder;
+  return a.id < b.id;
+}
+
+/**
+ * 雙向邊補齊（reciprocal edge repair）：對「已寫到磁碟的全部 Concept」（既存＋本次全部新起草）
+ * 做一次全面掃描，把單向邊補成雙向一致——某 Concept 的 prerequisite/next 正確指向另一個
+ * Concept，但對方檔案未反映回來的那一側。
+ *
+ * 實測（全量跑 15 個 Topic）發現：LLM **連自己同一份回應內**的 Concept 之間都無法穩定維持
+ * 雙向一致（不只是跨 Topic 引用既存 Concept 才會漏）——故本函式**不分是否同批次**，統一對
+ * 全部 Concept 掃描修補，不再像先前只處理「跨批次引用既存 Concept」的子集合。
+ *
+ * 只在 Ordinal 順序合法（prerequisite 的目標必須嚴格早於自己；next 的目標必須嚴格晚於自己）
+ * 時才補邊：這是同一條邊的另一端，資訊已由來源完全決定、無歧義；若順序不合法（forward-dependency
+ * 等真實錯誤），不代為修復，留給結構 Gate 攔下、要求重新起草——不同於 Gate 本身刻意不自動
+ * 補齊雙向一致（見 F2 curriculum.ts 的 FR-017 註解），此函式僅用於 Stage 1 產線內部。
+ */
+export function repairReciprocalEdges(modulesPath: string, conceptsDir: string): void {
+  const { graph } = loadCurriculum({ modulesPath, conceptsDir });
+  const { concepts, ordinalOf } = graph;
+  // F2 loadCurriculum 的 skeletonPath 寫死 `concepts/${dirName}/${fname}` 前綴（生產環境的
+  // CONCEPTS_DIR 恰好就是字面上的 "concepts"，故該處無感）；此函式收到的 conceptsDir 參數可能是
+  // 別的路徑（例如單元測試用的暫存目錄），故自行以 conceptsDir 重組實際檔案路徑，不依賴該欄位。
+  const filePathOf = (dirName: string, skeletonPath: string): string => join(conceptsDir, dirName, basename(skeletonPath));
+
+  const nextAdditions = new Map<string, Set<string>>();
+  const prereqAdditions = new Map<string, Set<string>>();
+  const addTo = (map: Map<string, Set<string>>, id: string, value: string): void => {
+    const set = map.get(id) ?? new Set<string>();
+    set.add(value);
+    map.set(id, set);
+  };
+
+  for (const c of concepts.values()) {
+    const cOrd = ordinalOf.get(c.id)!;
+    for (const p of c.prerequisite) {
+      const target = concepts.get(p);
+      if (!target) continue; // dangling-ref，留給 Gate 報
+      if (!ordinalIsBefore(ordinalOf.get(p)!, cOrd)) continue; // 方向不合法，不代為修復
+      if (!target.next.includes(c.id)) addTo(nextAdditions, p, c.id);
+    }
+    for (const n of c.next) {
+      const target = concepts.get(n);
+      if (!target) continue;
+      if (!ordinalIsBefore(cOrd, ordinalOf.get(n)!)) continue;
+      if (!target.prerequisite.includes(c.id)) addTo(prereqAdditions, n, c.id);
+    }
+  }
+
+  for (const [id, adds] of nextAdditions) {
+    const node = concepts.get(id)!;
+    patchConceptEdgeField(filePathOf(node.dirName, node.skeletonPath), "next", [...adds]);
+  }
+  for (const [id, adds] of prereqAdditions) {
+    const node = concepts.get(id)!;
+    patchConceptEdgeField(filePathOf(node.dirName, node.skeletonPath), "prerequisite", [...adds]);
+  }
 }
 
 function parseOnlyFlag(argv: string[]): Set<string> | undefined {
@@ -324,14 +386,14 @@ async function main(): Promise<void> {
   // 種子（seed：以既存 concept 的宣告序位置初始化 known，而非從空 Map 開始）：若目錄下已有既存
   // Concept（F2 stub 種子，或前次部分執行留下的產物），LLM 完全不知道它們存在，會把自己起草的
   // 第一篇當成整個 Topic 的起點（prerequisite 留空），使新篇與既存篇斷鏈，被結構 Gate 判定孤兒
-  // ——實測 --only programming-mindset 已踩到這個情境。記錄宣告序位置（而非只記 id）供
-  // filterPriorConceptIds 排除宣告序更晚的 Module/Topic，避免另一個實測踩到的 forward-dependency。
-  const known = new Map<string, KnownConceptPosition & { filePath: string }>();
+  // ——實測 --only programming-mindset 已踩到這個情境。記錄宣告序位置供 filterPriorConceptIds
+  // 排除宣告序更晚的 Module/Topic，避免另一個實測踩到的 forward-dependency。
+  const known = new Map<string, KnownConceptPosition>();
   {
     const { graph: existingGraph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
-    for (const [id, node] of existingGraph.concepts) {
+    for (const id of existingGraph.concepts.keys()) {
       const ordinal = existingGraph.ordinalOf.get(id)!;
-      known.set(id, { moduleIndex: ordinal.moduleIndex, topicIndex: ordinal.topicIndex, filePath: node.skeletonPath });
+      known.set(id, { moduleIndex: ordinal.moduleIndex, topicIndex: ordinal.topicIndex });
     }
   }
 
@@ -357,22 +419,18 @@ async function main(): Promise<void> {
 
       mkdirSync(dir, { recursive: true });
       const startOrder = force ? 1 : existingFiles.length + 1;
-      const batchSlugs = new Set(concepts.map((c) => c.slug));
       concepts.forEach((concept, i) => {
         const nnn = String(startOrder + i).padStart(3, "0");
-        const filePath = join(dir, `${nnn}-${concept.slug}.md`);
-        writeFileSync(filePath, conceptToMarkdown(concept, module.id, topic.id), "utf-8");
-
-        for (const prereqId of concept.prerequisite) {
-          if (batchSlugs.has(prereqId)) continue; // 同批次內部一致性由 LLM 自己在同一份回應內負責
-          const older = known.get(prereqId);
-          if (older) patchConceptNextIfMissing(older.filePath, concept.slug);
-        }
-
-        known.set(concept.slug, { moduleIndex, topicIndex, filePath });
+        writeFileSync(join(dir, `${nnn}-${concept.slug}.md`), conceptToMarkdown(concept, module.id, topic.id), "utf-8");
+        known.set(concept.slug, { moduleIndex, topicIndex });
       });
     }
   }
+
+  // 雙向邊補齊（見 repairReciprocalEdges 註解）：對「這次全部寫到磁碟的 Concept」統一掃描
+  // 修補一次，而非邊寫邊補——因為同一份 LLM 回應內部的雙向一致性本身就可能不完整，必須等
+  // 整批（甚至整輪）都寫完、能看見完整的 next/prerequisite 全貌後才能正確判斷該補去哪一側。
+  repairReciprocalEdges(MODULES_PATH, CONCEPTS_DIR);
 
   // populate-problem-bank：驗證候選題號並填入事實 metadata（Q1 / R5，MUST NOT 由 LLM 生成）
   const { graph: draftGraph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });

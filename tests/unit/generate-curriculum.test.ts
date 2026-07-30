@@ -1,17 +1,21 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import matter from "gray-matter";
 import { afterEach, describe, expect, it } from "vitest";
+import { validModules } from "../helpers/curriculum.js";
 import {
   conceptToMarkdown,
   filterPriorConceptIds,
   normalizeDraftConcept,
   normalizeDraftConcepts,
+  ordinalIsBefore,
   parseDraftResponse,
-  patchConceptNextIfMissing,
+  patchConceptEdgeField,
+  repairReciprocalEdges,
   type KnownConceptPosition,
 } from "../../scripts/generate-curriculum.js";
+import type { Ordinal } from "../../src/types/curriculum.js";
 import type { DraftConcept } from "../../scripts/lib/prompts/stage1-curriculum.js";
 
 function sampleDraft(overrides: Partial<DraftConcept> = {}): DraftConcept {
@@ -102,7 +106,7 @@ describe("filterPriorConceptIds（priorConceptIds 只含宣告序不晚於目前
   });
 });
 
-describe("patchConceptNextIfMissing（雙向邊補齊：既存 Concept 的 next 反映新篇的 prerequisite）", () => {
+describe("patchConceptEdgeField（雙向邊補齊：既存 Concept 的 next 反映新篇的 prerequisite）", () => {
   let dir: string;
   afterEach(() => {
     if (dir) rmSync(dir, { recursive: true, force: true });
@@ -142,7 +146,7 @@ describe("patchConceptNextIfMissing（雙向邊補齊：既存 Concept 的 next 
     const filePath = join(dir, "001-existing-one.md");
     writeConceptFile(filePath, "next: []");
 
-    patchConceptNextIfMissing(filePath, "new-concept");
+    patchConceptEdgeField(filePath, "next", ["new-concept"]);
 
     const parsed = matter(readFileSync(filePath, "utf-8"));
     expect(parsed.data.next).toEqual(["new-concept"]);
@@ -155,7 +159,7 @@ describe("patchConceptNextIfMissing（雙向邊補齊：既存 Concept 的 next 
     const filePath = join(dir, "001-existing-one.md");
     writeConceptFile(filePath, "next: [new-concept]");
 
-    patchConceptNextIfMissing(filePath, "new-concept");
+    patchConceptEdgeField(filePath, "next", ["new-concept"]);
 
     const parsed = matter(readFileSync(filePath, "utf-8"));
     expect(parsed.data.next).toEqual(["new-concept"]);
@@ -192,7 +196,7 @@ describe("patchConceptNextIfMissing（雙向邊補齊：既存 Concept 的 next 
       "utf-8",
     );
 
-    patchConceptNextIfMissing(filePath, "new-concept");
+    patchConceptEdgeField(filePath, "next", ["new-concept"]);
 
     const parsed = matter(readFileSync(filePath, "utf-8"));
     // 修好前：gray-matter 找不到落在字串開頭的 ---，整份 frontmatter 被誤判為純文字，
@@ -201,6 +205,136 @@ describe("patchConceptNextIfMissing（雙向邊補齊：既存 Concept 的 next 
     expect(parsed.data.title).toBe("Existing One");
     expect(parsed.data.next).toEqual(["new-concept"]);
     expect(parsed.content).toContain("保留這段本文，補邊時不應被更動");
+  });
+});
+
+describe("ordinalIsBefore（純函式，Ordinal 嚴格早於比較）", () => {
+  function ord(overrides: Partial<Ordinal> = {}): Ordinal {
+    return { moduleIndex: 0, topicIndex: 0, localOrder: 0, id: "x", ...overrides };
+  }
+
+  it("moduleIndex 較小 → true", () => {
+    expect(ordinalIsBefore(ord({ moduleIndex: 0 }), ord({ moduleIndex: 1 }))).toBe(true);
+  });
+  it("moduleIndex 較大 → false", () => {
+    expect(ordinalIsBefore(ord({ moduleIndex: 1 }), ord({ moduleIndex: 0 }))).toBe(false);
+  });
+  it("同 module，topicIndex 較小 → true", () => {
+    expect(ordinalIsBefore(ord({ topicIndex: 0 }), ord({ topicIndex: 1 }))).toBe(true);
+  });
+  it("同 module 同 topic，localOrder 較小 → true", () => {
+    expect(ordinalIsBefore(ord({ localOrder: 1 }), ord({ localOrder: 2 }))).toBe(true);
+  });
+  it("完全相同（自我比較）→ false", () => {
+    expect(ordinalIsBefore(ord(), ord())).toBe(false);
+  });
+});
+
+describe("repairReciprocalEdges（雙向邊補齊：實測全量跑 15 個 Topic 才踩到的同批次內部不一致）", () => {
+  let dir: string;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  function writeMinimalConcept(
+    conceptsDir: string,
+    nnn: string,
+    id: string,
+    prerequisite: string[],
+    next: string[],
+  ): void {
+    const topicDir = join(conceptsDir, "programming-mindset");
+    mkdirSync(topicDir, { recursive: true });
+    writeFileSync(
+      join(topicDir, `${nnn}-${id}.md`),
+      [
+        "---",
+        `id: ${id}`,
+        `title: ${id}`,
+        "module: programming-mindset",
+        "topic: programming-mindset",
+        "difficulty: easy",
+        "estimated_minutes: 10",
+        "pattern_label: P",
+        "complexity_label: O(n)",
+        `prerequisite: [${prerequisite.join(", ")}]`,
+        `next: [${next.join(", ")}]`,
+        "learning_goal:\n  - g",
+        "exit_criteria:\n  - e",
+        "leetcode: []",
+        "tags: []",
+        "---",
+        "",
+        "## Author Hints",
+        "",
+        "- x",
+      ].join("\n"),
+      "utf-8",
+    );
+  }
+
+  function readConceptData(conceptsDir: string, nnn: string, id: string): Record<string, unknown> {
+    const raw = readFileSync(join(conceptsDir, "programming-mindset", `${nnn}-${id}.md`), "utf-8");
+    return matter(raw).data;
+  }
+
+  it("prerequisite 正確指向較早的 Concept，但對方 next 未反映 → 補上（即使同屬一次批次起草）", () => {
+    dir = mkdtempSync(join(tmpdir(), "repair-edges-test-"));
+    const modulesPath = join(dir, "modules.json");
+    const conceptsDir = join(dir, "concepts");
+    writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+    writeMinimalConcept(conceptsDir, "001", "concept-a", [], []);
+    writeMinimalConcept(conceptsDir, "002", "concept-b", ["concept-a"], []);
+
+    repairReciprocalEdges(modulesPath, conceptsDir);
+
+    expect(readConceptData(conceptsDir, "001", "concept-a").next).toEqual(["concept-b"]);
+  });
+
+  it("next 正確指向較晚的 Concept，但對方 prerequisite 未反映 → 補上", () => {
+    dir = mkdtempSync(join(tmpdir(), "repair-edges-test-"));
+    const modulesPath = join(dir, "modules.json");
+    const conceptsDir = join(dir, "concepts");
+    writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+    writeMinimalConcept(conceptsDir, "001", "concept-c", [], ["concept-d"]);
+    writeMinimalConcept(conceptsDir, "002", "concept-d", [], []);
+
+    repairReciprocalEdges(modulesPath, conceptsDir);
+
+    expect(readConceptData(conceptsDir, "002", "concept-d").prerequisite).toEqual(["concept-c"]);
+  });
+
+  it("方向不合法（會構成 forward-dependency）→ 不代為修復，留給 Gate 攔下", () => {
+    dir = mkdtempSync(join(tmpdir(), "repair-edges-test-"));
+    const modulesPath = join(dir, "modules.json");
+    const conceptsDir = join(dir, "concepts");
+    writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+    // concept-e（較早）卻把宣告序更晚的 concept-f 列為 prerequisite：方向不合法
+    writeMinimalConcept(conceptsDir, "001", "concept-e", ["concept-f"], []);
+    writeMinimalConcept(conceptsDir, "002", "concept-f", [], []);
+
+    repairReciprocalEdges(modulesPath, conceptsDir);
+
+    // 不應該把 concept-e 補進 concept-f 的 next（那會讓 concept-f 也產生反向的不合法邊）
+    expect(readConceptData(conceptsDir, "002", "concept-f").next).toEqual([]);
+  });
+
+  it("邊已雙向一致 → 不重複寫入、不觸碰檔案", () => {
+    dir = mkdtempSync(join(tmpdir(), "repair-edges-test-"));
+    const modulesPath = join(dir, "modules.json");
+    const conceptsDir = join(dir, "concepts");
+    writeFileSync(modulesPath, JSON.stringify(validModules()), "utf-8");
+
+    writeMinimalConcept(conceptsDir, "001", "concept-g", [], ["concept-h"]);
+    writeMinimalConcept(conceptsDir, "002", "concept-h", ["concept-g"], []);
+
+    repairReciprocalEdges(modulesPath, conceptsDir);
+
+    expect(readConceptData(conceptsDir, "001", "concept-g").next).toEqual(["concept-h"]);
+    expect(readConceptData(conceptsDir, "002", "concept-h").prerequisite).toEqual(["concept-g"]);
   });
 });
 
