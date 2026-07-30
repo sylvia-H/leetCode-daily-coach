@@ -1,7 +1,7 @@
 # LeetCode Daily Coach
 
 > Version: 0.3 · Status: Draft
-> Codename: **Ascent**（循序登頂：依所選 Track，約半年的每日小步練習，從 Easy 穩步進階到 Medium / Hard）
+> Codename: **Ascent**（循序登頂：依所選 Track，約 8～10 個月的每日小步練習，從 Easy 穩步進階到 Medium / Hard）
 
 > **本專案的目標不是讓使用者刷更多題，而是建立能夠持續解題的思維模式。**
 > This project is designed to teach algorithmic thinking, not to maximize the number of solved LeetCode problems.
@@ -10,7 +10,7 @@
 
 ### v0.3 修訂摘要（相對 v0.2）
 
-1. **三軌全量交付**：取消「MVP 只交付 Foundation」的限制。三個 Track 的完整 180-Session 課表與全部教材（150+ Concept）MUST 於上線前全數生成並通過 Gate；不採用 Runway（跑道）模式，Gate 維持「全部 Track × 全部 Session 完整編譯」的最強保證（§9、§23、§24 AC5/AC8）。
+1. **三軌全量交付**：取消「MVP 只交付 Foundation」的限制。三個 Track 的完整課表（長度依涵蓋深度與節奏而異，見 §13.5）與全部教材（150+ Concept）MUST 於上線前全數生成並通過 Gate；不採用 Runway（跑道）模式，Gate 維持「全部 Track × 全部 Session 完整編譯」的最強保證（§9、§23、§24 AC5/AC8）。
 2. **多 Track 推播（Multi-Track Delivery）**：每 Track 一個 Discord Webhook Secret，**設定即啟用**；同一個每日 job 依固定順序逐 Track 推播至各自頻道，單一 Track 失敗 MUST NOT 中斷其他 Track（§9.2、§16.5、§18、§24 AC10）。
 3. **State 改為每 Track 一份進度**：`state.json` 以 `tracks` map 保存各 Track 的 `currentSessionIndex` / `lastPushAt` / history，單次 commit 寫入（§19）。
 4. **內容產線半自動化、唯一人工檢查點**：Concept Skeleton（課綱 + Author Hints）改由 LLM 批次起草（新增 `scripts/generate-curriculum.ts`），**整條產線唯一的人工介入是「課綱大綱表一次性定稿」**（約 1～2 小時）；定稿凍結後，Skeleton、全文、課表全自動生成、僅由自動 Gate 把關（§4-17、§10.4、§20.3）。
@@ -82,15 +82,15 @@ LeetCode Daily Coach 是一套**演算法課程引擎（Learning Pipeline）**�
 
 ## 2. Product Goals
 
-- **G1**：以每天約 20 分鐘內的閱讀量，讓一個能寫 TypeScript / Python 的中階工程師，在約半年（每 Track ~180 個 Session）內，依所選 **Track** 達到對應的解題等級：
+- **G1**：以每天約 20 分鐘內的閱讀量，讓一個能寫 TypeScript / Python 的中階工程師，在**約 8～10 個月**（每 Track 約 236～291 個 Session，長度依該 Track 的涵蓋深度與節奏而異，見 §13）內，依所選 **Track** 達到對應的解題等級：
 
-  | Track                | 半年目標等級                       |
+  | Track                | 目標等級                           |
   | -------------------- | ---------------------------------- |
   | **Foundation**       | 熟練解 **Easy**、能碰觸簡單 Medium |
   | **InterviewReady**   | 熟練解 **Medium**                  |
   | **InterviewMastery** | 大廠面試程度 / 熟練解 **Hard**     |
 
-  三個 Track **共用同一份 Concept 教材庫與知識圖譜（DAG）**，但**各自有不同的 180-Session 課表**（涵蓋深度與題目難度不同），以達到不同的目標等級（見 §9）。**三個 Track 全量交付、同時上線**，各自推播至獨立的 Discord 頻道（見 §9.2）。
+  三個 Track **共用同一份 Concept 教材庫與知識圖譜（DAG）**，但**各自有不同長度的課表**（涵蓋深度、學習節奏與題目難度不同，§13.5），以達到不同的目標等級（見 §9）。**三個 Track 全量交付、同時上線**，各自推播至獨立的 Discord 頻道（見 §9.2）。
 
 - **G2**：每日推播**先建立觀念、再搭配題目**，培養**辨識解題模式（Pattern Recognition）**的能力，而非背誦題號。
 - **G3**：教材品質一致、可版本控制、可人工修改，不因 LLM 模型更新而風格漂移。
@@ -161,7 +161,7 @@ LeetCode Daily Coach 是一套**演算法課程引擎（Learning Pipeline）**�
 - **Curriculum**：所有 Module / Topic / Concept 及其 prerequisite / next 關係構成的 DAG。
 - **Curriculum Outline（課綱大綱表）**：`generate-curriculum.ts` 產出的可讀大綱（Module / Topic / Concept 清單、順序、依賴、對應題目一覽），是**整條產線唯一的人工定稿物**（§20.3 Stage 1）。
 - **Session**：一次「每日推播」的邏輯單位（例：`Session 87`）。Session 與 Concept **非一對一**：某些 Session 是 Practice / Review / Challenge / Rest，不引入新 Concept。
-- **Track**：學習軌道。共三種（見 §9），**共用同一份 Concept 教材庫與 DAG**，但**各自有獨立的 Session 課表、題目難度帶與 Discord 頻道**，對應不同的半年目標等級（Easy / Medium / Hard）。
+- **Track**：學習軌道。共三種（見 §9），**共用同一份 Concept 教材庫與 DAG**，但**各自有獨立的 Session 課表、題目難度帶與 Discord 頻道**，對應不同的目標等級（Easy / Medium / Hard）。
 - **Problem**：一題 LeetCode 題目及其 metadata（見 §12）。
 - **Lesson Compiler**：把 `curriculum + articles + problem-bank + schedules + overlays` 編譯成 `Lesson` 物件的**單一模組**；CI Gate 與每日 runtime 共用（§7.1）。
 - **Renderer**：把 `Lesson` 物件組成 Discord message（embeds）的純函式元件；不含 Curriculum 邏輯。
@@ -319,13 +319,13 @@ Sliding Window        │
 
 ## 9. Track System
 
-三種 Track，**共用同一份 Concept 教材庫與 DAG**，但**各自有獨立的 180-Session 課表**（由 script 生成，§13.4）與**獨立的 Discord 頻道**（§9.2），以在約半年內達到不同的目標等級：
+三種 Track，**共用同一份 Concept 教材庫與 DAG**，但**各自有獨立長度的課表**（由 script 生成，§13.4）與**獨立的 Discord 頻道**（§9.2），以在約 8～10 個月內達到不同的目標等級：
 
 ```
 Track
 ├── Foundation         目標：熟練 Easy、碰觸簡單 Medium
-│                      課表：基礎模組吃更多節奏、涵蓋較淺（進階模組可不在半年內走完）
-│                      題目：Easy 為主；Challenge = Easy / 簡單 Medium
+│                      課表：基礎模組吃更多節奏、涵蓋較淺（進階模組不納入其課表，§13.5）
+│                      題目：Easy + Medium（難度控制靠較淺的涵蓋與 Easy 級 Challenge，§13.5）；Challenge = Easy
 ├── InterviewReady     目標：熟練 Medium
 │                      課表：走完完整核心課綱、對齊 Grind75 / NeetCode 節奏
 │                      題目：Easy 暖身 → Medium 為主；Challenge = 標準 Medium
@@ -349,10 +349,10 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
 
 - 三個 Track MUST NOT 各自複製三份 Concept 教材正文；**分歧只發生在「課表 + 題目難度 + Challenge 難度 + 頻道」**，Concept 教學內容 MUST 共用同一份。
 - 每個 Track MUST 有自己的確定性課表（`schedules/{track}.json`），由 `scripts/generate-schedule.ts` 生成（§13.4），且必為 DAG 的合法拓樸子序列（MUST NOT 違反 prerequisite）。
-- Track 課表 MAY 涵蓋 Concept 教材庫的**子集**（Foundation 可不在半年內走完全部進階 Concept），但 MUST NOT 引入不存在於教材庫的 Concept。
+- Track 課表 MAY 涵蓋 Concept 教材庫的**子集**（Foundation 的課表不涵蓋 tree 之後的進階模組，見 §13.5），但 MUST NOT 引入不存在於教材庫的 Concept。
 - 每個 Concept 對每個 Track 的題目難度由 Overlay（§16.3）指定；同一 Concept 在不同 Track 可搭配不同難度題目。
 - 未來新增 Track MUST NOT 需要複製核心教材，只需新增一份 Track 參數（供課表生成器使用）+ Overlay + Webhook Secret。
-- **交付範圍**：三個 Track 的完整 180-Session 課表與其涵蓋的全部教材 MUST 全量交付、同時上線（Gate 對三軌全 Session 完整編譯，§7.1 / §24 AC8）。
+- **交付範圍**：三個 Track 的完整課表（長度見 §13.5）與其涵蓋的全部教材 MUST 全量交付、同時上線（Gate 對三軌全 Session 完整編譯，§7.1 / §24 AC8）。
 
 ### 9.2 Multi-Track Delivery（多頻道推播，MUST）
 
@@ -559,7 +559,7 @@ MUST NOT 直接引用他人教材內容；MAY 參考其**知識架構與題目�
 
 ## 13. Session Scheduling
 
-Session 是「每日推播」的邏輯單位；每 Track 總量 MUST 約 **180 個 Session**，對應約半年的每日學習。
+Session 是「每日推播」的邏輯單位。**每 Track 的總量由「該 Track 的涵蓋深度（`maxLevel`）÷ 每週節奏的 concept 槽數」決定，不是固定值**（F7 定案 2026-07-31，見 §13.5）——現行三軌為 Foundation 243 / InterviewReady 236 / InterviewMastery 291 個 Session，對應約 8～10 個月的每日學習。
 
 ### 13.1 Session ≠ Concept
 
@@ -596,7 +596,7 @@ Day 7  rest       休息
 
 ### 13.4 課表生成（MUST 由 script 生成，不手寫）
 
-- `schedules/{track}.json` MUST NOT 手工撰寫與維護（3 × ~180 筆手寫必然出錯且難以演進）。
+- `schedules/{track}.json` MUST NOT 手工撰寫與維護（三軌合計 770 筆手寫必然出錯且難以演進）。
 - MUST 由 `scripts/generate-schedule.ts` **確定性生成**（三份課表一次生成）：
   - **輸入**：Curriculum DAG、每週節奏模板（§13.2）、Track 參數（`curriculum/track-params.json`，zod 驗證；涵蓋範圍準則以 Module/Level 宣告 + prerequisite 閉包、難度帶、challenge 難度、節奏微調、targetLevel；F4 定案）。題目難度分歧由生成器以 Problem Bank difficulty 過濾 + Overlay 附加實現。
   - **輸出**：`schedules/{track}.json` × 3，生成後 commit 定版（Constitution 第 13 條：commit 後即凍結；重新生成是刻意的 build-time 行為）。
@@ -611,6 +611,28 @@ Day 7  rest       休息
   由生成端消除、由內容 Gate 的預算檢查兜底。生成器 MUST 以 `session-problem-overflow` 具名回報任何
   超過 3 題卻未被截取的情形（不變式自檢）。
 - 插入 / 調整 Concept 時的工作流：改 Curriculum → 重跑生成器 → review diff → commit。MUST NOT 手改生成物。
+
+### 13.5 Track 分歧的三個維度與課表長度（MUST，F7 定案 2026-07-31）
+
+三軌的分歧 MUST 由 `curriculum/track-params.json` 的三個維度共同表達，**MUST NOT 只用其中一個**：
+
+| 維度 | 欄位 | Foundation | InterviewReady | InterviewMastery |
+| --- | --- | --- | --- | --- |
+| **涵蓋深度** | `maxLevel` | 9（至 linked-list） | 12（至 heap） | 15（全量） |
+| **學習節奏** | `rhythm` | 每週 3 個新觀念（含 practice 日） | 每週 4 個 | 每週 4 個 |
+| **題目難度帶** | `problemDifficulties` / `challengeDifficulty` | Easy+Medium／Easy | Easy+Medium／Medium | Medium+Hard／Hard |
+| 結果 | — | 103 觀念 / **243 Session** | 134 觀念 / **236 Session** | 165 觀念 / **291 Session** |
+
+- **課表長度是導出值，不是設定值**：`Session 數 = ceil(涵蓋 Concept 數 ÷ rhythm 的 concept 槽數) × rhythm 長度`。
+  故新增 Concept 或調整節奏都會改變長度，**MUST NOT 在 spec 或任何設定中把長度寫死為固定值**。
+- **Foundation 的 `problemDifficulties` MUST 為 `Easy + Medium`，MUST NOT 收窄為僅 `Easy`**（F7 實測定案）。
+  **理由**：LeetCode 上 backtracking / heap / graph / monotonic stack / DP 等主題**本質上不存在 Easy 級題目**；
+  實測若堅持 Easy-only，即使經過補題 pass（§20.3a），Foundation 仍有 **60%** 的 concept Session 沒有任何
+  題目可練，直接違反「每日一則觀念 ＋ 1～3 題」的產品核心（§1）。放寬為 Easy+Medium 後降至 **21%**
+  （其中 16% 是 `leetcode: []` 的「無題目觀念課」，屬合法下限）。教完某個 Pattern 後給該 Pattern 的
+  Medium 題，正是練習的意義；Foundation 的難度控制改由 `challengeDifficulty: Easy` 與較淺的 `maxLevel` 承擔。
+- **InterviewMastery 的 rhythm MUST 保留 challenge 槽**：§13.2 明訂其 challenge SHOULD 升級為變體／綜合題，
+  若為壓縮長度而移除 challenge 槽即違反該條。
 
 ---
 
@@ -818,7 +840,7 @@ type SessionType = "concept" | "practice" | "review" | "challenge" | "rest";
 type Track = "foundation" | "interviewReady" | "interviewMastery";
 
 interface SessionPlan {
-  sessionIndex: number; // 1..~180
+  sessionIndex: number; // 1..該 Track 的課表長度（§13.5，非固定值）
   type: SessionType;
   conceptId?: string; // type === 'concept'
   reviewRange?: [number, number]; // type === 'review'（本週 sessionIndex 範圍）
@@ -828,8 +850,8 @@ interface SessionPlan {
 // 每個 Track 一份獨立課表（模型 B）；由 scripts/generate-schedule.ts 生成（§13.4）
 interface TrackSchedule {
   track: Track;
-  targetLevel: "easy" | "medium" | "hard"; // 半年目標等級
-  sessions: SessionPlan[]; // 約 180 筆；MUST 為共用 DAG 的合法拓樸子序列
+  targetLevel: "easy" | "medium" | "hard"; // 該 Track 的目標等級
+  sessions: SessionPlan[]; // 筆數依 Track 涵蓋深度與節奏而定（§13.5）；MUST 為共用 DAG 的合法拓樸子序列
 }
 ```
 
@@ -961,9 +983,9 @@ leetcode-daily-coach/
 │   ├── track-params.json        # 三組 Track 參數（涵蓋範圍準則/難度帶/challenge/節奏微調/targetLevel）；generate-schedule.ts 輸入，zod 驗證（F4 定案）
 │   └── outline.md               # 課綱大綱表（generate-curriculum 產出；唯一人工定稿物）
 ├── schedules/                   # 每 Track 一份課表；由 script 生成後 commit（MUST NOT 手寫）
-│   ├── foundation.json          # ~180 Session；目標 Easy
-│   ├── interview-ready.json     # ~180 Session；目標 Medium
-│   └── interview-mastery.json   # ~180 Session；目標 Hard
+│   ├── foundation.json          # 243 Session（maxLevel 9）；目標 Easy
+│   ├── interview-ready.json     # 236 Session（maxLevel 12）；目標 Medium
+│   └── interview-mastery.json   # 291 Session（maxLevel 15）；目標 Hard
 ├── concepts/                    # Concept Skeleton（產線起草、大綱定稿後凍結；frontmatter + Author Hints）
 │   ├── mindset/
 │   │   ├── 001-complexity.md
@@ -1104,7 +1126,7 @@ leetcode-daily-coach/
 
 規範（MUST）：
 
-- **存放位置：專用 `state` 分支**。`state.json` 的每日 commit MUST 推至 `state` 分支（orphan branch，初始化一次），MUST NOT commit 至 `main` / `develop`——避免半年 180+ 個 bot commit 淹沒主分支歷史。
+- **存放位置：專用 `state` 分支**。`state.json` 的每日 commit MUST 推至 `state` 分支（orphan branch，初始化一次），MUST NOT commit 至 `main` / `develop`——避免 8～10 個月共 240+ 個 bot commit 淹沒主分支歷史。
 - 每日 workflow MUST checkout 兩個 ref：主分支（程式與內容）+ `state` 分支（state.json，checkout 至獨立路徑，見 §21.2）。
 - 各 Track 的 `currentSessionIndex` 只在**該 Track 推播成功後**前進（+1），確保漏跑 / 失敗不會跳課；Track 之間互不影響。
 - 各 Track 的 `lastPushAt` 各自用於 idempotency guard（Asia/Taipei 日期判斷，§21.1）。
@@ -1159,7 +1181,21 @@ LLM MUST NOT
 **Stage 1：課綱與 Skeleton 起草（`scripts/generate-curriculum.ts`）**
 
 1. LLM 依 §8 的 Module 骨架與規範（Topic 5～12 Concept、Module 10～30 Concept、總數 ≥150）批次起草：完整 Concept 清單（frontmatter：id、依賴、對應題號…）與每個 Concept 的 Author Hints。LLM 對「對應題目」**只提出候選題號**，MUST NOT 生成題目 metadata（§12）。
+   - **候選題 SHOULD 跨難度帶（F7 定案 2026-07-31）**：三軌分歧靠「題目難度帶過濾」實現（§4-6、§13.5），
+     故每個 Concept 的候選題 SHOULD 同時涵蓋 `Easy` 與 `Medium`／`Hard`，否則過濾後會有 Track 拿不到任何題目。
+     **實測教訓**：初版 prompt 只要求「列出 1～3 個適合的題號」，未提難度帶，模型多半只給 1 題
+     （165 個 Concept 中 103 個只有 1 題），導致 Foundation 65%、InterviewMastery 46% 的 concept Session
+     無題可練。此為 SHOULD 而非 MUST，因為部分主題（backtracking / heap / DP…）在該難度帶確實無對應題，
+     **寧可留白也 MUST NOT 硬塞不相干的題目**。
 1b. **題庫擴充（build-time，F7 定案 2026-07-30）**：以 `scripts/` 步驟驗證 Stage 1 提出的每個候選題號**真實存在**並從權威來源填入 `id / slug / title / url / difficulty` 至 `data/problem-bank.json`（**只取 metadata、不抓題目描述**，§5 / §12），commit 凍結；查無 / 錯號回報以驅動 Stage 1 重生。metadata 來源（即時抓取 vs. 靜態快照）為實作細節。
+1c. **補題 pass（`scripts/supplement-problems.ts`，F7 新增 2026-07-31）**：對「候選題只落在單一難度帶」的
+   既有 Concept，以 LLM 補上缺少難度帶的候選題。**MUST 為純追加**——只擴充 frontmatter 的 `leetcode` 與
+   Author Hints 的逐題說明，**MUST NOT 更動 slug / prerequisite / next / 既有 Hints**（課綱定稿後重跑
+   Stage 1 會刷新全部 slug 並毀掉已凍結的結構）。補題同樣只提題號，且 MUST 驗證**實際難度符合宣稱的
+   難度帶**（實測 62 筆提案中 11 筆標錯難度帶，由此檢核退回）。`leetcode: []` 的「無題目觀念課」
+   MUST 略過，不得硬塞題目。
+   **MUST 在 Stage 2 之前執行**：Article 含題目清單與逐題說明，`leetcode` 一改則 Skeleton hash 改變、
+   該篇會被判定需重生；補題延後到 Stage 2 之後將使全部 Article 重跑一次（一次批次 2～4 天）。
 2. **結構 Gate（自動）**：DAG 驗證（無環、無前向依賴、無孤兒）、顆粒度規則（Topic / Module 的 Concept 數範圍）、frontmatter schema（zod）、`leetcode` 題號存在於 Problem Bank、id 全域唯一。
 3. 產出**課綱大綱表**（`curriculum/outline.md`：Module / Topic / Concept 清單、順序、依賴、對應題目一覽）。
 4. **唯一人工檢查點**：你審閱大綱表（約 1～2 小時，只看方向：顆粒度、順序、依賴是否合理），核可後 Skeleton 凍結 commit。修改意見以「調整參數 / 提示 → 重跑 Stage 1」處理，不逐篇手改。
@@ -1487,7 +1523,7 @@ MUST 有單元測試：
 - **Stage 1**：LLM 批次起草完整課綱（150+ Concept 的 Skeleton）→ 結構 Gate → **課綱大綱表一次性定稿（唯一人工檢查點，約 1～2 小時）** → 凍結。
 - **Stage 2**：LLM 全量展開 Full Article（繁中、含固定區塊、Digest / Tips、Exit Criteria、每題 Hint）→ §20.3 品質 Gate → 凍結（機器批次 2～4 天，含節流與斷點續跑）。
 - 建立 `problem-bank.json`（涵蓋三 Track 難度帶的全部對應題目）。
-- 以 `generate-schedule.ts` 產出**三份完整 180-Session 課表**並 commit。
+- 以 `generate-schedule.ts` 產出**三份完整課表**（長度依 Track 涵蓋深度與節奏而異，§13.5）並 commit。
 
 ### Phase 2：建立推播引擎（MVP 完成點）
 
