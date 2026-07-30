@@ -160,6 +160,48 @@ describe("patchConceptNextIfMissing（雙向邊補齊：既存 Concept 的 next 
     const parsed = matter(readFileSync(filePath, "utf-8"));
     expect(parsed.data.next).toEqual(["new-concept"]);
   });
+
+  it("實測踩過的崩潰：F2 stub 種子帶有 frontmatter 之前的 <!-- --> 前導註解，patch 後 frontmatter MUST NOT 被降級為純文字內文", () => {
+    dir = mkdtempSync(join(tmpdir(), "patch-next-test-"));
+    const filePath = join(dir, "001-existing-one.md");
+    writeFileSync(
+      filePath,
+      [
+        "<!-- F2 stub seed，F7 內容產線上線後由生成物取代（FR-027） -->",
+        "---",
+        "id: existing-one",
+        "title: Existing One",
+        "module: m",
+        "topic: t",
+        "difficulty: easy",
+        "estimated_minutes: 10",
+        "pattern_label: P",
+        "complexity_label: O(n)",
+        "prerequisite: []",
+        "next: []",
+        "learning_goal:\n  - g",
+        "exit_criteria:\n  - e",
+        "leetcode: []",
+        "tags: []",
+        "---",
+        "",
+        "## Author Hints",
+        "",
+        "- 保留這段本文，補邊時不應被更動",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    patchConceptNextIfMissing(filePath, "new-concept");
+
+    const parsed = matter(readFileSync(filePath, "utf-8"));
+    // 修好前：gray-matter 找不到落在字串開頭的 ---，整份 frontmatter 被誤判為純文字，
+    // 所有欄位（id/title/...）因而從 parsed.data 消失。
+    expect(parsed.data.id).toBe("existing-one");
+    expect(parsed.data.title).toBe("Existing One");
+    expect(parsed.data.next).toEqual(["new-concept"]);
+    expect(parsed.content).toContain("保留這段本文，補邊時不應被更動");
+  });
 });
 
 describe("normalizeDraftConcept：實測 Gemini 回應形態（真實踩過的兩個偏差）", () => {

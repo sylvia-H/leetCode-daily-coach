@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import matter from "gray-matter";
-import { loadCurriculum, validateCurriculum } from "../src/compiler/curriculum.js";
+import { loadCurriculum, stripLeadingComment, validateCurriculum } from "../src/compiler/curriculum.js";
 import { loadProblemBank, makeProblemExists } from "../src/compiler/problem.js";
 import type { Violation } from "../src/types/curriculum.js";
 import type { ProblemBankFile } from "../src/types/problem.js";
@@ -246,10 +246,16 @@ export function filterPriorConceptIds(
  * 完全決定、無歧義，故在 Stage 1 產線內部機械式補上；F2 `curriculum.ts` 的 Gate 本身仍刻意
  * 不自動補齊雙向一致（見其 FR-017 註解），用以攔截「人工手改一側卻忘了改另一側」的真實錯誤。
  * 只在此新增 `next`（若已存在則不重複新增），不觸碰其餘欄位與 Author Hints 正文。
+ *
+ * MUST 先套用 `stripLeadingComment`（與 F2 `loadCurriculum` 同一套）才能交給 gray-matter：
+ * F2 stub 種子檔案帶有 frontmatter **之前**的 `<!-- ... -->` 註解，若直接對 raw 呼叫
+ * `matter()`，gray-matter 找不到落在字串開頭的 `---`，會把整份 frontmatter 誤判為純文字
+ * content，寫回時就會在檔案最上面生成第二層假 frontmatter、把原本的 frontmatter 整包
+ * 降級為內文——實測踩過，把 001/002 兩篇 F2 stub 種子的 frontmatter 整個弄壞。
  */
 export function patchConceptNextIfMissing(filePath: string, newConceptId: string): void {
   const raw = readFileSync(filePath, "utf-8");
-  const { data, content } = matter(raw);
+  const { data, content } = matter(stripLeadingComment(raw));
   const currentNext = Array.isArray(data.next)
     ? (data.next as unknown[]).filter((v): v is string => typeof v === "string")
     : [];
