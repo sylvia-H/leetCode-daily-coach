@@ -25,11 +25,19 @@ import {
 import { createLlmClient, type LlmClient } from "./lib/llm-client.js";
 import {
   buildStage2Prompt,
+  buildStage2ResponseSchema,
+  REQUIRED_ARTICLE_TEXT_FIELDS,
   type DraftArticleResponse,
   type DraftChallengeEntry,
 } from "./lib/prompts/stage2-content.js";
 import { buildSelfCheckPrompt, type SelfCheckResponse } from "./lib/prompts/self-check.js";
-import { checkCodeBlocks, createRealExecutor, extractCodeBlocks } from "./run-code-blocks.js";
+import {
+  checkCodeBlocks,
+  checkToolchain,
+  createRealExecutor,
+  extractCodeBlocks,
+  findSectionsWithoutCode,
+} from "./run-code-blocks.js";
 
 const MODULES_PATH = "curriculum/modules.json";
 const CONCEPTS_DIR = "concepts";
@@ -55,21 +63,8 @@ function stripJsonFence(raw: string): string {
     .trim();
 }
 
-/** DraftArticleResponse 中每個 MUST 為非空字串的區塊欄位（結構欄位不在此，一律由 Skeleton 帶入）。 */
-const REQUIRED_ARTICLE_TEXT_FIELDS = [
-  "concept",
-  "thinking",
-  "patternRecognition",
-  "commonMistakes",
-  "complexity",
-  "tsCorner",
-  "pyCorner",
-  "tomorrowPreview",
-  "digest",
-  "tsTip",
-  "pyTip",
-  "takeaway",
-] as const satisfies readonly (keyof DraftArticleResponse)[];
+// 欄位清單改由 stage2-content.ts 單一來源提供（見該處註解）：schema 的 required 與此處的逐欄
+// 驗證 MUST 是同一份，否則「schema 要求了、解析端不驗」之類的落差極難察覺。
 
 /**
  * 剝除 ``` fence 後解析為 DraftArticleResponse；形狀不符即具名 throw（由 generateOneConcept 接住、
@@ -268,6 +263,13 @@ async function runPerArticleGate(
     return { reason: `繁中判準：${tc.violations.map((v) => v.message).join("; ")}` };
   }
 
+  // MUST 先擋「區塊在、fence 不在」：否則 extractCodeBlocks 抽到 0 個區塊，checkCodeBlocks 自然
+  // 無失敗可報，整篇文章會以「程式碼實測通過」的姿態放行（真空通過，見 findSectionsWithoutCode）。
+  const sectionsWithoutCode = findSectionsWithoutCode(markdown);
+  if (sectionsWithoutCode.length > 0) {
+    return { reason: `程式碼區塊缺失：${sectionsWithoutCode.join("、")} 內找不到 fenced code block` };
+  }
+
   const blocks = extractCodeBlocks(markdown);
   const codeResults = await checkCodeBlocks(blocks, createRealExecutor());
   const failedBlock = codeResults.find((r) => !r.ok);
@@ -350,11 +352,14 @@ export async function generateOneConcept(
       exitCriteria: node.exitCriteria,
       authorHints,
       candidateProblems: node.leetcode.map((id) => ({ id })),
+      // 首次無回饋；重生時帶上一次被 Gate 擋下的具名原因（俚語位置、缺失區塊、程式碼錯誤訊息…
+      // 都已足夠具體，可直接作為修正指示）。少了這個，重生只是重擲同一顆骰子（見 Stage2PromptInput）。
+      retryFeedback: lastFailure?.reason,
     });
 
     let markdown: string;
     try {
-      const raw = await llmClient.generate(prompt);
+      const raw = await llmClient.generate(prompt, buildStage2ResponseSchema());
       const draft = parseDraftArticleResponse(raw);
       markdown = assembleArticleMarkdown(skeleton, draft);
     } catch (err) {
@@ -397,6 +402,16 @@ async function main(): Promise<void> {
 
   if (!isSkeletonFrozen(allowDirty)) {
     console.error("✗ Skeleton 未定稿：工作目錄 concepts/** 有未提交變更，請先完成 outline 定稿並 commit（或明確帶 --allow-dirty，僅供開發用）。");
+    process.exit(1);
+    return;
+  }
+
+  // 工具鏈前置檢查 MUST 在任何 LLM 呼叫之前：環境沒裝 Python 時，每篇文章的 Python 區塊都會
+  // execution-failed 並各重生 3 次，165 篇的批次會白燒 2～4 天才發現是環境問題（見 checkToolchain）。
+  const toolchainFailures = await checkToolchain(createRealExecutor());
+  if (toolchainFailures.length > 0) {
+    console.error("✗ 工具鏈前置檢查未通過，未呼叫任何 LLM（教材程式碼將無法實測，批次不予開始）：");
+    for (const f of toolchainFailures) console.error(`  [${f.lang}] ${f.detail}`);
     process.exit(1);
     return;
   }

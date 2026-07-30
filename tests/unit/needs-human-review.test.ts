@@ -88,3 +88,34 @@ describe("needs-human-review（FR-012：重生 3 次仍不過 → 標記、繼�
     expect(skip).toBe(false);
   });
 });
+
+describe("重生時把 Gate 失敗原因回饋進 prompt（避免重擲同一顆骰子）", () => {
+  it("第 2 次起的 prompt MUST 含上一次的失敗原因", async () => {
+    // 實測：第一篇文章連續兩次因俚語「寫扣」被擋、第三次才過。額度是免費層批次的瓶頸，
+    // 每篇多打兩次會讓 165 篇的批次從 2～4 天變成 6～12 天。
+    const prompts: string[] = [];
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () => ({
+          models: {
+            generateContent: async (args: { contents: string }) => {
+              prompts.push(args.contents);
+              // 永遠回不合法 JSON → 每次都失敗，便於觀察三次 prompt 的差異
+              return { text: "{ not valid json" };
+            },
+          },
+        }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    await generateOneConcept(llmClient, fakeConceptNode(), "hints");
+
+    expect(prompts).toHaveLength(3);
+    expect(prompts[0]).not.toContain("上一次產出未通過品質 Gate");
+    expect(prompts[1]).toContain("上一次產出未通過品質 Gate");
+    expect(prompts[1]).toContain("stage2-parse-error");
+    expect(prompts[2]).toContain("上一次產出未通過品質 Gate");
+  });
+});

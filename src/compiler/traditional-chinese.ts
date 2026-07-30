@@ -2,7 +2,7 @@
 // （憲章 IX，不另建平行判斷）。1) 移除 fenced/行內 code 與 frontmatter 得散文文本；2) 簡體字偵測
 // （比對簡體專用字集）；3) CJK 佔比（CJK ÷（CJK + 拉丁字母詞數）），低於門檻視為英文過多/疑似未譯。
 
-export type TraditionalChineseRule = "simplified-char" | "cjk-ratio-low";
+export type TraditionalChineseRule = "simplified-char" | "cjk-ratio-low" | "slang-term";
 
 export interface TraditionalChineseViolation {
   rule: TraditionalChineseRule;
@@ -21,6 +21,21 @@ export interface TraditionalChineseResult {
 
 /** 門檻預設 0.5（寬鬆設計）：英文技術術語計入分母但不因此失敗（research R7）。 */
 export const DEFAULT_CJK_RATIO_THRESHOLD = 0.5;
+
+/**
+ * 教材 MUST NOT 使用的網路俚語（音譯用字）。**刻意極小且精準**，不追求窮舉——俚語無法列舉完全，
+ * 此處只收「實測真的出現、且在教材語境下必為誤用」的樣態，避免誤殺正常用語。
+ *
+ * 實測起因：Stage 2 產出的第一篇文章用了 6 次「寫扣」（把 code 音譯為「扣」的台式網路俚語），
+ * 散見於 Concept / Pattern Recognition / Common Mistakes / Digest 四個區塊。既有的繁中判準只驗
+ * 簡繁與 CJK 佔比，對「是繁體、但用語不適合教材」完全無感。而只靠 prompt 約束對這類系統性
+ * 偏差不可靠（本 Feature 已反覆驗證：篇數、缺欄位、程式碼 fence 都是加了機器檢查才真正解決）。
+ *
+ * MUST 只匹配動詞搭配（寫/敲/打 + 扣），不可單獨匹配「扣」——「折扣」「扣除」「扣分」皆為正常用語。
+ */
+const SLANG_PATTERNS: { pattern: RegExp; suggestion: string }[] = [
+  { pattern: /[寫敲打]扣/g, suggestion: "「扣」為 code 的音譯俚語，教材請改用「程式碼」或保留英文 code" },
+];
 
 /**
  * 簡體專用字集（bundled，非窮舉）：僅收錄「簡體寫法與繁體字形完全不同、且該簡體字形在正式繁中
@@ -71,6 +86,19 @@ export function checkTraditionalChinese(
         char: ch,
         index: i,
         message: `偵測到簡體字「${ch}」（散文文本位置 ${i}）`,
+      });
+    }
+  }
+
+  for (const { pattern, suggestion } of SLANG_PATTERNS) {
+    // 每個 pattern 的 lastIndex 在共用的 /g regex 上會累積，MUST 逐次重置才不會漏掉後續出現位置。
+    pattern.lastIndex = 0;
+    for (const match of prose.matchAll(pattern)) {
+      violations.push({
+        rule: "slang-term",
+        char: match[0],
+        index: match.index,
+        message: `偵測到不適合教材的俚語「${match[0]}」（散文文本位置 ${match.index}）：${suggestion}`,
       });
     }
   }

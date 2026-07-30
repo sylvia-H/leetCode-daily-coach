@@ -61,3 +61,30 @@ describe("checkTraditionalChinese（R7 / FR-008，繁中機器判準）", () => 
     expect(strict.violations.some((v) => v.rule === "cjk-ratio-low")).toBe(true);
   });
 });
+
+describe("slang-term（教材 MUST NOT 使用網路俚語）", () => {
+  // 實測：Stage 2 首篇文章用了 6 次「寫扣」（code 的音譯俚語）。既有判準只驗簡繁與 CJK 佔比，
+  // 對「是繁體、但用語不適合教材」完全無感，故補上這道最小且精準的檢查。
+  it("偵測到「寫扣」→ slang-term 違規並給出替代建議", () => {
+    const result = checkTraditionalChinese("這不僅是寫扣前的重要心智模型。");
+    expect(result.ok).toBe(false);
+    const v = result.violations.find((x) => x.rule === "slang-term");
+    expect(v?.char).toBe("寫扣");
+    expect(v?.message).toContain("程式碼");
+  });
+
+  it("同一篇多處出現 → 逐一列出（/g regex 的 lastIndex MUST 重置，否則會漏報後續位置）", () => {
+    const result = checkTraditionalChinese("一開始就想寫扣。停止直接寫扣的衝動。敲扣之前先想清楚。");
+    expect(result.violations.filter((v) => v.rule === "slang-term")).toHaveLength(3);
+  });
+
+  it("MUST NOT 誤殺正常用語：折扣／扣除／扣分 皆不觸發", () => {
+    const result = checkTraditionalChinese("這裡談的是折扣、扣除與扣分，都是正常用語。");
+    expect(result.violations.filter((v) => v.rule === "slang-term")).toEqual([]);
+  });
+
+  it("俚語出現在 fenced code block 內 → 不觸發（stripNonProse 已剝除程式碼）", () => {
+    const result = checkTraditionalChinese("正常敘述。\n\n```ts\n// 寫扣\n```\n");
+    expect(result.violations.filter((v) => v.rule === "slang-term")).toEqual([]);
+  });
+});

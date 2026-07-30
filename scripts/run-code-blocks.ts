@@ -28,6 +28,30 @@ const TARGET_SECTIONS: { name: string; lang: CodeLang }[] = [
 
 const FENCE_RE = /```(?:\w+)?\r?\n([\s\S]*?)```/g;
 
+/**
+ * 找出「區塊存在、卻沒有任何 fenced code block」的 Corner/Tip 區塊名稱。
+ *
+ * 為何 MUST 有這道檢查（實測踩過）：`extractCodeBlocks` 對這種情形只是抽不到東西、靜默略過，
+ * 於是**整篇文章零區塊 → 零失敗 → 通過**，形成**真空通過**（vacuous pass）——比沒有 Gate 更危險，
+ * 因為它會回報綠燈。實測 Stage 2 產出的第一篇文章，Corner 區塊把程式碼寫成單行純文字（無 fence、
+ * 換行全失），生成期與 CI 的程式碼實測都毫無異狀地放行。
+ *
+ * §10 要求 TypeScript/Python 的 Corner 與 Tip 各自內含可執行且自帶斷言的 fenced code block，
+ * 故「區塊在、fence 不在」一律視為缺陷。區塊本身不存在則不在此檢查範圍（由 §10 固定區塊解析負責）。
+ */
+export function findSectionsWithoutCode(articleMarkdown: string): string[] {
+  const { content } = matter(articleMarkdown);
+  const sections = parseSections(content);
+  const missing: string[] = [];
+  for (const { name } of TARGET_SECTIONS) {
+    const raw = sections.get(name);
+    if (raw === undefined) continue; // 區塊不存在：不屬本函式職責
+    const hasCode = [...raw.matchAll(FENCE_RE)].some((m) => (m[1] ?? "").trim() !== "");
+    if (!hasCode) missing.push(name);
+  }
+  return missing;
+}
+
 /** 抽出 Article 內 TypeScript/Python Corner/Tip 的 fenced code blocks（frontmatter 已由 gray-matter 剝除）。 */
 export function extractCodeBlocks(articleMarkdown: string): CodeBlock[] {
   const { content } = matter(articleMarkdown);
@@ -114,14 +138,37 @@ export function withTempDir<T>(prefix: string, fn: (dir: string) => T): T {
   }
 }
 
+/**
+ * Windows 的 Microsoft Store「App Execution Alias」佔位程式：`python.exe` / `python3.exe` 存在於
+ * `%LOCALAPPDATA%\Microsoft\WindowsApps\`，但**未安裝 Python 時執行只會回 exit code 9009 且零輸出**
+ * （本 repo 實測）。這會讓「直譯器根本不存在」偽裝成「教材程式碼執行失敗」，在 Stage 2 批次裡
+ * 表現為每一篇的 Python 區塊都失敗——165 篇的批次可能因此白跑 2～4 天才被發現。
+ */
+const WINDOWS_COMMAND_NOT_FOUND_EXIT = 9009;
+
 function runCommand(command: string, args: string[]): ExecResult {
   try {
     execFileSync(command, args, { stdio: "pipe" });
     return { ok: true };
   } catch (err) {
-    const e = err as { stdout?: Buffer; stderr?: Buffer; message: string };
-    const detail = [e.stdout?.toString(), e.stderr?.toString()].filter(Boolean).join("\n") || e.message;
-    return { ok: false, detail };
+    const e = err as { stdout?: Buffer; stderr?: Buffer; message: string; status?: number; code?: string };
+    const output = [e.stdout?.toString(), e.stderr?.toString()].filter(Boolean).join("\n").trim();
+
+    // 直譯器不可用 MUST 與「程式碼本身有錯」明確區分：兩者的處置完全不同（前者是環境問題，
+    // 重生再多次也不會過；後者才該觸發重生）。缺了這個區分，錯誤訊息會把人引導到完全錯誤的方向。
+    const notFound = e.code === "ENOENT" || (e.status === WINDOWS_COMMAND_NOT_FOUND_EXIT && output === "");
+    if (notFound) {
+      return {
+        ok: false,
+        detail:
+          `找不到可執行的 \`${command}\`（exit=${e.status ?? e.code}）。教材程式碼未被實際執行。\n` +
+          `若在 Windows 上看到此訊息，多半是 PATH 指向 Microsoft Store 的佔位程式\n` +
+          `（%LOCALAPPDATA%\\Microsoft\\WindowsApps\\${command}.exe），而非真正安裝的直譯器。\n` +
+          `請安裝 Python 3.x 並確認 \`${command} --version\` 可正常輸出版本後再重跑。`,
+      };
+    }
+    const status = e.status !== undefined ? `（exit=${e.status}）` : "";
+    return { ok: false, detail: `${output || e.message}${status}` };
   }
 }
 
@@ -135,6 +182,28 @@ const TSC_ENTRY = require_.resolve("typescript/bin/tsc");
 const TSX_ENTRY = require_.resolve("tsx/cli");
 
 /** 真實 executor：TS 以 `tsc --noEmit --strict` 型別檢查 + `tsx` 執行；Python 以 `python` 執行。 */
+/**
+ * 工具鏈前置檢查：用最小的合法片段實際跑一次 TypeScript 與 Python，確認直譯器/編譯器可用。
+ *
+ * 為何 MUST 在批次開始前跑（實測踩過）：本機 `python` 指向 Microsoft Store 佔位程式時，
+ * 每篇文章的 Python 區塊都會 `execution-failed`，且訊息看起來像「教材程式碼有錯」。Stage 2 會為
+ * 每篇重生 3 次才放棄——165 篇 × 3 次的額度與 2～4 天的批次時間全數浪費在一個裝好 Python 就能解決的
+ * 環境問題上。用兩次極短的執行換取這個保證，划算得不成比例。
+ */
+export async function checkToolchain(executor: CodeExecutor): Promise<{ lang: CodeLang; detail: string }[]> {
+  const probes: { lang: CodeLang; code: string }[] = [
+    { lang: "typescript", code: 'const ok: number = 1;\nif (ok !== 1) throw new Error("toolchain probe failed");\n' },
+    { lang: "python", code: 'ok = 1\nassert ok == 1, "toolchain probe failed"\n' },
+  ];
+  const failures: { lang: CodeLang; detail: string }[] = [];
+  for (const probe of probes) {
+    const result =
+      probe.lang === "typescript" ? await executor.runTypeScript(probe.code) : await executor.runPython(probe.code);
+    if (!result.ok) failures.push({ lang: probe.lang, detail: result.detail ?? "(無錯誤輸出)" });
+  }
+  return failures;
+}
+
 export function createRealExecutor(): CodeExecutor {
   return {
     async runTypeScript(code: string): Promise<ExecResult> {
@@ -178,7 +247,15 @@ async function main(): Promise<void> {
   let totalBlocks = 0;
 
   for (const file of files) {
-    const blocks = extractCodeBlocks(readFileSync(file, "utf-8"));
+    const raw = readFileSync(file, "utf-8");
+
+    // 先擋真空通過：區塊在、fence 不在時，下面的 extractCodeBlocks 會抽到 0 個區塊而「無異狀通過」。
+    for (const section of findSectionsWithoutCode(raw)) {
+      failures++;
+      console.error(`✗ [missing-code-block] ${file} · ${section}：區塊內找不到 fenced code block`);
+    }
+
+    const blocks = extractCodeBlocks(raw);
     const results = await checkCodeBlocks(blocks, executor);
     totalBlocks += results.length;
     for (const r of results) {

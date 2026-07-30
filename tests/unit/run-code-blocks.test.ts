@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   checkCodeBlocks,
   extractCodeBlocks,
+  findSectionsWithoutCode,
   hasAssertion,
   withTempDir,
   type CodeBlock,
@@ -133,5 +134,43 @@ describe("withTempDir（暫存資源清理，R6）", () => {
       }),
     ).toThrow("boom");
     expect(existsSync(capturedDir)).toBe(false);
+  });
+});
+
+describe("findSectionsWithoutCode（擋真空通過：區塊在、fence 不在）", () => {
+  // 實測：Stage 2 產出的第一篇文章把 Corner 的程式碼寫成單行純文字（無 fence），
+  // extractCodeBlocks 抽到 0 個區塊 → checkCodeBlocks 無失敗可報 → 生成期與 CI 雙雙回報通過。
+  // 一個會回報綠燈的失效 Gate，比沒有 Gate 更危險。
+  function article(sections: Record<string, string>): string {
+    const body = Object.entries(sections)
+      .map(([name, content]) => `## ${name}\n\n${content}\n`)
+      .join("\n");
+    return `---\nid: x\n---\n${body}`;
+  }
+
+  it("區塊存在但無 fenced code block → 具名列出該區塊", () => {
+    const md = article({
+      "TypeScript Corner": "function f() { throw new Error('x'); } f();",
+      "Python Corner": "def f(): assert True",
+    });
+    expect(findSectionsWithoutCode(md)).toEqual(["TypeScript Corner", "Python Corner"]);
+  });
+
+  it("區塊有合法 fenced code block → 不列入", () => {
+    const md = article({
+      "TypeScript Corner": "```typescript\nthrow new Error('x');\n```",
+      "Python Corner": "```python\nassert True\n```",
+    });
+    expect(findSectionsWithoutCode(md)).toEqual([]);
+  });
+
+  it("fence 存在但內容為空 → 仍列為缺失（空 block 等於沒有可測程式碼）", () => {
+    expect(findSectionsWithoutCode(article({ "TypeScript Corner": "```typescript\n\n```" }))).toEqual([
+      "TypeScript Corner",
+    ]);
+  });
+
+  it("區塊本身不存在 → 不屬本函式職責，不列入（由 §10 固定區塊解析負責）", () => {
+    expect(findSectionsWithoutCode(article({ Concept: "純文字" }))).toEqual([]);
   });
 });
