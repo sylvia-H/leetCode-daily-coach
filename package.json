@@ -18,7 +18,8 @@
     "generate:content": "tsx scripts/generate-content.ts",
     "populate:problem-bank": "tsx scripts/populate-problem-bank.ts",
     "gate:code": "tsx scripts/run-code-blocks.ts",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "supplement:problems": "tsx scripts/supplement-problems.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
