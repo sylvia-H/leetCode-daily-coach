@@ -88,8 +88,8 @@ US5（CI）為 P2。
 - [X] T017 [US1] 撰寫 Stage 1 prompt 模板於 [scripts/lib/prompts/](../../scripts/lib/prompts/)：依 §8 Module 骨架與顆粒度規範批次起草 frontmatter（`leetcode` 只候選題號）＋ Author Hints（§10.4 涵蓋項）
 - [X] T018 [US1] 確認結構 Gate 顆粒度規則（Topic 5–12 / Module 10–30）在**全量模式生效**（非 stub 豁免）：檢視/調整 [src/compiler/curriculum.ts](../../src/compiler/curriculum.ts) 的模式旗標，並於 [tests/unit/](../../tests/unit/) 補測顆粒度違規會被報出（FR-002）
 - [X] T019 [US1] 實作 [scripts/generate-curriculum.ts](../../scripts/generate-curriculum.ts) 入口：建構 llm-client → 批次起草 Skeleton（checkpoint 跳過已過關者）→ 呼叫 populate → 結構 Gate（重用 `curriculum.ts`＋`schema.ts`）→ 產 outline.md；`process.exit` 只在此檔；具名違規輸出、缺金鑰/違規 exit 1、不進定稿（FR-001/003/003a/004、contracts/stage1-curriculum）
-- [ ] T020 [US1] **執行 Stage 1**（機器批次）：產出 `concepts/**`（16 Module、≥150 Concept）、擴充後 `data/problem-bank.json` ＋ `data/leetcode-index.json`、`curriculum/outline.md`；結構 Gate 零違規　**⚠️ 待手動執行**：需真實 `GEMINI_API_KEY`，本次 `/speckit-implement` 僅完成程式碼與 mock 測試（使用者已確認範圍），依 quickstart.md 步驟 1 手動跑
-- [ ] T021 [US1] **唯一人工檢查點**：review `curriculum/outline.md`（顆粒度/順序/依賴方向），核可後凍結 commit（`concepts/` + `curriculum/outline.md` + `data/problem-bank.json` + `data/leetcode-index.json`）；不核可則調參數重跑 T020（FR-005/006）　**⚠️ 待 T020 完成後由使用者人工執行**
+- [x] T020 [US1] **執行 Stage 1**（機器批次）：產出 `concepts/**`（16 Module、≥150 Concept）、擴充後 `data/problem-bank.json` ＋ `data/leetcode-index.json`、`curriculum/outline.md`；結構 Gate 零違規　**已於 2026-07-30 執行**：16 Module / **165 Concept**（每 Topic 10–12）、題庫 337 題（Easy 93 / Medium 203 / Hard 40）、結構 Gate 零違規。驗收期間發現並修復 Stage 1 產線的四項缺陷（結構化輸出、篇數/slug 守門、失敗回饋重試、`--only` 殘留邊清除），見同批 `fix(007-content-generation)` commit
+- [x] T021 [US1] **唯一人工檢查點**：review `curriculum/outline.md`（顆粒度/順序/依賴方向），核可後凍結 commit（`concepts/` + `curriculum/outline.md` + `data/problem-bank.json` + `data/leetcode-index.json`）；不核可則調參數重跑 T020（FR-005/006）　**已於 2026-07-30 核可凍結**。review 期間處理：two-pointer 模組與 array/string 重複教學（題 27 被教 4 次）＋ 同技巧湊數 3 篇 → 單獨重跑修正（跨 Module 重複題號 20→15、涉及 two-pointer 者 6→1）；評估後**不重跑 array**（4 個下游模組入口 Concept 會成孤兒，風險大於效益）；heap/queue 無題目 Concept 經查證為合法「無題目觀念課」（資料結構內部機制），無需處理
 
 **Checkpoint**: 完整課綱與 Skeleton 定稿凍結；US2/US3 可開始
 

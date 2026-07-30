@@ -1,0 +1,36 @@
+---
+id: binary-search-inclusive-bounds
+title: Binary Search Inclusive Bounds
+module: binary-search
+topic: binary-search
+difficulty: easy
+estimated_minutes: 15
+pattern_label: Binary Search
+complexity_label: O(log n) / O(1)
+prerequisite:
+  - binary-search-core-concept
+next:
+  - binary-search-overflow-prevention
+learning_goal:
+  - >-
+    Master the [left, right] inclusive pointer configuration and loop condition
+    left <= right.
+exit_criteria:
+  - Correctly initialize pointers for inclusive bounds.
+  - Use correct termination condition.
+leetcode:
+  - 704
+tags:
+  - binary-search
+  - pointers
+---
+
+## Author Hints
+
+- 核心觀念：Use left = 0 and right = n - 1 with while (left <= right).
+- Pattern 辨識線索：Standard template for exact match search.
+- Thinking：When left exceeds right, the search space is exhausted without a match.
+- Common Mistakes：Using left < right which might miss the single element case.
+- TypeScript 重點：Ensure loop condition handles equality correctly.
+- Python 重點：Ensure while left <= right is properly bounded.
+- 題號 704 為何適合此 Pattern：Fits the standard inclusive bounds template perfectly.

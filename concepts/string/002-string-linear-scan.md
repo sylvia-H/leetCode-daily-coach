@@ -1,0 +1,44 @@
+---
+id: string-linear-scan
+title: String Linear Scan
+module: string
+topic: string
+difficulty: easy
+estimated_minutes: 10
+pattern_label: Linear Scan
+complexity_label: O(n) / O(1)
+prerequisite:
+  - string-ascii-representation
+next:
+  - string-two-pointers-opposite
+  - stack-valid-parentheses
+  - stack-remove-adjacent-duplicates
+  - string-sliding-window-fixed
+  - string-anagram-grouping
+  - string-pattern-matching-basic
+  - string-parsing-simulation
+  - two-pointer-backspace-string-compare
+learning_goal:
+  - Traverse strings character by character to accumulate or check conditions.
+exit_criteria:
+  - >-
+    Can write a standard loop over string indices or characters without
+    off-by-one errors.
+leetcode:
+  - 387
+  - 242
+tags:
+  - string
+  - linear-scan
+---
+
+## Author Hints
+
+- 核心觀念：Inspect every character sequentially to extract properties.
+- Pattern 辨識線索：Problems asking to validate, count, or search within a string linearly.
+- Thinking：Initialize accumulators and loop through the entire string length once.
+- Common Mistakes：Modifying strings in place when strings are immutable.
+- TypeScript 重點：Iterate using for...of or traditional index loops.
+- Python 重點：Iterate directly over string items or use enumerate().
+- 題號 387 為何適合此 Pattern：Requires scanning characters to count frequencies.
+- 題號 242 為何適合此 Pattern：Scans both strings to verify identical character counts.
