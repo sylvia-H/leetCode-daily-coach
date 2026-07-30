@@ -128,7 +128,7 @@ Digest / Tips / Exit Criteria / Takeaway 各自符合 §14.5 字元預算；觀�
 2. **Given** Full Article 含 TS / Python 程式碼（各片段自帶最小斷言），**When** 品質 Gate 執行程式碼實測，
    **Then** TS 程式碼 `tsc` 編譯通過且 `vitest`/`tsx` 斷言成功、Python 程式碼 `pytest` 斷言成功；任一編譯失敗 /
    斷言失敗 / 缺斷言 MUST 擋下該篇並觸發重生，MUST NOT 凍結。
-3. **Given** Full Article 的推播區塊，**When** Gate 檢查字元預算，**Then** Digest ≤900、TS/Python Tip 各 ≤450、
+3. **Given** Full Article 的推播區塊，**When** Gate 檢查字元預算，**Then** Digest ≤900、TS/Python Tip 各 ≤650、
    每題 ≤350（最多 3 題）、Exit Criteria ≤400、Takeaway ≤120、footer ≤200、單則全 embeds ≤5,500——任一超限
    MUST 擋下並重生，MUST NOT 截斷凍結。
 4. **Given** Full Article 的 `Today's Challenge`，**When** Gate 檢查題目正確性，**Then** 每個 `leetcode` 題號存在於

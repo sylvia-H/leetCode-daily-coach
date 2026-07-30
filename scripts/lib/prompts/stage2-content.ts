@@ -180,7 +180,8 @@ ${problemsList}
    每個 code block MUST 內嵌至少一個斷言（TypeScript 用 \`throw\` 或 \`node:assert\`；Python 用 \`assert\`），
    且 MUST 能實際編譯／執行通過。
 4. challenge 陣列 MUST 為每個候選題目各提供恰好一條，欄位為 { id, whyThisPattern, hint? }；id MUST 與候選題目一致，MUST NOT 新增、刪除或替換題號。
-5. digest ≤900 字、tsTip/pyTip 各 ≤450 字、takeaway ≤120 字（Discord 字元預算，§14.5）；超限請自行精簡，MUST NOT 期待後續被截斷。
+5. digest ≤900 字、tsTip/pyTip 各 ≤650 字（**含 fenced code block 本身**）、takeaway ≤120 字
+   （Discord 字元預算，§14.5）；超限請自行精簡，MUST NOT 期待後續被截斷。
 6. 回傳格式 MUST 為單一 JSON 物件，形狀為 DraftArticleResponse（concept/thinking/patternRecognition/commonMistakes/complexity/tsCorner/pyCorner/tomorrowPreview/digest/tsTip/pyTip/takeaway/challenge），不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。
 
 請開始展開。`;

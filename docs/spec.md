@@ -721,8 +721,8 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | 區塊                        | 預算（字元）              |
 | --------------------------- | ------------------------- |
 | Digest（主 Embed description） | ≤ 900                  |
-| TypeScript Tip（field value）  | ≤ 450（含程式碼區塊）   |
-| Python Tip（field value）      | ≤ 450（含程式碼區塊）   |
+| TypeScript Tip（field value）  | ≤ 650（含程式碼區塊）   |
+| Python Tip（field value）      | ≤ 650（含程式碼區塊）   |
 | 每題（連結 + 難度 + why + Hint）| ≤ 350，最多 3 題        |
 | Exit Criteria（checklist）     | ≤ 400（≤6 條、每條 ≤60）|
 | Takeaway                       | ≤ 120                   |
@@ -731,6 +731,16 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | Weekly Reflection 問題（review）| ≤ 300                   |
 | 鼓勵語（rest）                 | ≤ 200                   |
 
+- **TS / Python Tip 由 ≤450 放寬為 ≤650（F7 定案 2026-07-31）**：這兩個區塊 MUST 內含一個 fenced code
+  block **加上**說明文字，450 字元實測過緊——Stage 2 第一批產出為 561 / 532，且內容並不浮濫，是「寫得
+  剛好」的長度。強壓只會逼出兩種壞結果：把程式碼砍到失去示範價值，或反覆重生浪費免費層額度。
+  放寬後 concept Session 的各 slot 上限加總為 **4,370**，距自訂總量上限 5,500 仍有 1,130 餘裕、距
+  Discord 硬限 6,000 有 1,630；總量檢查（`total` / `total.hard`）照舊把關，故單項放寬不會讓整則訊息失控。
+  **上限值 MUST 以 `src/renderer/budget.ts` 的 `ARTICLE_BUDGET_LIMITS` 為唯一來源**（Stage 2 的
+  per-article Gate 與 `checkBudget` 共用），MUST NOT 在生成端另寫一份數字。
+- **逐區塊預算 MUST 在 per-article Gate 就檢查（MUST，F7 定案 2026-07-31）**：MUST NOT 只依賴批次末的
+  全課表 Gate——後者要等全部教材生成完才跑，超標會在 2～4 天的批次結束時才一次爆出，屆時已無從挽回
+  額度。實測：per-article Gate 原本完全沒驗預算，超標文章一路放行至批次末。
 - **「最多 3 題」的把關點在課表生成端（MUST，F5 定案 2026-07-23）**：Compiler 與 Renderer **MUST NOT**
   為了滿足此上限而截斷題目清單（同本節「超限一律視為失敗、MUST NOT 自動截斷」）。題數上限由
   `generate-schedule.ts` 於寫入 `schedules/{track}.json` 時保證（§13.4），Gate 的 `problems.count` 檢查

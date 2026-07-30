@@ -11,6 +11,7 @@ import { loadCurriculum } from "../src/compiler/curriculum.js";
 import { CONCEPT_BODY_MAX_CHARS, countConceptBodyChars, runContentGate } from "../src/compiler/gate.js";
 import { loadCompilerDeps } from "../src/compiler/lesson.js";
 import { checkTraditionalChinese } from "../src/compiler/traditional-chinese.js";
+import { ARTICLE_BUDGET_LIMITS } from "../src/renderer/budget.js";
 import { parseArticle } from "../src/compiler/content.js";
 import type { ConceptNode } from "../src/types/curriculum.js";
 import {
@@ -264,6 +265,26 @@ async function runPerArticleGate(
   const tc = checkTraditionalChinese(article.rawContent);
   if (!tc.ok) {
     return { reason: `繁中判準：${tc.violations.map((v) => v.message).join("; ")}` };
+  }
+
+  // §14.5 逐區塊預算（文章層級）。MUST 在此擋下，MUST NOT 只依賴批次末的全課表 Gate——後者要等
+  // 165 篇全部生成完才跑，超標會在 2～4 天的批次結束時才一次爆出（實測 tsTip 561 / pyTip 532，
+  // 而 per-article Gate 原本完全沒驗預算，該篇一路放行）。上限見 ARTICLE_BUDGET_LIMITS 的放寬說明。
+  // 上限取自 renderer 的 ARTICLE_BUDGET_LIMITS（唯一來源，憲章 IX：不另立平行判準）。
+  const overBudget = (
+    [
+      ["digest", article.digest],
+      ["tsTip", article.tsTip],
+      ["pyTip", article.pyTip],
+      ["takeaway", article.takeaway],
+    ] as const
+  )
+    .map(([slot, text]) => ({ slot, len: [...text].length, limit: ARTICLE_BUDGET_LIMITS[slot] }))
+    .filter((x) => x.len > x.limit);
+  if (overBudget.length > 0) {
+    return {
+      reason: `字元預算超標（§14.5）：${overBudget.map((x) => `${x.slot} ${x.len}/${x.limit}`).join("、")}——請精簡，MUST NOT 期待後續被截斷`,
+    };
   }
 
   // MUST 先擋「區塊在、fence 不在」：否則 extractCodeBlocks 抽到 0 個區塊，checkCodeBlocks 自然

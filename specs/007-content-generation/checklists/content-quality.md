@@ -10,7 +10,7 @@
 - [x] CHK001 §10 固定區塊清單（閱讀用 8 段 + 推播用 4 段 + Today's Challenge）是否**逐項列明且無遺漏**，作為區塊完整性 Gate 的判準？ [Completeness, Spec §FR-007 / data-model §3]
 - [x] CHK002 每個 `leetcode` 候選題號是否**明訂**須產出對應 `Today's Challenge` 條目（含 `whyThisPattern` + Hint）？ [Completeness, Spec §FR-009]
 - [x] CHK003 品質 Gate 的**七道關卡**是否各自定義了通過/不通過的具體判準，而非只列名稱？ [Completeness, Spec §FR-010 / contracts/content-quality-gate §1]
-- [x] CHK004 各推播區塊的字元預算上限（Digest ≤900、Tip 各 ≤450、每題 ≤350、Exit Criteria ≤400、Takeaway ≤120、footer ≤200、總 ≤5,500）是否**在需求層完整列出**？ [Completeness, Spec §FR-010.3 / 憲章]
+- [x] CHK004 各推播區塊的字元預算上限（Digest ≤900、Tip 各 ≤650、每題 ≤350、Exit Criteria ≤400、Takeaway ≤120、footer ≤200、總 ≤5,500）是否**在需求層完整列出**？ [Completeness, Spec §FR-010.3 / 憲章]
 - [x] CHK005 「觀念本體 ≤2,000 字」的**「觀念本體」範圍**是否有明確定義（是 `Concept` 區塊，還是含其他段落）？ [Gap, Spec §FR-008 / §10.3]
 - [x] CHK006 是否明訂 self-check（關卡 7）**不進 CI**、只在生成期執行的邊界？ [Completeness, Spec §FR-010.7 / contracts/content-quality-gate §1]
 
