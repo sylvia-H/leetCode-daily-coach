@@ -352,7 +352,7 @@ Gate 已做同一件事；CI 步驟是把這道把關固化進合併流程，故
 **憲章護欄（本 Feature MUST 維持）**
 
 - **FR-022**: LLM 使用 MUST 限於 **build-time**（本機或手動 `workflow_dispatch`）；`GEMINI_API_KEY` MUST NOT 出現在
-  `daily.yml`（憲章 VIII / §4-8）。模型 MUST 為 `gemini-3.1-flash-lite`（§20.4；憲章 v1.0.1 釘死）。
+  `daily.yml`（憲章 VIII / §4-8）。模型 MUST 為 `gemini-3.5-flash-lite`（§20.4；憲章 v1.0.2 釘死）。
 - **FR-023**: LLM SDK（`@google/genai`）MUST 只出現在 `scripts/` 的依賴路徑，`src/` MUST NOT import（憲章 VIII）；
   本 Feature 引入 SDK 時 MUST 確認既有的 `src/` 匯入禁止檢查仍生效。
 - **FR-024**: 大綱定稿凍結後，LLM MUST NOT 未經人為觸發即變更課綱結構 / 重排 / 生成學習順序（順序為 deterministic，
@@ -405,8 +405,9 @@ Gate 已做同一件事；CI 步驟是把這道把關固化進合併流程，故
 - **prompt 模板 / 批次大小為 plan / tasks 待定項**：本 spec 以合理預設描述行為；prompt 模板細節、每批 Concept
   數與跨天排程、CJK 佔比門檻確切值、`leetcode-index.json` 初始題目集合來源於 `/speckit-plan` / `/speckit-tasks`
   定案。（Gate 通過門檻、程式碼實測標準、繁中判準、重生上限、題目 metadata 來源＝靜態快照優先已定案。）
-- **模型釘死 `gemini-3.1-flash-lite`**：依 §20.4 與憲章 v1.0.1，本 Feature 不重新評估型號；若免費層資格變動，
-  屬憲章 PATCH 修訂流程，非本 Feature 範圍。
+- **模型釘死 `gemini-3.5-flash-lite`**：依 §20.4 與憲章 v1.0.2，本 Feature 不重新評估型號；若免費層資格變動，
+  屬憲章 PATCH 修訂流程，非本 Feature 範圍。（2026-07-21 官方發布 `gemini-3.5-flash-lite` 後，已由憲章
+  v1.0.1 → v1.0.2 完成一次此類 PATCH，同步更新本 Feature 全部引用處。）
 - **內容正確性的殘餘風險為可接受權衡**（§20.3 風險披露）：Gate + 大綱定稿消除結構 / 程式碼 / 參照 / 版面類
   錯誤與方向性偏差，但不保證教學敘述 100% 正確；純自用場景下上線後邊用邊修（改 Skeleton → 重跑展開）。
 - **執行環境**：Stage 1 / Stage 2 於本機或手動 `workflow_dispatch` 執行（Windows / PowerShell 本機 + Node 24），

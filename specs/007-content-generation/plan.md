@@ -31,7 +31,7 @@ F7 是**一次性 build-time 內容工程**：以 LLM 批次生成全部 16 個 
 **Language/Version**: strict TypeScript 5.5（`tsc` → `node dist/...`），Node.js 24。教材程式碼實測另用 Python 3.x + `pytest`（僅 Gate）。
 
 **Primary Dependencies**: **新增 `@google/genai`（devDependency，只在 `scripts/` 依賴路徑，僅 build-time；模型
-`gemini-3.1-flash-lite`，憲章釘死）**。既有 `zod`（frontmatter/JSON schema）、`gray-matter` + `marked`（Skeleton/
+`gemini-3.5-flash-lite`，憲章釘死）**。既有 `zod`（frontmatter/JSON schema）、`gray-matter` + `marked`（Skeleton/
 Article 解析）續用。題目 metadata 取得用 Node 內建 `fetch`。無其他新增 runtime 相依（`src/` 相依不變）。
 
 **Storage**: 版本控制的檔案。**產物**＝`concepts/**`（Skeleton）、`articles/**`（Full Article）、
@@ -66,7 +66,7 @@ import；題號/連結/難度由程式帶入、MUST NOT 由 LLM 生成、MUST NO
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-逐條對照 `.specify/memory/constitution.md`（v1.0.1）：
+逐條對照 `.specify/memory/constitution.md`（v1.0.2）：
 
 | 原則 | 判定 | 說明 |
 | --- | --- | --- |

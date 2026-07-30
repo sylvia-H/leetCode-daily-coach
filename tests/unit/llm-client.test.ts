@@ -24,7 +24,7 @@ describe("createLlmClient（scripts/lib/llm-client.ts，R1 / FR-021/022/025）",
     expect(factory).toHaveBeenCalledWith("key");
   });
 
-  it("模型 id 釘死為 gemini-3.1-flash-lite，每次呼叫皆帶入", async () => {
+  it("模型 id 釘死為 gemini-3.5-flash-lite，每次呼叫皆帶入", async () => {
     const generateContent = vi.fn(async () => ({ text: "hello" }));
     const client = createLlmClient(
       { GEMINI_API_KEY: "key" },
@@ -32,7 +32,7 @@ describe("createLlmClient（scripts/lib/llm-client.ts，R1 / FR-021/022/025）",
     );
     await client.generate("some prompt");
     expect(generateContent).toHaveBeenCalledWith({ model: GEMINI_MODEL, contents: "some prompt" });
-    expect(GEMINI_MODEL).toBe("gemini-3.1-flash-lite");
+    expect(GEMINI_MODEL).toBe("gemini-3.5-flash-lite");
   });
 
   it("呼叫確實經過 throttle：schedule 被呼叫、節流間隔生效", async () => {

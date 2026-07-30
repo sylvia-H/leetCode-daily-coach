@@ -7,8 +7,9 @@ spec Clarifications（Q1–Q4）。所有「plan 待定項」在此定案，交 
 
 ## R1 — LLM 供應與呼叫層（`scripts/lib/llm-client.ts`）
 
-**Decision**: 以 `@google/genai`（devDependency）封裝單一 `LlmClient`，模型硬編 `gemini-3.1-flash-lite`
-（憲章 v1.0.1 釘死），只讀 `process.env.GEMINI_API_KEY`；缺金鑰在客戶端建構時即 throw（fail-fast，FR-025）。
+**Decision**: 以 `@google/genai`（devDependency）封裝單一 `LlmClient`，模型硬編 `gemini-3.5-flash-lite`
+（憲章 v1.0.2 釘死；2026-07-21 官方發布後由 v1.0.1 的 `gemini-3.1-flash-lite` PATCH 更新而來），只讀
+`process.env.GEMINI_API_KEY`；缺金鑰在客戶端建構時即 throw（fail-fast，FR-025）。
 Client 只在 `scripts/lib/` 出現，`src/` 一律不 import。所有呼叫走此單一出口，方便統一套用節流/退避（R3）與
 「只送公開資料」的約束（FR-021）。
 

@@ -64,7 +64,7 @@ US5（CI）為 P2。
 
 - [X] T005 實作 [scripts/lib/throttle.ts](../../scripts/lib/throttle.ts)：RPM 節流（間隔＝60000/RPM，預設 RPM=10、可環境變數覆寫）＋ 429/5xx/暫時性錯誤指數退避＋全抖動 jitter（base 1s、上限如 60s、重試上限預設 6）；非暫時性 4xx MUST 直接失敗；時鐘/sleep 以注入參數表示（research R3、FR-017/018）
 - [X] T006 [P] 單元測試 [tests/unit/throttle.test.ts](../../tests/unit/throttle.test.ts)：假時鐘驗節流間隔、退避成長、jitter 邊界、非 429 立即失敗、耗盡後拋可辨識錯誤（不需真等待）
-- [X] T007 實作 [scripts/lib/llm-client.ts](../../scripts/lib/llm-client.ts)：`@google/genai` 包裝，模型硬編 `gemini-3.1-flash-lite`，建構期讀 `GEMINI_API_KEY`（缺即 throw，fail-fast），所有呼叫走 throttle；只送公開資料（R1、FR-021/022/025）
+- [X] T007 實作 [scripts/lib/llm-client.ts](../../scripts/lib/llm-client.ts)：`@google/genai` 包裝，模型硬編 `gemini-3.5-flash-lite`（憲章 v1.0.2，2026-07-21 官方發布後由 `gemini-3.1-flash-lite` PATCH 更新），建構期讀 `GEMINI_API_KEY`（缺即 throw，fail-fast），所有呼叫走 throttle；只送公開資料（R1、FR-021/022/025）
 - [X] T008 [P] 單元測試 [tests/unit/llm-client.test.ts](../../tests/unit/llm-client.test.ts)（mock SDK）：缺金鑰 → 建構期 throw；模型 id 釘死；呼叫確實經過 throttle
 - [X] T009 實作 [scripts/lib/checkpoint.ts](../../scripts/lib/checkpoint.ts)：manifest 讀寫（`.cache/content-manifest.json`）、Skeleton sha256 雜湊、跳過判斷（產物存在＋雜湊一致）、`--force` 覆蓋、manifest 遺失時由掃描 `concepts/**`＋`articles/**` 重建（R4、FR-019/020、data-model §6）
 - [X] T010 [P] 單元測試 [tests/unit/checkpoint.test.ts](../../tests/unit/checkpoint.test.ts)：凍結且未變更 → 跳過、雜湊不符 → 只重生該篇、`--force` → 重生、manifest 遺失 → 重建

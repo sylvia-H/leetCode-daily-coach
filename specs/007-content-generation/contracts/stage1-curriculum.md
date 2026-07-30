@@ -18,7 +18,7 @@ npm run generate:curriculum -- [--force] [--only <conceptId,...>]
 
 ## 3. 流程（MUST 依序）
 
-1. 建構 `LlmClient`（模型 `gemini-3.1-flash-lite`；節流/退避見 R3）。缺金鑰即 exit 1。
+1. 建構 `LlmClient`（模型 `gemini-3.5-flash-lite`；節流/退避見 R3）。缺金鑰即 exit 1。
 2. 對每個 Module/Topic 批次起草 Concept：frontmatter（`leetcode` **只候選題號**）+ Author Hints。
    - 冪等：Skeleton 已存在且結構 Gate 通過的 Concept 跳過（除非 `--force`；`--only` 限定範圍）。
 3. 呼叫 `populate-problem-bank.ts` 流程驗證候選題號並填入 metadata（見對應契約）。

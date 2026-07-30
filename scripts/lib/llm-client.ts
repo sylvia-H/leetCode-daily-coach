@@ -4,8 +4,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { Throttle, resolveRpmLimit } from "./throttle.js";
 
-/** 憲章 v1.0.1 釘死的模型 id；MUST NOT 改用其他（可能付費）型號。 */
-export const GEMINI_MODEL = "gemini-3.1-flash-lite";
+/** 憲章 v1.0.2 釘死的模型 id；MUST NOT 改用其他（可能付費）型號。 */
+export const GEMINI_MODEL = "gemini-3.5-flash-lite";
 
 /** `@google/genai` 中本檔實際使用的最小介面（供測試以假物件替身，避免直接 mock SDK 模組）。 */
 export interface GenAiLike {
