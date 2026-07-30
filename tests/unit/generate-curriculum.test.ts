@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { validModules } from "../helpers/curriculum.js";
 import {
   conceptToMarkdown,
+  draftTopicWithRetry,
   filterPriorConceptIds,
   normalizeDraftConcept,
   normalizeDraftConcepts,
@@ -15,6 +16,8 @@ import {
   repairReciprocalEdges,
   type KnownConceptPosition,
 } from "../../scripts/generate-curriculum.js";
+import { createLlmClient, type GenAiLike } from "../../scripts/lib/llm-client.js";
+import { Throttle } from "../../scripts/lib/throttle.js";
 import type { Ordinal } from "../../src/types/curriculum.js";
 import type { DraftConcept } from "../../scripts/lib/prompts/stage1-curriculum.js";
 
@@ -67,6 +70,76 @@ describe("parseDraftResponse（Stage 1 LLM 回應解析）", () => {
 
   it("缺 concepts 陣列 → 具名 stage1-parse-error", () => {
     expect(() => parseDraftResponse(JSON.stringify({ foo: "bar" }))).toThrow("stage1-parse-error");
+  });
+});
+
+describe("draftTopicWithRetry（同 Topic 內重試，實測「string」Topic 踩過的偶發 JSON 語法錯誤）", () => {
+  function fakeGenAi(generateContent: GenAiLike["models"]["generateContent"]): GenAiLike {
+    return { models: { generateContent } };
+  }
+
+  it("第一次就成功 → 不重試，回傳 concepts", async () => {
+    const validRaw = JSON.stringify({ concepts: [sampleDraft()] });
+    let calls = 0;
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async () => {
+            calls++;
+            return { text: validRaw };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    const result = await draftTopicWithRetry(llmClient, "array", "Array", "array", "Array", []);
+
+    expect(result.concepts).toHaveLength(1);
+    expect(result.error).toBeUndefined();
+    expect(calls).toBe(1);
+  });
+
+  it("前兩次回應是壞掉的 JSON，第三次才合法 → 重試後成功（同一 Topic 內解決，不需整批重跑）", async () => {
+    const validRaw = JSON.stringify({ concepts: [sampleDraft()] });
+    let calls = 0;
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async () => {
+            calls++;
+            return { text: calls < 3 ? "{ not valid json" : validRaw };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    const result = await draftTopicWithRetry(llmClient, "array", "Array", "array", "Array", []);
+
+    expect(result.concepts).toHaveLength(1);
+    expect(calls).toBe(3);
+  });
+
+  it("重試耗盡（MAX_DRAFT_ATTEMPTS 次皆失敗）→ 回傳 error，不 throw（供呼叫端單篇隔離）", async () => {
+    let calls = 0;
+    const llmClient = createLlmClient(
+      { GEMINI_API_KEY: "key" },
+      {
+        genAiFactory: () =>
+          fakeGenAi(async () => {
+            calls++;
+            return { text: "{ not valid json" };
+          }),
+        throttle: new Throttle({ rpmLimit: Infinity }),
+      },
+    );
+
+    const result = await draftTopicWithRetry(llmClient, "string", "String", "string", "String", []);
+
+    expect(result.concepts).toBeUndefined();
+    expect(result.error).toContain("stage1-parse-error");
+    expect(calls).toBe(3);
   });
 });
 

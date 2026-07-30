@@ -30,6 +30,10 @@ const INDEX_PATH = "data/leetcode-index.json";
 // 合法地依 Topic 下限（5）起草卻落入 Module 下限（10）違規，白白浪費一輪額度（見 src/compiler/curriculum.ts）。
 const TOPIC_MIN_CONCEPTS = 10;
 const TOPIC_MAX_CONCEPTS = 12;
+// 每個 Topic 起草的重試上限（與 Stage 2 generate-content.ts 的 MAX_REGEN 同精神）：LLM 回應
+// 偶爾出現 JSON 語法錯誤（例如字串內含未跳脫的引號/反斜線，實測 "string" Topic 踩過）本質上是
+// 隨機雜訊，同一份 prompt 重打一次往往就過——同一 Topic 內重試，不需要動用整批重跑。
+const MAX_DRAFT_ATTEMPTS = 3;
 
 interface ModulesFile {
   modules: { id: string; title: string; topics: { id: string; title: string }[] }[];
@@ -387,6 +391,32 @@ async function draftTopic(
   return normalizeDraftConcepts(response.concepts, topicId);
 }
 
+/**
+ * draftTopic 加上同 Topic 內重試（MAX_DRAFT_ATTEMPTS 次）：LLM 回應偶發的 JSON 語法錯誤/
+ * 漏欄位本質上是隨機雜訊，同一份 prompt 重打一次往往就過，不需要為此中止整批。
+ * 回傳 `undefined` 代表重試耗盡仍失敗，由呼叫端決定如何處理（單篇隔離，不在此 exit）。
+ */
+export async function draftTopicWithRetry(
+  llmClient: LlmClient,
+  moduleId: string,
+  moduleTitle: string,
+  topicId: string,
+  topicTitle: string,
+  priorConceptIds: string[],
+): Promise<{ concepts: DraftConcept[]; error?: undefined } | { concepts?: undefined; error: string }> {
+  let lastError = "";
+  for (let attempt = 1; attempt <= MAX_DRAFT_ATTEMPTS; attempt++) {
+    try {
+      const concepts = await draftTopic(llmClient, moduleId, moduleTitle, topicId, topicTitle, priorConceptIds);
+      return { concepts };
+    } catch (err) {
+      lastError = (err as Error).message;
+      console.error(`  Topic「${topicId}」第 ${attempt}/${MAX_DRAFT_ATTEMPTS} 次嘗試失敗：${lastError}`);
+    }
+  }
+  return { error: lastError };
+}
+
 function formatViolation(v: Violation): string {
   const loc = v.field ? `${v.subject}.${v.field}` : v.subject;
   const target = v.target ? ` → ${v.target}` : "";
@@ -444,6 +474,12 @@ async function main(): Promise<void> {
     }
   }
 
+  // 單篇（單 Topic）隔離（憲章 XV）：某 Topic 重試耗盡仍失敗時記錄下來、跳過，繼續處理其餘
+  // 獨立的 Topic，而非立刻中止整批——LLM 回應的偶發語法錯誤不該讓已成功的 Topic 白跑、也不該
+  // 讓後面尚未嘗試的 Topic 連機會都沒有（實測全量跑到「string」Topic 才踩到，若不隔離，
+  // 每次都要從頭整批重跑，直到那顆骰子擲出合法 JSON 為止）。
+  const failedTopics: string[] = [];
+
   for (const [moduleIndex, module] of modulesFile.modules.entries()) {
     for (const [topicIndex, topic] of module.topics.entries()) {
       const dir = join(CONCEPTS_DIR, topic.id);
@@ -461,16 +497,26 @@ async function main(): Promise<void> {
 
       const priorConceptIds = filterPriorConceptIds(known, moduleIndex, topicIndex);
 
-      let concepts: DraftConcept[];
-      try {
-        concepts = await draftTopic(llmClient, module.id, module.title, topic.id, topic.title, priorConceptIds);
-      } catch (err) {
-        console.error(`✗ Topic「${topic.id}」起草失敗：${(err as Error).message}`);
-        process.exit(1);
-        return;
+      const { concepts, error } = await draftTopicWithRetry(
+        llmClient,
+        module.id,
+        module.title,
+        topic.id,
+        topic.title,
+        priorConceptIds,
+      );
+
+      if (!concepts) {
+        console.error(
+          `✗ Topic「${topic.id}」重試 ${MAX_DRAFT_ATTEMPTS} 次後仍失敗，跳過（既有內容未被觸碰，繼續處理其餘 Topic）：${error}`,
+        );
+        failedTopics.push(topic.id);
+        // 復原：這個 Topic 的檔案其實沒被動過（起草失敗，clearTopicConcepts 不會執行），
+        // 把 staleIds 放回 known，避免後續 Topic 誤以為它們已消失而漏掉合法的 prerequisite。
+        for (const id of staleIds) known.set(id, { moduleIndex, topicIndex });
+        continue;
       }
 
-      // 起草成功後才動既有檔案：失敗已在上面 exit，不會留下被清空的目錄。
       mkdirSync(dir, { recursive: true });
       clearTopicConcepts(dir);
       concepts.forEach((concept, i) => {
@@ -534,6 +580,19 @@ async function main(): Promise<void> {
     console.log("違規清單：");
     for (const v of violations) console.log(formatViolation(v));
     console.error(`\n✗ 結構 Gate 未通過：${errors.length} 個 error（不產 outline、不視為定稿）`);
+    if (failedTopics.length > 0) {
+      console.error(`✗ 另有 Topic 起草失敗（重試耗盡）：${failedTopics.join(", ")}（可用 --only ${failedTopics.join(",")} 單獨重跑）`);
+    }
+    process.exit(1);
+    return;
+  }
+
+  // 結構 Gate 通過不代表整批完成——若有 Topic 起草失敗（重試耗盡），curriculum 仍不完整，
+  // 只是恰好還沒撞到 granularity-range/total 下限（例如只剩極少數 Topic 未完成）。MUST NOT
+  // 因為 Gate 綠燈就誤產 outline.md、讓使用者誤判為可定稿。
+  if (failedTopics.length > 0) {
+    console.error(`✗ 以下 Topic 起草失敗（已重試 ${MAX_DRAFT_ATTEMPTS} 次仍未成功）：${failedTopics.join(", ")}`);
+    console.error(`   請執行 npm run generate:curriculum -- --only ${failedTopics.join(",")} 單獨重跑這些 Topic。`);
     process.exit(1);
     return;
   }
