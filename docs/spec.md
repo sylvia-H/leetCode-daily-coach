@@ -458,6 +458,23 @@ tags: [array, in-place, sorted]
 - 目標節奏：核心觀念本體 SHOULD 在「每天約 20 分鐘內」可讀完；語言 Corner 與題目視為延伸練習。
 - 觀念本體過長（單一 Concept 塞入多個新 Pattern）時 MUST 分割為多個 Concept（呼應 Small Learning Steps），MUST NOT 硬塞。
 
+#### 10.3.1 `difficulty` 判定基準（MUST，F7 定案 2026-07-30）
+
+Concept 的 `difficulty` **值域刻意只有 `easy | medium`，沒有 `hard`**——這不是遺漏，是用來強制執行
+Small Learning Steps（§4-3）的機關，**MUST NOT 為了讓「難」的 Concept 通過而擴充值域**。
+
+- **語意界定**：此欄位指「**Concept 本身的認知難度**」，與 LeetCode 題目難度是不同層級的兩件事。
+  題目難度為 `Easy | Medium | Hard`（§12.1 Problem Bank，由程式從權威來源帶入），Track 的挑戰題難度帶
+  為 `challengeDifficulty`（§16.x）。**一個 medium 的 Concept 完全可以搭配 Hard 題目**，兩者不相關。
+- **判定規則（MUST）**：一堂 Session 只引入恰好一個新觀念（§4-2），本來就不該「難」。
+  **當一個 Concept 難到需要標成 hard，那就是「它塞了不只一個新觀念」的訊號——此時 MUST 依 §10.3
+  拆分為兩個以上的 Concept，MUST NOT 標成 medium 硬塞成一篇。** 拆開後每一篇各自都會落在 easy 或 medium。
+  - 例：N-Queens ⇒ 拆為「對角線衝突的 O(1) 判斷」與「逐行放置的回溯與剪枝」。
+  - 例：Largest Rectangle in Histogram ⇒ 拆為「單調堆疊維護」與「左右邊界延伸與面積計算」。
+- **對 F7 產線的約束（MUST）**：Stage 1 起草的結構化輸出 schema MUST 以 enum 釘死 `easy | medium`；
+  且因 enum 會使模型無法再用 `hard` 發出「這篇太大了」的訊號（只會默默改標 medium 硬塞，**恰好違反本節
+  想守的原則**），Stage 1 的 prompt MUST 同時明確教導上述拆分規則。**MUST NOT 只設 enum 而不給拆分引導。**
+
 ### 10.4 Concept Skeleton（半自動產出的來源）
 
 Skeleton（`concepts/**`）是內容的來源真相，MUST 只含兩部分：
@@ -1389,7 +1406,7 @@ MUST 有單元測試：
 **F2 `002-curriculum-schema` — Curriculum 骨架與 DAG 驗證**
 
 - 範圍：`curriculum/modules.json`（Module / Topic 順序定稿）、Concept frontmatter schema（zod）、curriculum 載入 + in-memory DAG、驗證（拓樸排序、無環、無前向依賴、參照完整性、**顆粒度規則**——供 Stage 1 結構 Gate 重用），以 Level 0 + Level 1 少量 Concept stub 驗證。**另建立 `ci.yml` 工程 Gate**（push / PR：`npm ci` → build → test → `validate:curriculum`；F2 定案 2026-07-22——此前單元測試從未在 CI 執行，`daily.yml` 只跑 build）。
-- **本 Feature 待定（clarify 定案）**：Module / Topic 命名、Concept 顆粒度的機器可驗規則、`difficulty` 判定基準（實際 Concept 清單由 F7 Stage 1 產出、大綱定稿決定）。
+- **本 Feature 待定（clarify 定案）**：Module / Topic 命名、Concept 顆粒度的機器可驗規則（實際 Concept 清單由 F7 Stage 1 產出、大綱定稿決定）。`difficulty` 判定基準已於 **F7 定案 2026-07-30**，見 §10.3.1。
 - 驗收（= M1 部分）：DAG 驗證通過（對應 AC1）。
 
 **F3 `003-problem-bank` — 題庫與逆向對應**
