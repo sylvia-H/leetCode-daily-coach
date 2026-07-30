@@ -9,4 +9,7 @@ dist/
 # 本機 dry run 的 state checkout 目錄；MUST 排除以免誤入主分支
 .state/
 
+# F7 產線續跑 checkpoint manifest：加速快取、非教材產物、非真實來源（可由掃描產物重建）
+.cache/
+
 # package-lock.json MUST NOT 被忽略（npm ci 相依，見 T001）
