@@ -208,14 +208,53 @@ function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf-8");
 }
 
+export interface KnownConceptPosition {
+  /** 宣告序中的 Module 陣列索引。 */
+  moduleIndex: number;
+  /** 宣告序中、該 Module 內的 Topic 陣列索引。 */
+  topicIndex: number;
+}
+
 /**
- * 既存 Concept id 清單（供種子 priorConceptIds，見 main() 註解）：純粹重用 F2 `loadCurriculum`
- * 建圖結果，不另寫平行讀檔邏輯。抽成具名函式供單測驗證「既存 Concept 會被納入」，不需要跑
- * 整個 main()。
+ * 從「全部已知 Concept 的宣告序位置」篩出可安全作為目前 Topic 之 prerequisite 的候選 id：
+ * 只留下宣告序嚴格早於、或與目前 Topic 同一位置（同 Module 同 Topic，如既存 stub）者，
+ * 排除宣告序更晚的 Module/Topic（FR-014：prerequisite MUST NOT 指向宣告序更晚的 Concept）。
+ *
+ * 若不篩選、直接把「整個 concepts/** 現有的全部 id」都告訴 LLM 當作可用 prerequisite，
+ * 會誘使 LLM 把宣告序更晚的 Concept（例如後面 Module 的 Concept）當成前置依賴，
+ * 產出 forward-dependency 違規——實測 --only programming-mindset 已踩到這個情境
+ * （programming-mindset 的收尾 Concept 把 array Module 的 Concept 列為 prerequisite）。
  */
-export function loadExistingConceptIds(modulesPath: string, conceptsDir: string): string[] {
-  const { graph } = loadCurriculum({ modulesPath, conceptsDir });
-  return [...graph.concepts.keys()];
+export function filterPriorConceptIds(
+  known: ReadonlyMap<string, KnownConceptPosition>,
+  moduleIndex: number,
+  topicIndex: number,
+): string[] {
+  const result: string[] = [];
+  for (const [id, pos] of known) {
+    if (pos.moduleIndex < moduleIndex || (pos.moduleIndex === moduleIndex && pos.topicIndex <= topicIndex)) {
+      result.push(id);
+    }
+  }
+  return result;
+}
+
+/**
+ * 雙向邊補齊（reciprocal edge repair，I/O 邊界）：某 Concept 的 prerequisite 引用「本批次之前
+ * 就已存在」的 Concept 時，那個既存檔案不會自動反映對應的 next——因為每次 LLM 呼叫只能寫入
+ * 「這次正在起草的 Topic」的檔案。這是同一條邊的另一端，資訊已由來源（prerequisite 清單）
+ * 完全決定、無歧義，故在 Stage 1 產線內部機械式補上；F2 `curriculum.ts` 的 Gate 本身仍刻意
+ * 不自動補齊雙向一致（見其 FR-017 註解），用以攔截「人工手改一側卻忘了改另一側」的真實錯誤。
+ * 只在此新增 `next`（若已存在則不重複新增），不觸碰其餘欄位與 Author Hints 正文。
+ */
+export function patchConceptNextIfMissing(filePath: string, newConceptId: string): void {
+  const raw = readFileSync(filePath, "utf-8");
+  const { data, content } = matter(raw);
+  const currentNext = Array.isArray(data.next)
+    ? (data.next as unknown[]).filter((v): v is string => typeof v === "string")
+    : [];
+  if (currentNext.includes(newConceptId)) return;
+  writeFileSync(filePath, matter.stringify(content, { ...data, next: [...currentNext, newConceptId] }), "utf-8");
 }
 
 function parseOnlyFlag(argv: string[]): Set<string> | undefined {
@@ -276,22 +315,34 @@ async function main(): Promise<void> {
   }
   const modulesFile = JSON.parse(readFileSync(MODULES_PATH, "utf-8")) as ModulesFile;
 
-  // 種子（seed：以既存 concept id 作為 priorConceptIds 的起點，而非從空陣列開始）：若目錄下
-  // 已有既存 Concept（F2 stub 種子，或前次部分執行留下的產物），LLM 完全不知道它們存在，會把
-  // 自己起草的第一篇當成整個 Topic 的起點（prerequisite 留空），使新篇與既存篇斷鏈，被結構
-  // Gate 判定孤兒——實測 --only programming-mindset 已踩到這個情境（既存 2 篇 stub + 新起草
-  // 10 篇，新篇的第一篇未接回既存鏈）。
-  const draftedConceptIds: string[] = loadExistingConceptIds(MODULES_PATH, CONCEPTS_DIR);
-  for (const module of modulesFile.modules) {
-    for (const topic of module.topics) {
+  // 種子（seed：以既存 concept 的宣告序位置初始化 known，而非從空 Map 開始）：若目錄下已有既存
+  // Concept（F2 stub 種子，或前次部分執行留下的產物），LLM 完全不知道它們存在，會把自己起草的
+  // 第一篇當成整個 Topic 的起點（prerequisite 留空），使新篇與既存篇斷鏈，被結構 Gate 判定孤兒
+  // ——實測 --only programming-mindset 已踩到這個情境。記錄宣告序位置（而非只記 id）供
+  // filterPriorConceptIds 排除宣告序更晚的 Module/Topic，避免另一個實測踩到的 forward-dependency。
+  const known = new Map<string, KnownConceptPosition & { filePath: string }>();
+  {
+    const { graph: existingGraph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
+    for (const [id, node] of existingGraph.concepts) {
+      const ordinal = existingGraph.ordinalOf.get(id)!;
+      known.set(id, { moduleIndex: ordinal.moduleIndex, topicIndex: ordinal.topicIndex, filePath: node.skeletonPath });
+    }
+  }
+
+  for (const [moduleIndex, module] of modulesFile.modules.entries()) {
+    for (const [topicIndex, topic] of module.topics.entries()) {
       const dir = join(CONCEPTS_DIR, topic.id);
       const existingFiles = listExistingConceptFiles(dir);
-      const shouldDraft = force ? true : only ? only.has(topic.id) : existingFiles.length === 0;
+      // --only 一律限定範圍；--force 只在未指定 --only 時才擴大成「全部重跑」，避免
+      // --only X --force 誤觸發把其餘 15 個 Topic 也一併重新起草（浪費額度、超出使用者原意）。
+      const shouldDraft = only ? only.has(topic.id) : force || existingFiles.length === 0;
       if (!shouldDraft) continue;
+
+      const priorConceptIds = filterPriorConceptIds(known, moduleIndex, topicIndex);
 
       let concepts: DraftConcept[];
       try {
-        concepts = await draftTopic(llmClient, module.id, module.title, topic.id, topic.title, draftedConceptIds);
+        concepts = await draftTopic(llmClient, module.id, module.title, topic.id, topic.title, priorConceptIds);
       } catch (err) {
         console.error(`✗ Topic「${topic.id}」起草失敗：${(err as Error).message}`);
         process.exit(1);
@@ -300,10 +351,19 @@ async function main(): Promise<void> {
 
       mkdirSync(dir, { recursive: true });
       const startOrder = force ? 1 : existingFiles.length + 1;
+      const batchSlugs = new Set(concepts.map((c) => c.slug));
       concepts.forEach((concept, i) => {
         const nnn = String(startOrder + i).padStart(3, "0");
-        writeFileSync(join(dir, `${nnn}-${concept.slug}.md`), conceptToMarkdown(concept, module.id, topic.id), "utf-8");
-        draftedConceptIds.push(concept.slug);
+        const filePath = join(dir, `${nnn}-${concept.slug}.md`);
+        writeFileSync(filePath, conceptToMarkdown(concept, module.id, topic.id), "utf-8");
+
+        for (const prereqId of concept.prerequisite) {
+          if (batchSlugs.has(prereqId)) continue; // 同批次內部一致性由 LLM 自己在同一份回應內負責
+          const older = known.get(prereqId);
+          if (older) patchConceptNextIfMissing(older.filePath, concept.slug);
+        }
+
+        known.set(concept.slug, { moduleIndex, topicIndex, filePath });
       });
     }
   }

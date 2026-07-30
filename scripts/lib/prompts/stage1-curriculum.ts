@@ -84,12 +84,14 @@ export function buildStage1Prompt(input: Stage1PromptInput): string {
 
 Module: ${input.moduleTitle}（id: ${input.moduleId}）
 Topic: ${input.topicTitle}（id: ${input.topicId}）
-已存在、可作為 prerequisite 引用的 Concept id：${priorList}
+已存在、依課綱順序排在本 Topic 之前（或同屬本 Topic）的 Concept id，只能被 prerequisite 引用：${priorList}
 
 規則（MUST 遵守）：
 1. 每個 Session（Concept）MUST 只引入恰好一個新觀念，不可為縮短課程合併多個觀念。
 2. 每個 Concept 物件的識別欄位**必須命名為 "slug"（不是 "id"）**，值為 kebab-case（小寫英數＋連字號），Topic 內外皆須全域唯一。
-3. prerequisite 與 next **必須是 JSON 陣列**，即使只有 0 個或 1 個元素也一樣（例如 [] 或 ["some-slug"]），**絕對不可以是單一字串**；只能引用「已存在」或「本次一併起草」的 slug，不可前向依賴（不可指向宣告序更晚的 Concept）。
+3. prerequisite 與 next **必須是 JSON 陣列**，即使只有 0 個或 1 個元素也一樣（例如 [] 或 ["some-slug"]），**絕對不可以是單一字串**。
+   - prerequisite **只能**引用上面列出的「已存在」id，或本次一起草的其他 concept 的 slug；MUST NOT 引用上面清單以外的 id（那些是宣告序更晚的 Concept，會構成前向依賴）。
+   - next **只能**引用「本次一起草的其他 concept」的 slug，或留空 []；**絕對不可以引用上面「已存在」清單中的任何 id**——那個方向的連結會由程式自動處理，你只需要正向（透過 prerequisite）建立關係。
 4. difficulty 僅 "easy" 或 "medium"。
 5. leetcode_candidates 僅列出 1–3 個你認為適合的 LeetCode 題號（整數陣列），MUST NOT 自行編造 slug / title / url / difficulty——那些由程式從權威題庫帶入，你只需要選號。若判斷此 Concept 不需要對應題目，回傳空陣列 []。
 6. author_hints 需涵蓋：一句話核心觀念（core_idea）、Pattern 辨識線索（pattern_recognition）、解題思維（thinking）、常見錯誤（common_mistakes）、TypeScript 重點（ts_notes）、Python 重點（py_notes），以及每個候選題號「為何適合此 Pattern」一句話（leetcode_hints，須與 leetcode_candidates 一一對應）。

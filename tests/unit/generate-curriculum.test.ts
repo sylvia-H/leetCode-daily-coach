@@ -1,14 +1,16 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import matter from "gray-matter";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   conceptToMarkdown,
-  loadExistingConceptIds,
+  filterPriorConceptIds,
   normalizeDraftConcept,
   normalizeDraftConcepts,
   parseDraftResponse,
+  patchConceptNextIfMissing,
+  type KnownConceptPosition,
 } from "../../scripts/generate-curriculum.js";
 import type { DraftConcept } from "../../scripts/lib/prompts/stage1-curriculum.js";
 
@@ -64,25 +66,51 @@ describe("parseDraftResponse（Stage 1 LLM 回應解析）", () => {
   });
 });
 
-describe("loadExistingConceptIds（種子 priorConceptIds，實測踩過的孤兒 bug）", () => {
+describe("filterPriorConceptIds（priorConceptIds 只含宣告序不晚於目前 Topic 者，防 forward-dependency）", () => {
+  function known(entries: Record<string, KnownConceptPosition>): Map<string, KnownConceptPosition> {
+    return new Map(Object.entries(entries));
+  }
+
+  it("排除宣告序更晚的 Module（實測踩過：programming-mindset 把 array 的 Concept 當 prerequisite）", () => {
+    const map = known({
+      "time-space-complexity": { moduleIndex: 0, topicIndex: 0 },
+      "array-traversal": { moduleIndex: 1, topicIndex: 0 },
+    });
+    // 目前正在起草 module 0（programming-mindset）的 topic 0
+    expect(filterPriorConceptIds(map, 0, 0)).toEqual(["time-space-complexity"]);
+  });
+
+  it("同 Module 但宣告序更晚的 Topic 也排除", () => {
+    const map = known({
+      "a": { moduleIndex: 0, topicIndex: 0 },
+      "b": { moduleIndex: 0, topicIndex: 1 },
+    });
+    expect(filterPriorConceptIds(map, 0, 0)).toEqual(["a"]);
+  });
+
+  it("同 Module 同 Topic（既存 stub）納入，因為屬於「本次一起草」的同一個 Topic", () => {
+    const map = known({ "existing-one": { moduleIndex: 0, topicIndex: 0 } });
+    expect(filterPriorConceptIds(map, 0, 0)).toEqual(["existing-one"]);
+  });
+
+  it("宣告序更早的 Module 全數納入", () => {
+    const map = known({
+      "a": { moduleIndex: 0, topicIndex: 0 },
+      "b": { moduleIndex: 1, topicIndex: 0 },
+    });
+    expect(filterPriorConceptIds(map, 2, 0)).toEqual(["a", "b"]);
+  });
+});
+
+describe("patchConceptNextIfMissing（雙向邊補齊：既存 Concept 的 next 反映新篇的 prerequisite）", () => {
   let dir: string;
   afterEach(() => {
     if (dir) rmSync(dir, { recursive: true, force: true });
   });
 
-  it("回傳既存 concepts/** 內全部 Concept id，供 draftTopic 的 priorConceptIds 種子", () => {
-    dir = mkdtempSync(join(tmpdir(), "generate-curriculum-test-"));
-    const modulesPath = join(dir, "modules.json");
-    const conceptsDir = join(dir, "concepts");
+  function writeConceptFile(path: string, next: string): void {
     writeFileSync(
-      modulesPath,
-      JSON.stringify({ version: 1, modules: [{ id: "m", title: "M", level: 0, topics: [{ id: "t", title: "T" }] }] }),
-      "utf-8",
-    );
-    mkdirSync(join(conceptsDir, "t"), { recursive: true });
-    // 模擬實測情境：topic 內已有既存 Concept（如 F2 stub 種子），本次只是「還沒告訴 LLM 它們存在」。
-    writeFileSync(
-      join(conceptsDir, "t", "001-existing-one.md"),
+      path,
       [
         "---",
         "id: existing-one",
@@ -94,7 +122,7 @@ describe("loadExistingConceptIds（種子 priorConceptIds，實測踩過的孤�
         "pattern_label: P",
         "complexity_label: O(n)",
         "prerequisite: []",
-        "next: []",
+        next,
         "learning_goal:\n  - g",
         "exit_criteria:\n  - e",
         "leetcode: []",
@@ -103,23 +131,34 @@ describe("loadExistingConceptIds（種子 priorConceptIds，實測踩過的孤�
         "",
         "## Author Hints",
         "",
-        "- x",
+        "- 保留這段本文，補邊時不應被更動",
       ].join("\n"),
       "utf-8",
     );
+  }
 
-    expect(loadExistingConceptIds(modulesPath, conceptsDir)).toEqual(["existing-one"]);
+  it("既存 Concept 的 next 缺少新篇 id → 補上（保留其餘欄位與本文不變）", () => {
+    dir = mkdtempSync(join(tmpdir(), "patch-next-test-"));
+    const filePath = join(dir, "001-existing-one.md");
+    writeConceptFile(filePath, "next: []");
+
+    patchConceptNextIfMissing(filePath, "new-concept");
+
+    const parsed = matter(readFileSync(filePath, "utf-8"));
+    expect(parsed.data.next).toEqual(["new-concept"]);
+    expect(parsed.data.id).toBe("existing-one"); // 其餘欄位不變
+    expect(parsed.content).toContain("保留這段本文，補邊時不應被更動");
   });
 
-  it("concepts 目錄不存在（全新課綱起草）→ 回傳空陣列，不 throw", () => {
-    dir = mkdtempSync(join(tmpdir(), "generate-curriculum-test-"));
-    const modulesPath = join(dir, "modules.json");
-    writeFileSync(
-      modulesPath,
-      JSON.stringify({ version: 1, modules: [{ id: "m", title: "M", level: 0, topics: [{ id: "t", title: "T" }] }] }),
-      "utf-8",
-    );
-    expect(loadExistingConceptIds(modulesPath, join(dir, "concepts"))).toEqual([]);
+  it("既存 Concept 的 next 已含新篇 id → 不重複新增（冪等）", () => {
+    dir = mkdtempSync(join(tmpdir(), "patch-next-test-"));
+    const filePath = join(dir, "001-existing-one.md");
+    writeConceptFile(filePath, "next: [new-concept]");
+
+    patchConceptNextIfMissing(filePath, "new-concept");
+
+    const parsed = matter(readFileSync(filePath, "utf-8"));
+    expect(parsed.data.next).toEqual(["new-concept"]);
   });
 });
 
