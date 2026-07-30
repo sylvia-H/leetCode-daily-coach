@@ -1,0 +1,184 @@
+// F7 程式碼實測（Q2 / R6，contracts/content-quality-gate.md §2）：抽出 Article 的 TypeScript/Python
+// Corner/Tip fenced code blocks，缺斷言即失敗；否則實際編譯 + 執行斷言。供本機 Stage 2 生成期與
+// CI content-gate.yml 共用（憲章 IX，單一實作）。純抽取/判斷（extractCodeBlocks/hasAssertion/
+// checkCodeBlocks）與實際 spawn 外部工具（tsc/tsx/python）分離，前者可在無 tsc/python 環境下單測
+// （外部呼叫以 mock 測，教材程式碼實測只在 Gate/CI 跑）。
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import matter from "gray-matter";
+import { parseSections } from "../src/compiler/content.js";
+
+export type CodeLang = "typescript" | "python";
+
+export interface CodeBlock {
+  section: string;
+  lang: CodeLang;
+  code: string;
+}
+
+const TARGET_SECTIONS: { name: string; lang: CodeLang }[] = [
+  { name: "TypeScript Corner", lang: "typescript" },
+  { name: "TypeScript Tip", lang: "typescript" },
+  { name: "Python Corner", lang: "python" },
+  { name: "Python Tip", lang: "python" },
+];
+
+const FENCE_RE = /```(?:\w+)?\r?\n([\s\S]*?)```/g;
+
+/** 抽出 Article 內 TypeScript/Python Corner/Tip 的 fenced code blocks（frontmatter 已由 gray-matter 剝除）。 */
+export function extractCodeBlocks(articleMarkdown: string): CodeBlock[] {
+  const { content } = matter(articleMarkdown);
+  const sections = parseSections(content);
+  const blocks: CodeBlock[] = [];
+
+  for (const { name, lang } of TARGET_SECTIONS) {
+    const raw = sections.get(name);
+    if (!raw) continue;
+    for (const match of raw.matchAll(FENCE_RE)) {
+      const code = match[1] ?? "";
+      if (code.trim() !== "") blocks.push({ section: name, lang, code });
+    }
+  }
+  return blocks;
+}
+
+/** 缺斷言即失敗判準（R6）：TS 認 `throw` 或 `node:assert`；Python 認 `assert`。 */
+export function hasAssertion(lang: CodeLang, code: string): boolean {
+  if (lang === "typescript") return /\bthrow\b/.test(code) || /\bnode:assert\b/.test(code) || /\bassert\(/.test(code);
+  return /\bassert\b/.test(code);
+}
+
+export interface ExecResult {
+  ok: boolean;
+  detail?: string;
+}
+
+/** 實際 spawn tsc/tsx/python 的邊界；供 checkCodeBlocks 注入，測試以假物件替身（不需真環境）。 */
+export interface CodeExecutor {
+  runTypeScript(code: string): Promise<ExecResult>;
+  runPython(code: string): Promise<ExecResult>;
+}
+
+export type BlockCheckReason = "missing-assertion" | "execution-failed";
+
+export interface BlockCheckResult {
+  section: string;
+  lang: CodeLang;
+  ok: boolean;
+  reason?: BlockCheckReason;
+  detail?: string;
+}
+
+/**
+ * 逐一檢查 code blocks：缺斷言直接判不過（不呼叫 executor，省一次編譯/執行）；
+ * 否則交給 executor 實測，結果原樣回報。純邏輯（executor 由呼叫端決定真假）。
+ */
+export async function checkCodeBlocks(blocks: CodeBlock[], executor: CodeExecutor): Promise<BlockCheckResult[]> {
+  const results: BlockCheckResult[] = [];
+  for (const block of blocks) {
+    if (!hasAssertion(block.lang, block.code)) {
+      results.push({ section: block.section, lang: block.lang, ok: false, reason: "missing-assertion" });
+      continue;
+    }
+    const exec = block.lang === "typescript" ? await executor.runTypeScript(block.code) : await executor.runPython(block.code);
+    results.push(
+      exec.ok
+        ? { section: block.section, lang: block.lang, ok: true }
+        : { section: block.section, lang: block.lang, ok: false, reason: "execution-failed", detail: exec.detail },
+    );
+  }
+  return results;
+}
+
+/**
+ * 建立系統暫存目錄、執行 fn、finally 內清理（不論成功/失敗皆刪除，MUST NOT 殘留、MUST NOT 寫入 repo）。
+ * 匯出供單測驗證清理行為，不需真的 spawn 任何外部工具。
+ */
+export function withTempDir<T>(prefix: string, fn: (dir: string) => T): T {
+  const dir = mkdtempSync(join(tmpdir(), prefix));
+  try {
+    return fn(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function runCommand(command: string, args: string[]): ExecResult {
+  try {
+    execFileSync(command, args, { stdio: "pipe" });
+    return { ok: true };
+  } catch (err) {
+    const e = err as { stdout?: Buffer; stderr?: Buffer; message: string };
+    const detail = [e.stdout?.toString(), e.stderr?.toString()].filter(Boolean).join("\n") || e.message;
+    return { ok: false, detail };
+  }
+}
+
+/** 真實 executor：TS 以 `tsc --noEmit --strict` 型別檢查 + `tsx` 執行；Python 以 `python` 執行。 */
+export function createRealExecutor(): CodeExecutor {
+  return {
+    async runTypeScript(code: string): Promise<ExecResult> {
+      return withTempDir("f7-code-block-ts-", (dir) => {
+        const file = join(dir, "snippet.ts");
+        writeFileSync(file, code, "utf-8");
+        const typeCheck = runCommand("npx", ["--yes", "tsc", "--noEmit", "--strict", file]);
+        if (!typeCheck.ok) return typeCheck;
+        return runCommand("npx", ["--yes", "tsx", file]);
+      });
+    },
+    async runPython(code: string): Promise<ExecResult> {
+      return withTempDir("f7-code-block-py-", (dir) => {
+        const file = join(dir, "snippet.py");
+        writeFileSync(file, code, "utf-8");
+        return runCommand("python", [file]);
+      });
+    },
+  };
+}
+
+function listArticleFiles(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  const walk = (d: string): void => {
+    for (const entry of readdirSync(d).sort()) {
+      const full = join(d, entry);
+      if (statSync(full).isDirectory()) walk(full);
+      else if (entry.endsWith(".md")) out.push(full);
+    }
+  };
+  walk(dir);
+  return out;
+}
+
+async function main(): Promise<void> {
+  const articlesDir = process.argv[2] ?? "articles";
+  const files = listArticleFiles(articlesDir);
+  const executor = createRealExecutor();
+  let failures = 0;
+  let totalBlocks = 0;
+
+  for (const file of files) {
+    const blocks = extractCodeBlocks(readFileSync(file, "utf-8"));
+    const results = await checkCodeBlocks(blocks, executor);
+    totalBlocks += results.length;
+    for (const r of results) {
+      if (!r.ok) {
+        failures++;
+        console.error(`✗ [${r.reason}] ${file} · ${r.section}${r.detail ? `\n${r.detail}` : ""}`);
+      }
+    }
+  }
+
+  if (failures > 0) {
+    console.error(`\n✗ 程式碼實測未通過：${failures} 個區塊失敗（共檢查 ${totalBlocks} 個區塊）`);
+    process.exit(1);
+  }
+  console.log(`✓ 程式碼實測通過：${totalBlocks} 個區塊（編譯 + 斷言執行）`);
+  process.exit(0);
+}
+
+if (process.argv[1]?.endsWith("run-code-blocks.ts")) {
+  main();
+}

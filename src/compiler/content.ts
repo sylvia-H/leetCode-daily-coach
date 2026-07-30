@@ -25,6 +25,13 @@ export interface ArticleContent {
   pyTip: string;
   takeaway: string;
   challenge: Map<number, ArticleChallengeEntry>;
+  /**
+   * §10.3「觀念本體」範圍（F7 FR-008）：Concept/Thinking/Pattern Recognition/Common Mistakes 四段
+   * 敘述性文字合併，供 Gate 檢查字數上限（2,000 字）；排除 Corner/程式碼/Challenge/Complexity 算式。
+   */
+  conceptBody: string;
+  /** frontmatter 以外的完整 markdown 正文（供繁中機器判準等純內容檢查使用，F7 FR-011）。 */
+  rawContent: string;
 }
 
 // 閱讀用固定區塊（docs/spec.md §10）：MUST 存在且非空，但不進 Lesson（Discord 不推全文，§14.5）。
@@ -44,6 +51,10 @@ const READING_SECTIONS = [
 const PUSH_SECTIONS = ["Digest", "TypeScript Tip", "Python Tip", "Takeaway"] as const;
 
 const CHALLENGE_SECTION = "Today's Challenge";
+
+// §10.3 觀念本體範圍（F7 FR-008）：只計入敘述性文字，排除 Corner（程式碼）、Challenge（題目）、
+// Complexity（算式）。
+const CONCEPT_BODY_SECTIONS = ["Concept", "Thinking", "Pattern Recognition", "Common Mistakes"] as const;
 
 // Module → Discord embed 色碼（十進位整數）的確定性對照表，涵蓋 curriculum/modules.json 全部 16 個
 // Module（FR-018）。屬 Curriculum 知識，故置於 compiler/ 而非 renderer/（憲章 XI）。
@@ -88,7 +99,12 @@ function requireMetaField(data: Record<string, unknown>, key: string): unknown {
   return value;
 }
 
-function parseSections(markdown: string): Map<string, string> {
+/**
+ * 依 H2 標題切分 markdown 為區塊原始文字（含區塊內的 fenced code）。以 marked lexer 走訪，避免
+ * 程式碼區塊內的 `## ` 字樣被誤判為新區塊邊界。匯出供 `scripts/run-code-blocks.ts`（F7 US2）
+ * 抽取 TypeScript/Python Corner/Tip 的 fenced code blocks 重用，避免另寫一套解析（憲章 IX）。
+ */
+export function parseSections(markdown: string): Map<string, string> {
   const tokens = marked.lexer(markdown) as Token[];
   const raws = new Map<string, string[]>();
   let current: string | null = null;
@@ -260,6 +276,7 @@ export function parseArticle(raw: string, conceptId: string, articlePath: string
   }
   const challengeRaw = requireSection(sections, CHALLENGE_SECTION, articlePath);
   const challenge = parseChallengeEntries(challengeRaw, articlePath);
+  const conceptBody = CONCEPT_BODY_SECTIONS.map((name) => sections.get(name) ?? "").join("\n\n");
 
   return {
     meta,
@@ -268,6 +285,8 @@ export function parseArticle(raw: string, conceptId: string, articlePath: string
     pyTip: sections.get("Python Tip") as string,
     takeaway: sections.get("Takeaway") as string,
     challenge,
+    conceptBody,
+    rawContent: content,
   };
 }
 
