@@ -49,10 +49,10 @@ US5（CI）為 P2。
 
 **Purpose**: 建立產線腳本的相依、npm scripts 與目錄鷹架
 
-- [ ] T001 於 [package.json](../../package.json) 新增 `@google/genai` 至 `devDependencies`，並註冊 npm scripts：`generate:curriculum`、`generate:content`、`populate:problem-bank`、`gate:code`（分別對應 `scripts/generate-curriculum.ts`、`generate-content.ts`、`populate-problem-bank.ts`、`run-code-blocks.ts`，以 `tsx` 執行）
-- [ ] T002 [P] 於 [.gitignore](../../.gitignore) 加入 `.cache/`（checkpoint manifest 為 gitignored 產線快取，非教材產物）
-- [ ] T003 [P] 建立目錄鷹架：`scripts/lib/`、`scripts/lib/prompts/`（放 Stage 1 / Stage 2 / self-check prompt 模板）
-- [ ] T004 確認 `tsconfig` / `vitest.config.ts` 的 include 涵蓋 `scripts/**` 與 `tests/unit/**`（typecheck 與測試可見新檔）；缺則補設定
+- [X] T001 於 [package.json](../../package.json) 新增 `@google/genai` 至 `devDependencies`，並註冊 npm scripts：`generate:curriculum`、`generate:content`、`populate:problem-bank`、`gate:code`（分別對應 `scripts/generate-curriculum.ts`、`generate-content.ts`、`populate-problem-bank.ts`、`run-code-blocks.ts`，以 `tsx` 執行）
+- [X] T002 [P] 於 [.gitignore](../../.gitignore) 加入 `.cache/`（checkpoint manifest 為 gitignored 產線快取，非教材產物）
+- [X] T003 [P] 建立目錄鷹架：`scripts/lib/`、`scripts/lib/prompts/`（放 Stage 1 / Stage 2 / self-check prompt 模板）
+- [X] T004 確認 `tsconfig` / `vitest.config.ts` 的 include 涵蓋 `scripts/**` 與 `tests/unit/**`（typecheck 與測試可見新檔）；缺則補設定
 
 ---
 
@@ -62,14 +62,14 @@ US5（CI）為 P2。
 
 **⚠️ CRITICAL**: 本階段完成前，US1/US2 的腳本無法安全呼叫 LLM
 
-- [ ] T005 實作 [scripts/lib/throttle.ts](../../scripts/lib/throttle.ts)：RPM 節流（間隔＝60000/RPM，預設 RPM=10、可環境變數覆寫）＋ 429/5xx/暫時性錯誤指數退避＋全抖動 jitter（base 1s、上限如 60s、重試上限預設 6）；非暫時性 4xx MUST 直接失敗；時鐘/sleep 以注入參數表示（research R3、FR-017/018）
-- [ ] T006 [P] 單元測試 [tests/unit/throttle.test.ts](../../tests/unit/throttle.test.ts)：假時鐘驗節流間隔、退避成長、jitter 邊界、非 429 立即失敗、耗盡後拋可辨識錯誤（不需真等待）
-- [ ] T007 實作 [scripts/lib/llm-client.ts](../../scripts/lib/llm-client.ts)：`@google/genai` 包裝，模型硬編 `gemini-3.1-flash-lite`，建構期讀 `GEMINI_API_KEY`（缺即 throw，fail-fast），所有呼叫走 throttle；只送公開資料（R1、FR-021/022/025）
-- [ ] T008 [P] 單元測試 [tests/unit/llm-client.test.ts](../../tests/unit/llm-client.test.ts)（mock SDK）：缺金鑰 → 建構期 throw；模型 id 釘死；呼叫確實經過 throttle
-- [ ] T009 實作 [scripts/lib/checkpoint.ts](../../scripts/lib/checkpoint.ts)：manifest 讀寫（`.cache/content-manifest.json`）、Skeleton sha256 雜湊、跳過判斷（產物存在＋雜湊一致）、`--force` 覆蓋、manifest 遺失時由掃描 `concepts/**`＋`articles/**` 重建（R4、FR-019/020、data-model §6）
-- [ ] T010 [P] 單元測試 [tests/unit/checkpoint.test.ts](../../tests/unit/checkpoint.test.ts)：凍結且未變更 → 跳過、雜湊不符 → 只重生該篇、`--force` → 重生、manifest 遺失 → 重建
-- [ ] T011 [P] 守門測試 [tests/unit/no-llm-in-src.test.ts](../../tests/unit/no-llm-in-src.test.ts)：掃描 `src/**` MUST NOT import `@google/genai`（憲章 VIII、FR-023、SC-007）
-- [ ] T012 [P] 守門測試 [tests/unit/daily-no-llm-key.test.ts](../../tests/unit/daily-no-llm-key.test.ts)：掃描 [.github/workflows/daily.yml](../../.github/workflows/daily.yml) 內 LLM 金鑰名稱（`GEMINI`/`GOOGLE_API_KEY`/`OPENAI`/`ANTHROPIC`/`_API_KEY`）出現次數為 0（FR-022、SC-007）
+- [X] T005 實作 [scripts/lib/throttle.ts](../../scripts/lib/throttle.ts)：RPM 節流（間隔＝60000/RPM，預設 RPM=10、可環境變數覆寫）＋ 429/5xx/暫時性錯誤指數退避＋全抖動 jitter（base 1s、上限如 60s、重試上限預設 6）；非暫時性 4xx MUST 直接失敗；時鐘/sleep 以注入參數表示（research R3、FR-017/018）
+- [X] T006 [P] 單元測試 [tests/unit/throttle.test.ts](../../tests/unit/throttle.test.ts)：假時鐘驗節流間隔、退避成長、jitter 邊界、非 429 立即失敗、耗盡後拋可辨識錯誤（不需真等待）
+- [X] T007 實作 [scripts/lib/llm-client.ts](../../scripts/lib/llm-client.ts)：`@google/genai` 包裝，模型硬編 `gemini-3.1-flash-lite`，建構期讀 `GEMINI_API_KEY`（缺即 throw，fail-fast），所有呼叫走 throttle；只送公開資料（R1、FR-021/022/025）
+- [X] T008 [P] 單元測試 [tests/unit/llm-client.test.ts](../../tests/unit/llm-client.test.ts)（mock SDK）：缺金鑰 → 建構期 throw；模型 id 釘死；呼叫確實經過 throttle
+- [X] T009 實作 [scripts/lib/checkpoint.ts](../../scripts/lib/checkpoint.ts)：manifest 讀寫（`.cache/content-manifest.json`）、Skeleton sha256 雜湊、跳過判斷（產物存在＋雜湊一致）、`--force` 覆蓋、manifest 遺失時由掃描 `concepts/**`＋`articles/**` 重建（R4、FR-019/020、data-model §6）
+- [X] T010 [P] 單元測試 [tests/unit/checkpoint.test.ts](../../tests/unit/checkpoint.test.ts)：凍結且未變更 → 跳過、雜湊不符 → 只重生該篇、`--force` → 重生、manifest 遺失 → 重建
+- [X] T011 [P] 守門測試 [tests/unit/no-llm-in-src.test.ts](../../tests/unit/no-llm-in-src.test.ts)：掃描 `src/**` MUST NOT import `@google/genai`（憲章 VIII、FR-023、SC-007）
+- [X] T012 [P] 守門測試 [tests/unit/daily-no-llm-key.test.ts](../../tests/unit/daily-no-llm-key.test.ts)：掃描 [.github/workflows/daily.yml](../../.github/workflows/daily.yml) 內 LLM 金鑰名稱（`GEMINI`/`GOOGLE_API_KEY`/`OPENAI`/`ANTHROPIC`/`_API_KEY`）出現次數為 0（FR-022、SC-007）
 
 **Checkpoint**: 共用 LLM 層與韌性 lib 就緒，US1/US2 腳本可開始
 
@@ -81,15 +81,15 @@ US5（CI）為 P2。
 
 **Independent Test**: 執行一次 Stage 1，檢查產出涵蓋 16 Module、Concept ≥150、結構 Gate 零違規、outline.md 可讀；未定稿前 Skeleton 不視為凍結
 
-- [ ] T013 [P] [US1] 實作 [scripts/lib/outline.ts](../../scripts/lib/outline.ts)：依 modules.json 宣告序＋各 Skeleton frontmatter **確定性序列化** outline.md 內容（Module/Topic/Concept 清單、順序、依賴、對應題號）（R12、FR-004）
-- [ ] T014 [P] [US1] 單元測試 [tests/unit/outline.test.ts](../../tests/unit/outline.test.ts)：同輸入 → byte-identical outline
-- [ ] T015 [US1] 實作 [scripts/populate-problem-bank.ts](../../scripts/populate-problem-bank.ts) 核心（合併/驗證純函式抽出）：蒐集候選題號、查 `data/leetcode-index.json` 快照、缺項以 `fetch` 打 LeetCode GraphQL **metadata**（只 metadata、不抓描述）補齊寫回快照、併入 bank（不覆蓋既有、除非 `--force`）、`url` slug 一致性、`leetcode: []` 合法、候選守 §12.1（1–3 題/不重複）（R5、FR-003a、contracts/problem-bank-population）
-- [ ] T016 [P] [US1] 單元測試 [tests/unit/populate-problem-bank.test.ts](../../tests/unit/populate-problem-bank.test.ts)（mock `fetch`）：快照命中 / 線上補齊 / 查無 → 具名錯誤 / 不覆蓋既有 / `leetcode: []` 不報錯 / 超量或重複被擋
-- [ ] T017 [US1] 撰寫 Stage 1 prompt 模板於 [scripts/lib/prompts/](../../scripts/lib/prompts/)：依 §8 Module 骨架與顆粒度規範批次起草 frontmatter（`leetcode` 只候選題號）＋ Author Hints（§10.4 涵蓋項）
-- [ ] T018 [US1] 確認結構 Gate 顆粒度規則（Topic 5–12 / Module 10–30）在**全量模式生效**（非 stub 豁免）：檢視/調整 [src/compiler/curriculum.ts](../../src/compiler/curriculum.ts) 的模式旗標，並於 [tests/unit/](../../tests/unit/) 補測顆粒度違規會被報出（FR-002）
-- [ ] T019 [US1] 實作 [scripts/generate-curriculum.ts](../../scripts/generate-curriculum.ts) 入口：建構 llm-client → 批次起草 Skeleton（checkpoint 跳過已過關者）→ 呼叫 populate → 結構 Gate（重用 `curriculum.ts`＋`schema.ts`）→ 產 outline.md；`process.exit` 只在此檔；具名違規輸出、缺金鑰/違規 exit 1、不進定稿（FR-001/003/003a/004、contracts/stage1-curriculum）
-- [ ] T020 [US1] **執行 Stage 1**（機器批次）：產出 `concepts/**`（16 Module、≥150 Concept）、擴充後 `data/problem-bank.json` ＋ `data/leetcode-index.json`、`curriculum/outline.md`；結構 Gate 零違規
-- [ ] T021 [US1] **唯一人工檢查點**：review `curriculum/outline.md`（顆粒度/順序/依賴方向），核可後凍結 commit（`concepts/` + `curriculum/outline.md` + `data/problem-bank.json` + `data/leetcode-index.json`）；不核可則調參數重跑 T020（FR-005/006）
+- [X] T013 [P] [US1] 實作 [scripts/lib/outline.ts](../../scripts/lib/outline.ts)：依 modules.json 宣告序＋各 Skeleton frontmatter **確定性序列化** outline.md 內容（Module/Topic/Concept 清單、順序、依賴、對應題號）（R12、FR-004）
+- [X] T014 [P] [US1] 單元測試 [tests/unit/outline.test.ts](../../tests/unit/outline.test.ts)：同輸入 → byte-identical outline
+- [X] T015 [US1] 實作 [scripts/populate-problem-bank.ts](../../scripts/populate-problem-bank.ts) 核心（合併/驗證純函式抽出）：蒐集候選題號、查 `data/leetcode-index.json` 快照、缺項以 `fetch` 打 LeetCode GraphQL **metadata**（只 metadata、不抓描述）補齊寫回快照、併入 bank（不覆蓋既有、除非 `--force`）、`url` slug 一致性、`leetcode: []` 合法、候選守 §12.1（1–3 題/不重複）（R5、FR-003a、contracts/problem-bank-population）
+- [X] T016 [P] [US1] 單元測試 [tests/unit/populate-problem-bank.test.ts](../../tests/unit/populate-problem-bank.test.ts)（mock `fetch`）：快照命中 / 線上補齊 / 查無 → 具名錯誤 / 不覆蓋既有 / `leetcode: []` 不報錯 / 超量或重複被擋
+- [X] T017 [US1] 撰寫 Stage 1 prompt 模板於 [scripts/lib/prompts/](../../scripts/lib/prompts/)：依 §8 Module 骨架與顆粒度規範批次起草 frontmatter（`leetcode` 只候選題號）＋ Author Hints（§10.4 涵蓋項）
+- [X] T018 [US1] 確認結構 Gate 顆粒度規則（Topic 5–12 / Module 10–30）在**全量模式生效**（非 stub 豁免）：檢視/調整 [src/compiler/curriculum.ts](../../src/compiler/curriculum.ts) 的模式旗標，並於 [tests/unit/](../../tests/unit/) 補測顆粒度違規會被報出（FR-002）
+- [X] T019 [US1] 實作 [scripts/generate-curriculum.ts](../../scripts/generate-curriculum.ts) 入口：建構 llm-client → 批次起草 Skeleton（checkpoint 跳過已過關者）→ 呼叫 populate → 結構 Gate（重用 `curriculum.ts`＋`schema.ts`）→ 產 outline.md；`process.exit` 只在此檔；具名違規輸出、缺金鑰/違規 exit 1、不進定稿（FR-001/003/003a/004、contracts/stage1-curriculum）
+- [ ] T020 [US1] **執行 Stage 1**（機器批次）：產出 `concepts/**`（16 Module、≥150 Concept）、擴充後 `data/problem-bank.json` ＋ `data/leetcode-index.json`、`curriculum/outline.md`；結構 Gate 零違規　**⚠️ 待手動執行**：需真實 `GEMINI_API_KEY`，本次 `/speckit-implement` 僅完成程式碼與 mock 測試（使用者已確認範圍），依 quickstart.md 步驟 1 手動跑
+- [ ] T021 [US1] **唯一人工檢查點**：review `curriculum/outline.md`（顆粒度/順序/依賴方向），核可後凍結 commit（`concepts/` + `curriculum/outline.md` + `data/problem-bank.json` + `data/leetcode-index.json`）；不核可則調參數重跑 T020（FR-005/006）　**⚠️ 待 T020 完成後由使用者人工執行**
 
 **Checkpoint**: 完整課綱與 Skeleton 定稿凍結；US2/US3 可開始
 
@@ -101,16 +101,16 @@ US5（CI）為 P2。
 
 **Independent Test**: 對凍結 Skeleton 執行 Stage 2，每篇具備 §10 全區塊、程式碼編譯+斷言通過、繁中+字元預算通過、全 Track×全 Session 編譯 render 通過
 
-- [ ] T022 [P] [US2] 實作 [src/compiler/traditional-chinese.ts](../../src/compiler/traditional-chinese.ts)：移除 fenced/行內 code＋frontmatter → 簡體字偵測（比對簡體專用字集）＋ CJK 佔比（CJK ÷（CJK＋拉丁字母詞數），預設門檻 0.5）（R7、FR-008）
-- [ ] T023 [P] [US2] 單元測試 [tests/unit/traditional-chinese.test.ts](../../tests/unit/traditional-chinese.test.ts)：含簡體字 → 違規、整段英文 → 低於門檻違規、正常繁中夾英文術語 → 通過、程式碼區塊不計入
-- [ ] T024 [US2] 擴充 [src/compiler/gate.ts](../../src/compiler/gate.ts) `runContentGate`：加入繁中判準（T022）＋觀念本體 ≤2,000 字（依 §10.3 界定 `Concept`/`Thinking`/`Pattern Recognition`/`Common Mistakes` 敘述性文字，排除 Corner/程式碼/Challenge/Complexity 算式）＋ Article 固定區塊完整性；使 CI 與生成期共用同一 Gate（FR-008/010.2/011/016）
-- [ ] T025 [P] [US2] 單元測試 [tests/unit/content-gate-additions.test.ts](../../tests/unit/content-gate-additions.test.ts)：繁中違規、觀念本體超字、缺固定區塊皆被 `runContentGate` 報出
-- [ ] T026 [US2] 實作 [scripts/run-code-blocks.ts](../../scripts/run-code-blocks.ts)：抽 TS/Python Corner+Tip fenced blocks → **缺斷言**（TS 無 `throw`/`node:assert`、Python 無 `assert`）視同不通過 → TS `tsc --noEmit --strict`＋`tsx` 執行斷言、Python 執行斷言 → 暫存於系統暫存區、用後清理不寫 repo（R6、FR-010.1、contracts/content-quality-gate §2）
-- [ ] T027 [P] [US2] 單元測試 [tests/unit/run-code-blocks.test.ts](../../tests/unit/run-code-blocks.test.ts)：缺斷言 → 失敗、編譯失敗 → 失敗、斷言失敗 → 失敗、正確 → 通過、暫存清理
-- [ ] T028 [US2] 撰寫 Stage 2 展開＋self-check prompt 模板於 [scripts/lib/prompts/](../../scripts/lib/prompts/)：§10 全區塊、繁中保留英文、程式碼自帶斷言、每候選題號 `whyThisPattern`+Hint
-- [ ] T029 [US2] 實作 [scripts/generate-content.ts](../../scripts/generate-content.ts) 入口：前置檢查「Skeleton 已凍結（工作目錄 `concepts/**` 無未提交變更；`--allow-dirty` 僅開發）」→ **冪等 skip（呼叫 [scripts/lib/checkpoint.ts](../../scripts/lib/checkpoint.ts)：產物存在＋Skeleton 雜湊一致則跳過，除非 `--force`/`--only`）** → 讀凍結 Skeleton → LLM 展開 → 品質 Gate 逐關（結構/繁中/程式碼實測/題目正確性/DAG/完整編譯 render 預算；self-check 生成期專屬）→ 每篇重生 ≤3、3 次標記 `needsHumanReview`、單篇隔離不阻斷其餘 → 過關凍結 `articles/**`；**Stage 2 MUST NOT 寫入 `concepts/**`**（FR-007/010/012/013/024、contracts/stage2-content）
-- [ ] T029a [P] [US2] 守門測試 [tests/unit/no-structure-mutation.test.ts](../../tests/unit/no-structure-mutation.test.ts)：驗證 Stage 2 **(1)** MUST NOT 寫入 `concepts/**`（只讀凍結 Skeleton、只寫 `articles/**`）；**(2)** 生成 Article 的結構欄位（`leetcode`/`prerequisite`/`next`/`module`/`topic`/`id`）MUST 等於來源 Skeleton frontmatter——LLM 展開不得新增/替換/重排題號或依賴（FR-024、憲章 IV/XIV；依賴 T029）
-- [ ] T030 [US2] **執行 Stage 2**（機器批次 2–4 天）：全量展開 `articles/**`、過品質 Gate 凍結；批次末對全 Track×全 Session 跑 `runContentGate` 零違規；處理任何 `needsHumanReview` 篇
+- [X] T022 [P] [US2] 實作 [src/compiler/traditional-chinese.ts](../../src/compiler/traditional-chinese.ts)：移除 fenced/行內 code＋frontmatter → 簡體字偵測（比對簡體專用字集）＋ CJK 佔比（CJK ÷（CJK＋拉丁字母詞數），預設門檻 0.5）（R7、FR-008）
+- [X] T023 [P] [US2] 單元測試 [tests/unit/traditional-chinese.test.ts](../../tests/unit/traditional-chinese.test.ts)：含簡體字 → 違規、整段英文 → 低於門檻違規、正常繁中夾英文術語 → 通過、程式碼區塊不計入
+- [X] T024 [US2] 擴充 [src/compiler/gate.ts](../../src/compiler/gate.ts) `runContentGate`：加入繁中判準（T022）＋觀念本體 ≤2,000 字（依 §10.3 界定 `Concept`/`Thinking`/`Pattern Recognition`/`Common Mistakes` 敘述性文字，排除 Corner/程式碼/Challenge/Complexity 算式）＋ Article 固定區塊完整性；使 CI 與生成期共用同一 Gate（FR-008/010.2/011/016）
+- [X] T025 [P] [US2] 單元測試 [tests/unit/content-gate-additions.test.ts](../../tests/unit/content-gate-additions.test.ts)：繁中違規、觀念本體超字、缺固定區塊皆被 `runContentGate` 報出
+- [X] T026 [US2] 實作 [scripts/run-code-blocks.ts](../../scripts/run-code-blocks.ts)：抽 TS/Python Corner+Tip fenced blocks → **缺斷言**（TS 無 `throw`/`node:assert`、Python 無 `assert`）視同不通過 → TS `tsc --noEmit --strict`＋`tsx` 執行斷言、Python 執行斷言 → 暫存於系統暫存區、用後清理不寫 repo（R6、FR-010.1、contracts/content-quality-gate §2）
+- [X] T027 [P] [US2] 單元測試 [tests/unit/run-code-blocks.test.ts](../../tests/unit/run-code-blocks.test.ts)：缺斷言 → 失敗、編譯失敗 → 失敗、斷言失敗 → 失敗、正確 → 通過、暫存清理
+- [X] T028 [US2] 撰寫 Stage 2 展開＋self-check prompt 模板於 [scripts/lib/prompts/](../../scripts/lib/prompts/)：§10 全區塊、繁中保留英文、程式碼自帶斷言、每候選題號 `whyThisPattern`+Hint
+- [X] T029 [US2] 實作 [scripts/generate-content.ts](../../scripts/generate-content.ts) 入口：前置檢查「Skeleton 已凍結（工作目錄 `concepts/**` 無未提交變更；`--allow-dirty` 僅開發）」→ **冪等 skip（呼叫 [scripts/lib/checkpoint.ts](../../scripts/lib/checkpoint.ts)：產物存在＋Skeleton 雜湊一致則跳過，除非 `--force`/`--only`）** → 讀凍結 Skeleton → LLM 展開 → 品質 Gate 逐關（結構/繁中/程式碼實測/題目正確性/DAG/完整編譯 render 預算；self-check 生成期專屬）→ 每篇重生 ≤3、3 次標記 `needsHumanReview`、單篇隔離不阻斷其餘 → 過關凍結 `articles/**`；**Stage 2 MUST NOT 寫入 `concepts/**`**（FR-007/010/012/013/024、contracts/stage2-content）
+- [X] T029a [P] [US2] 守門測試 [tests/unit/no-structure-mutation.test.ts](../../tests/unit/no-structure-mutation.test.ts)：驗證 Stage 2 **(1)** MUST NOT 寫入 `concepts/**`（只讀凍結 Skeleton、只寫 `articles/**`）；**(2)** 生成 Article 的結構欄位（`leetcode`/`prerequisite`/`next`/`module`/`topic`/`id`）MUST 等於來源 Skeleton frontmatter——LLM 展開不得新增/替換/重排題號或依賴（FR-024、憲章 IV/XIV；依賴 T029）
+- [ ] T030 [US2] **執行 Stage 2**（機器批次 2–4 天）：全量展開 `articles/**`、過品質 Gate 凍結；批次末對全 Track×全 Session 跑 `runContentGate` 零違規；處理任何 `needsHumanReview` 篇　**⚠️ 待手動執行**：需真實 `GEMINI_API_KEY` 且依賴 T021 完成，留待使用者依 quickstart.md 手動跑
 
 **Checkpoint**: 三軌全量教材凍結，每篇通過品質 Gate
 
@@ -122,9 +122,9 @@ US5（CI）為 P2。
 
 **Independent Test**: 連跑兩次生成器 → `git diff schedules/` 無差異；三份課表通過拓樸子序列驗證、~180 Session
 
-- [ ] T031 [US3] 更新 [curriculum/track-params.json](../../curriculum/track-params.json)：三軌 `maxLevel` 由 `1` → `15`（全量涵蓋）；`problemDifficulties`/`challengeDifficulty`/`rhythm` 維持三軌分歧（R11、FR-014）
-- [ ] T032 [US3] 執行 [scripts/generate-schedule.ts](../../scripts/generate-schedule.ts) 對凍結 DAG 產 `schedules/{track}.json` × 3；驗證兩次執行 byte-identical、通過生成器內建拓樸子序列/`reviewRange`/參照驗證、長度 ~180 Session（FR-014/015、SC-008）
-- [ ] T033 [US3] commit 三份課表取代 F4 種子；若 Session 數顯著偏離 ~180，經 track-params 節奏參數微調後**重跑生成器**（MUST NOT 手改產物）再 commit（R11 note）
+- [ ] T031 [US3] 更新 [curriculum/track-params.json](../../curriculum/track-params.json)：三軌 `maxLevel` 由 `1` → `15`（全量涵蓋）；`problemDifficulties`/`challengeDifficulty`/`rhythm` 維持三軌分歧（R11、FR-014）　**⚠️ 待 T021 完成後執行**：現行 DAG 只有 5 個 stub Concept，提前調高 `maxLevel` 無意義且可能誤導其他測試
+- [ ] T032 [US3] 執行 [scripts/generate-schedule.ts](../../scripts/generate-schedule.ts) 對凍結 DAG 產 `schedules/{track}.json` × 3；驗證兩次執行 byte-identical、通過生成器內建拓樸子序列/`reviewRange`/參照驗證、長度 ~180 Session（FR-014/015、SC-008）　**⚠️ 待手動執行**（依賴 T021/T030 真實內容）
+- [ ] T033 [US3] commit 三份課表取代 F4 種子；若 Session 數顯著偏離 ~180，經 track-params 節奏參數微調後**重跑生成器**（MUST NOT 手改產物）再 commit（R11 note）　**⚠️ 待手動執行**
 
 **Checkpoint**: 三份正式課表凍結，觸發 F6 完課狀態自動解除（FR-022b）
 
@@ -138,11 +138,11 @@ US5（CI）為 P2。
 
 **（依賴 US1/US2 的腳本已成形；lib 已於 Foundational 完成）**
 
-- [ ] T034 [US4] 補齊並固化兩支腳本的旗標接線與續跑邊界：`--force` / `--only <conceptId,...>` 語意、退避耗盡的終局處理（該 Concept 待重跑＋非零 exit＋checkpoint 保留，FR-018）、manifest 遺失重建。**基本 skip（產物存在＋雜湊一致）已於 T019 / T029 由 [scripts/lib/checkpoint.ts](../../scripts/lib/checkpoint.ts) 接入**，本任務只補旗標與邊界行為、**不重複實作 skip 判斷**（FR-018/019/020、data-model §7）
-- [ ] T035 [P] [US4] 行為測試 [tests/unit/resume.test.ts](../../tests/unit/resume.test.ts)（暫存目錄＋mock llm-client）：中斷後重跑跳過已凍結且過 Gate 者、只續缺漏（FR-019、SC-006）
-- [ ] T036 [P] [US4] 行為測試 [tests/unit/idempotency.test.ts](../../tests/unit/idempotency.test.ts)：未變更 → 0 重生、`--force` → 重生、Skeleton 變更 → 只重生該篇（FR-020、SC-006）
-- [ ] T037 [P] [US4] 行為測試 [tests/unit/backoff-exhaustion.test.ts](../../tests/unit/backoff-exhaustion.test.ts)（mock 429/4xx）：429 → 退避重試、非暫時性 4xx → 立即失敗、退避耗盡 → 該 Concept 待重跑＋非零 exit＋checkpoint 保留（FR-018）
-- [ ] T038 [P] [US4] 行為測試 [tests/unit/needs-human-review.test.ts](../../tests/unit/needs-human-review.test.ts)：重生 3 次仍不過 → 標記＋繼續其餘＋非零 exit；**重跑時該篇 MUST 重新嘗試、不永久靜默跳過**（FR-012）
+- [X] T034 [US4] 補齊並固化兩支腳本的旗標接線與續跑邊界：`--force` / `--only <conceptId,...>` 語意、退避耗盡的終局處理（該 Concept 待重跑＋非零 exit＋checkpoint 保留，FR-018）、manifest 遺失重建。**基本 skip（產物存在＋雜湊一致）已於 T019 / T029 由 [scripts/lib/checkpoint.ts](../../scripts/lib/checkpoint.ts) 接入**，本任務只補旗標與邊界行為、**不重複實作 skip 判斷**（FR-018/019/020、data-model §7）
+- [X] T035 [P] [US4] 行為測試 [tests/unit/resume.test.ts](../../tests/unit/resume.test.ts)（暫存目錄＋mock llm-client）：中斷後重跑跳過已凍結且過 Gate 者、只續缺漏（FR-019、SC-006）
+- [X] T036 [P] [US4] 行為測試 [tests/unit/idempotency.test.ts](../../tests/unit/idempotency.test.ts)：未變更 → 0 重生、`--force` → 重生、Skeleton 變更 → 只重生該篇（FR-020、SC-006）
+- [X] T037 [P] [US4] 行為測試 [tests/unit/backoff-exhaustion.test.ts](../../tests/unit/backoff-exhaustion.test.ts)（mock 429/4xx）：429 → 退避重試、非暫時性 4xx → 立即失敗、退避耗盡 → 該 Concept 待重跑＋非零 exit＋checkpoint 保留（FR-018）
+- [X] T038 [P] [US4] 行為測試 [tests/unit/needs-human-review.test.ts](../../tests/unit/needs-human-review.test.ts)：重生 3 次仍不過 → 標記＋繼續其餘＋非零 exit；**重跑時該篇 MUST 重新嘗試、不永久靜默跳過**（FR-012）
 
 **Checkpoint**: 全量批次可在免費層內斷點續跑完成
 
@@ -154,9 +154,9 @@ US5（CI）為 P2。
 
 **Independent Test**: 對程式碼寫錯的教材開 PR → `content-gate.yml` 失敗阻擋合併；修正後通過
 
-- [ ] T039 [US5] 編輯 [.github/workflows/content-gate.yml](../../.github/workflows/content-gate.yml)：**新增 Python 3.x 環境設定（`actions/setup-python`）**供 `run-code-blocks.ts` 的 `pytest` 步驟（現行 workflow 僅裝 Node 24，缺 Python 會使程式碼實測無法執行）；新增 `npm run gate:code`（run-code-blocks）步驟，與既有 `validate:content` 於同一支 workflow；確認**不含** `GEMINI_API_KEY`、不跑 self-check（FR-016、SC-010）
-- [ ] T040 [P] [US5] （可選）新增 [.github/workflows/content.yml](../../.github/workflows/content.yml)：`workflow_dispatch` only 的產線手動觸發，帶 `GEMINI_API_KEY` Secret；MUST NOT 進 `daily.yml`（R2、FR-022）
-- [ ] T041 [US5] 於 [quickstart.md](./quickstart.md) 補記 CI 驗證步驟並實地驗證：故意壞碼 PR → CI 失敗；修正 → 通過（SC-010）
+- [X] T039 [US5] 編輯 [.github/workflows/content-gate.yml](../../.github/workflows/content-gate.yml)：**新增 Python 3.x 環境設定（`actions/setup-python`）**供 `run-code-blocks.ts` 的 `pytest` 步驟（現行 workflow 僅裝 Node 24，缺 Python 會使程式碼實測無法執行）；新增 `npm run gate:code`（run-code-blocks）步驟，與既有 `validate:content` 於同一支 workflow；確認**不含** `GEMINI_API_KEY`、不跑 self-check（FR-016、SC-010）
+- [X] T040 [P] [US5] （可選）新增 [.github/workflows/content.yml](../../.github/workflows/content.yml)：`workflow_dispatch` only 的產線手動觸發，帶 `GEMINI_API_KEY` Secret；MUST NOT 進 `daily.yml`（R2、FR-022）
+- [ ] T041 [US5] 於 [quickstart.md](./quickstart.md) 補記 CI 驗證步驟並實地驗證：故意壞碼 PR → CI 失敗；修正 → 通過（SC-010）　**部分完成**：quickstart.md 的 CI Gate 步驟已於 `/speckit-plan` 階段寫好、與現行 workflow 一致，不需再補；**實地開 PR 驗證仍待手動執行**
 
 **Checkpoint**: 凍結後內容持續受 CI 把關
 
