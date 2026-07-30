@@ -169,33 +169,47 @@ function writeJsonFile(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf-8");
 }
 
-/** 線上補齊：LeetCode 公開 GraphQL 端點，只取 title/titleSlug/difficulty（不取 content，§5）。 */
+const DIFFICULTY_BY_LEVEL: Record<number, LeetcodeDifficulty> = { 1: "Easy", 2: "Medium", 3: "Hard" };
+
+interface AllProblemsResponse {
+  stat_status_pairs: {
+    stat: { frontend_question_id: number; question__title: string; question__title_slug: string };
+    difficulty: { level: number };
+  }[];
+}
+
+let cachedAllProblems: Map<number, LeetcodeIndexEntry> | undefined;
+
+/**
+ * 線上補齊：LeetCode 公開 `api/problems/all/` 端點——回傳全部題目的 `frontend_question_id` →
+ * title/slug/difficulty，只取 metadata、不取 content（§5）。
+ *
+ * 不採用 GraphQL `questionList` 的 `searchKeywords` 關鍵字搜尋：該端點是全文模糊搜尋（比對標題
+ * 字樣），並非「依題號精確查找」——例如搜尋 "1" 可能命中「Two Sum」也可能命中標題含「1」的其他題
+ * （如「Number of 1 Bits」），只是恰好 `limit: 1` 時常排到正確結果，並非保證正確。`api/problems/all/`
+ * 一次回傳全表、以 `frontend_question_id` 為鍵精確查找，才是可靠且不會張冠李戴的作法；per-process
+ * 快取整張表，避免每個候選題號各打一次網路。
+ */
 export async function fetchLeetCodeMetadata(id: number): Promise<LeetcodeIndexEntry | undefined> {
-  const query = `query problemsetQuestionList($filters: QuestionListFilterInput) {
-    problemsetQuestionList: questionList(
-      categorySlug: ""
-      limit: 1
-      filters: $filters
-    ) {
-      questions: data {
-        title
-        titleSlug
-        difficulty
-      }
+  if (!cachedAllProblems) {
+    const response = await fetch("https://leetcode.com/api/problems/all/");
+    if (!response.ok) {
+      throw new Error(`leetcode-fetch-error：無法取得 LeetCode 題目清單（HTTP ${response.status}）`);
     }
-  }`;
-  const response = await fetch("https://leetcode.com/graphql/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables: { filters: { searchKeywords: String(id) } } }),
-  });
-  if (!response.ok) return undefined;
-  const json = (await response.json()) as {
-    data?: { problemsetQuestionList?: { questions?: { title: string; titleSlug: string; difficulty: string }[] } };
-  };
-  const hit = json.data?.problemsetQuestionList?.questions?.[0];
-  if (!hit) return undefined;
-  return { slug: hit.titleSlug, title: hit.title, difficulty: hit.difficulty as LeetcodeDifficulty };
+    const json = (await response.json()) as AllProblemsResponse;
+    const map = new Map<number, LeetcodeIndexEntry>();
+    for (const pair of json.stat_status_pairs) {
+      const difficulty = DIFFICULTY_BY_LEVEL[pair.difficulty.level];
+      if (!difficulty) continue;
+      map.set(pair.stat.frontend_question_id, {
+        slug: pair.stat.question__title_slug,
+        title: pair.stat.question__title,
+        difficulty,
+      });
+    }
+    cachedAllProblems = map;
+  }
+  return cachedAllProblems.get(id);
 }
 
 const BANK_PATH = "data/problem-bank.json";

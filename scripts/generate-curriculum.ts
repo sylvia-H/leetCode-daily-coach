@@ -25,7 +25,10 @@ const CONCEPTS_DIR = "concepts";
 const OUTLINE_PATH = "curriculum/outline.md";
 const BANK_PATH = "data/problem-bank.json";
 const INDEX_PATH = "data/leetcode-index.json";
-const TOPIC_MIN_CONCEPTS = 5;
+// curriculum/modules.json 目前每個 Module 恰為 1 個 Topic，故 Topic 顆粒度（5–12）與 Module
+// 顆粒度（10–30，全量模式強制）在本 repo 現況下是同一個數字：下限取兩者交集 10，才不會讓 LLM
+// 合法地依 Topic 下限（5）起草卻落入 Module 下限（10）違規，白白浪費一輪額度（見 src/compiler/curriculum.ts）。
+const TOPIC_MIN_CONCEPTS = 10;
 const TOPIC_MAX_CONCEPTS = 12;
 
 interface ModulesFile {
