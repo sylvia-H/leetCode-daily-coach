@@ -47,21 +47,33 @@ function countedTextLength(embed: DiscordEmbed): number {
  *
  * MUST 是唯一來源：兩處各寫一份數字必然漂移，屆時「生成期放行、CI 擋下」會非常難查。
  *
- * ## tsTip / pyTip 由 450 放寬為 650（F7 定案 2026-07-31）
+ * ## tsTip / pyTip 由 450 → 650 → 800（F7 兩次放寬，皆定案於 2026-07-31）
  *
- * 這兩個區塊 MUST 內含一個 fenced code block **加上**說明文字，450 字元實測過緊——第一批產出為
- * 561 / 532，且內容並不浮濫，是「寫得剛好」的長度。強壓只會逼出兩種壞結果：把程式碼砍到失去
- * 示範價值，或反覆重生浪費免費層額度。
+ * **第一次（450 → 650）**：這兩個區塊 MUST 內含一個 fenced code block **加上**說明文字，450 字元
+ * 實測過緊——第一批產出為 561 / 532，且內容並不浮濫，是「寫得剛好」的長度。強壓只會逼出兩種壞結果：
+ * 把程式碼砍到失去示範價值，或反覆重生浪費免費層額度。
  *
- * 放寬是安全的：concept Session 各 slot 上限加總為 digest 900 + tsTip 650 + pyTip 650 +
- * exitCriteria 400 + takeaway 120 + problems 3×350 + pathFooter 200 + overlayNotes 400 = **4,370**，
- * 距自訂總量上限 5,500 仍有 1,130 餘裕、距 Discord 硬限 6,000 有 1,630。總量檢查（`total` /
- * `total.hard`）照舊把關，故單項放寬不會讓整則訊息失控。
+ * **第二次（650 → 800）**：起因是 Stage 2 prompt 新增「code block MUST self-contained」要求後，
+ * 出現了 650 定案當時**不存在的成本**。教材片段會被單獨存檔編譯，沒有 LeetCode 平台環境，故凡涉及
+ * `ListNode` / `TreeNode` 的 Concept MUST 在區塊內自行定義型別。實測（linked-list-cycle-start-node，
+ * 修正後首篇通過者）：tsTip 共 432 字元，其中 `class ListNode` 定義獨佔 **210 字元**——這段對讀者
+ * 有用（複製即可執行）卻無教學增量，等於先扣掉三分之一預算才輪到真正的示範與解說。
+ *
+ * 後果是 5 篇 linked-list / tree / graph 教材卡在 697～727 / 650（各超 47～77），且它們在 prompt
+ * 修正前的失敗原因是 TS2304 / IndentationError 而非長度——是被自足性要求推過線的，不是內容浮濫。
+ * 此處 MUST NOT 誤診為「Concept 顆粒度過大而需拆課綱」：165 個 Concept 中僅 1 個碰到觀念本體 2,000
+ * 上限且只超 29 字（1.5%），若顆粒度真有問題會系統性顯現；而重跑 Stage 1 需重走 T021 人工核可
+ * （憲章 XVII）並使 165 篇 Skeleton 雜湊全變、觸發全量重生，代價與「5 篇各超 50～80 字」完全不成比例。
+ *
+ * 放寬仍安全：concept Session 各 slot 上限加總為 digest 900 + tsTip 800 + pyTip 800 +
+ * exitCriteria 400 + takeaway 120 + problems 3×350 + pathFooter 200 + overlayNotes 400 = **4,670**，
+ * 距自訂總量上限 5,500 仍有 830 餘裕、距 Discord 硬限 6,000 有 1,330；實測最大 727 亦留 73 緩衝。
+ * 總量檢查（`total` / `total.hard`）照舊把關，故單項放寬不會讓整則訊息失控。
  */
 export const ARTICLE_BUDGET_LIMITS = {
   digest: 900,
-  tsTip: 650,
-  pyTip: 650,
+  tsTip: 800,
+  pyTip: 800,
   takeaway: 120,
 } as const;
 

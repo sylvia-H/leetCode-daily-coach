@@ -730,8 +730,8 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | 區塊                        | 預算（字元）              |
 | --------------------------- | ------------------------- |
 | Digest（主 Embed description） | ≤ 900                  |
-| TypeScript Tip（field value）  | ≤ 650（含程式碼區塊）   |
-| Python Tip（field value）      | ≤ 650（含程式碼區塊）   |
+| TypeScript Tip（field value）  | ≤ 800（含程式碼區塊）   |
+| Python Tip（field value）      | ≤ 800（含程式碼區塊）   |
 | 每題（連結 + 難度 + why + Hint）| ≤ 350，最多 3 題        |
 | Exit Criteria（checklist）     | ≤ 400（≤6 條、每條 ≤110）|
 | Takeaway                       | ≤ 120                   |
@@ -740,11 +740,19 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | Weekly Reflection 問題（review）| ≤ 300                   |
 | 鼓勵語（rest）                 | ≤ 200                   |
 
-- **TS / Python Tip 由 ≤450 放寬為 ≤650（F7 定案 2026-07-31）**：這兩個區塊 MUST 內含一個 fenced code
-  block **加上**說明文字，450 字元實測過緊——Stage 2 第一批產出為 561 / 532，且內容並不浮濫，是「寫得
-  剛好」的長度。強壓只會逼出兩種壞結果：把程式碼砍到失去示範價值，或反覆重生浪費免費層額度。
-  放寬後 concept Session 的各 slot 上限加總為 **4,370**，距自訂總量上限 5,500 仍有 1,130 餘裕、距
-  Discord 硬限 6,000 有 1,630；總量檢查（`total` / `total.hard`）照舊把關，故單項放寬不會讓整則訊息失控。
+- **TS / Python Tip 由 ≤450 → ≤650 → ≤800（F7 兩次放寬，皆定案 2026-07-31）**：這兩個區塊 MUST 內含
+  一個 fenced code block **加上**說明文字。**第一次（450 → 650）**：450 字元實測過緊——Stage 2 第一批
+  產出為 561 / 532，且內容並不浮濫，是「寫得剛好」的長度。強壓只會逼出兩種壞結果：把程式碼砍到失去
+  示範價值，或反覆重生浪費免費層額度。**第二次（650 → 800）**：Stage 2 prompt 新增「code block MUST
+  self-contained」要求後，出現 650 定案當時不存在的成本——教材片段被單獨存檔編譯、沒有 LeetCode 平台
+  環境，故涉及 `ListNode` / `TreeNode` 的 Concept MUST 於區塊內自行定義型別。實測該定義獨佔 **210
+  字元**（linked-list-cycle-start-node，tsTip 共 432），對讀者有用卻無教學增量，等於先扣掉三分之一
+  預算。後果是 5 篇 linked-list / tree / graph 教材卡在 697～727 / 650。**此現象 MUST NOT 誤診為
+  Concept 顆粒度過大**：165 個 Concept 僅 1 個碰到觀念本體 2,000 上限且只超 29 字（1.5%），顆粒度若
+  真有問題會系統性顯現；重跑 Stage 1 需重走 T021 人工核可（憲章 XVII）並使 165 篇 Skeleton 雜湊全變、
+  觸發全量重生，代價與「5 篇各超 50～80 字」不成比例。
+  放寬後 concept Session 的各 slot 上限加總為 **4,670**，距自訂總量上限 5,500 仍有 830 餘裕、距
+  Discord 硬限 6,000 有 1,330；總量檢查（`total` / `total.hard`）照舊把關，故單項放寬不會讓整則訊息失控。
   **上限值 MUST 以 `src/renderer/budget.ts` 的 `ARTICLE_BUDGET_LIMITS` 為唯一來源**（Stage 2 的
   per-article Gate 與 `checkBudget` 共用），MUST NOT 在生成端另寫一份數字。
 - **逐區塊預算 MUST 在 per-article Gate 就檢查（MUST，F7 定案 2026-07-31）**：MUST NOT 只依賴批次末的
