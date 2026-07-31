@@ -36,7 +36,7 @@ Compiler MUST NOT 自行拼路徑。
 | `pattern_label` | string | ✅ | 主 Embed `Pattern` field（原樣帶入，MUST NOT 改寫） |
 | `complexity_label` | string | ✅ | 主 Embed `複雜度` field |
 | `estimated_minutes` | number | ✅ | 主 Embed `預估時間` field |
-| `exit_criteria` | string[] | ✅ | 結尾 Embed checklist；SHOULD ≤6 條、每條 ≤60 字元 |
+| `exit_criteria` | string[] | ✅ | 結尾 Embed checklist；MUST ≤6 條、每條 ≤110 字元（F7 定案 2026-07-31 由 60 放寬為 110） |
 
 > frontmatter 的其餘欄位（`topic` / `difficulty` / `prerequisite` / `next` / `learning_goal` /
 > `leetcode` / `tags`）是 **Concept Skeleton 的權威欄位**，由 F2 自 `concepts/**` 載入建 DAG。

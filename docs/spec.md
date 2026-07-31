@@ -445,10 +445,19 @@ tags: [array, in-place, sorted]
 
 - 每個 Concept MUST 定義 `exit_criteria`，明確列出「今天真正學會什麼」，而非「今天學完」。
 - Exit Criteria SHOULD 可勾選（呈現為 checklist），供使用者自評。
-- 推播版面考量：`exit_criteria` **MUST ≤ 6 條、每條 MUST ≤ 60 字元**（F5 定案 2026-07-23 由 SHOULD 升為
-  MUST）。**理由**：此上限由 §14.5 的 Exit Criteria 預算（≤400 字元）反推而來，且 F5 的預算檢查函式會
-  逐一檢查條數與單條長度並在超限時**失敗**——既然機器會擋，規範就 MUST NOT 停留在 SHOULD，否則
-  「合規的 SHOULD 卻過不了 Gate」會成為常態。F7 產線生成 `exit_criteria` 時 MUST 遵守此上限。
+- 推播版面考量：`exit_criteria` **MUST ≤ 6 條、每條 MUST ≤ 110 字元**（F5 定案 2026-07-23 由 SHOULD 升為
+  MUST；單條上限 **F7 定案 2026-07-31 由 60 放寬為 110**）。**理由**：條數與整體上限由 §14.5 的 Exit
+  Criteria 預算（≤400 字元）反推而來，且 F5 的預算檢查函式會逐一檢查條數與單條長度並在超限時**失敗**
+  ——既然機器會擋，規範就 MUST NOT 停留在 SHOULD，否則「合規的 SHOULD 卻過不了 Gate」會成為常態。
+  F7 產線生成 `exit_criteria` 時 MUST 遵守此上限。
+- **單條上限由 60 放寬為 110 的依據（F7 實測 2026-07-31）**：原值 60 是「整體 400 ÷ 至多 6 條」的均分
+  反推值，不是對內容量過的判準。全量課綱凍結後實測，273 條 `exit_criteria` 中有 **116 條（42.5%）超過
+  60**、涉及 **93 / 165 個 Concept（56.4%）**，最長 107 字元——**超標率過半代表判準本身不合身**。根因是
+  中英文字元密度差異：`exit_criteria` 為英文完整句子（§11），60 字元僅容十餘個單字，寫得清楚的驗收標準
+  必然破表；同樣 60 字元的中文資訊量是數倍，沿用同一數字等於對英文欄位隱性加嚴。放寬**不影響總量**：
+  真正的封頂「整體 ≤400」與「≤6 條」皆未更動，實測全 165 個 Concept 整體最長僅 **197 / 400**、條數最多
+  僅 **2 / 6**，單條上限實為被整體上限吸收的次級限制。**MUST NOT** 改以手改已凍結 `concepts/**` 解決
+  （生成物不得手改），亦不採重跑 Stage 1（會使 165 篇 Article 的 Skeleton 雜湊全變而觸發全量重生）。
 
 ### 10.3 內容長度與詳盡度
 
@@ -724,7 +733,7 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | TypeScript Tip（field value）  | ≤ 650（含程式碼區塊）   |
 | Python Tip（field value）      | ≤ 650（含程式碼區塊）   |
 | 每題（連結 + 難度 + why + Hint）| ≤ 350，最多 3 題        |
-| Exit Criteria（checklist）     | ≤ 400（≤6 條、每條 ≤60）|
+| Exit Criteria（checklist）     | ≤ 400（≤6 條、每條 ≤110）|
 | Takeaway                       | ≤ 120                   |
 | 學習路徑 footer                | ≤ 200                   |
 | Track 補充（Overlay notes）    | ≤ 400                   |

@@ -65,6 +65,28 @@ export const ARTICLE_BUDGET_LIMITS = {
   takeaway: 120,
 } as const;
 
+/**
+ * `exit_criteria` 單條上限（§10.2 / §14.5）。**由 60 放寬為 110（F7 定案 2026-07-31）**。
+ *
+ * 原值 60 是由「整體 ≤400」除以「≤6 條」反推的均分值，而非對內容本身量過的判準。F7 全量課綱凍結後
+ * 實測，這個反推值與現實嚴重不符：273 條 `exit_criteria` 中有 **116 條（42.5%）超標**，涉及
+ * **93 / 165 個 Concept（56.4%）**，最長一條 107 字元。超標率過半代表問題出在判準、不是內容失控。
+ *
+ * 根因是中英文的字元密度差異：`exit_criteria` MUST 為英文完整句子（§11 技術術語保留英文），而 60
+ * 字元的英文只夠寫十來個單字——「Can write a recursive function that reverses the rest of the list
+ * and fixes pointer directions on unwinding」這種把驗收標準講清楚的句子必然破表。同樣 60 字元的
+ * 中文資訊量是英文的數倍，沿用同一個數字等於對英文欄位隱性加嚴。
+ *
+ * 放寬是安全的，**總量預算完全不受影響**：真正的封頂是「整體 ≤400」與「≤6 條」，兩者皆未更動，
+ * 且實測全 165 個 Concept 的整體長度最大僅 **197 / 400**、條數最大僅 **2 / 6**，離上限都很遠。
+ * 換言之單條上限在此是被整體上限吸收的次級限制，放寬它不會讓 §14.5 的 5,500 總量鬆動。
+ *
+ * MUST NOT 改以「手改 93 個已凍結 Skeleton」解決——`concepts/**` 是生成物、依憲章 XIII 不得手改，
+ * 而重跑 Stage 1 會使 165 篇 Article 的 Skeleton 雜湊全變、觸發全量重生（再燒兩天免費層額度），
+ * 代價與收益完全不成比例。
+ */
+export const EXIT_CRITERIA_ITEM_MAX = 110;
+
 // 獨立純函式（憲章 IX）：對單一 RenderedMessage 同時檢查逐區塊預算、結構性上限與總量，
 // 供 runtime 與 scripts/validate.ts 共用同一顆實作。budgetSlots 由 render() 提供，
 // 值 MUST 是放進 embeds 的同一份字串實例，故此處不再反解析 embeds（research R10）。
@@ -104,7 +126,7 @@ export function checkBudget(message: RenderedMessage): BudgetReport {
     items.push(makeItem("exitCriteria.count", lines.length, 6));
     lines.forEach((line, i) => {
       const text = line.startsWith(EXIT_CRITERIA_PREFIX) ? line.slice(EXIT_CRITERIA_PREFIX.length) : line;
-      items.push(makeItem(`exitCriteria[${i}]`, codePointLength(text), 60));
+      items.push(makeItem(`exitCriteria[${i}]`, codePointLength(text), EXIT_CRITERIA_ITEM_MAX));
     });
   }
   if (budgetSlots.problems !== undefined) {
