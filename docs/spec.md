@@ -1469,7 +1469,10 @@ MUST 有單元測試：
 **F2 `002-curriculum-schema` — Curriculum 骨架與 DAG 驗證**
 
 - 範圍：`curriculum/modules.json`（Module / Topic 順序定稿）、Concept frontmatter schema（zod）、curriculum 載入 + in-memory DAG、驗證（拓樸排序、無環、無前向依賴、參照完整性、**顆粒度規則**——供 Stage 1 結構 Gate 重用），以 Level 0 + Level 1 少量 Concept stub 驗證。**另建立 `ci.yml` 工程 Gate**（push / PR：`npm ci` → build → test → `validate:curriculum`；F2 定案 2026-07-22——此前單元測試從未在 CI 執行，`daily.yml` 只跑 build）。
-- **本 Feature 待定（clarify 定案）**：Module / Topic 命名、Concept 顆粒度的機器可驗規則（實際 Concept 清單由 F7 Stage 1 產出、大綱定稿決定）。`difficulty` 判定基準已於 **F7 定案 2026-07-30**，見 §10.3.1。
+- **Module / Topic 命名、Concept 顆粒度已由 F7 Stage 1 定案（2026-07-30，`curriculum/outline.md` 人工核可）**：
+  最終 16 Module／165 Concept，每 Topic 10–12 Concept（本 Feature 訂定的顆粒度 Gate 區間 Topic 5–12／
+  Module 10–30 於全量規模下實測成立，未需放寬）。`difficulty` 判定基準已於 **F7 定案 2026-07-30**，
+  見 §10.3.1。
 - 驗收（= M1 部分）：DAG 驗證通過（對應 AC1）。
 
 **F3 `003-problem-bank` — 題庫與逆向對應**
@@ -1480,7 +1483,10 @@ MUST 有單元測試：
 **F4 `004-schedule-generator` — 課表生成器與 Overlay**
 
 - 範圍：`generate-schedule.ts`（DAG + 週節奏模板 + Track 參數 → `schedules/{track}.json` × 3；determinism MUST）、`TrackSchedule` / `TrackOverlay` schema、三組 Track 參數定義、生成器內建課表驗證（拓樸子序列、reviewRange、參照）。**以 stub / 種子 DAG 開發與測試**；正式三份課表於 F7 Stage 1 課綱凍結後生成。
-- **本 Feature 待定（clarify 定案）**：各 Track 參數（節奏微調、涵蓋子集規則、難度帶映射）、`targetLevel` 對應的題目難度分佈。
+- **各 Track 參數（節奏微調、涵蓋子集規則、難度帶映射）已由 F7 依正式 DAG 定案（2026-07-31）**：
+  最終三組參數與導出的課表長度見 §13.5（Foundation `maxLevel=9`／InterviewReady `maxLevel=12`／
+  InterviewMastery `maxLevel=15`，Foundation `problemDifficulties` 為 `Easy+Medium`）；本 Feature 交付時
+  以 stub DAG 開發的三組參數僅為佔位，已於 F7 全數改寫。
 - 驗收（= M2 部分）：同輸入 → byte-identical 課表；課表全數通過 DAG 子序列驗證。
 
 **F5 `005-lesson-compiler` — Compiler、Renderer 與 CI Gate**
@@ -1502,7 +1508,12 @@ MUST 有單元測試：
   - 課綱凍結後執行 `generate-schedule.ts` 產出三份正式課表並 commit。
   - **補入 `content-gate.yml` 的 TS/Python 程式碼實測步驟**（§21.3、§20.3 Stage 2-1；F5 定案 2026-07-23 由本 Feature 承接）。
 - 定位：內容工程主軸，**可與 F5/F6 並行**（機器批次 2～4 天）。
-- **本 Feature 待定（clarify 定案）**：Stage 1 / Stage 2 的 prompt 模板與 self-check 準則、Gate 通過門檻（程式碼執行範圍、字數 / 繁中嚴格度）、批次大小與排程。
+- **prompt 模板、self-check 準則與 Gate 門檻已於實作期間定案**：程式碼實測範圍、繁中判準見 §11 與
+  §20.3 關卡 1–8；逐區塊字元預算（含 TS/Python Tip ≤800、觀念本體 ≤2,000 字）見 §14.5；批次大小與
+  排程以 RPM 節流（預設 10）＋ checkpoint 續跑取代固定批次切分（見 §20.4、`scripts/lib/throttle.ts`）。
+- **實際產出（2026-07-30／2026-07-31 完成）**：Stage 1 交付 16 Module／165 Concept、題庫 337 題
+  （Easy 93／Medium 203／Hard 40）；Stage 2 全數 165 篇 Article 通過品質 Gate；三份正式課表
+  Foundation 243／InterviewReady 236／InterviewMastery 291 Session，determinism 已驗證（byte-identical）。
 - 驗收（= M3 並行）：三軌全部 Session 內容齊備，Gate（含 TS/Python 程式碼在 CI 實測、字元預算、全編譯）全數通過。
 
 **F8 `008-review-extras` — Weekly Review 素材與語錄池**
