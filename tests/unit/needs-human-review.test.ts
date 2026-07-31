@@ -4,6 +4,13 @@ import { shouldSkip } from "../../scripts/lib/checkpoint.js";
 import { createLlmClient, type GenAiLike } from "../../scripts/lib/llm-client.js";
 import { Throttle } from "../../scripts/lib/throttle.js";
 import type { ConceptNode } from "../../src/types/curriculum.js";
+import type { ProblemBank } from "../../src/types/problem.js";
+
+// 題號 1 的最小題庫替身：per-article Gate 的逐題預算檢查需由 Problem Bank 取得 title/url/difficulty。
+const fakeBank: ProblemBank = {
+  byId: new Map([[1, { id: 1, slug: "two-sum", title: "Two Sum", url: "https://leetcode.com/problems/two-sum/", difficulty: "Easy" as const, patterns: [] }]]),
+  byPattern: new Map(),
+};
 
 function fakeConceptNode(): ConceptNode {
   return {
@@ -64,7 +71,7 @@ describe("needs-human-review（FR-012：重生 3 次仍不過 → 標記、繼�
       { genAiFactory, throttle: new Throttle({ rpmLimit: Infinity }) },
     );
 
-    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints");
+    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank);
 
     expect(result.markdown).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);
@@ -110,7 +117,7 @@ describe("重生時把 Gate 失敗原因回饋進 prompt（避免重擲同一顆
       },
     );
 
-    await generateOneConcept(llmClient, fakeConceptNode(), "hints");
+    await generateOneConcept(llmClient, fakeConceptNode(), "hints", fakeBank);
 
     expect(prompts).toHaveLength(3);
     expect(prompts[0]).not.toContain("上一次產出未通過品質 Gate");

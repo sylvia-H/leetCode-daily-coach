@@ -11,9 +11,18 @@ import { loadCurriculum } from "../src/compiler/curriculum.js";
 import { CONCEPT_BODY_MAX_CHARS, countConceptBodyChars, runContentGate } from "../src/compiler/gate.js";
 import { loadCompilerDeps } from "../src/compiler/lesson.js";
 import { checkTraditionalChinese } from "../src/compiler/traditional-chinese.js";
-import { ARTICLE_BUDGET_LIMITS } from "../src/renderer/budget.js";
+import {
+  ARTICLE_BUDGET_LIMITS,
+  EXIT_CRITERIA_COUNT_MAX,
+  EXIT_CRITERIA_ITEM_MAX,
+  EXIT_CRITERIA_TOTAL_MAX,
+  PROBLEM_ENTRY_MAX,
+} from "../src/renderer/budget.js";
+import { EXIT_CRITERIA_PREFIX, renderProblemEntry } from "../src/renderer/discord.js";
+import { getProblemsForConcept, loadProblemBank } from "../src/compiler/problem.js";
 import { parseArticle } from "../src/compiler/content.js";
 import type { ConceptNode } from "../src/types/curriculum.js";
+import type { ProblemBank } from "../src/types/problem.js";
 import {
   hashContent,
   readManifestFile,
@@ -42,7 +51,61 @@ import {
 
 const MODULES_PATH = "curriculum/modules.json";
 const CONCEPTS_DIR = "concepts";
+const PROBLEM_BANK_PATH = "data/problem-bank.json";
 export const MAX_REGEN = 3;
+
+export interface SkeletonBudgetViolation {
+  conceptId: string;
+  reason: string;
+}
+
+/**
+ * 凍結 Skeleton 的 `exit_criteria` 預算前置檢查（§10.2 / §14.5）。
+ *
+ * ## 為何 MUST 在批次開始前檢查，而非放進 per-article Gate
+ *
+ * `exit_criteria` 由 `assembleArticleMarkdown` **從 Skeleton 原樣複製**進 Article frontmatter，
+ * DraftArticleResponse 型別根本不含此欄位——**LLM 對它零影響力**（FR-024）。若把它塞進
+ * `runPerArticleGate`，每篇會白白重生 3 次卻永遠修不好，最後標成 needsHumanReview，與
+ * `checkToolchain` 擋的「Python 佔位程式」屬同一類「結構性問題偽裝成內容有錯」。
+ *
+ * 正確處置是**在任何 LLM 呼叫之前**一次驗完全部 Skeleton 並 fail loud：這類違規只能靠修 Skeleton
+ * 或調整預算判準解決（實測 2026-07-31：116 條超過舊上限 60，導致批次末 Gate 261 筆違規中有 219 筆
+ * 出自此處，而 165 篇 Article 全部無辜）。
+ */
+export function checkFrozenSkeletonBudgets(
+  concepts: Iterable<Pick<ConceptNode, "id" | "exitCriteria">>,
+): SkeletonBudgetViolation[] {
+  const violations: SkeletonBudgetViolation[] = [];
+  for (const node of concepts) {
+    const items = node.exitCriteria;
+    if (items.length > EXIT_CRITERIA_COUNT_MAX) {
+      violations.push({
+        conceptId: node.id,
+        reason: `exit_criteria 共 ${items.length} 條，超過上限 ${EXIT_CRITERIA_COUNT_MAX} 條`,
+      });
+    }
+    items.forEach((text, i) => {
+      const len = [...text].length;
+      if (len > EXIT_CRITERIA_ITEM_MAX) {
+        violations.push({
+          conceptId: node.id,
+          reason: `exit_criteria[${i}] ${len} 字元，超過單條上限 ${EXIT_CRITERIA_ITEM_MAX}`,
+        });
+      }
+    });
+    // 總長 MUST 以 render 後的形態量測（含 checklist 前綴與換行），與 checkBudget 的量測對象一致。
+    const rendered = items.map((t) => `${EXIT_CRITERIA_PREFIX}${t}`).join("\n");
+    const total = [...rendered].length;
+    if (total > EXIT_CRITERIA_TOTAL_MAX) {
+      violations.push({
+        conceptId: node.id,
+        reason: `exit_criteria 合計 ${total} 字元，超過上限 ${EXIT_CRITERIA_TOTAL_MAX}`,
+      });
+    }
+  }
+  return violations;
+}
 
 export interface SkeletonFrontmatterForArticle {
   id: string;
@@ -249,6 +312,7 @@ interface GateFailure {
 async function runPerArticleGate(
   markdown: string,
   node: ConceptNode,
+  bank: ProblemBank,
 ): Promise<GateFailure | undefined> {
   let article;
   try {
@@ -307,6 +371,28 @@ async function runPerArticleGate(
     }
   }
 
+  // 逐題預算（§14.5，每題 ≤350）。與 exit_criteria 不同，`whyThisPattern` / `hint` **由 LLM 產生**，
+  // 重生確實修得好，故屬 per-article Gate。量測對象 MUST 是 renderer 的 renderProblemEntry 輸出——
+  // 題目 title / url / difficulty 由程式從 Problem Bank 帶入（憲章 XV），只量 LLM 那段會低估實際長度。
+  // 實測教訓：problem[0](449/350) 一路放行到批次末的全課表 Gate 才爆出。
+  for (const meta of getProblemsForConcept(node.id, node.leetcode, bank)) {
+    const entry = article.challenge.get(meta.id)!;
+    const rendered = renderProblemEntry({
+      id: meta.id,
+      title: meta.title,
+      url: meta.url,
+      difficulty: meta.difficulty,
+      whyThisPattern: entry.whyThisPattern,
+      ...(entry.hint !== undefined ? { hint: entry.hint } : {}),
+    });
+    const len = [...rendered].length;
+    if (len > PROBLEM_ENTRY_MAX) {
+      return {
+        reason: `字元預算超標（§14.5）：題號 ${meta.id} 的條目 ${len}/${PROBLEM_ENTRY_MAX} 字元——請精簡 whyThisPattern／hint，MUST NOT 期待後續被截斷`,
+      };
+    }
+  }
+
   return undefined;
 }
 
@@ -362,6 +448,7 @@ export async function generateOneConcept(
   llmClient: LlmClient,
   node: ConceptNode,
   authorHints: string,
+  bank: ProblemBank,
 ): Promise<{ markdown?: string; failure?: GateFailure; attempts: number }> {
   const skeleton = toSkeletonFrontmatter(node);
   let lastFailure: GateFailure | undefined;
@@ -391,7 +478,7 @@ export async function generateOneConcept(
       continue;
     }
 
-    const gateFailure = await runPerArticleGate(markdown, node);
+    const gateFailure = await runPerArticleGate(markdown, node, bank);
     if (gateFailure) {
       lastFailure = gateFailure;
       continue;
@@ -440,6 +527,29 @@ async function main(): Promise<void> {
     return;
   }
 
+  const { graph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
+
+  // Skeleton 預算前置檢查，同樣 MUST 在任何 LLM 呼叫之前（理由見 checkFrozenSkeletonBudgets）：
+  // exit_criteria 由 Skeleton 原樣帶入，重生無法修正，放進 per-article Gate 只會白燒重生額度。
+  const skeletonViolations = checkFrozenSkeletonBudgets(graph.concepts.values());
+  if (skeletonViolations.length > 0) {
+    console.error(
+      `✗ 凍結 Skeleton 的 exit_criteria 預算檢查未通過（${skeletonViolations.length} 筆），未呼叫任何 LLM——` +
+        `此類違規 MUST 由修正 Skeleton 或調整 §14.5 判準解決，重生 Article 無效：`,
+    );
+    for (const v of skeletonViolations) console.error(`  [${v.conceptId}] ${v.reason}`);
+    process.exit(1);
+    return;
+  }
+
+  const { bank, loadViolations: bankViolations } = loadProblemBank(PROBLEM_BANK_PATH);
+  const bankErrors = bankViolations.filter((v) => v.severity === "error");
+  if (bankErrors.length > 0) {
+    console.error(`✗ 題庫載入失敗，未呼叫任何 LLM：${bankErrors.map((v) => v.message).join("; ")}`);
+    process.exit(1);
+    return;
+  }
+
   let llmClient: LlmClient;
   try {
     llmClient = createLlmClient(process.env);
@@ -448,8 +558,6 @@ async function main(): Promise<void> {
     process.exit(1);
     return;
   }
-
-  const { graph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
 
   // manifest 遺失（.cache/ 為 gitignored 快取，換機器/清快取後即不存在）**或損毀**（寫入中途被
   // 打斷留下半截 JSON）：兩者都由掃描現存 concepts/** + articles/** 重建，避免把已凍結產物誤判為
@@ -478,7 +586,7 @@ async function main(): Promise<void> {
     }
 
     const authorHints = extractAuthorHints(skeletonRaw);
-    const { markdown, failure, attempts } = await generateOneConcept(llmClient, node, authorHints);
+    const { markdown, failure, attempts } = await generateOneConcept(llmClient, node, authorHints, bank);
 
     if (markdown) {
       mkdirSync(dirname(node.articlePath), { recursive: true });

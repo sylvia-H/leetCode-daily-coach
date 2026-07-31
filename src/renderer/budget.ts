@@ -87,6 +87,19 @@ export const ARTICLE_BUDGET_LIMITS = {
  */
 export const EXIT_CRITERIA_ITEM_MAX = 110;
 
+/** `exitCriteria` 全部條目合計上限與條數上限（§14.5）。與單條上限同為具名常數，供產線前置檢查沿用。 */
+export const EXIT_CRITERIA_TOTAL_MAX = 400;
+export const EXIT_CRITERIA_COUNT_MAX = 6;
+
+/**
+ * 單一題目條目（render 後的 `• [id. title](url)\n  難度 · why · Hint: …`）上限（§14.5）。
+ *
+ * 具名匯出是為了讓 Stage 2 的 per-article Gate 能沿用同一數字：`whyThisPattern` / `hint` 由 LLM 產生、
+ * 重生可修，但題目的 title / url / difficulty 由程式帶入，故長度 MUST 以 render 後的完整字串量測
+ * （實測 problem[0] 449/350 只在批次末才爆出，per-article Gate 當時完全沒驗這項）。
+ */
+export const PROBLEM_ENTRY_MAX = 350;
+
 // 獨立純函式（憲章 IX）：對單一 RenderedMessage 同時檢查逐區塊預算、結構性上限與總量，
 // 供 runtime 與 scripts/validate.ts 共用同一顆實作。budgetSlots 由 render() 提供，
 // 值 MUST 是放進 embeds 的同一份字串實例，故此處不再反解析 embeds（research R10）。
@@ -121,9 +134,9 @@ export function checkBudget(message: RenderedMessage): BudgetReport {
     items.push(makeItem("pathFooter", codePointLength(budgetSlots.pathFooter), 200));
   }
   if (budgetSlots.exitCriteria !== undefined) {
-    items.push(makeItem("exitCriteria", codePointLength(budgetSlots.exitCriteria), 400));
+    items.push(makeItem("exitCriteria", codePointLength(budgetSlots.exitCriteria), EXIT_CRITERIA_TOTAL_MAX));
     const lines = budgetSlots.exitCriteria.split("\n").filter((line) => line.length > 0);
-    items.push(makeItem("exitCriteria.count", lines.length, 6));
+    items.push(makeItem("exitCriteria.count", lines.length, EXIT_CRITERIA_COUNT_MAX));
     lines.forEach((line, i) => {
       const text = line.startsWith(EXIT_CRITERIA_PREFIX) ? line.slice(EXIT_CRITERIA_PREFIX.length) : line;
       items.push(makeItem(`exitCriteria[${i}]`, codePointLength(text), EXIT_CRITERIA_ITEM_MAX));
@@ -131,7 +144,7 @@ export function checkBudget(message: RenderedMessage): BudgetReport {
   }
   if (budgetSlots.problems !== undefined) {
     budgetSlots.problems.forEach((entry, i) => {
-      items.push(makeItem(`problem[${i}]`, codePointLength(entry), 350));
+      items.push(makeItem(`problem[${i}]`, codePointLength(entry), PROBLEM_ENTRY_MAX));
     });
     // 兜底檢查（唯一套用點在生成端 generate-schedule.ts，docs/spec.md §13.4）：
     // 命中代表課表缺陷，MUST NOT 由 Compiler / Renderer 截斷（data-model.md §5）。

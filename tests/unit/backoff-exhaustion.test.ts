@@ -3,6 +3,13 @@ import { MAX_REGEN, generateOneConcept } from "../../scripts/generate-content.js
 import { createLlmClient, type GenAiLike } from "../../scripts/lib/llm-client.js";
 import { Throttle } from "../../scripts/lib/throttle.js";
 import type { ConceptNode } from "../../src/types/curriculum.js";
+import type { ProblemBank } from "../../src/types/problem.js";
+
+// 題號 1 的最小題庫替身：per-article Gate 的逐題預算檢查需由 Problem Bank 取得 title/url/difficulty。
+const fakeBank: ProblemBank = {
+  byId: new Map([[1, { id: 1, slug: "two-sum", title: "Two Sum", url: "https://leetcode.com/problems/two-sum/", difficulty: "Easy" as const, patterns: [] }]]),
+  byPattern: new Map(),
+};
 
 function fakeConceptNode(overrides: Partial<ConceptNode> = {}): ConceptNode {
   return {
@@ -54,7 +61,7 @@ describe("backoff-exhaustion（FR-018：429 退避重試、非暫時性 4xx 立�
     });
     const llmClient = createLlmClient({ GEMINI_API_KEY: "key" }, { genAiFactory, throttle });
 
-    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints");
+    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank);
 
     expect(result.markdown).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);
@@ -78,7 +85,7 @@ describe("backoff-exhaustion（FR-018：429 退避重試、非暫時性 4xx 立�
       { genAiFactory, throttle: new Throttle({ rpmLimit: Infinity, maxRetries: 5 }) },
     );
 
-    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints");
+    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank);
 
     expect(result.markdown).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);
