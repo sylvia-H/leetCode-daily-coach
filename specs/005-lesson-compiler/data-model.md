@@ -204,10 +204,10 @@ interface RenderedMessage {
 | slot / 項目 | 上限 | 備註 |
 | --- | --- | --- |
 | `digest` | 900 | 主 Embed description |
-| `tsTip` / `pyTip` | 各 450 | 含程式碼區塊 |
+| `tsTip` / `pyTip` | 各 800 | 含程式碼區塊與其中的型別定義（F7 定案 2026-07-31 由 450 → 650 → 800，見 `docs/spec.md` §14.5） |
 | `problems[i]` | 各 350 | 逐題（連結 + 難度 + why + Hint） |
 | `problems.count` | 3 | 題數上限。**兜底檢查**——上限的唯一套用點在 F4 生成端（`docs/spec.md` §13.4）；此處命中代表課表缺陷，處置是修生成器重跑，MUST NOT 由 Compiler / Renderer 截斷 |
-| `exitCriteria` | 400 | ≤6 條、每條 ≤60（條數與單條長度亦檢查） |
+| `exitCriteria` | 400 | ≤6 條、每條 ≤110（條數與單條長度亦檢查；單條上限 F7 定案 2026-07-31 由 60 放寬為 110，實作常數 `EXIT_CRITERIA_ITEM_MAX`） |
 | `takeaway` | 120 | |
 | `pathFooter` | 200 | |
 | `reflectionQuestion` | 300 | 【新 2026-07-24】F8 素材；預算 MUST 在素材之前就位（`docs/spec.md` §14.5） |

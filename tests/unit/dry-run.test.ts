@@ -3,6 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { run } from "../../src/main.js";
+import { loadCompilerDeps } from "../../src/compiler/lesson.js";
+import { pastEndSessionIndex } from "../helpers/real-schedule.js";
 
 describe("DRY_RUN 模式", () => {
   let dir: string;
@@ -72,9 +74,13 @@ describe("DRY_RUN 模式", () => {
   // compile 組裝失敗，而是完課終態——DRY_RUN 下只輸出「would send completion notice」日誌，
   // 不發送、不寫狀態，且 MUST NOT 計入非零 exit code（courses complete ≠ 故障）。
   it("課表走完（sessionIndex 超出範圍）→ DRY_RUN 下只輸出完課預覽日誌，不推播、不視為失敗", async () => {
+    // sessionIndex MUST 由真實課表長度導出，MUST NOT 硬編——原本寫死的 99 在 F1 / F5 種子課表確實
+    // 超出範圍，但 F7 正式課表已有 243 個 Session（長度是導出值，spec §13.5），99 反而落在範圍內，
+    // 使本測試不再測到「完課終態」而是普通推播。
+    const beyondEnd = pastEndSessionIndex(loadCompilerDeps(), "foundation");
     const raw = JSON.stringify({
       tracks: {
-        foundation: { currentSessionIndex: 99, lastPushAt: null, completedConceptIds: [], history: [] },
+        foundation: { currentSessionIndex: beyondEnd, lastPushAt: null, completedConceptIds: [], history: [] },
       },
     });
     writeFileSync(stateFile, raw);

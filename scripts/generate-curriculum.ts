@@ -1,0 +1,755 @@
+// F7 Stage 1 入口（contracts/stage1-curriculum.md）：LLM 批次起草 Skeleton → populate-problem-bank
+// → 結構 Gate（重用 F2，全量模式）→ 產 curriculum/outline.md。process.exit / 檔案寫入 / LLM 呼叫
+// 只在本檔與 scripts/lib/；純函式（parseDraftResponse/conceptToMarkdown）供單測，其餘為 I/O 邊界。
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
+import matter from "gray-matter";
+import { loadCurriculum, stripLeadingComment, validateCurriculum } from "../src/compiler/curriculum.js";
+import { loadProblemBank, makeProblemExists } from "../src/compiler/problem.js";
+import { KEBAB_SLUG } from "../src/compiler/schema.js";
+import type { Ordinal, Violation } from "../src/types/curriculum.js";
+import type { ProblemBankFile } from "../src/types/problem.js";
+import { createLlmClient, type LlmClient } from "./lib/llm-client.js";
+import { serializeOutline } from "./lib/outline.js";
+import {
+  buildStage1Prompt,
+  buildStage1ResponseSchema,
+  type DraftConcept,
+  type DraftConceptResponse,
+} from "./lib/prompts/stage1-curriculum.js";
+import {
+  collectCandidates,
+  fetchLeetCodeMetadata,
+  mergeIntoBank,
+  resolveMetadata,
+  type CandidateSource,
+  type LeetcodeIndex,
+} from "./populate-problem-bank.js";
+
+const MODULES_PATH = "curriculum/modules.json";
+const CONCEPTS_DIR = "concepts";
+const OUTLINE_PATH = "curriculum/outline.md";
+const BANK_PATH = "data/problem-bank.json";
+const INDEX_PATH = "data/leetcode-index.json";
+// curriculum/modules.json 目前每個 Module 恰為 1 個 Topic，故 Topic 顆粒度（5–12）與 Module
+// 顆粒度（10–30，全量模式強制）在本 repo 現況下是同一個數字：下限取兩者交集 10，才不會讓 LLM
+// 合法地依 Topic 下限（5）起草卻落入 Module 下限（10）違規，白白浪費一輪額度（見 src/compiler/curriculum.ts）。
+const TOPIC_MIN_CONCEPTS = 10;
+const TOPIC_MAX_CONCEPTS = 12;
+// 每個 Topic 起草的重試上限（與 Stage 2 generate-content.ts 的 MAX_REGEN 同精神）。重試涵蓋兩類失敗：
+// (a) 隨機雜訊——JSON 語法錯誤、漏欄位，重打一次往往就過（導入結構化輸出後已大幅減少，見 llm-client）；
+// (b) 系統性偏差——篇數不足（stage1-granularity）、slug 格式錯誤（stage1-slug-format），這類重打
+//     同一份 prompt 不會變好，故 draftTopicWithRetry MUST 把上次的失敗原因回饋進下一次 prompt。
+// 兩者都在同一 Topic 內解決，不需要動用整批重跑（整批重跑會刷新全部 slug，反而引發跨 Topic 的 dangling-ref）。
+const MAX_DRAFT_ATTEMPTS = 3;
+
+interface ModulesFile {
+  modules: { id: string; title: string; topics: { id: string; title: string }[] }[];
+}
+
+/** 剝除 LLM 回應可能夾帶的 ``` fence，解析為 DraftConceptResponse；形狀不符即具名 throw。 */
+export function parseDraftResponse(raw: string): DraftConceptResponse {
+  const cleaned = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/, "")
+    .trim();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (err) {
+    throw new Error(`stage1-parse-error：LLM 回應非合法 JSON：${(err as Error).message}`);
+  }
+  const obj = parsed as { concepts?: unknown };
+  if (!Array.isArray(obj.concepts)) {
+    throw new Error("stage1-parse-error：LLM 回應缺少 concepts 陣列");
+  }
+  return { concepts: obj.concepts as DraftConcept[] };
+}
+
+function requireString(value: unknown, topicId: string, index: number, field: string): string {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`stage1-parse-error：Topic「${topicId}」第 ${index + 1} 個 concept 缺少必要欄位 ${field}`);
+  }
+  return value;
+}
+
+/**
+ * 驗證 slug 類欄位為 kebab-case（重用 F2 的 `KEBAB_SLUG`，憲章 IX：不另建平行規則）。
+ *
+ * 為何 MUST 在起草階段就擋：實測 LLM 產出過 `stack-core-concept-and- LIFO`（夾帶空格與大寫），
+ * 而 `requireString` 只驗「非空字串」，於是這顆壞 slug 一路寫進磁碟成為檔名，先被 F2 schema Gate 以
+ * `schema-id-format` 打回，接著**所有引用它的 Concept 全變成 dangling-ref**——單一顆壞 slug 一次引爆
+ * 13 筆違規，且要等整批跑完才看得到。在此 throw 可讓 draftTopicWithRetry 對同一 Topic 立刻重試。
+ */
+function requireKebabSlug(value: string, topicId: string, index: number, field: string): string {
+  if (!KEBAB_SLUG.test(value)) {
+    throw new Error(
+      `stage1-slug-format：Topic「${topicId}」第 ${index + 1} 個 concept 的 ${field} 不是合法 kebab-case（僅小寫英數與單一連字號）：${JSON.stringify(value)}`,
+    );
+  }
+  return value;
+}
+
+function requireEnum<T extends string>(value: unknown, topicId: string, index: number, field: string, allowed: readonly T[]): T {
+  if (typeof value !== "string" || !(allowed as readonly string[]).includes(value)) {
+    throw new Error(
+      `stage1-parse-error：Topic「${topicId}」第 ${index + 1} 個 concept 的 ${field} 不是合法值（${allowed.join("/")}）：${JSON.stringify(value)}`,
+    );
+  }
+  return value as T;
+}
+
+function requirePositiveNumber(value: unknown, topicId: string, index: number, field: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    throw new Error(`stage1-parse-error：Topic「${topicId}」第 ${index + 1} 個 concept 的 ${field} 不是正數：${JSON.stringify(value)}`);
+  }
+  return value;
+}
+
+// LLM 偶爾把「只有一個元素」的陣列欄位（如 next）直接回傳成單一純量（"foo" 而非 ["foo"]），
+// 即使 prompt 已明講 MUST 為陣列——這裡多容忍一層，把純量包成單元素陣列，而非直接視為空陣列
+// 悄悄丟棄這筆依賴（實測踩過：漏收 next 會讓 DAG 少一條邊卻不易察覺，直到很後面才報 orphan）。
+function asStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === "string");
+  if (typeof value === "string" && value.trim() !== "") return [value];
+  return [];
+}
+
+function asNumberArray(value: unknown): number[] {
+  if (Array.isArray(value)) return value.filter((v): v is number => typeof v === "number");
+  if (typeof value === "number") return [value];
+  return [];
+}
+
+function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+/**
+ * 把 LLM 回應的單一 concept 正規化為 DraftConcept：必要純量欄位（slug/title/difficulty/
+ * estimated_minutes/pattern_label/complexity_label）缺漏或型別不符即具名 throw（fail loud，
+ * 觸發該 Topic 重新起草，不進一步往下污染檔案）；陣列欄位（prerequisite/next/learning_goal/
+ * exit_criteria/leetcode_candidates/tags/author_hints.leetcode_hints）與 author_hints 各文字
+ * 欄位在缺漏/型別不符時安全預設為空陣列/空字串——這些欄位語意上可合法為空（例如 Topic 首個
+ * Concept 沒有 prerequisite），真的留白會被下游 F2 zod Gate 以 `schema-missing-field` 報出，
+ * 不需要在此提前擋下；此處只需保證 `conceptToMarkdown`／`matter.stringify` 不會因為收到
+ * `undefined` 而以難以理解的 YAML dump 例外崩潰（研究 R-fix：實測 Gemini 偶爾漏欄位）。
+ */
+export function normalizeDraftConcept(raw: unknown, topicId: string, index: number): DraftConcept {
+  const obj = (raw ?? {}) as Partial<DraftConcept> & Record<string, unknown>;
+  const hintsRaw = (obj.author_hints ?? {}) as Partial<DraftConcept["author_hints"]> & Record<string, unknown>;
+
+  // LLM 有時仍會把識別欄位命名為 "id"（貼近最終 frontmatter 欄位名）而非 prompt 要求的
+  // "slug"——與其每次都靠加強措辭賭它聽話，不如在解析邊界多接受這個別名，兩者對本檔而言
+  // 語意完全等價（都是這個 concept 的 kebab-case 識別碼）。
+  const slugRaw = typeof obj.slug === "string" ? obj.slug : obj.id;
+
+  try {
+    return {
+      slug: requireKebabSlug(requireString(slugRaw, topicId, index, "slug"), topicId, index, "slug"),
+      title: requireString(obj.title, topicId, index, "title"),
+      difficulty: requireEnum(obj.difficulty, topicId, index, "difficulty", ["easy", "medium"] as const),
+      estimated_minutes: requirePositiveNumber(obj.estimated_minutes, topicId, index, "estimated_minutes"),
+      pattern_label: requireString(obj.pattern_label, topicId, index, "pattern_label"),
+      complexity_label: requireString(obj.complexity_label, topicId, index, "complexity_label"),
+      // 邊的每個元素同樣 MUST 為合法 slug：壞元素會原樣寫進 frontmatter，先被 F2 zod 以 schema-type
+      // 打回，再讓對向的 Concept 變成 dangling-ref（與壞 slug 同一類的連鎖，見 requireKebabSlug）。
+      // 空陣列仍為合法（Topic 首篇沒有 prerequisite），此處只驗「有值時的格式」。
+      prerequisite: asStringArray(obj.prerequisite).map((id) => requireKebabSlug(id, topicId, index, "prerequisite")),
+      next: asStringArray(obj.next).map((id) => requireKebabSlug(id, topicId, index, "next")),
+      learning_goal: asStringArray(obj.learning_goal),
+      exit_criteria: asStringArray(obj.exit_criteria),
+      leetcode_candidates: asNumberArray(obj.leetcode_candidates),
+      tags: asStringArray(obj.tags),
+      author_hints: {
+        core_idea: asString(hintsRaw.core_idea),
+        pattern_recognition: asString(hintsRaw.pattern_recognition),
+        thinking: asString(hintsRaw.thinking),
+        common_mistakes: asString(hintsRaw.common_mistakes),
+        ts_notes: asString(hintsRaw.ts_notes),
+        py_notes: asString(hintsRaw.py_notes),
+        leetcode_hints: Array.isArray(hintsRaw.leetcode_hints)
+          ? hintsRaw.leetcode_hints.filter(
+              (h): h is DraftConcept["author_hints"]["leetcode_hints"][number] =>
+                typeof (h as { id?: unknown } | null)?.id === "number" &&
+                typeof (h as { whyThisPattern?: unknown } | null)?.whyThisPattern === "string",
+            )
+          : [],
+      },
+    };
+  } catch (err) {
+    // 診斷輔助（不改變錯誤語意，只附加原始物件實際長什麼樣）：LLM 若用了不同的欄位命名
+    // （例如把 slug 取名 id），光看「缺少欄位 X」猜不出實際命名為何，須看到原始 keys 才好對症下藥。
+    const preview = JSON.stringify(obj).slice(0, 500);
+    throw new Error(`${(err as Error).message}\n  收到的原始物件（前 500 字）：${preview}`);
+  }
+}
+
+/** 正規化整批回應（保留原陣列順序，逐一 throw 具名錯誤而非攔截後靜默丟棄壞資料）。 */
+export function normalizeDraftConcepts(concepts: unknown[], topicId: string): DraftConcept[] {
+  return concepts.map((c, i) => normalizeDraftConcept(c, topicId, i));
+}
+
+/** DraftConcept → Skeleton markdown（frontmatter + Author Hints，§10.1/§10.4）。純函式，可單測。 */
+export function conceptToMarkdown(draft: DraftConcept, moduleId: string, topicId: string): string {
+  const frontmatter = {
+    id: draft.slug,
+    title: draft.title,
+    module: moduleId,
+    topic: topicId,
+    difficulty: draft.difficulty,
+    estimated_minutes: draft.estimated_minutes,
+    pattern_label: draft.pattern_label,
+    complexity_label: draft.complexity_label,
+    prerequisite: draft.prerequisite,
+    next: draft.next,
+    learning_goal: draft.learning_goal,
+    exit_criteria: draft.exit_criteria,
+    leetcode: draft.leetcode_candidates,
+    tags: draft.tags,
+  };
+  const h = draft.author_hints;
+  const body = [
+    "## Author Hints",
+    "",
+    `- 核心觀念：${h.core_idea}`,
+    `- Pattern 辨識線索：${h.pattern_recognition}`,
+    `- Thinking：${h.thinking}`,
+    `- Common Mistakes：${h.common_mistakes}`,
+    `- TypeScript 重點：${h.ts_notes}`,
+    `- Python 重點：${h.py_notes}`,
+    ...h.leetcode_hints.map((hint) => `- 題號 ${hint.id} 為何適合此 Pattern：${hint.whyThisPattern}`),
+    "",
+  ].join("\n");
+  return matter.stringify(`\n${body}`, frontmatter);
+}
+
+function listExistingConceptFiles(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".md"))
+    .sort();
+}
+
+/**
+ * 讀出某 Topic 目錄下既有 Skeleton 的 concept id（frontmatter 的 `id`；讀不動的殘檔退回以
+ * 檔名 `NNN-slug.md` 推得的 slug）。只讀不刪，供「起草前先把它們排除在 prior 之外、起草成功後
+ * 才真的刪除」兩個時機共用同一份清單。
+ */
+function readTopicConceptIds(dir: string): string[] {
+  return listExistingConceptFiles(dir).map((fname) => {
+    try {
+      const { data } = matter(stripLeadingComment(readFileSync(join(dir, fname), "utf-8")));
+      if (typeof data.id === "string") return data.id;
+    } catch {
+      // 忽略：frontmatter 讀不動的殘檔照樣要納入清單（等一下要刪掉），id 退回檔名推得。
+    }
+    return fname.replace(/^\d+-/, "").replace(/\.md$/, "");
+  });
+}
+
+/**
+ * 重新起草某 Topic 前清空該 Topic 目錄下的既有 Skeleton（replace 語意，不是 append）。
+ *
+ * 為何 MUST 清空：起草一律從 001 重新編號，若不先刪除，
+ * (a) 新草稿篇數較少時，舊的高編號檔會殘留在 graph 裡，帶著已不存在的 id 造成 dangling-ref；
+ * (b) 舊檔 slug 與新檔不同時會變成沒有任何人指向的孤兒 Concept；
+ * (c) `--only` 若改以 `existingFiles.length + 1` 續編號，同一 Topic 的 Concept 數量會默默翻倍。
+ * 三者都要整輪跑完才在結構 Gate 爆出來，白費一輪 LLM 額度。
+ */
+function clearTopicConcepts(dir: string): void {
+  for (const fname of listExistingConceptFiles(dir)) rmSync(join(dir, fname));
+}
+
+function readJson<T>(path: string, fallback: T): T {
+  return existsSync(path) ? (JSON.parse(readFileSync(path, "utf-8")) as T) : fallback;
+}
+
+function writeJson(path: string, value: unknown): void {
+  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf-8");
+}
+
+export interface KnownConceptPosition {
+  /** 宣告序中的 Module 陣列索引。 */
+  moduleIndex: number;
+  /** 宣告序中、該 Module 內的 Topic 陣列索引。 */
+  topicIndex: number;
+}
+
+/**
+ * 從「全部已知 Concept 的宣告序位置」篩出可安全作為目前 Topic 之 prerequisite 的候選 id：
+ * 只留下宣告序嚴格早於、或與目前 Topic 同一位置（同 Module 同 Topic，如既存 stub）者，
+ * 排除宣告序更晚的 Module/Topic（FR-014：prerequisite MUST NOT 指向宣告序更晚的 Concept）。
+ *
+ * 若不篩選、直接把「整個 concepts/** 現有的全部 id」都告訴 LLM 當作可用 prerequisite，
+ * 會誘使 LLM 把宣告序更晚的 Concept（例如後面 Module 的 Concept）當成前置依賴，
+ * 產出 forward-dependency 違規——實測 --only programming-mindset 已踩到這個情境
+ * （programming-mindset 的收尾 Concept 把 array Module 的 Concept 列為 prerequisite）。
+ */
+export function filterPriorConceptIds(
+  known: ReadonlyMap<string, KnownConceptPosition>,
+  moduleIndex: number,
+  topicIndex: number,
+): string[] {
+  const result: string[] = [];
+  for (const [id, pos] of known) {
+    if (pos.moduleIndex < moduleIndex || (pos.moduleIndex === moduleIndex && pos.topicIndex <= topicIndex)) {
+      result.push(id);
+    }
+  }
+  return result;
+}
+
+/**
+ * 對既存檔案的 `next` 或 `prerequisite` 欄位新增缺漏的 id（若已存在則不重複新增），
+ * 不觸碰其餘欄位與 Author Hints 正文（I/O 邊界，供 repairReciprocalEdges 呼叫）。
+ *
+ * MUST 先套用 `stripLeadingComment`（與 F2 `loadCurriculum` 同一套）才能交給 gray-matter：
+ * F2 stub 種子檔案帶有 frontmatter **之前**的 `<!-- ... -->` 註解，若直接對 raw 呼叫
+ * `matter()`，gray-matter 找不到落在字串開頭的 `---`，會把整份 frontmatter 誤判為純文字
+ * content，寫回時就會在檔案最上面生成第二層假 frontmatter、把原本的 frontmatter 整包
+ * 降級為內文——實測踩過，把 001/002 兩篇 F2 stub 種子的 frontmatter 整個弄壞。
+ */
+export function patchConceptEdgeField(filePath: string, field: "next" | "prerequisite", idsToAdd: readonly string[]): void {
+  if (idsToAdd.length === 0) return;
+  const raw = readFileSync(filePath, "utf-8");
+  const { data, content } = matter(stripLeadingComment(raw));
+  const current = Array.isArray(data[field])
+    ? (data[field] as unknown[]).filter((v): v is string => typeof v === "string")
+    : [];
+  const missing = idsToAdd.filter((id) => !current.includes(id));
+  if (missing.length === 0) return;
+  writeFileSync(filePath, matter.stringify(content, { ...data, [field]: [...current, ...missing] }), "utf-8");
+}
+
+/**
+ * 從某 Concept 檔的 `next` / `prerequisite` 移除指定 id（與 patchConceptEdgeField 相反的操作）。
+ * 同樣 MUST 先 `stripLeadingComment` 才交給 gray-matter（理由見 patchConceptEdgeField）。
+ */
+export function removeConceptEdgeIds(
+  filePath: string,
+  field: "next" | "prerequisite",
+  idsToRemove: ReadonlySet<string>,
+): void {
+  const raw = readFileSync(filePath, "utf-8");
+  const { data, content } = matter(stripLeadingComment(raw));
+  const current = Array.isArray(data[field])
+    ? (data[field] as unknown[]).filter((v): v is string => typeof v === "string")
+    : [];
+  const kept = current.filter((id) => !idsToRemove.has(id));
+  if (kept.length === current.length) return;
+  writeFileSync(filePath, matter.stringify(content, { ...data, [field]: kept }), "utf-8");
+}
+
+/**
+ * 清除**未被重新起草的** Concept 中，指向已不存在 Concept 的殘留邊。
+ *
+ * 為何必要（實測 --only two-pointer 踩到）：重新起草一個 Topic 是 **replace** 語意，舊 Concept 連同
+ * 其 id 一起消失。但**其他 Topic 檔案裡指向那些舊 id 的邊沒有任何人清理**——尤其 `repairReciprocalEdges`
+ * 當初還會把它們反向補寫進別的 Topic 檔案（例：`array-linear-scan.next` 被補上兩個 two-pointer 的 id）。
+ * 少了這一步，任何 `--only` 重跑都必然產生 dangling-ref，使 `--only` 實質不可用、只能整批 --force
+ * 重跑（而整批重跑會刷新全部 slug，引發更大範圍的同類問題）。
+ *
+ * ## 判準是「這條邊在誰的檔案裡」，不是「這輪刪了哪些 id」
+ *
+ * 先前版本只清除**本輪**刪除的 id，實測無效：殘留邊往往源自**更早某一輪**的重新起草（該輪根本還沒有
+ * 本函式），本輪讀到的 stale id 與殘留邊指向的 id 完全對不上。正確且穩健的區分是依「邊的所在」：
+ *
+ * - **本輪重新起草的 Topic**（`redraftedTopicIds`）：其 dangling 邊可能是 LLM 幻想出來的 id，屬於
+ *   真實錯誤，**MUST NOT 清除**——留給結構 Gate 攔下並觸發重新起草（與 repairReciprocalEdges
+ *   「不代為修復真實錯誤」同原則）。
+ * - **未被觸碰的 Topic**：其內容並非本輪產生，dangling 只可能是「它指向的 Concept 被某一輪重新起草
+ *   刪掉了」的簿記殘渣，清除是唯一的修復方式。
+ *
+ * 清除若導致某個 Concept 變成孤兒或違反顆粒度，結構 Gate 仍會照常報出——失敗依舊大聲，不會被靜默吞掉。
+ */
+export function pruneStaleEdges(
+  modulesPath: string,
+  conceptsDir: string,
+  redraftedTopicIds: ReadonlySet<string>,
+): void {
+  const { graph } = loadCurriculum({ modulesPath, conceptsDir });
+  const exists = (id: string): boolean => graph.concepts.has(id);
+
+  for (const c of graph.concepts.values()) {
+    if (redraftedTopicIds.has(c.topic)) continue; // 本輪產生的內容：dangling 是真實錯誤，留給 Gate
+    const gone = new Set([...c.prerequisite, ...c.next].filter((id) => !exists(id)));
+    if (gone.size === 0) continue;
+    const filePath = join(conceptsDir, c.dirName, basename(c.skeletonPath));
+    if (c.prerequisite.some((id) => gone.has(id))) removeConceptEdgeIds(filePath, "prerequisite", gone);
+    if (c.next.some((id) => gone.has(id))) removeConceptEdgeIds(filePath, "next", gone);
+  }
+}
+
+/** 純函式版本的 Ordinal 嚴格早於比較（與 F2 curriculum.ts 的 cmpOrdinal 同語意，只需布林結果）。 */
+export function ordinalIsBefore(a: Ordinal, b: Ordinal): boolean {
+  if (a.moduleIndex !== b.moduleIndex) return a.moduleIndex < b.moduleIndex;
+  if (a.topicIndex !== b.topicIndex) return a.topicIndex < b.topicIndex;
+  if (a.localOrder !== b.localOrder) return a.localOrder < b.localOrder;
+  return a.id < b.id;
+}
+
+/**
+ * 雙向邊補齊（reciprocal edge repair）：對「已寫到磁碟的全部 Concept」（既存＋本次全部新起草）
+ * 做一次全面掃描，把單向邊補成雙向一致——某 Concept 的 prerequisite/next 正確指向另一個
+ * Concept，但對方檔案未反映回來的那一側。
+ *
+ * 實測（全量跑 15 個 Topic）發現：LLM **連自己同一份回應內**的 Concept 之間都無法穩定維持
+ * 雙向一致（不只是跨 Topic 引用既存 Concept 才會漏）——故本函式**不分是否同批次**，統一對
+ * 全部 Concept 掃描修補，不再像先前只處理「跨批次引用既存 Concept」的子集合。
+ *
+ * 只在 Ordinal 順序合法（prerequisite 的目標必須嚴格早於自己；next 的目標必須嚴格晚於自己）
+ * 時才補邊：這是同一條邊的另一端，資訊已由來源完全決定、無歧義；若順序不合法（forward-dependency
+ * 等真實錯誤），不代為修復，留給結構 Gate 攔下、要求重新起草——不同於 Gate 本身刻意不自動
+ * 補齊雙向一致（見 F2 curriculum.ts 的 FR-017 註解），此函式僅用於 Stage 1 產線內部。
+ */
+export function repairReciprocalEdges(modulesPath: string, conceptsDir: string): void {
+  const { graph } = loadCurriculum({ modulesPath, conceptsDir });
+  const { concepts, ordinalOf } = graph;
+  // F2 loadCurriculum 的 skeletonPath 寫死 `concepts/${dirName}/${fname}` 前綴（生產環境的
+  // CONCEPTS_DIR 恰好就是字面上的 "concepts"，故該處無感）；此函式收到的 conceptsDir 參數可能是
+  // 別的路徑（例如單元測試用的暫存目錄），故自行以 conceptsDir 重組實際檔案路徑，不依賴該欄位。
+  const filePathOf = (dirName: string, skeletonPath: string): string => join(conceptsDir, dirName, basename(skeletonPath));
+
+  const nextAdditions = new Map<string, Set<string>>();
+  const prereqAdditions = new Map<string, Set<string>>();
+  const addTo = (map: Map<string, Set<string>>, id: string, value: string): void => {
+    const set = map.get(id) ?? new Set<string>();
+    set.add(value);
+    map.set(id, set);
+  };
+
+  for (const c of concepts.values()) {
+    const cOrd = ordinalOf.get(c.id)!;
+    for (const p of c.prerequisite) {
+      const target = concepts.get(p);
+      if (!target) continue; // dangling-ref，留給 Gate 報
+      if (!ordinalIsBefore(ordinalOf.get(p)!, cOrd)) continue; // 方向不合法，不代為修復
+      if (!target.next.includes(c.id)) addTo(nextAdditions, p, c.id);
+    }
+    for (const n of c.next) {
+      const target = concepts.get(n);
+      if (!target) continue;
+      if (!ordinalIsBefore(cOrd, ordinalOf.get(n)!)) continue;
+      if (!target.prerequisite.includes(c.id)) addTo(prereqAdditions, n, c.id);
+    }
+  }
+
+  for (const [id, adds] of nextAdditions) {
+    const node = concepts.get(id)!;
+    patchConceptEdgeField(filePathOf(node.dirName, node.skeletonPath), "next", [...adds]);
+  }
+  for (const [id, adds] of prereqAdditions) {
+    const node = concepts.get(id)!;
+    patchConceptEdgeField(filePathOf(node.dirName, node.skeletonPath), "prerequisite", [...adds]);
+  }
+}
+
+function parseOnlyFlag(argv: string[]): Set<string> | undefined {
+  const idx = argv.indexOf("--only");
+  if (idx < 0 || !argv[idx + 1]) return undefined;
+  return new Set(argv[idx + 1]!.split(","));
+}
+
+async function draftTopic(
+  llmClient: LlmClient,
+  moduleId: string,
+  moduleTitle: string,
+  topicId: string,
+  topicTitle: string,
+  priorConceptIds: string[],
+  usedLeetcodeIds: number[],
+  retryFeedback?: string,
+): Promise<DraftConcept[]> {
+  const prompt = buildStage1Prompt({
+    moduleId,
+    moduleTitle,
+    topicId,
+    topicTitle,
+    minConcepts: TOPIC_MIN_CONCEPTS,
+    maxConcepts: TOPIC_MAX_CONCEPTS,
+    priorConceptIds,
+    usedLeetcodeIds,
+    retryFeedback,
+  });
+  const raw = await llmClient.generate(prompt, buildStage1ResponseSchema());
+  const response = parseDraftResponse(raw);
+  // 正規化在此（draftTopic 而非 parseDraftResponse）進行：需要 topicId 組出具名錯誤訊息，
+  // 且必須在 main() 迴圈寫檔前**完成於同一個 try/catch 保護範圍內**——若驗證延後到寫檔迴圈才做，
+  // 前面幾個 concept 已寫入磁碟、才在寫到第 N 個時 throw，會讓該 Topic 目錄留下不完整的殘檔，
+  // 且因目錄已非空，續跑判斷會誤以為此 Topic 已起草完成而跳過重試。
+  const concepts = normalizeDraftConcepts(response.concepts, topicId);
+
+  // 篇數守門（defense-in-depth）：schema 的 minItems 已在 API 層要求 ≥ TOPIC_MIN_CONCEPTS，此處再驗一次。
+  //
+  // 為何 MUST 在**這裡**（起草階段）擋、而不是留給最後的結構 Gate：篇數不足原本要等 16 個 Topic 全部
+  // 跑完、才在結構 Gate 以 `granularity-range` 爆出來，那時整批已寫入磁碟，重試機制完全介入不了——
+  // 實測連續多輪都有 2～6 個 Topic 卡在 9 篇，每次都得整批 --force 重跑（且會刷新全部 slug，連帶引發
+  // 跨 Topic 的 dangling-ref）。在此 throw 才能讓 draftTopicWithRetry 立刻對**同一個 Topic** 重試，
+  // 把「整批重跑」降級為「單一 Topic 重打一次 prompt」。
+  if (concepts.length < TOPIC_MIN_CONCEPTS) {
+    throw new Error(
+      `stage1-granularity：Topic「${topicId}」只起草了 ${concepts.length} 個 Concept，未達下限 ${TOPIC_MIN_CONCEPTS}`,
+    );
+  }
+  return concepts;
+}
+
+/**
+ * draftTopic 加上同 Topic 內重試（MAX_DRAFT_ATTEMPTS 次），**並把上次的失敗原因回饋給下一次嘗試**。
+ *
+ * 為何要回饋而不是單純重送同一份 prompt：偶發的 JSON 語法錯誤確實重擲一次骰子就過，但**系統性**
+ * 偏差不會——實測本 schema 下模型對每個 Topic 的自然傾向就是回 9 個 Concept（`concepts` 陣列無法
+ * 用 minItems 在 API 層強制，見 buildStage1ResponseSchema 的 docblock），不告知上次錯在哪，三次
+ * 嘗試只會擲出三次同樣的 9。
+ *
+ * 回傳 `undefined` 代表重試耗盡仍失敗，由呼叫端決定如何處理（單篇隔離，不在此 exit）。
+ */
+export async function draftTopicWithRetry(
+  llmClient: LlmClient,
+  moduleId: string,
+  moduleTitle: string,
+  topicId: string,
+  topicTitle: string,
+  priorConceptIds: string[],
+  usedLeetcodeIds: number[] = [],
+): Promise<{ concepts: DraftConcept[]; error?: undefined } | { concepts?: undefined; error: string }> {
+  let lastError = "";
+  for (let attempt = 1; attempt <= MAX_DRAFT_ATTEMPTS; attempt++) {
+    try {
+      const concepts = await draftTopic(
+        llmClient,
+        moduleId,
+        moduleTitle,
+        topicId,
+        topicTitle,
+        priorConceptIds,
+        usedLeetcodeIds,
+        // 首次嘗試無回饋；重試時帶上一次的具名錯誤（stage1-granularity / stage1-slug-format /
+        // stage1-parse-error 等訊息本身已足夠具體，可直接作為給模型的修正指示）。
+        lastError === "" ? undefined : lastError,
+      );
+      return { concepts };
+    } catch (err) {
+      lastError = (err as Error).message;
+      console.error(`  Topic「${topicId}」第 ${attempt}/${MAX_DRAFT_ATTEMPTS} 次嘗試失敗：${lastError}`);
+    }
+  }
+  return { error: lastError };
+}
+
+function formatViolation(v: Violation): string {
+  const loc = v.field ? `${v.subject}.${v.field}` : v.subject;
+  const target = v.target ? ` → ${v.target}` : "";
+  return `  [${v.severity}] ${v.rule} ${loc}${target}：${v.message}`;
+}
+
+async function main(): Promise<void> {
+  const force = process.argv.includes("--force");
+  const only = parseOnlyFlag(process.argv);
+
+  let llmClient: LlmClient;
+  try {
+    llmClient = createLlmClient(process.env);
+  } catch (err) {
+    console.error(`✗ ${(err as Error).message}`);
+    process.exit(1);
+    return;
+  }
+
+  if (!existsSync(MODULES_PATH)) {
+    console.error(`✗ 素材載入失敗：${MODULES_PATH} 不存在`);
+    process.exit(1);
+    return;
+  }
+  const modulesFile = JSON.parse(readFileSync(MODULES_PATH, "utf-8")) as ModulesFile;
+
+  // Stage 1 的 --only 比對的是 **Topic id**（起草最小單位是一個 Topic），Stage 2 才是 Concept id。
+  // 填錯（例如照著混淆的說明填了 Concept id）時若不擋，會一個 Topic 都不起草卻仍改寫 outline.md、
+  // 印「✓ Stage 1 完成」並 exit 0——workflow 綠燈但什麼也沒做，是最難察覺的失敗模式。
+  if (only) {
+    const topicIds = new Set(modulesFile.modules.flatMap((m) => m.topics.map((t) => t.id)));
+    const unknown = [...only].filter((id) => !topicIds.has(id));
+    if (unknown.length > 0) {
+      console.error(
+        `✗ --only 指定了不存在的 Topic id：${unknown.join(", ")}（Stage 1 比對 ${MODULES_PATH} 的 topics[].id，非 Concept id）`,
+      );
+      process.exit(1);
+      return;
+    }
+  }
+
+  // 種子（seed：以既存 concept 的宣告序位置初始化 known，而非從空 Map 開始）：若**其他 Topic**
+  // 已有既存 Concept（F2 stub 種子，或前次執行留下的產物），LLM 完全不知道它們存在，會把自己
+  // 起草的第一篇當成整條課綱的起點（prerequisite 留空），使新篇與既存篇斷鏈，被結構 Gate 判定
+  // 孤兒——實測 --only programming-mindset 已踩到這個情境。記錄宣告序位置供 filterPriorConceptIds
+  // 排除宣告序更晚的 Module/Topic，避免另一個實測踩到的 forward-dependency。
+  // 注意：**本次要重新起草的 Topic 自己的既存 Concept 不算 prior**（replace 語意下它們會被刪除），
+  // 由迴圈內的 readTopicConceptIds + known.delete 在起草前先剔除。
+  const known = new Map<string, KnownConceptPosition>();
+  // 與 known 平行維護「每個 Concept 用掉哪些題號」，供 prompt 告知 LLM 哪些題已教過（避免跨 Module
+  // 重複選題）。不併進 KnownConceptPosition 以免動到既有的匯出型別與其測試。
+  const knownProblems = new Map<string, number[]>();
+  {
+    const { graph: existingGraph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
+    for (const [id, concept] of existingGraph.concepts) {
+      const ordinal = existingGraph.ordinalOf.get(id)!;
+      known.set(id, { moduleIndex: ordinal.moduleIndex, topicIndex: ordinal.topicIndex });
+      knownProblems.set(id, concept.leetcode);
+    }
+  }
+
+  // 單篇（單 Topic）隔離（憲章 XV）：某 Topic 重試耗盡仍失敗時記錄下來、跳過，繼續處理其餘
+  // 獨立的 Topic，而非立刻中止整批——LLM 回應的偶發語法錯誤不該讓已成功的 Topic 白跑、也不該
+  // 讓後面尚未嘗試的 Topic 連機會都沒有（實測全量跑到「string」Topic 才踩到，若不隔離，
+  // 每次都要從頭整批重跑，直到那顆骰子擲出合法 JSON 為止）。
+  const failedTopics: string[] = [];
+  // 本輪**成功**重新起草的 Topic id（起草失敗者不計，其檔案未被觸碰、內容仍是舊的）。
+  // 供 pruneStaleEdges 區分「本輪新產生的內容」與「未被觸碰的既有內容」。
+  const redraftedTopicIds = new Set<string>();
+
+  for (const [moduleIndex, module] of modulesFile.modules.entries()) {
+    for (const [topicIndex, topic] of module.topics.entries()) {
+      const dir = join(CONCEPTS_DIR, topic.id);
+      const existingFiles = listExistingConceptFiles(dir);
+      // --only 一律限定範圍；--force 只在未指定 --only 時才擴大成「全部重跑」，避免
+      // --only X --force 誤觸發把其餘 15 個 Topic 也一併重新起草（浪費額度、超出使用者原意）。
+      const shouldDraft = only ? only.has(topic.id) : force || existingFiles.length === 0;
+      if (!shouldDraft) continue;
+
+      // replace 語意下，本 Topic 的既有 Skeleton 起草成功後就會被整批刪除，故 MUST 先從 known
+      // 移除，否則它們會以 prior 身分餵給 LLM（誘導新篇把即將消失的 id 列為 prerequisite），
+      // 也會殘留成後續 Topic 眼中的合法 prerequisite，整輪跑完才在結構 Gate 爆 dangling-ref。
+      const staleIds = readTopicConceptIds(dir);
+      const staleProblems = new Map(staleIds.map((id) => [id, knownProblems.get(id) ?? []]));
+      for (const id of staleIds) {
+        known.delete(id);
+        knownProblems.delete(id);
+      }
+
+      const priorConceptIds = filterPriorConceptIds(known, moduleIndex, topicIndex);
+      // 只取宣告序更早的 Concept 用掉的題號（與 priorConceptIds 同一份範圍）：宣告序更晚的
+      // Topic 尚未定案（且本輪可能整個被重寫），拿它們的題號來限制目前 Topic 沒有意義。
+      const usedLeetcodeIds = [...new Set(priorConceptIds.flatMap((id) => knownProblems.get(id) ?? []))];
+
+      const { concepts, error } = await draftTopicWithRetry(
+        llmClient,
+        module.id,
+        module.title,
+        topic.id,
+        topic.title,
+        priorConceptIds,
+        usedLeetcodeIds,
+      );
+
+      if (!concepts) {
+        console.error(
+          `✗ Topic「${topic.id}」重試 ${MAX_DRAFT_ATTEMPTS} 次後仍失敗，跳過（既有內容未被觸碰，繼續處理其餘 Topic）：${error}`,
+        );
+        failedTopics.push(topic.id);
+        // 復原：這個 Topic 的檔案其實沒被動過（起草失敗，clearTopicConcepts 不會執行），
+        // 把 staleIds 放回 known，避免後續 Topic 誤以為它們已消失而漏掉合法的 prerequisite。
+        for (const id of staleIds) {
+          known.set(id, { moduleIndex, topicIndex });
+          knownProblems.set(id, staleProblems.get(id) ?? []);
+        }
+        continue;
+      }
+
+      mkdirSync(dir, { recursive: true });
+      clearTopicConcepts(dir);
+      // 到這裡本 Topic 已確定被本輪重寫（起草成功才會走到），登記供 pruneStaleEdges 區分內容來源。
+      redraftedTopicIds.add(topic.id);
+      concepts.forEach((concept, i) => {
+        const nnn = String(i + 1).padStart(3, "0");
+        writeFileSync(join(dir, `${nnn}-${concept.slug}.md`), conceptToMarkdown(concept, module.id, topic.id), "utf-8");
+        known.set(concept.slug, { moduleIndex, topicIndex });
+        knownProblems.set(concept.slug, concept.leetcode_candidates);
+      });
+    }
+  }
+
+  // 順序 MUST 為「先清除、後補齊」：清除殘留邊會改寫檔案，若先補齊，repairReciprocalEdges 可能
+  // 依據仍含舊 id 的狀態做判斷；且清除後才是本輪真正的邊全貌，補齊才補得正確。
+  pruneStaleEdges(MODULES_PATH, CONCEPTS_DIR, redraftedTopicIds);
+
+  // 雙向邊補齊（見 repairReciprocalEdges 註解）：對「這次全部寫到磁碟的 Concept」統一掃描
+  // 修補一次，而非邊寫邊補——因為同一份 LLM 回應內部的雙向一致性本身就可能不完整，必須等
+  // 整批（甚至整輪）都寫完、能看見完整的 next/prerequisite 全貌後才能正確判斷該補去哪一側。
+  repairReciprocalEdges(MODULES_PATH, CONCEPTS_DIR);
+
+  // populate-problem-bank：驗證候選題號並填入事實 metadata（Q1 / R5，MUST NOT 由 LLM 生成）
+  const { graph: draftGraph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
+  const sources: CandidateSource[] = [...draftGraph.concepts.values()].map((c) => ({
+    conceptId: c.id,
+    topicId: c.topic,
+    leetcodeIds: c.leetcode,
+  }));
+  const { byId, violations: candidateViolations } = collectCandidates(sources);
+  if (candidateViolations.length > 0) {
+    for (const v of candidateViolations) console.error(`✗ [${v.rule}] ${v.message}`);
+    process.exit(1);
+    return;
+  }
+
+  const bank = readJson<ProblemBankFile>(BANK_PATH, {});
+  const index = readJson<LeetcodeIndex>(INDEX_PATH, {});
+  const idsToResolve = [...byId.keys()].filter((id) => !bank[String(id)]);
+  // fetchLeetCodeMetadata 在 HTTP 非 2xx 時 throw（網路中斷、LeetCode 改版/限流）；未接住的話
+  // 整支腳本會以 unhandled rejection 收場，與 main() 其餘「印 ✗ + exit 1」的 fail-loud 慣例不一致
+  // （憲章 XII），也讓使用者看不出是產線邏輯錯還是外部 API 掛掉。
+  let resolveResult: Awaited<ReturnType<typeof resolveMetadata>>;
+  try {
+    resolveResult = await resolveMetadata(idsToResolve, index, fetchLeetCodeMetadata);
+  } catch (err) {
+    console.error(`✗ 題目 metadata 解析失敗（LeetCode API 不可用）：${(err as Error).message}`);
+    process.exit(1);
+    return;
+  }
+  const { index: updatedIndex, resolved, violations: resolveViolations } = resolveResult;
+  if (resolveViolations.length > 0) {
+    for (const v of resolveViolations) console.error(`✗ [${v.rule}] ${v.message}`);
+    process.exit(1);
+    return;
+  }
+  writeJson(INDEX_PATH, updatedIndex);
+  writeJson(BANK_PATH, mergeIntoBank(bank, resolved, byId));
+
+  // 結構 Gate（重用 F2，全量模式，FR-002：顆粒度下限強制生效）
+  const { bank: loadedBank } = loadProblemBank(BANK_PATH);
+  const { graph, loadViolations } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
+  const result = validateCurriculum(graph, { mode: "full", problemExists: makeProblemExists(loadedBank) });
+  const violations = [...loadViolations, ...result.violations];
+  const errors = violations.filter((v) => v.severity === "error");
+
+  if (errors.length > 0) {
+    console.log("違規清單：");
+    for (const v of violations) console.log(formatViolation(v));
+    console.error(`\n✗ 結構 Gate 未通過：${errors.length} 個 error（不產 outline、不視為定稿）`);
+    if (failedTopics.length > 0) {
+      console.error(`✗ 另有 Topic 起草失敗（重試耗盡）：${failedTopics.join(", ")}（可用 --only ${failedTopics.join(",")} 單獨重跑）`);
+    }
+    process.exit(1);
+    return;
+  }
+
+  // 結構 Gate 通過不代表整批完成——若有 Topic 起草失敗（重試耗盡），curriculum 仍不完整，
+  // 只是恰好還沒撞到 granularity-range/total 下限（例如只剩極少數 Topic 未完成）。MUST NOT
+  // 因為 Gate 綠燈就誤產 outline.md、讓使用者誤判為可定稿。
+  if (failedTopics.length > 0) {
+    console.error(`✗ 以下 Topic 起草失敗（已重試 ${MAX_DRAFT_ATTEMPTS} 次仍未成功）：${failedTopics.join(", ")}`);
+    console.error(`   請執行 npm run generate:curriculum -- --only ${failedTopics.join(",")} 單獨重跑這些 Topic。`);
+    process.exit(1);
+    return;
+  }
+
+  writeFileSync(OUTLINE_PATH, serializeOutline(graph), "utf-8");
+  console.log(`✓ Stage 1 完成：${graph.concepts.size} 個 Concept，outline 已產出於 ${OUTLINE_PATH}`);
+  console.log("下一步：人工 review outline.md（唯一人工檢查點），核可後 commit 凍結。");
+  process.exit(0);
+}
+
+if (process.argv[1]?.endsWith("generate-curriculum.ts")) {
+  main();
+}

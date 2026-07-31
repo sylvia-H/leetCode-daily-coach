@@ -3,12 +3,33 @@
 // （唯一 I/O 與 exit 位置在 scripts/validate.ts）。Gate 與每日 runtime import 同一顆
 // compile / render / checkBudget（憲章 IX），不另寫平行的編譯或版面邏輯。
 import { TRACK_ORDER } from "../config.js";
-import { compile, type CompilerDeps } from "./lesson.js";
+import { compile, readArticleCached, type CompilerDeps } from "./lesson.js";
 import { checkBudget } from "../renderer/budget.js";
 import { render } from "../renderer/discord.js";
+import { checkTraditionalChinese } from "./traditional-chinese.js";
 import type { Track } from "../types/lesson.js";
 
-export type GateRule = "compile-error" | "render-error" | "budget-over" | "curriculum-invalid" | "schedule-empty";
+export type GateRule =
+  | "compile-error"
+  | "render-error"
+  | "budget-over"
+  | "curriculum-invalid"
+  | "schedule-empty"
+  | "traditional-chinese"
+  | "concept-body-too-long";
+
+/** §10.3 觀念本體字數上限（F7 FR-008/FR-010.2）。 */
+export const CONCEPT_BODY_MAX_CHARS = 2000;
+
+/**
+ * 觀念本體字數的近似計數：先剝除 fenced/行內 code（§10.3 排除程式碼），再移除 markdown 標記符號
+ * （標題井號、粗體/斜體星號、清單槓）與空白，取剩餘字元數。近似值，非逐字元語言學斷詞。
+ */
+export function countConceptBodyChars(conceptBody: string): number {
+  const withoutCode = conceptBody.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
+  const stripped = withoutCode.replace(/[#*_>-]/g, "").replace(/\s+/g, "");
+  return stripped.length;
+}
 
 export interface GateViolation {
   rule: GateRule;
@@ -49,6 +70,9 @@ export function runContentGate(input: GateInput): GateResult {
   const violations: GateViolation[] = [];
   let compiled = 0;
   let total = 0;
+  // 同一 Article 可能被多個 Track/Session 引用（三軌共用正文，憲章 VI）；只在首次遇到時檢查一次，
+  // 避免同一違規重複回報 3 次。
+  const checkedArticlePaths = new Set<string>();
 
   for (const track of TRACK_ORDER) {
     const schedule = deps.schedules[track];
@@ -81,6 +105,53 @@ export function runContentGate(input: GateInput): GateResult {
         continue;
       }
       compiled++;
+
+      if (lesson.type === "concept") {
+        const articlePath = lesson.concept.articlePath;
+        if (!checkedArticlePaths.has(articlePath)) {
+          checkedArticlePaths.add(articlePath);
+          // MUST NOT 直接讀 `deps.articleCache?.get()`：`articleCache` 是**可選**相依，缺席時
+          // 這兩項教材檢查會被無聲跳過、不回報任何違規——守門點在可選相依缺席時默默放行。
+          // 一律走 Compiler 同一顆 readArticleCached（有快取就命中、沒有就當場解析）。
+          let article;
+          try {
+            article = readArticleCached(articlePath, lesson.concept.id, deps);
+          } catch (err) {
+            violations.push({
+              rule: "compile-error",
+              severity: "error",
+              track,
+              sessionIndex,
+              subject: lesson.concept.id,
+              message: `教材無法載入以進行內容檢查：${(err as Error).message}`,
+            });
+            continue;
+          }
+
+          const tc = checkTraditionalChinese(article.rawContent);
+          for (const v of tc.violations) {
+            violations.push({
+              rule: "traditional-chinese",
+              severity: "error",
+              track,
+              sessionIndex,
+              subject: article.meta.id,
+              message: v.message,
+            });
+          }
+          const bodyChars = countConceptBodyChars(article.conceptBody);
+          if (bodyChars > CONCEPT_BODY_MAX_CHARS) {
+            violations.push({
+              rule: "concept-body-too-long",
+              severity: "error",
+              track,
+              sessionIndex,
+              subject: article.meta.id,
+              message: `觀念本體約 ${bodyChars} 字，超過上限 ${CONCEPT_BODY_MAX_CHARS} 字（§10.3）`,
+            });
+          }
+        }
+      }
 
       let messages;
       try {

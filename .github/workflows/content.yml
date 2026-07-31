@@ -1,0 +1,75 @@
+# F7 產線手動觸發（R2、FR-022）：僅 workflow_dispatch，供無本機環境時批次跑產線。
+# MUST NOT 排程觸發、MUST NOT 併入 daily.yml——LLM 只在 build-time 一次性內容工程使用，
+# 每日 runtime 零 LLM（憲章 VIII）。GEMINI_API_KEY 只在此走 Secrets，不入庫。
+name: Content Pipeline (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "要執行的階段"
+        type: choice
+        options:
+          - curriculum
+          - content
+        default: curriculum
+      force:
+        description: "強制模式（覆蓋冪等、重生已凍結產物）"
+        type: boolean
+        default: false
+      only:
+        # 兩個 stage 的比對單位不同，填錯不會報錯、只會「一個都沒處理」卻仍 exit 0（綠燈但空跑）：
+        # curriculum（Stage 1）比對 curriculum/modules.json 的 topics[].id；
+        # content（Stage 2）比對 Skeleton frontmatter 的 Concept id。
+        description: "只處理指定項目，逗號分隔，留空 = 全部（stage=curriculum 填 Topic id；stage=content 填 Concept id）"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Stage 1（generate:curriculum）
+        if: ${{ inputs.stage == 'curriculum' }}
+        run: npm run generate:curriculum -- ${{ inputs.force == true && '--force' || '' }} ${{ inputs.only != '' && format('--only {0}', inputs.only) || '' }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Run Stage 2（generate:content）
+        if: ${{ inputs.stage == 'content' }}
+        run: npm run generate:content -- ${{ inputs.force == true && '--force' || '' }} ${{ inputs.only != '' && format('--only {0}', inputs.only) || '' }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      # 產線只產出檔案，不代表已核可/凍結——outline.md 定稿與最終 commit 仍是唯一人工檢查點
+      # （憲章 XVII），本 workflow MUST NOT 自動 commit 或推送產線輸出。
+      - name: 上傳產線輸出供人工檢視
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-pipeline-output
+          path: |
+            concepts/
+            articles/
+            curriculum/outline.md
+            data/problem-bank.json
+            data/leetcode-index.json
+          if-no-files-found: warn

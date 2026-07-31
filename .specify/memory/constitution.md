@@ -30,6 +30,17 @@ Sync Impact Report
 - Added/Removed sections: 無。
 - Templates status: 無需更新（無樣板相依此條款的結構）。
 - Follow-up TODOs: 無。
+
+[1.0.2] Gemini 模型型號更新（3.1 → 3.5）
+- Version change: 1.0.1 → 1.0.2
+- Rationale: PATCH——非新原則，僅因應官方於 2026-07-21 發布 `gemini-3.5-flash-lite`，將既有
+  「技術與資源約束」LLM SDK 條款釘死的型號由 `gemini-3.1-flash-lite` 更新為
+  `gemini-3.5-flash-lite`（新版同為 Gemini 免費層資格）。同步更新 docs/spec.md §20.4、§22.3，
+  以及 007-content-generation Feature 內引用此型號的設計文件與程式碼。
+- Modified sections: 技術與資源約束（LLM SDK 條款）。
+- Added/Removed sections: 無。
+- Templates status: 無需更新（無樣板相依此條款的結構）。
+- Follow-up TODOs: 無。
 -->
 
 # LeetCode Daily Coach (Ascent) Constitution
@@ -155,7 +166,7 @@ spec §20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全�
   `marked`（或等價）。**HTTP**：Node 內建 `fetch`（undici）。
 - **測試**：`vitest`；Python 教材程式碼實測用 `python` / `pytest`（僅 CI Gate）。
 - **LLM SDK**：`@google/genai`，只允許出現在 `scripts/` 依賴路徑，僅 build-time。模型 MUST 為
-  `gemini-3.1-flash-lite`（經實測，目前僅此型號符合 Gemini 免費層資格；其餘 Flash 系型號
+  `gemini-3.5-flash-lite`（經實測，目前僅此型號符合 Gemini 免費層資格；其餘 Flash 系型號
   MUST NOT 使用）。
 - **執行環境**：GitHub Actions（Node 24）；狀態為 `state` 分支的 `state.json`，
   只經 `StateStore` 讀寫，MUST NOT 另建平行狀態。
@@ -211,4 +222,4 @@ spec §20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全�
   本憲章原則並記錄違反與正當化理由（無法正當化者退回設計）；`/speckit-analyze` MUST
   將憲章衝突列為 CRITICAL。程式碼審查與驗收 MUST 確認未違反任一 MUST / MUST NOT。
 
-**Version**: 1.0.1 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-07-19
+**Version**: 1.0.2 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-07-30

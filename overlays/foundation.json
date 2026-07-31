@@ -1,10 +1,4 @@
 {
   "track": "foundation",
-  "byConcept": {
-    "array-traversal": {
-      "extraProblemIds": [27],
-      "extraNotesMarkdown": "Foundation 額外練習：先熟悉單純走訪，再挑戰同樣走訪但需就地改寫的題目。",
-      "challengeDifficulty": "Easy"
-    }
-  }
+  "byConcept": {}
 }

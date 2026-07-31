@@ -88,8 +88,11 @@ export interface LoadResult {
  * 去除檔首雜訊，讓 frontmatter 的 `---` 落在字串開頭供 gray-matter 解析：
  * BOM、任意數量的前導 HTML 註解、以及其間 / 其後的空白。單一 regex 只能吃掉一個註解，
  * 遇到 BOM、前導空行或連續兩個註解時 frontmatter 會被漏讀而誤報整批 missing-field，故在此正規化。
+ * 匯出供 `scripts/generate-curriculum.ts`（F7）在**修改**既存 Skeleton 前重用同一套前導雜訊處理
+ * ——F2 stub 種子檔案帶有 `<!-- ... -->` 前導註解，若直接對 raw 呼叫 gray-matter 而不先剝除，
+ * 會把整份 frontmatter 誤判為純文字內容，寫回時憑空產生第二層假 frontmatter（實測踩過）。
  */
-function stripLeadingComment(raw: string): string {
+export function stripLeadingComment(raw: string): string {
   let s = raw.replace(/^\uFEFF/, "");
   for (;;) {
     const stripped = s.replace(/^\s*<!--[\s\S]*?-->/, "");

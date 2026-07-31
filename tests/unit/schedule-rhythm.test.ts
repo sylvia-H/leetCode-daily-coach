@@ -1,10 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { generateAllSchedules } from "../../src/compiler/schedule-generator.js";
-import { buildBank, loadRealGenerateInput, makeOverlays, makeParamsFile, makeProblem } from "../helpers/schedule.js";
+import { buildBank, makeOverlays, makeParamsFile, makeProblem } from "../helpers/schedule.js";
 import { buildGraph, skeletonOf, type ConceptSpec } from "../helpers/curriculum.js";
 
-describe("週節奏攤課（US4 / FR-011~013，stub 5 Concept）", () => {
-  const input = loadRealGenerateInput();
+/**
+ * 以 fixture（5 個 Concept）驗證節奏攤課，MUST NOT 讀真實 `concepts/**`。
+ *
+ * 舊版讀 F2 交付的 5 個 stub Concept，並在斷言裡硬編那 5 個 id（time-space-complexity…）。
+ * F7 課綱定稿後 stub 已被 165 個真實 Concept 取代，測試隨即失效——但「佇列用盡後於當輪節奏
+ * 走完處自然收尾」這個被測行為完全沒變。改用 fixture 後，此測試不再隨課綱內容起舞。
+ */
+describe("週節奏攤課（US4 / FR-011~013）", () => {
+  const skeleton = skeletonOf([{ id: "m0", topics: ["t0"] }]);
+  const specs: ConceptSpec[] = Array.from({ length: 5 }, (_, i) => ({
+    id: `c${i}`,
+    module: "m0",
+    topic: "t0",
+    localOrder: i + 1,
+  }));
+  const input = {
+    graph: buildGraph(specs, skeleton),
+    bank: buildBank([]),
+    params: makeParamsFile({ foundation: { maxLevel: 0 } }),
+    overlays: makeOverlays(),
+  };
   const { schedules } = generateAllSchedules(input);
   const foundation = schedules.foundation;
 
@@ -27,20 +46,14 @@ describe("週節奏攤課（US4 / FR-011~013，stub 5 Concept）", () => {
     }
   });
 
-  it("Concept 佇列（5 個）用盡後於當輪節奏走完處自然收尾，不填充湊滿 180", () => {
+  it("Concept 佇列用盡後於當輪節奏走完處自然收尾，MUST NOT 填充湊滿固定長度", () => {
     // rhythm = [concept,concept,practice,concept,challenge,review,rest]，每輪 3 個 concept 槽（位置 0,1,3）；
-    // 5 個 concept：第 1 輪排滿 3 個（time-space-complexity/reading-the-problem/array-traversal），
-    // 第 2 輪排 2 個（in-place-operations/prefix-sum，槽 0,1）後佇列已空，槽 3 的 concept 落空、跳過
-    // （不消耗 sessionIndex），practice/challenge/review/rest 仍正常跑完（13 = 7 + 6）。
+    // 5 個 concept：第 1 輪排滿 3 個（c0/c1/c2），第 2 輪排 2 個（c3/c4，槽 0,1）後佇列已空，
+    // 槽 3 的 concept 落空、跳過（不消耗 sessionIndex），practice/challenge/review/rest 仍正常跑完（13 = 7 + 6）。
     const conceptSessions = foundation.sessions.filter((s) => s.type === "concept");
     expect(conceptSessions).toHaveLength(5);
-    expect(conceptSessions.map((s) => s.conceptId)).toEqual([
-      "time-space-complexity",
-      "reading-the-problem",
-      "array-traversal",
-      "in-place-operations",
-      "prefix-sum",
-    ]);
+    expect(conceptSessions.map((s) => s.conceptId)).toEqual(["c0", "c1", "c2", "c3", "c4"]);
+    expect(foundation.sessions).toHaveLength(13);
     // 第 2 輪仍完整跑完剩餘槽位（practice/review/challenge/rest），sessionIndex 連續無缺口
     const indices = foundation.sessions.map((s) => s.sessionIndex);
     expect(indices).toEqual(Array.from({ length: indices.length }, (_, i) => i + 1));

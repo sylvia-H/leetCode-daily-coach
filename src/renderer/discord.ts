@@ -46,7 +46,12 @@ function embedLength(embed: DiscordEmbed): number {
   return total;
 }
 
-function renderProblemEntry(problem: Problem): string {
+/**
+ * 匯出供 Stage 2 的 per-article Gate 沿用（憲章 IX：不另立平行判準）。生成期要判斷單題是否超過
+ * `PROBLEM_ENTRY_MAX`，量測對象 MUST 是**這裡 render 出的同一份字串**——自行拼一份「差不多」的
+ * 格式必然與 renderer 漂移，屆時會出現「生成期放行、批次末才擋下」的落差。
+ */
+export function renderProblemEntry(problem: Problem): string {
   const hintPart = problem.hint ? ` · Hint: ${problem.hint}` : "";
   const detail = problem.whyThisPattern
     ? `\n  ${problem.difficulty} · ${problem.whyThisPattern}${hintPart}`

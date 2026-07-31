@@ -12,6 +12,7 @@ import { render } from "../../src/renderer/discord.js";
 import { run } from "../../src/main.js";
 import type { ConceptLesson, Track } from "../../src/types/lesson.js";
 import { createFetchRecorder, type FetchRecorder } from "../helpers/fetch-recorder.js";
+import { findConceptInAllTracks } from "../helpers/real-schedule.js";
 
 const WEBHOOK_URLS: Record<Track, string> = {
   foundation: "https://discord.com/api/webhooks/1000/foundation-hook",
@@ -114,11 +115,14 @@ describe("US1: 三個頻道各自收到自己 Track 的今日課程（AC2 / AC5 
     expect(new Set(serializedEmbeds).size).toBe(3);
   });
 
-  it("AC5：prefix-sum 三軌正文逐字相同、題目難度帶不同（FR-004 / SC-007，sessionIndex 動態查得不硬編）", async () => {
+  it("AC5：同一 Concept 三軌正文逐字相同、題目難度帶依 §13.5 分歧（FR-004 / SC-007，conceptId 與 sessionIndex 皆動態查得不硬編）", async () => {
     const deps = loadCompilerDeps();
+    // conceptId 亦 MUST NOT 硬編：原本寫死的 `prefix-sum` 是 F1 / F5 種子課綱的 id，F7 正式課綱已無此
+    // Concept（對應者為 array-prefix-sum-basic）。改為從課表動態選出三軌皆涵蓋且皆有題目者。
+    const sharedConceptId = findConceptInAllTracks(deps, true);
     const conceptIndexes = {} as Record<Track, number>;
     for (const track of TRACK_ORDER) {
-      conceptIndexes[track] = findSessionIndexForConcept(deps, track, "prefix-sum");
+      conceptIndexes[track] = findSessionIndexForConcept(deps, track, sharedConceptId);
     }
     writeState(stateFile, conceptIndexes);
 
@@ -128,7 +132,7 @@ describe("US1: 三個頻道各自收到自己 Track 的今日課程（AC2 / AC5 
     const lessons = TRACK_ORDER.map((track) => compile(track, conceptIndexes[track], deps) as ConceptLesson);
     for (const lesson of lessons) {
       expect(lesson.type).toBe("concept");
-      expect(lesson.concept.id).toBe("prefix-sum");
+      expect(lesson.concept.id).toBe(sharedConceptId);
     }
 
     const [foundationLesson, interviewReadyLesson, interviewMasteryLesson] = lessons;
@@ -139,8 +143,17 @@ describe("US1: 三個頻道各自收到自己 Track 的今日課程（AC2 / AC5 
     expect(foundationLesson!.concept.exitCriteria).toEqual(interviewReadyLesson!.concept.exitCriteria);
     expect(interviewReadyLesson!.concept.exitCriteria).toEqual(interviewMasteryLesson!.concept.exitCriteria);
 
-    const difficultySets = lessons.map((lesson) => JSON.stringify([...new Set(lesson.problems.map((p) => p.difficulty))].sort()));
-    expect(new Set(difficultySets).size).toBe(3);
+    // 難度帶 MUST NOT 斷言「三軌全異」——spec §13.5 的 track-params 表明訂 Foundation 與 InterviewReady
+    // 的 problemDifficulties **同為 Easy+Medium**（F7 實測定案：Easy-only 會讓 Foundation 有 60% 的
+    // concept Session 無題可練），兩軌的分歧改由 maxLevel（9 / 12）、rhythm 與 challengeDifficulty
+    // （Easy / Medium）承擔。故「全異」在設計上即不可能，實測 165 個 Concept 無一符合。
+    // 此處改為釘住 §13.5 實際保證的關係：InterviewMastery（Medium+Hard）MUST 與另兩軌相異，
+    // 而 Foundation 與 InterviewReady MUST 相同——任一方向被改動都會在此失敗。
+    const [foundationSet, interviewReadySet, interviewMasterySet] = lessons.map((lesson) =>
+      JSON.stringify([...new Set(lesson.problems.map((p) => p.difficulty))].sort()),
+    );
+    expect(foundationSet).toBe(interviewReadySet);
+    expect(interviewMasterySet).not.toBe(foundationSet);
 
     // 確認真的透過完整推播鏈路送達：posted embeds 與 render() 輸出逐一對應。
     for (const [i, track] of TRACK_ORDER.entries()) {

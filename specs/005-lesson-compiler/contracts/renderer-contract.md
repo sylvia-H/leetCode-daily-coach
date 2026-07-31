@@ -103,7 +103,8 @@ interface BudgetReport { items: BudgetItem[]; total: number; totalLimit: 5500; h
 - **計入總量**：每個 embed 的 `title` / `description` / 每個 field 的 `name` 與 `value` / `footer.text` /
   `author.name`。**不計入**：`url` / `color` 等非文字欄位。
 - `ok === false` 即失敗；呼叫端 MUST NOT 因此截斷內容（§14.5）。
-- `exitCriteria` 除總長 400 外，另檢查**條數 ≤ 6**與**每條 ≤ 60**（§10.2）。
+- `exitCriteria` 除總長 400 外，另檢查**條數 ≤ 6**與**每條 ≤ 110**（§10.2；單條上限 F7 定案
+  2026-07-31 由 60 放寬為 110，實作常數為 `EXIT_CRITERIA_ITEM_MAX`，理由見 `docs/spec.md` §10.2）。
 
 ---
 

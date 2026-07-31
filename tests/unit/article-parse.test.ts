@@ -82,3 +82,24 @@ describe("parseArticle — Today's Challenge 條目格式", () => {
     expect(article.challenge.get(2)).toEqual({ problemId: 2, whyThisPattern: "說明二" });
   });
 });
+
+describe("parseArticle — 無題目觀念課的 Today's Challenge（spec §12.1 一等合法狀態）", () => {
+  it("區塊有說明散文但無 list 條目 → challenge 為空 Map，MUST NOT 視為格式錯誤", () => {
+    // 27 個「無題目觀念課」（leetcode: []）本來就沒有題目可列。舊版為了滿足「至少一個條目」
+    // 的硬性要求，寫死 `- **1** · 佔位條目`——「1」會被讀成題號 1（Two Sum），對讀者是誤導。
+    const raw = makeArticleMarkdown({ id: "fixture" }).replace(
+      /## Today's Challenge\n\n[\s\S]*$/,
+      "## Today's Challenge\n\n本篇為觀念課，沒有對應的 LeetCode 練習題。\n",
+    );
+    const article = parseArticle(raw, "fixture", PATH);
+    expect(article.challenge.size).toBe(0);
+  });
+
+  it("區塊完全空白 → 仍為錯誤（requireSection 擋下，區塊不得為空）", () => {
+    const raw = makeArticleMarkdown({ id: "fixture" }).replace(
+      /## Today's Challenge\n\n[\s\S]*$/,
+      "## Today's Challenge\n\n",
+    );
+    expect(() => parseArticle(raw, "fixture", PATH)).toThrow(/Today's Challenge/);
+  });
+});

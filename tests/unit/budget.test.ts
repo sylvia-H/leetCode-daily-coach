@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkBudget } from "../../src/renderer/budget.js";
+import { EXIT_CRITERIA_ITEM_MAX, checkBudget } from "../../src/renderer/budget.js";
 import type { BudgetSlots, DiscordEmbed, RenderedMessage } from "../../src/types/lesson.js";
 
 function makeMessage(overrides: Partial<BudgetSlots> = {}): RenderedMessage {
@@ -103,11 +103,20 @@ describe("checkBudget — exitCriteria 條數與單條長度（§10.2）", () =>
     expect(report.ok).toBe(false);
   });
 
-  it("單條超過 60（剝除 '- [ ] ' 前綴後量測）→ 對應 exitCriteria[i] over 為 true", () => {
-    const report = checkBudget(makeMessage({ exitCriteria: `- [ ] ${"字".repeat(61)}` }));
+  it("單條超過 110（剝除 '- [ ] ' 前綴後量測）→ 對應 exitCriteria[i] over 為 true", () => {
+    const report = checkBudget(makeMessage({ exitCriteria: `- [ ] ${"字".repeat(111)}` }));
     const item = report.items.find((i) => i.name === "exitCriteria[0]");
     expect(item?.over).toBe(true);
-    expect(item?.length).toBe(61);
+    expect(item?.length).toBe(111);
+  });
+
+  // 迴歸守衛（F7 定案 2026-07-31 由 60 放寬為 110）：實際課綱有 116 條落在 60～107 之間，
+  // 若上限被改回 60，這批已凍結 Skeleton 會有 93 個 Concept 全面失敗且無從修復（不得手改生成物）。
+  it("單條 107（實際課綱最長值）MUST 不超標", () => {
+    const report = checkBudget(makeMessage({ exitCriteria: `- [ ] ${"a".repeat(107)}` }));
+    const item = report.items.find((i) => i.name === "exitCriteria[0]");
+    expect(item?.over).toBe(false);
+    expect(EXIT_CRITERIA_ITEM_MAX).toBe(110);
   });
 });
 
