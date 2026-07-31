@@ -8,7 +8,9 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { run } from "../../src/main.js";
 import type { Track } from "../../src/types/lesson.js";
+import { loadCompilerDeps } from "../../src/compiler/lesson.js";
 import { createFetchRecorder, type FetchRecorder } from "../helpers/fetch-recorder.js";
+import { conceptIdAt } from "../helpers/real-schedule.js";
 
 const counters = vi.hoisted(() => ({ writeFileSyncCalls: 0 }));
 
@@ -90,10 +92,12 @@ describe("US3: 各 Track 進度獨立推進、單次存檔（AC4 / SC-003）", (
         >;
       };
 
-      // 成功軌：session 1 在三軌皆為 concept 類（time-space-complexity）。
+      // 成功軌：session 1 在三軌皆為 concept 類。conceptId MUST 動態查得——原本硬編的
+      // `time-space-complexity` 是 F1 / F5 種子課綱的 id，F7 正式課綱已無此 Concept。
+      const session1ConceptId = conceptIdAt(loadCompilerDeps(), "foundation", 1);
       expect(saved.tracks.foundation?.currentSessionIndex).toBe(2);
       expect(saved.tracks.foundation?.lastPushAt).not.toBeNull();
-      expect(saved.tracks.foundation?.completedConceptIds).toContain("time-space-complexity");
+      expect(saved.tracks.foundation?.completedConceptIds).toContain(session1ConceptId);
       expect(saved.tracks.foundation?.history).toHaveLength(1);
 
       // 失敗軌：全部欄位變化量為 0（漏跑不跳課，FR-013／SC-003）。
@@ -106,11 +110,13 @@ describe("US3: 各 Track 進度獨立推進、單次存檔（AC4 / SC-003）", (
 
       // 未知啟用 Track 自動補建為初始值，並照常處理成功。
       expect(saved.tracks.interviewMastery?.currentSessionIndex).toBe(2);
-      expect(saved.tracks.interviewMastery?.completedConceptIds).toContain("time-space-complexity");
+      expect(saved.tracks.interviewMastery?.completedConceptIds).toContain(
+        conceptIdAt(loadCompilerDeps(), "interviewMastery", 1),
+      );
 
       // history 上限 30 的滾動裁切已由 tests/unit/state-advance.test.ts 對純函式 advance() 直接驗證
-      // （累積 35 筆 → 保留最新 30 筆）；e2e 層受限於真實課表僅 13 個 Session，同一軌不可能在單一
-      // 執行序內真實累積超過 13 筆，故此不變式不在此重複驗證。
+      // （累積 35 筆 → 保留最新 30 筆）；e2e 層單次執行每軌只推一課、僅累積 1 筆，無從觸及上限，
+      // 故此不變式不在此重複驗證。
     },
   );
 
