@@ -308,6 +308,35 @@ interface GateFailure {
   reason: string;
 }
 
+/**
+ * 預算超標時附加的**可執行**縮減指示（只用於重生回饋，MUST NOT 併入首次生成的 prompt）。
+ *
+ * ## 為何只給數字不夠
+ *
+ * 原本的回饋只有「tsTip 1002/800」。字元數是 LLM **無法自我驗證**的量——它沒辦法邊寫邊數，
+ * 這在模型的操作語彙裡是不可執行的指令。實測 graph-detect-cycle-directed 連續 6 次嘗試
+ * （兩輪各 3 次）穩定落在 895～908，等於在同一個分佈裡反覆抽樣，回饋完全沒有改變行為。
+ *
+ * 改給**數得出來**的結構性約束（行數、句數、具體寫法）才能真正收斂。上限本身不再放寬：實測
+ * 326 個 Tip 樣本的中位數僅 344、超過 650 者僅 4 筆（1.2%）、超過 800 者 0 筆——800 對絕大多數
+ * 教材綽綽有餘，超標的是離群值而非判準過緊，再往上加只會重演同一齣戲。
+ *
+ * ## 為何 MUST NOT 放進首次生成的 prompt
+ *
+ * 161 篇已通過的教材是在沒有這些額外約束下寫成的（中位數 344，遠低於上限）。把「≤15 行、≤2 句」
+ * 變成常態要求，會讓本來寬裕的篇章被無謂地壓縮、損失示範價值。這是**針對超標才施加**的補救措施。
+ */
+const BUDGET_RETRY_GUIDANCE = [
+  "具體做法（MUST 照做，只給字元數你無法自行核算）：",
+  "1. 該區塊的 fenced code block MUST 壓到 **15 行以內**（含空行），只保留示範核心邏輯所需的最短程式碼。",
+  "2. 該區塊的說明文字 MUST 壓到 **2 句以內**。",
+  "3. 若區塊內含 ListNode / TreeNode 等型別定義，MUST 改用最精簡寫法——TypeScript 用 constructor",
+  "   參數屬性一行帶過，例如：",
+  "   class TreeNode { constructor(public val: number, public left: TreeNode | null = null, public right: TreeNode | null = null) {} }",
+  "   Python 用 dataclass 或最短的 __init__，MUST NOT 為型別定義寫註解或額外方法。",
+  "4. 型別定義與測試資料 MUST NOT 佔用超過區塊的三分之一——主角是示範的演算法本身。",
+].join("\n");
+
 /** 逐關快檢（結構/字數 → 繁中 → 程式碼實測 → 題目正確性），失敗即回傳第一個失敗原因。 */
 async function runPerArticleGate(
   markdown: string,
@@ -347,7 +376,9 @@ async function runPerArticleGate(
     .filter((x) => x.len > x.limit);
   if (overBudget.length > 0) {
     return {
-      reason: `字元預算超標（§14.5）：${overBudget.map((x) => `${x.slot} ${x.len}/${x.limit}`).join("、")}——請精簡，MUST NOT 期待後續被截斷`,
+      reason:
+        `字元預算超標（§14.5）：${overBudget.map((x) => `${x.slot} ${x.len}/${x.limit}`).join("、")}——請精簡，MUST NOT 期待後續被截斷。\n` +
+        BUDGET_RETRY_GUIDANCE,
     };
   }
 
