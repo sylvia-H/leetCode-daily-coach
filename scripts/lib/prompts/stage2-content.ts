@@ -129,7 +129,10 @@ export function buildStage2Prompt(input: Stage2PromptInput): string {
 
   // 回饋擺在最前面：這是本次與上次唯一的差異，放在長規則清單之後容易被淹沒。
   const feedback = input.retryFeedback
-    ? `⚠️ 上一次產出未通過品質 Gate，原因如下，這次 MUST 修正：\n${input.retryFeedback}\n\n`
+    ? `⚠️ 上一次產出未通過品質 Gate，原因如下，這次 MUST 修正：\n${input.retryFeedback}\n\n` +
+      `這次 MUST 改變作法，MUST NOT 重複同樣的寫法——同一種錯誤重複三次即整篇作廢。` +
+      `若上述原因與格式有關（缺 fenced code block、縮排、找不到型別名稱），` +
+      `請逐字比照下方規則 3 的範例格式重寫該欄位。\n\n`
     : "";
 
   return `${feedback}你是 LeetCode Daily Coach 課程引擎的教材作者。請將以下 Concept 展開為完整教學文章（Full Article）的各個區塊。
@@ -179,6 +182,21 @@ ${problemsList}
    程式碼會被程式抽出後真的拿去編譯與執行，沒有 fence 就抽不到，換行被壓掉則無法執行。
    每個 code block MUST 內嵌至少一個斷言（TypeScript 用 \`throw\` 或 \`node:assert\`；Python 用 \`assert\`），
    且 MUST 能實際編譯／執行通過。
+
+   **每個 code block MUST 完全自給自足（self-contained）**——它會被單獨存成一個檔案編譯與執行，
+   **沒有 LeetCode 平台環境、沒有前一個區塊的內容、沒有任何隱含的預先定義**。因此：
+   - 若用到 \`ListNode\` / \`TreeNode\` / \`Node\` 這類 LeetCode 題目「預設已存在」的型別或類別，
+     **MUST 在同一個 code block 內自行完整定義**（TypeScript 用 \`class\`，Python 用 \`class\`），
+     MUST NOT 假設它已經存在。實測：未自行定義會得到
+     \`error TS2304: Cannot find name 'ListNode'\` 而整篇作廢。
+   - 需要用到的任何 import（例如 \`import assert from "node:assert"\`、\`from collections import deque\`）
+     MUST 寫在該 code block 內。
+   - 建立測試資料時 MUST 傳入正確型別：例如樹的節點 MUST 傳 \`TreeNode\` 實例而非整數，
+     否則會得到 \`AttributeError: 'int' object has no attribute 'right'\` 這類執行期錯誤。
+   - 斷言的預期值 MUST 是你**實際推算過**的正確答案；若不確定，請改用你有把握的簡單測資。
+
+   **Python 的縮排 MUST 正確且一致**（統一 4 空格）——JSON 字串中的縮排會被原樣寫入檔案執行，
+   縮排遺失會得到 \`IndentationError: expected an indented block\`，整篇作廢。
 4. challenge 陣列 MUST 為每個候選題目各提供恰好一條，欄位為 { id, whyThisPattern, hint? }；id MUST 與候選題目一致，MUST NOT 新增、刪除或替換題號。
 5. digest ≤900 字、tsTip/pyTip 各 ≤650 字（**含 fenced code block 本身**）、takeaway ≤120 字
    （Discord 字元預算，§14.5）；超限請自行精簡，MUST NOT 期待後續被截斷。
