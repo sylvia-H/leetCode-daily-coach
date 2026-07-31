@@ -181,7 +181,40 @@ const require_ = createRequire(import.meta.url);
 const TSC_ENTRY = require_.resolve("typescript/bin/tsc");
 const TSX_ENTRY = require_.resolve("tsx/cli");
 
-/** 真實 executor：TS 以 `tsc --noEmit --strict` 型別檢查 + `tsx` 執行；Python 以 `python` 執行。 */
+/**
+ * 教材片段的型別檢查參數 MUST 與專案 `tsconfig.json` 對齊。片段被寫進系統暫存目錄成為獨立檔案，
+ * 而 `tsc <file>` 一旦帶了檔名引數就**完全不讀 `tsconfig.json`**，全部選項退回 tsc 預設值——與本專案
+ * 實際設定的落差大到會把合法教材判成錯誤（本 repo 實測，Stage 2 全量批次前 30 篇就踩到三種）：
+ *
+ *   - 缺 `esModuleInterop`：`import assert from "node:assert"` 一律 TS1259，是專案設定下完全合法的寫法。
+ *   - 缺 `target`/`lib`：預設 target 為 ES5，`Map`/`Set` 的 spread 與 for-of 皆 TS2802、
+ *     `Array.prototype.at()` 為 TS2550——heap / graph / hash-table 等模組幾乎篇篇中招。
+ *   - 只補 `target` 卻不補 `module`/`moduleResolution`：模組解析退化為 classic，`@types/node` 內部的
+ *     `undici-types` 找不到，錯誤從教材片段轉移到整包 .d.ts（故一併補 `skipLibCheck`，與專案同）。
+ *
+ * 這三種失敗都與教材品質無關，卻會吃光 `MAX_REGEN` 的 3 次重生額度並把該篇標記 needsHumanReview，
+ * 與 checkToolchain 擋的 Python 佔位程式屬同一類「環境偽裝成內容有錯」的坑。
+ *
+ * **刻意不帶 `noUncheckedIndexedAccess`**（專案 `src/**` 有開）：教材片段大量出現 `nums[i]` 這類索引
+ * 存取，開了會讓 `nums[i] + nums[j]` 這種標準解法一律 TS2532/TS2345。該選項對產品程式碼是正確的嚴格度，
+ * 對教材語境則是過度嚴格，MUST NOT 加入。
+ */
+const TSC_ALIGNED_FLAGS = [
+  "--noEmit",
+  "--strict",
+  "--esModuleInterop",
+  "--target",
+  "ES2022",
+  "--lib",
+  "ES2022",
+  "--module",
+  "nodenext",
+  "--moduleResolution",
+  "nodenext",
+  "--skipLibCheck",
+];
+
+/** 真實 executor：TS 以 `tsc`（參數見 TSC_ALIGNED_FLAGS）型別檢查 + `tsx` 執行；Python 以 `python` 執行。 */
 /**
  * 工具鏈前置檢查：用最小的合法片段實際跑一次 TypeScript 與 Python，確認直譯器/編譯器可用。
  *
@@ -210,7 +243,7 @@ export function createRealExecutor(): CodeExecutor {
       return withTempDir("f7-code-block-ts-", (dir) => {
         const file = join(dir, "snippet.ts");
         writeFileSync(file, code, "utf-8");
-        const typeCheck = runCommand(process.execPath, [TSC_ENTRY, "--noEmit", "--strict", file]);
+        const typeCheck = runCommand(process.execPath, [TSC_ENTRY, ...TSC_ALIGNED_FLAGS, file]);
         if (!typeCheck.ok) return typeCheck;
         return runCommand(process.execPath, [TSX_ENTRY, file]);
       });
