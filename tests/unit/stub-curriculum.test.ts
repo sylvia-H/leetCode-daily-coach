@@ -31,7 +31,9 @@ describe("已凍結課綱的端到端驗證（原 F2 stub 交付驗證，F7 定�
   it("topoOrder 涵蓋全部 Concept，且每個 Concept 皆排在其 prerequisite 之後（合法拓樸序）", () => {
     // 原斷言硬編 5 個 stub id；改以「拓樸序的定義」表達，課綱增修不需再改測試。
     const { graph } = loadReal();
-    const { topoOrder } = validateCurriculum(graph, { mode: "stub" });
+    const result = validateCurriculum(graph, { mode: "stub" });
+    expect(result.ok).toBe(true);
+    const topoOrder = result.topoOrder!;
     expect(topoOrder).toHaveLength(graph.concepts.size);
     expect(new Set(topoOrder).size).toBe(topoOrder.length); // 無重複
 
@@ -47,7 +49,9 @@ describe("已凍結課綱的端到端驗證（原 F2 stub 交付驗證，F7 定�
 
   it("第一個 Concept 屬於 Level 0 的 Module 且無前置依賴（課綱起點）", () => {
     const { graph } = loadReal();
-    const { topoOrder } = validateCurriculum(graph, { mode: "stub" });
+    const result = validateCurriculum(graph, { mode: "stub" });
+    expect(result.ok).toBe(true);
+    const topoOrder = result.topoOrder!;
     const first = graph.concepts.get(topoOrder[0]!)!;
     expect(graph.modules.find((m) => m.id === first.module)?.level).toBe(0);
     expect(first.prerequisite).toEqual([]);

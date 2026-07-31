@@ -37,7 +37,9 @@ describe("createLlmClient（scripts/lib/llm-client.ts，R1 / FR-021/022/025）",
   });
 
   it("未傳 responseSchema → MUST NOT 帶 config（Stage 2 輸出 Markdown，不可被 application/json 綁住）", async () => {
-    const generateContent = vi.fn(async () => ({ text: "hello" }));
+    const generateContent = vi.fn(async (_args: Parameters<GenAiLike["models"]["generateContent"]>[0]) => ({
+      text: "hello",
+    }));
     const client = createLlmClient(
       { GEMINI_API_KEY: "key" },
       { genAiFactory: () => fakeGenAi(generateContent), throttle: new Throttle() },
