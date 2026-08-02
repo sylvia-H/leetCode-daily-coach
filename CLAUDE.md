@@ -175,7 +175,7 @@ Overlay 疊加不取代、Renderer 純函式性與 Discord 限制（含 6,000 �
   | F5 | `005-lesson-compiler` | Lesson Compiler、Renderer 全 Session 類型、CI Gate 完整編譯 + 限制檢查 | F2、F4 | M2 |
   | F6 | `006-pipeline-mvp` | 每日 pipeline 端到端、多 Track 失敗隔離、per-track guard 與狀態推進 | F1、F5 | M3 |
   | F7 | `007-content-generation` | 兩階段產線（課綱起草＋大綱定稿 → 全量展開）＋品質 Gate＋節流／續跑 | F2、F3、F4 | M3 |
-  | F8 | `008-review-extras` | Reflection 題庫、語錄池、review／rest 版面 | F6、F7 | M4 |
+  | F8 | `008-review-extras` | Reflection 題庫、語錄池（掛 review）、review 版面、移除 rest 槽＋跳過無題槽並重跑課表 | F6、F7 | M4 |
   | F9 | `009-pages-publish` | GitHub Pages 儀表板 + 全文閱讀 + RSS（post-MVP） | F6 | M5 |
   | F10 | `010-interactive` | Slash Commands、每週測驗、自適應（Roadmap） | F6、F8 | M5 |
   **M0 → M3 走完即 MVP**（三頻道每日自動推課）。F7 可與 F5 / F6 並行（機器批次 2～4 天）。

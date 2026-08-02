@@ -22,7 +22,8 @@ function checkBudget(message: RenderedMessage): BudgetReport; // src/renderer/bu
 5. `budgetSlots` 的每個值 MUST 是放進 `embeds` 的**同一份字串實例**；且**反向亦成立**（slot⇄field
    parity，2026-07-24 補）：放進 embed 的每一段**可變長度文字** MUST 有對應 slot，未登記者等同完全逃過
    逐區塊預算。例外只給非教材自由文字（固定標籤、由 Compiler 依課表生成的清單，如 review 的
-   `📚 本週涵蓋`）。此不變式由 `tests/unit/review-fixes.test.ts` 的 parity 測試強制。
+   `📚 本週涵蓋`）。此不變式由 `tests/unit/budget-slot-parity.test.ts` 強制
+   （F8 自 `tests/unit/review-fixes.test.ts` **純搬移**而來，行為未變更）。
 5b. `Lesson` 為 discriminated union，Renderer 的各版面函式 MUST 接收收斂後的成員型別
    （`ConceptLesson` / `PracticeLesson` / `ReviewLesson` / `RestLesson`），**MUST NOT** 以 `!` 斷言
    取用類型專屬欄位。
