@@ -177,59 +177,8 @@ describe("Reflection / 鼓勵語的逐區塊預算（findings #6）", () => {
     expect(report.items.find((i) => i.name === "encouragement")?.over).toBe(true);
   });
 
-  // slot⇄field parity：Renderer 放進 embed 的每一段可變長度文字都 MUST 有對應 slot，
-  // 否則該段落完全逃過逐區塊預算（BudgetSlots 的不變式）。
-  it("五種版面的每個 embed field 值都能在 budgetSlots 中找到（固定文案除外）", () => {
-    // 例外只給「非教材自由文字」：固定標籤，以及由 Compiler 依課表生成的複習清單
-    // （長度由 rhythm 週長與 Concept 標題決定，不是作者可寫長的段落）。
-    const FIXED_TEXTS = new Set(["Pattern X", "O(n)", "20 分鐘"]);
-    const EXEMPT_FIELDS = new Set(["📚 本週涵蓋"]);
-    const lessons = [
-      makeLesson({
-        type: "concept",
-        concept: {
-          id: "a",
-          title: "A",
-          digest: "digest",
-          tsTip: "ts",
-          pyTip: "py",
-          takeaway: "take",
-          exitCriteria: ["c1"],
-          patternLabel: "Pattern X",
-          complexityLabel: "O(n)",
-          estimatedMinutes: 20,
-          articlePath: "x.md",
-        },
-        path: { current: "A" },
-        overlayNotes: "補充",
-        problems: [{ id: 1, title: "T", url: "https://x/", difficulty: "Easy", whyThisPattern: "why" }],
-      }),
-      makeLesson({
-        type: "review",
-        reviewConcepts: [{ id: "a", title: "A" }],
-        reflectionQuestion: "反思問題",
-        problems: [{ id: 1, title: "T", url: "https://x/", difficulty: "Easy" }],
-      }),
-      makeLesson({ type: "rest", encouragement: "加油！" }),
-    ];
-
-    for (const lesson of lessons) {
-      for (const message of render(lesson)) {
-        const slotValues = new Set<string>();
-        for (const value of Object.values(message.budgetSlots)) {
-          if (typeof value === "string") slotValues.add(value);
-          else if (Array.isArray(value)) for (const v of value) slotValues.add(v);
-        }
-        for (const embed of message.embeds) {
-          for (const field of embed.fields ?? []) {
-            if (FIXED_TEXTS.has(field.value) || EXEMPT_FIELDS.has(field.name)) continue;
-            const covered = [...slotValues].some((slot) => field.value === slot || field.value.includes(slot));
-            expect(covered, `${lesson.type} 的 field「${field.name}」未登記 budgetSlot`).toBe(true);
-          }
-        }
-      }
-    }
-  });
+  // slot⇄field parity 測試已於 F8 搬至 `tests/unit/budget-slot-parity.test.ts`（純搬移、無行為變更）：
+  // 它涵蓋全部版面類型、是全域不變式，不屬於「某一輪 findings 的回歸測試」。
 });
 
 describe("F8 素材的最小結構 schema（findings #10）", () => {
