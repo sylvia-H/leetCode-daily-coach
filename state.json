@@ -1,22 +1,46 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 1,
-      "lastPushAt": null,
-      "completedConceptIds": [],
-      "history": []
+      "currentSessionIndex": 2,
+      "lastPushAt": "2026-08-02T23:03:30.521Z",
+      "completedConceptIds": [
+        "computational-thinking-basics"
+      ],
+      "history": [
+        {
+          "sessionIndex": 1,
+          "pushedAt": "2026-08-02T23:03:30.521Z",
+          "conceptId": "computational-thinking-basics"
+        }
+      ]
     },
     "interviewReady": {
-      "currentSessionIndex": 1,
-      "lastPushAt": null,
-      "completedConceptIds": [],
-      "history": []
+      "currentSessionIndex": 2,
+      "lastPushAt": "2026-08-02T23:03:30.685Z",
+      "completedConceptIds": [
+        "computational-thinking-basics"
+      ],
+      "history": [
+        {
+          "sessionIndex": 1,
+          "pushedAt": "2026-08-02T23:03:30.685Z",
+          "conceptId": "computational-thinking-basics"
+        }
+      ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 1,
-      "lastPushAt": null,
-      "completedConceptIds": [],
-      "history": []
+      "currentSessionIndex": 2,
+      "lastPushAt": "2026-08-02T23:03:30.799Z",
+      "completedConceptIds": [
+        "computational-thinking-basics"
+      ],
+      "history": [
+        {
+          "sessionIndex": 1,
+          "pushedAt": "2026-08-02T23:03:30.799Z",
+          "conceptId": "computational-thinking-basics"
+        }
+      ]
     }
   }
 }
