@@ -1,44 +1,62 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 2,
-      "lastPushAt": "2026-08-02T23:03:30.521Z",
+      "currentSessionIndex": 3,
+      "lastPushAt": "2026-08-03T23:14:19.469Z",
       "completedConceptIds": [
-        "computational-thinking-basics"
+        "computational-thinking-basics",
+        "input-output-contract"
       ],
       "history": [
         {
           "sessionIndex": 1,
           "pushedAt": "2026-08-02T23:03:30.521Z",
           "conceptId": "computational-thinking-basics"
+        },
+        {
+          "sessionIndex": 2,
+          "pushedAt": "2026-08-03T23:14:19.469Z",
+          "conceptId": "input-output-contract"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 2,
-      "lastPushAt": "2026-08-02T23:03:30.685Z",
+      "currentSessionIndex": 3,
+      "lastPushAt": "2026-08-03T23:14:19.721Z",
       "completedConceptIds": [
-        "computational-thinking-basics"
+        "computational-thinking-basics",
+        "input-output-contract"
       ],
       "history": [
         {
           "sessionIndex": 1,
           "pushedAt": "2026-08-02T23:03:30.685Z",
           "conceptId": "computational-thinking-basics"
+        },
+        {
+          "sessionIndex": 2,
+          "pushedAt": "2026-08-03T23:14:19.721Z",
+          "conceptId": "input-output-contract"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 2,
-      "lastPushAt": "2026-08-02T23:03:30.799Z",
+      "currentSessionIndex": 3,
+      "lastPushAt": "2026-08-03T23:14:20.011Z",
       "completedConceptIds": [
-        "computational-thinking-basics"
+        "computational-thinking-basics",
+        "input-output-contract"
       ],
       "history": [
         {
           "sessionIndex": 1,
           "pushedAt": "2026-08-02T23:03:30.799Z",
           "conceptId": "computational-thinking-basics"
+        },
+        {
+          "sessionIndex": 2,
+          "pushedAt": "2026-08-03T23:14:20.011Z",
+          "conceptId": "input-output-contract"
         }
       ]
     }
