@@ -212,8 +212,11 @@ function checkDuplicates(entries: readonly { text: string; subject: string }[]):
   return violations;
 }
 
-/** research R13：零誤判的機械樣態——不比對 Concept id / title 清單（會誤殺一般性詞彙）。 */
-function isProgressCoupled(text: string): boolean {
+/**
+ * research R13：零誤判的機械樣態——不比對 Concept id / title 清單（會誤殺一般性詞彙）。
+ * 匯出供 `scripts/generate-materials.ts` 的 per-batch Gate 重用同一顆判準（憲章 IX）。
+ */
+export function isProgressCoupled(text: string): boolean {
   if (/https?:\/\//i.test(text)) return true;
   if (/\[[^\]]*\]\([^)]*\)/.test(text)) return true;
   if (/leetcode/i.test(text)) return true;

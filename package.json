@@ -16,6 +16,7 @@
     "validate:content": "tsx scripts/validate.ts",
     "generate:curriculum": "tsx scripts/generate-curriculum.ts",
     "generate:content": "tsx scripts/generate-content.ts",
+    "generate:materials": "tsx scripts/generate-materials.ts",
     "populate:problem-bank": "tsx scripts/populate-problem-bank.ts",
     "gate:code": "tsx scripts/run-code-blocks.ts",
     "start": "node dist/main.js",

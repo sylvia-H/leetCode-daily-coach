@@ -40,7 +40,15 @@ import {
   type DraftArticleResponse,
   type DraftChallengeEntry,
 } from "./lib/prompts/stage2-content.js";
-import { buildSelfCheckPrompt, type SelfCheckResponse } from "./lib/prompts/self-check.js";
+import {
+  buildSelfCheckPrompt,
+  parseSelfCheckResponse,
+  stripJsonFence,
+  type SelfCheckResponse,
+} from "./lib/prompts/self-check.js";
+// F8（research R10）：解析 helper 已搬至 scripts/lib/prompts/self-check.ts，此處 re-export 維持既有
+// 測試相容（純搬移，無行為變更）。
+export { parseSelfCheckResponse, stripJsonFence };
 import {
   checkCodeBlocks,
   checkToolchain,
@@ -116,15 +124,6 @@ export interface SkeletonFrontmatterForArticle {
   estimatedMinutes: number;
   exitCriteria: string[];
   leetcode: number[];
-}
-
-/** 剝除 LLM 回應可能夾帶的 ``` fence 後取 JSON 字面（Stage 2 各處共用）。 */
-function stripJsonFence(raw: string): string {
-  return raw
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/```\s*$/, "")
-    .trim();
 }
 
 // 欄位清單改由 stage2-content.ts 單一來源提供（見該處註解）：schema 的 required 與此處的逐欄
@@ -425,31 +424,6 @@ async function runPerArticleGate(
   }
 
   return undefined;
-}
-
-/**
- * 剝除 ``` fence 後解析 self-check 回應；形狀不符即具名 throw。
- *
- * 不可對 `JSON.parse` 的結果直接 cast 後取 `response.issues.length`：LLM 回非 JSON、或回了 JSON
- * 但漏掉 `issues`，都會在此炸出例外；`runSelfCheck` 又是整批產線迴圈裡的一次呼叫，未接住就是整批
- * Stage 2 以 unhandled rejection 中止（連批次末 Gate 都不會跑到）。解析失敗語意上等同「這次審稿
- * 不可信」，應算成一次重生，而非讓產線死掉。
- */
-export function parseSelfCheckResponse(raw: string): SelfCheckResponse {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stripJsonFence(raw));
-  } catch (err) {
-    throw new Error(`self-check-parse-error：LLM 回應非合法 JSON：${(err as Error).message}`);
-  }
-  const obj = parsed as Partial<SelfCheckResponse> | null;
-  if (typeof obj !== "object" || obj === null || typeof obj.confident !== "boolean") {
-    throw new Error("self-check-parse-error：LLM 回應缺少布林欄位 confident");
-  }
-  if (!Array.isArray(obj.issues) || obj.issues.some((i) => typeof i !== "string")) {
-    throw new Error("self-check-parse-error：LLM 回應缺少字串陣列欄位 issues");
-  }
-  return { confident: obj.confident, issues: obj.issues };
 }
 
 async function runSelfCheck(llmClient: LlmClient, node: ConceptNode, markdown: string): Promise<GateFailure | undefined> {
