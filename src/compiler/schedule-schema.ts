@@ -86,12 +86,16 @@ function makeTrackParamSchema(moduleIds: Set<string>, maxModuleLevel: number) {
 /**
  * rhythm 槽位順序約束：僅檢查「含 review」不足以擋下 schema-valid 卻生不出合法課表的排法，
  * 錯誤會延後到生成後才被 validateSchedule 攔下、且訊息指向 Session 而非真正的根因（rhythm 設定）。
- * 四條約束皆在此以 param-invalid 具名回報（F8 移除「MUST 含 rest」——rest 已非必要槽，data-model.md §5）：
+ * 五條約束皆在此以 param-invalid 具名回報（F8 移除「MUST 含 rest」——rest 已非必要槽，data-model.md §5）：
  *  1. 至少一個 concept 槽——否則 emitSessions 的涵蓋佇列永遠不被消耗（無限迴圈）。
  *  2. 每個 practice 槽之前 MUST 有 concept 槽——否則該週 practice 拿到空的 weekConcepts。
  *  3. 最後一個 concept 槽 MUST 早於某個 review 槽——否則該 concept 落在 reviewRange
  *     （= [weekStart, review−1]，FR-013）之外，永遠不被複習（對應 validateSchedule 的
- *     review-coverage-gap；此處於參數層先擋，指名根因）。此條亦排除 review 落首槽的空區間。
+ *     review-coverage-gap；此處於參數層先擋，指名根因）。
+ *  4. 第一個 review 槽 MUST 晚於第一個 concept 槽——否則該週第一個 review 的 reviewRange 內
+ *     一個 concept Session 也沒有：落首槽時更是 [weekStart, weekStart−1] 這種空區間。
+ *     contracts/schedule-revision.md §2.4 的「reviewRange 恆非空」原本只是對現行三軌 rhythm
+ *     的假設（首槽皆為 concept），此條把它升級為參數層強制（與約束 2 對稱）。
  */
 function validateRhythm(rhythm: readonly z.infer<typeof SESSION_TYPE_ENUM>[], ctx: z.RefinementCtx): void {
   if (!rhythm.includes("review")) {
@@ -108,6 +112,15 @@ function validateRhythm(rhythm: readonly z.infer<typeof SESSION_TYPE_ENUM>[], ct
       ctx,
       ["rhythm"],
       `rhythm 的第一個 practice 槽（第 ${firstPractice + 1} 槽）早於第一個 concept 槽（第 ${firstConcept + 1} 槽），該週 practice 將無題可練`,
+      "param-invalid",
+    );
+  }
+  const firstReview = rhythm.indexOf("review");
+  if (firstReview >= 0 && firstReview < firstConcept) {
+    withCustomIssue(
+      ctx,
+      ["rhythm"],
+      `rhythm 的第一個 review 槽（第 ${firstReview + 1} 槽）早於第一個 concept 槽（第 ${firstConcept + 1} 槽），該 review 的 reviewRange 內不含任何 concept Session`,
       "param-invalid",
     );
   }
