@@ -112,6 +112,17 @@ export const EXIT_CRITERIA_COUNT_MAX = 6;
  */
 export const PROBLEM_ENTRY_MAX = 350;
 
+/**
+ * Reflection / 鼓勵語逐則上限（FR-029、research R9，contracts/material-schema.md §4）。
+ * **單一來源**：`checkBudget`（render 後）、`src/compiler/material.ts` 的 `checkMaterials`
+ * （素材層）、`scripts/generate-materials.ts` 的 per-batch 檢查 MUST 全部 import 此常數，
+ * MUST NOT 出現第二處字面值。
+ */
+export const MATERIAL_BUDGET_LIMITS = {
+  reflectionQuestion: 300,
+  encouragement: 200,
+} as const;
+
 // 獨立純函式（憲章 IX）：對單一 RenderedMessage 同時檢查逐區塊預算、結構性上限與總量，
 // 供 runtime 與 scripts/validate.ts 共用同一顆實作。budgetSlots 由 render() 提供，
 // 值 MUST 是放進 embeds 的同一份字串實例，故此處不再反解析 embeds（research R10）。
@@ -134,10 +145,12 @@ export function checkBudget(message: RenderedMessage): BudgetReport {
   // Reflection / 鼓勵語（docs/spec.md §14.5，F5 定案）：素材由 F8 灌入，但預算 MUST 現在就存在——
   // 否則 F8 的第一批素材會在完全沒有逐區塊把關的情況下上線。
   if (budgetSlots.reflectionQuestion !== undefined) {
-    items.push(makeItem("reflectionQuestion", codePointLength(budgetSlots.reflectionQuestion), 300));
+    items.push(
+      makeItem("reflectionQuestion", codePointLength(budgetSlots.reflectionQuestion), MATERIAL_BUDGET_LIMITS.reflectionQuestion),
+    );
   }
   if (budgetSlots.encouragement !== undefined) {
-    items.push(makeItem("encouragement", codePointLength(budgetSlots.encouragement), 200));
+    items.push(makeItem("encouragement", codePointLength(budgetSlots.encouragement), MATERIAL_BUDGET_LIMITS.encouragement));
   }
   if (budgetSlots.takeaway !== undefined) {
     items.push(makeItem("takeaway", codePointLength(budgetSlots.takeaway), ARTICLE_BUDGET_LIMITS.takeaway));

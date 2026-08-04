@@ -87,11 +87,11 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 
 ### 2E. 素材共用底座（阻擋 US1 與 US2）
 
-- [ ] T020 [P] 抽出預算常數於 `src/renderer/budget.ts`：新增 `export const MATERIAL_BUDGET_LIMITS = { reflectionQuestion: 300, encouragement: 200 } as const`，`checkBudget` 改用之，移除原字面值 `300` / `200`（FR-029、research R9）
-- [ ] T021 新增 `src/compiler/material.ts`：`ReflectionBank`（`{ version: 1, byTopic: Record<string, string[]> }`）與 `EncouragementPool`（`{ version: 1, quotes: string[] }`）的 zod strict schema 與型別；陣列 MUST 允許為空（**MUST NOT 用 `min(1)`**，否則與 FR-014 的降級路徑互斥），每則字串 MUST 非空（data-model.md §1/§2、contracts/material-schema.md §1）
-- [ ] T022 收斂 `src/compiler/lesson.ts` 的 `CompilerDeps`：`reflectionBank?: unknown` / `encouragement?: unknown` 改為 `ReflectionBank` / `EncouragementPool`，刪除 F5 的骨架 `REFLECTION_BANK_SHAPE` / `ENCOURAGEMENT_SHAPE` 改用 `material.ts` 的完整 schema；`loadOptionalMaterial` 的既有語意（缺席 ⇒ `undefined`；壞檔／不符 schema ⇒ throw）**維持不變**（data-model.md §4、contracts/material-schema.md §2）
-- [ ] T023 [P] 新增 `tests/unit/material-load.test.ts`：三種降級情境（整檔缺席、集合為空、缺某 Topic 的 key）皆回傳 `undefined` 或省略且不失敗；非合法 JSON 與不符 schema 皆 throw 具名錯誤（MUST NOT 降級為缺席）（FR-014、contracts/material-schema.md §2）
-- [ ] T024 [P] 擴充 `tests/unit/budget.test.ts`：`checkBudget` 的 `reflectionQuestion` / `encouragement` 上限 MUST 取自 `MATERIAL_BUDGET_LIMITS`（斷言方式：以該常數的值組出剛好過關與剛好超標的字串，確認判定隨常數而動，而非隨字面值），且**這兩個 slot** 的上限在 `src/` 與 `scripts/` 內 MUST NOT 出現第二處字面值（FR-029）
+- [X] T020 [P] 抽出預算常數於 `src/renderer/budget.ts`：新增 `export const MATERIAL_BUDGET_LIMITS = { reflectionQuestion: 300, encouragement: 200 } as const`，`checkBudget` 改用之，移除原字面值 `300` / `200`（FR-029、research R9）
+- [X] T021 新增 `src/compiler/material.ts`：`ReflectionBank`（`{ version: 1, byTopic: Record<string, string[]> }`）與 `EncouragementPool`（`{ version: 1, quotes: string[] }`）的 zod strict schema 與型別；陣列 MUST 允許為空（**MUST NOT 用 `min(1)`**，否則與 FR-014 的降級路徑互斥），每則字串 MUST 非空（data-model.md §1/§2、contracts/material-schema.md §1）
+- [X] T022 收斂 `src/compiler/lesson.ts` 的 `CompilerDeps`：`reflectionBank?: unknown` / `encouragement?: unknown` 改為 `ReflectionBank` / `EncouragementPool`，刪除 F5 的骨架 `REFLECTION_BANK_SHAPE` / `ENCOURAGEMENT_SHAPE` 改用 `material.ts` 的完整 schema；`loadOptionalMaterial` 的既有語意（缺席 ⇒ `undefined`；壞檔／不符 schema ⇒ throw）**維持不變**（data-model.md §4、contracts/material-schema.md §2）
+- [X] T023 [P] 新增 `tests/unit/material-load.test.ts`：三種降級情境（整檔缺席、集合為空、缺某 Topic 的 key）皆回傳 `undefined` 或省略且不失敗；非合法 JSON 與不符 schema 皆 throw 具名錯誤（MUST NOT 降級為缺席）（FR-014、contracts/material-schema.md §2）
+- [X] T024 [P] 擴充 `tests/unit/budget.test.ts`：`checkBudget` 的 `reflectionQuestion` / `encouragement` 上限 MUST 取自 `MATERIAL_BUDGET_LIMITS`（斷言方式：以該常數的值組出剛好過關與剛好超標的字串，確認判定隨常數而動，而非隨字面值），且**這兩個 slot** 的上限在 `src/` 與 `scripts/` 內 MUST NOT 出現第二處字面值（FR-029）
   > **MUST NOT 對全檔做 `300` / `200` 的字面掃描**：`src/renderer/budget.ts` 的 `pathFooter` 上限本來就是字面值 `200`（§14.5 的另一個 slot，與素材無關），全檔掃描必然誤判。斷言對象是「這兩個 slot 的上限來源」，不是「檔案裡不准出現這兩個數字」。
 
 **Checkpoint**: 三份新課表已凍結、素材底座就位 → US1 / US2 可平行開始
@@ -113,10 +113,10 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 
 ### US1 實作
 
-- [ ] T025 [US1] 實作 `resolveReviewTopic(schedule, graph, reviewRange)` 於 `src/compiler/material.ts`：取 `reviewRange` 內 `sessionIndex` 最小的 concept Session 所屬 Concept 的 topic，並列時以 §16.1 的 `ordinalOf` 全序決勝，範圍內無 concept Session ⇒ `undefined`；MUST NOT 依賴 JSON 鍵序或雜湊（FR-011、contracts/review-selection.md §2）
-- [ ] T026 [US1] 實作 `selectReflectionQuestion(input)` 於 `src/compiler/material.ts`：`index = (topicOccurrence + trackOffset) mod pool.length`，`topicOccurrence` 為同 Track 中 `sessionIndex` 更小且歸屬同一 Topic 的 review Session 數（0-based），`trackOffset = TRACK_ORDER.indexOf(track)`；缺 Topic key 或池為空 ⇒ `undefined`。**MUST NOT 改用 `sessionIndex` 取模**（FR-011、research R6、contracts/review-selection.md §3）
-- [ ] T027 [US1] 於 `src/compiler/lesson.ts` 的 `compileReview` 填入 `reflectionQuestion`：僅在素材存在且 `trim() !== ""` 時設值（MUST NOT 以空字串填充）；review 的 `problems` 一律來自課表 `problemIds` 經 `buildOriginProblems`，**MUST NOT 於 runtime 選題**（FR-010、FR-015、contracts/review-selection.md §5）
-- [ ] T028 [US1] 實作 `checkMaterials(input)` 於 `src/compiler/material.ts` 的共用與 Reflection 判準。**先宣告回傳型別**：`MaterialViolationRule`（8 個具名 rule 的聯集）與 `MaterialViolation { rule, subject, message }`（data-model.md §1.1）——rule 名稱 MUST 具名到型別層級，**MUST NOT 只寫進 `message`**（否則 SC-007 只能靠子字串比對，改一次措辭即靜默失效）。判準：`material-budget`（取自 `MATERIAL_BUDGET_LIMITS`，code point 計）、`material-traditional-chinese`（沿用 `src/compiler/traditional-chinese.ts` 的同一預設門檻）、`material-duplicate`、`material-unknown-topic`、`material-quota`（配額＝該 Topic 依 T025 規則在三份課表中被選中的最大次數，訊息 MUST 指出需要幾則／實際幾則／哪一個 Track 造成最大值；**`requiredQuota === 0` 的 Topic 缺鍵或空陣列皆為合法，MUST NOT 擋下**——FR-014.3 的明文例外）；素材缺席 ⇒ 回傳空陣列；MUST NOT 自動截斷（FR-002–FR-005、FR-014、FR-028、contracts/material-schema.md §3）
+- [X] T025 [US1] 實作 `resolveReviewTopic(schedule, graph, reviewRange)` 於 `src/compiler/material.ts`：取 `reviewRange` 內 `sessionIndex` 最小的 concept Session 所屬 Concept 的 topic，並列時以 §16.1 的 `ordinalOf` 全序決勝，範圍內無 concept Session ⇒ `undefined`；MUST NOT 依賴 JSON 鍵序或雜湊（FR-011、contracts/review-selection.md §2）
+- [X] T026 [US1] 實作 `selectReflectionQuestion(input)` 於 `src/compiler/material.ts`：`index = (topicOccurrence + trackOffset) mod pool.length`，`topicOccurrence` 為同 Track 中 `sessionIndex` 更小且歸屬同一 Topic 的 review Session 數（0-based），`trackOffset = TRACK_ORDER.indexOf(track)`；缺 Topic key 或池為空 ⇒ `undefined`。**MUST NOT 改用 `sessionIndex` 取模**（FR-011、research R6、contracts/review-selection.md §3）
+- [X] T027 [US1] 於 `src/compiler/lesson.ts` 的 `compileReview` 填入 `reflectionQuestion`：僅在素材存在且 `trim() !== ""` 時設值（MUST NOT 以空字串填充）；review 的 `problems` 一律來自課表 `problemIds` 經 `buildOriginProblems`，**MUST NOT 於 runtime 選題**（FR-010、FR-015、contracts/review-selection.md §5）
+- [X] T028 [US1] 實作 `checkMaterials(input)` 於 `src/compiler/material.ts` 的共用與 Reflection 判準。**先宣告回傳型別**：`MaterialViolationRule`（8 個具名 rule 的聯集）與 `MaterialViolation { rule, subject, message }`（data-model.md §1.1）——rule 名稱 MUST 具名到型別層級，**MUST NOT 只寫進 `message`**（否則 SC-007 只能靠子字串比對，改一次措辭即靜默失效）。判準：`material-budget`（取自 `MATERIAL_BUDGET_LIMITS`，code point 計）、`material-traditional-chinese`（沿用 `src/compiler/traditional-chinese.ts` 的同一預設門檻）、`material-duplicate`、`material-unknown-topic`、`material-quota`（配額＝該 Topic 依 T025 規則在三份課表中被選中的最大次數，訊息 MUST 指出需要幾則／實際幾則／哪一個 Track 造成最大值；**`requiredQuota === 0` 的 Topic 缺鍵或空陣列皆為合法，MUST NOT 擋下**——FR-014.3 的明文例外）；素材缺席 ⇒ 回傳空陣列；MUST NOT 自動截斷（FR-002–FR-005、FR-014、FR-028、contracts/material-schema.md §3）
   > **前三項為 Reflection 與 Encouragement 的共用判準，MUST 於本任務一次寫成並同時套用於 `quotes`**（`material-budget` 走 `MATERIAL_BUDGET_LIMITS.encouragement`、`material-traditional-chinese` 同一函式、`material-duplicate` 於 `quotes` 內比對）。T039 只補**語錄池專屬**的兩個 rule（`material-pool-size` / `material-progress-coupled`），**MUST NOT** 重寫共用判準。`material-duplicate` 的比對範圍不同 MUST 分別實作：Reflection 為**跨 Topic 全庫**、語錄池為池內；兩者 MUST NOT 互相比對（一則反思問題與一則語錄字面相同並非違規）。
   > **`material-schema` 不在本任務的實作範圍**：它由既有載入層（`loadOptionalMaterial`）的 throw 實現，`checkMaterials` 收到的已是解析後的型別，**MUST NOT 為它保留永遠不成立的檢查分支**（contracts/material-schema.md §3 註記）。
   > **⚠️ 硬性前置：T015–T019 MUST 已完成。** `material-quota` 的配額是**三份課表的導出值**，
@@ -124,12 +124,12 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
   > 而且**不會有任何錯誤訊號**——Gate 照樣通過，只是門檻錯了，最終靜默生成不足或過多的問題。
   > 配額 MUST 由 Gate 依當時的三份課表**即時計算**，MUST NOT 寫死為常數（FR-003b）；
   > 現行課綱下的最大次數 4 僅為觀察值。此為本 Feature 唯一「錯了也不會報錯」的失效點。
-- [ ] T029 [US1] 於 `src/compiler/gate.ts` 新增 `GateRule = "material-invalid"`（**只新增這一個**，8 個細分留在 `MaterialViolationRule`）並在 `runContentGate()` 最前段呼叫 `checkMaterials`，逐筆映射為 `GateViolation`：`subject` MUST 為 `` `${v.rule}@${v.subject}` ``（例：`material-budget@reflection-bank:array[3]`）、`message` 沿用、`track` / `sessionIndex` 留空；**不新增獨立 CLI**（FR-030、research R8、data-model.md §8）
+- [X] T029 [US1] 於 `src/compiler/gate.ts` 新增 `GateRule = "material-invalid"`（**只新增這一個**，8 個細分留在 `MaterialViolationRule`）並在 `runContentGate()` 最前段呼叫 `checkMaterials`，逐筆映射為 `GateViolation`：`subject` MUST 為 `` `${v.rule}@${v.subject}` ``（例：`material-budget@reflection-bank:array[3]`）、`message` 沿用、`track` / `sessionIndex` 留空；**不新增獨立 CLI**（FR-030、research R8、data-model.md §8）
 
 ### US1 測試
 
-- [ ] T030 [P] [US1] 新增 `tests/unit/material-select.test.ts` 的 Reflection 區塊：不變式 I1–I4（同一 `(track, sessionIndex)` 恆同一則、同 Topic 前 L 次互異、三軌同一出現序數不同則）、跨 Module 的「取最早引入者」決勝、`reviewRange` 無 concept 時回傳 undefined（FR-011、contracts/review-selection.md §3）；並斷言**三軌共用同一份素材輸入**——同一個 `ReflectionBank` / `EncouragementPool` 實例即可驅動三軌的選取，選取函式 MUST NOT 有 per-track 的素材路徑、分支或欄位，Track 差異只來自 `trackOffset`（FR-013、憲章 VI）
-- [ ] T031 [P] [US1] 新增 `tests/unit/material-gate.test.ts` 的 Reflection 區塊：`material-budget`（超預算）、`material-traditional-chinese`（簡體字）、`material-duplicate`（跨 Topic 重複）、`material-unknown-topic`（未知 Topic key）、`material-quota`（某 Topic 則數低於計算配額）各自被具名擋下且訊息指名根因——**斷言 MUST 比對 `MaterialViolation.rule` 欄位（或 `GateViolation.subject` 的 `{rule}@` 前綴），MUST NOT 用 `message` 的子字串比對**；`material-schema` 則斷言**載入層對壞檔／不符 schema 會 throw**（非 Gate 違規，見 contracts §3 註記）；另 MUST 有一項「`requiredQuota === 0` 的 Topic 缺鍵／空陣列 ⇒ Gate 通過」的案例（FR-014.3 例外）；素材缺席時 Gate 通過（FR-028、SC-007）。**`material-schema` 與 `material-unknown-topic` 只在此以單元測試覆蓋**——quickstart §6 的人工樣本不含這兩項（SC-007）。**配額案例 MUST 以合成的小型課表 fixture 驗證計算式本身**（避免把「4」這個現行觀察值烘焙進測試）；另 MUST 有一項對 `tests/helpers/real-schedule.ts` 真實課表的檢查，斷言配額由重跑後的 198/200/243 導出而非硬編（FR-003b）
+- [X] T030 [P] [US1] 新增 `tests/unit/material-select.test.ts` 的 Reflection 區塊：不變式 I1–I4（同一 `(track, sessionIndex)` 恆同一則、同 Topic 前 L 次互異、三軌同一出現序數不同則）、跨 Module 的「取最早引入者」決勝、`reviewRange` 無 concept 時回傳 undefined（FR-011、contracts/review-selection.md §3）；並斷言**三軌共用同一份素材輸入**——同一個 `ReflectionBank` / `EncouragementPool` 實例即可驅動三軌的選取，選取函式 MUST NOT 有 per-track 的素材路徑、分支或欄位，Track 差異只來自 `trackOffset`（FR-013、憲章 VI）
+- [X] T031 [P] [US1] 新增 `tests/unit/material-gate.test.ts` 的 Reflection 區塊：`material-budget`（超預算）、`material-traditional-chinese`（簡體字）、`material-duplicate`（跨 Topic 重複）、`material-unknown-topic`（未知 Topic key）、`material-quota`（某 Topic 則數低於計算配額）各自被具名擋下且訊息指名根因——**斷言 MUST 比對 `MaterialViolation.rule` 欄位（或 `GateViolation.subject` 的 `{rule}@` 前綴），MUST NOT 用 `message` 的子字串比對**；`material-schema` 則斷言**載入層對壞檔／不符 schema 會 throw**（非 Gate 違規，見 contracts §3 註記）；另 MUST 有一項「`requiredQuota === 0` 的 Topic 缺鍵／空陣列 ⇒ Gate 通過」的案例（FR-014.3 例外）；素材缺席時 Gate 通過（FR-028、SC-007）。**`material-schema` 與 `material-unknown-topic` 只在此以單元測試覆蓋**——quickstart §6 的人工樣本不含這兩項（SC-007）。**配額案例 MUST 以合成的小型課表 fixture 驗證計算式本身**（避免把「4」這個現行觀察值烘焙進測試）；另 MUST 有一項對 `tests/helpers/real-schedule.ts` 真實課表的檢查，斷言配額由重跑後的 198/200/243 導出而非硬編（FR-003b）
   > **實算對照基準（2026-08-02 對 F7 凍結課表算出，供 `material-quota` 除錯用）**——review 的週分組不因 F8 的
   > 移除 rest／跳過無題槽而改變（兩者都不影響哪些 concept 落在同一輪），故**新課表應算出同一組配額**：
   >
@@ -145,10 +145,10 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
   > 它的用途是**實作時的對照**：真實課表若算出與此明顯不同的配額，先查是課綱／課表變了，還是
   > `resolveReviewTopic` 的歸屬規則寫錯了。這是本 Feature 唯一「錯了也不會報錯」的失效點，
   > 有一組已知正確答案可比，才不必等到素材生成完才發現門檻算歪。
-- [ ] T032 [P] [US1] 擴充 `tests/helpers/lesson.ts`：review fixture 支援指定 `reflectionQuestion` 與 `problems`，供 Renderer 與預算測試以純替身開發
-- [ ] T033 [P] [US1] 擴充 `tests/unit/compile-review.test.ts`：三軌各一個 review Session 編譯後 `reviewConcepts` 非空、`reflectionQuestion` 非空、`problems.length === 1`；素材缺席時欄位省略且不失敗（US1 Acceptance 1、FR-014）
-- [ ] T034 [P] [US1] 擴充 `tests/unit/renderer.test.ts`：review embed 依序含「📚 本週涵蓋」「🤔 Reflection」「🎯 Challenge」，任一素材缺席時整段省略且不留空欄位或佔位字串（FR-021）
-- [ ] T035 [P] [US1] 擴充 `tests/unit/budget-slot-parity.test.ts`（**檔案已存在**，見下方搬移說明）：review 版面每一段可變長度文字（`reflectionQuestion`、`problems`）都有對應登記的 budget slot，並通過逐區塊上限與單則 ≤ 5,500 的總量檢查（FR-024、FR-025、US1 Acceptance 4）
+- [X] T032 [P] [US1] 擴充 `tests/helpers/lesson.ts`：review fixture 支援指定 `reflectionQuestion` 與 `problems`，供 Renderer 與預算測試以純替身開發
+- [X] T033 [P] [US1] 擴充 `tests/unit/compile-review.test.ts`：三軌各一個 review Session 編譯後 `reviewConcepts` 非空、`reflectionQuestion` 非空、`problems.length === 1`；素材缺席時欄位省略且不失敗（US1 Acceptance 1、FR-014）
+- [X] T034 [P] [US1] 擴充 `tests/unit/renderer.test.ts`：review embed 依序含「📚 本週涵蓋」「🤔 Reflection」「🎯 Challenge」，任一素材缺席時整段省略且不留空欄位或佔位字串（FR-021）
+- [X] T035 [P] [US1] 擴充 `tests/unit/budget-slot-parity.test.ts`（**檔案已存在**，見下方搬移說明）：review 版面每一段可變長度文字（`reflectionQuestion`、`problems`）都有對應登記的 budget slot，並通過逐區塊上限與單則 ≤ 5,500 的總量檢查（FR-024、FR-025、US1 Acceptance 4）
   > **`📚 本週涵蓋`（`reviewConcepts`）MUST NOT 被要求登記 slot**：它是 `docs/spec.md` §14.5 明文例外的「由 Compiler 依課表生成的清單」，由 embed field value ≤1024 與總長兜底（FR-024、contracts/review-selection.md §6）。既有測試的 `EXEMPT_FIELDS` 已釘死此例外，**MUST NOT 移除**。
   > **檔案來源（已於 F8 規劃期完成，非實作任務）**：`tests/unit/budget-slot-parity.test.ts` 由 `tests/unit/review-fixes.test.ts` **純搬移**而來（行為未變更）——該不變式涵蓋全部版面類型、屬全域不變式，不該住在「某一輪 findings 的回歸測試」檔內。`docs/spec.md` §14.5 與 `specs/005-lesson-compiler` 的兩份契約已同步改指向本檔。**本 Feature 的實作只在其上追加斷言，MUST NOT 再搬動它。**
 
@@ -177,20 +177,20 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 
 ### US2 實作
 
-- [ ] T036 [US2] 於 `src/types/lesson.ts` 為 `ReviewLesson` 新增 `encouragement?: string`；`RestLesson.encouragement` 與 `SessionType` 的 `"rest"` **保留不刪**（FR-010、FR-014c、data-model.md §3）
-- [ ] T037 [US2] 實作 `reviewOrdinalOf(schedule, sessionIndex)` 與 `selectEncouragement(input)` 於 `src/compiler/material.ts`：`index = (reviewOrdinal + trackOffset) mod quotes.length`，`reviewOrdinal` 為該 Track 全部 review Session 依 `sessionIndex` 升冪的 0-based 序位；池為空 ⇒ `undefined`。**MUST NOT 改用 `sessionIndex` 對池大小取模**（FR-012、research R5、contracts/review-selection.md §4）
-- [ ] T038 [US2] 於 `src/compiler/lesson.ts` 的 `compileReview` 填入 `encouragement`（同 T027 的空字串處置）；`compileRest` 既有的 `encouragement` 填入路徑 MUST 保留不動（FR-010、FR-014c）
-- [ ] T039 [US2] 於 `src/compiler/material.ts` 的 `checkMaterials` 補上 Encouragement **專屬**判準：`material-pool-size`（`quotes.length < 30`）與 `material-progress-coupled`（命中 `http(s)://`／markdown 連結語法／`LeetCode` 不分大小寫／`#\d+` 題號樣式）；**MUST NOT 比對 Concept id 或 title 清單**（FR-007、FR-008、research R13）
+- [X] T036 [US2] 於 `src/types/lesson.ts` 為 `ReviewLesson` 新增 `encouragement?: string`；`RestLesson.encouragement` 與 `SessionType` 的 `"rest"` **保留不刪**（FR-010、FR-014c、data-model.md §3）
+- [X] T037 [US2] 實作 `reviewOrdinalOf(schedule, sessionIndex)` 與 `selectEncouragement(input)` 於 `src/compiler/material.ts`：`index = (reviewOrdinal + trackOffset) mod quotes.length`，`reviewOrdinal` 為該 Track 全部 review Session 依 `sessionIndex` 升冪的 0-based 序位；池為空 ⇒ `undefined`。**MUST NOT 改用 `sessionIndex` 對池大小取模**（FR-012、research R5、contracts/review-selection.md §4）
+- [X] T038 [US2] 於 `src/compiler/lesson.ts` 的 `compileReview` 填入 `encouragement`（同 T027 的空字串處置）；`compileRest` 既有的 `encouragement` 填入路徑 MUST 保留不動（FR-010、FR-014c）
+- [X] T039 [US2] 於 `src/compiler/material.ts` 的 `checkMaterials` 補上 Encouragement **專屬**判準：`material-pool-size`（`quotes.length < 30`）與 `material-progress-coupled`（命中 `http(s)://`／markdown 連結語法／`LeetCode` 不分大小寫／`#\d+` 題號樣式）；**MUST NOT 比對 Concept id 或 title 清單**（FR-007、FR-008、research R13）
   > **共用判準（`material-budget` / `material-traditional-chinese` / `material-duplicate`）已由 T028 一併套用於 `quotes`，本任務 MUST NOT 重寫**；本任務只加上表列的兩個語錄池專屬 rule。若 T028 尚未完成，本任務 MUST 等它——兩者同檔同函式。
-- [ ] T040 [US2] 於 `src/renderer/discord.ts` 的 `buildReviewBlocks` 補上「💬 一句話」field：MUST 為**最後一段**（Challenge 之後），MUST 同時登記 `slots.encouragement`，缺席即整段省略；`buildRestBlocks` 不變；Renderer 維持 stateless 純函式，MUST NOT 讀素材檔（FR-021–FR-023、contracts/review-selection.md §6）
+- [X] T040 [US2] 於 `src/renderer/discord.ts` 的 `buildReviewBlocks` 補上「💬 一句話」field：MUST 為**最後一段**（Challenge 之後），MUST 同時登記 `slots.encouragement`，缺席即整段省略；`buildRestBlocks` 不變；Renderer 維持 stateless 純函式，MUST NOT 讀素材檔（FR-021–FR-023、contracts/review-selection.md §6）
 
 ### US2 測試
 
-- [ ] T041 [P] [US2] 擴充 `tests/unit/material-select.test.ts` 的鼓勵語區塊：不變式 I5–I9（同一輸入恆同一則、連續 N 個互異、連續 30 個互異、相鄰不重複、三軌同一 `reviewOrdinal` 互異）（FR-012、SC-002）
-- [ ] T042 [P] [US2] 擴充 `tests/unit/material-gate.test.ts`：語錄池 29 則被 `material-pool-size` 擋下、含 URL／`LeetCode`／`#123` 的語錄被 `material-progress-coupled` 擋下、超 200 字元被 `material-budget` 擋下、重複語錄被 `material-duplicate` 擋下（FR-028、SC-007）
-- [ ] T043 [P] [US2] 擴充 `tests/unit/renderer.test.ts`：review embed 四段順序為「📚 本週涵蓋 → 🤔 Reflection → 🎯 Challenge → 💬 一句話」，鼓勵語 MUST NOT 出現在 Reflection 與 Challenge 之間；`encouragement` 缺席時該段省略（FR-022、US2 Acceptance 5）
-- [ ] T044 [P] [US2] 擴充 `tests/unit/budget-slot-parity.test.ts`：`encouragement` 亦登記對應 slot，並驗證四段合計（300 + 350×1 + 200 + 涵蓋清單）仍 ≤ 5,500（FR-024、US2 Acceptance 4）
-- [ ] T045 [P] [US2] 擴充 `tests/unit/compile-review.test.ts`：`encouragement` 非空且存在於語錄池中；同一 Track 連續 N 個 review 取得 N 則互異（US2 Acceptance 1–3）
+- [X] T041 [P] [US2] 擴充 `tests/unit/material-select.test.ts` 的鼓勵語區塊：不變式 I5–I9（同一輸入恆同一則、連續 N 個互異、連續 30 個互異、相鄰不重複、三軌同一 `reviewOrdinal` 互異）（FR-012、SC-002）
+- [X] T042 [P] [US2] 擴充 `tests/unit/material-gate.test.ts`：語錄池 29 則被 `material-pool-size` 擋下、含 URL／`LeetCode`／`#123` 的語錄被 `material-progress-coupled` 擋下、超 200 字元被 `material-budget` 擋下、重複語錄被 `material-duplicate` 擋下（FR-028、SC-007）
+- [X] T043 [P] [US2] 擴充 `tests/unit/renderer.test.ts`：review embed 四段順序為「📚 本週涵蓋 → 🤔 Reflection → 🎯 Challenge → 💬 一句話」，鼓勵語 MUST NOT 出現在 Reflection 與 Challenge 之間；`encouragement` 缺席時該段省略（FR-022、US2 Acceptance 5）
+- [X] T044 [P] [US2] 擴充 `tests/unit/budget-slot-parity.test.ts`：`encouragement` 亦登記對應 slot，並驗證四段合計（300 + 350×1 + 200 + 涵蓋清單）仍 ≤ 5,500（FR-024、US2 Acceptance 4）
+- [X] T045 [P] [US2] 擴充 `tests/unit/compile-review.test.ts`：`encouragement` 非空且存在於語錄池中；同一 Track 連續 N 個 review 取得 N 則互異（US2 Acceptance 1–3）
 
 **Checkpoint**: US1 與 US2 皆可獨立通過測試，review 四段版面在替身素材下完整
 

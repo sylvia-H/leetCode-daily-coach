@@ -42,6 +42,7 @@ describe("slot⇄field 對等不變式（全版面）", () => {
         reviewConcepts: [{ id: "a", title: "A" }],
         reflectionQuestion: "反思問題",
         problems: [{ id: 1, title: "T", url: "https://x/", difficulty: "Easy" }],
+        encouragement: "加油！",
       }),
       makeLesson({ type: "rest", encouragement: "加油！" }),
     ];
@@ -62,5 +63,28 @@ describe("slot⇄field 對等不變式（全版面）", () => {
         }
       }
     }
+  });
+
+  // F8（US1/US2）：review 四段（📚 本週涵蓋 / 🤔 Reflection / 🎯 Challenge / 💬 一句話）的每一段
+  // 可變長度文字皆已由上一測試驗證登記 slot；本測試額外釘死「理論最大長度合計仍遠低於 5,500」
+  // （contracts/review-selection.md §6.1），避免未來調高單則上限時悄悄逼近總量上限而無人察覺。
+  it("review 四段合計（300 + 350×1 + 200 + 涵蓋清單）仍 ≤ 5,500", () => {
+    const lesson = makeLesson({
+      type: "review",
+      reviewConcepts: [
+        { id: "a", title: "Array Traversal" },
+        { id: "b", title: "In-place Operations" },
+      ],
+      reflectionQuestion: "反".repeat(300),
+      problems: [{ id: 1, title: "T".repeat(50), url: "https://x/", difficulty: "Easy", whyThisPattern: "理".repeat(200) }],
+      encouragement: "鼓".repeat(200),
+    });
+    const [message] = render(lesson);
+    const total = message!.embeds.reduce((sum, embed) => {
+      let t = (embed.title?.length ?? 0) + (embed.description?.length ?? 0);
+      for (const f of embed.fields ?? []) t += f.name.length + f.value.length;
+      return sum + t;
+    }, 0);
+    expect(total).toBeLessThanOrEqual(5500);
   });
 });

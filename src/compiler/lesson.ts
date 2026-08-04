@@ -5,6 +5,14 @@ import { z } from "zod";
 import { TRACK_ORDER } from "../config.js";
 import { loadCurriculum, validateCurriculum } from "./curriculum.js";
 import { type ArticleContent, DEFAULT_MODULE_COLOR, moduleColor, parseArticle } from "./content.js";
+import {
+  encouragementPoolSchema,
+  reflectionBankSchema,
+  selectEncouragement,
+  selectReflectionQuestion,
+  type EncouragementPool,
+  type ReflectionBank,
+} from "./material.js";
 import { getOverlayNotes, loadAllOverlays } from "./overlay.js";
 import { getProblemsForConcept, loadProblemBank, makeProblemExists } from "./problem.js";
 import { getSessionPlan, loadAllSchedules } from "./schedule.js";
@@ -34,8 +42,8 @@ export interface CompilerDeps {
   readArticle: (path: string) => string;
   articleCache?: Map<string, ArticleContent>;
   problemOrigins: Record<Track, ProblemOrigin>;
-  reflectionBank?: unknown;
-  encouragement?: unknown;
+  reflectionBank?: ReflectionBank;
+  encouragement?: EncouragementPool;
 }
 
 export interface CompilerPaths {
@@ -107,19 +115,7 @@ export function checkOverlayCoverage(
   }
 }
 
-/**
- * F8 素材（`data/reflection-bank.json` / `data/encouragement.json`）的**最小結構** schema。
- * 完整 schema（依 Topic／週次組織、決定性輪替規則）屬 F8；此處只釘住足以讓
- * contracts/lesson-contract.md §1「存在但不符 schema ⇒ fail loud」成立的骨架，避免把「壞檔」
- * 靜默當成「缺席」——後者會讓一個打錯字的 JSON 讓整個段落無聲消失。
- */
-const REFLECTION_BANK_SHAPE = z.record(z.string(), z.unknown());
-const ENCOURAGEMENT_SHAPE = z.union([
-  z.array(z.string().min(1)).min(1),
-  z.record(z.string(), z.unknown()),
-]);
-
-function loadOptionalMaterial(path: string, label: string, shape: z.ZodTypeAny): unknown {
+function loadOptionalMaterial<T>(path: string, label: string, shape: z.ZodType<T>): T | undefined {
   if (!existsSync(path)) return undefined;
 
   let raw: unknown;
@@ -181,9 +177,9 @@ export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDe
     problemOrigins,
   };
 
-  const reflectionBank = loadOptionalMaterial(p.reflectionBankPath, "reflection bank", REFLECTION_BANK_SHAPE);
+  const reflectionBank = loadOptionalMaterial(p.reflectionBankPath, "reflection bank", reflectionBankSchema);
   if (reflectionBank !== undefined) deps.reflectionBank = reflectionBank;
-  const encouragement = loadOptionalMaterial(p.encouragementPath, "encouragement", ENCOURAGEMENT_SHAPE);
+  const encouragement = loadOptionalMaterial(p.encouragementPath, "encouragement", encouragementPoolSchema);
   if (encouragement !== undefined) deps.encouragement = encouragement;
 
   return deps;
@@ -381,7 +377,7 @@ function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, sche
   }
 
   const problems = buildOriginProblems(plan.problemIds ?? [], deps, track, plan.sessionIndex);
-  return {
+  const lesson: ReviewLesson = {
     sessionIndex: plan.sessionIndex,
     type: "review",
     track,
@@ -389,6 +385,19 @@ function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, sche
     problems,
     reviewConcepts,
   };
+
+  // F8 素材（contracts/review-selection.md §5）：MUST NOT 以空字串填充（沿用 overlayNotes 的既有處置），
+  // 否則 Renderer 會長出一個空欄位；缺席／查無對應 Topic／池為空皆回傳 undefined，此處自然省略。
+  if (deps.reflectionBank) {
+    const q = selectReflectionQuestion({ bank: deps.reflectionBank, schedule, graph: deps.graph, track, sessionIndex: plan.sessionIndex });
+    if (q !== undefined && q.trim() !== "") lesson.reflectionQuestion = q;
+  }
+  if (deps.encouragement) {
+    const e = selectEncouragement({ pool: deps.encouragement, schedule, track, sessionIndex: plan.sessionIndex });
+    if (e !== undefined && e.trim() !== "") lesson.encouragement = e;
+  }
+
+  return lesson;
 }
 
 function compileRest(track: Track, plan: SessionPlan): RestLesson {
