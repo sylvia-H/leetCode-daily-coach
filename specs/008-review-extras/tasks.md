@@ -223,8 +223,8 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 
 - [X] T056 [P] [US3] 新增 `tests/unit/material-generate.test.ts`（以 `GenAiLike` 假物件替身，MUST NOT 打真實 API）：self-check 解析失敗算一次重生且不造成 unhandled rejection、3 次不過標記 `needsHumanReview` 且該批不寫入、其餘批次照常完成、整體以非零 exit code 收尾；續跑跳過已通過批次（零重複呼叫）、`--force` 覆蓋、`--only` 只跑指定批次（FR-026、FR-028a/b、SC-008、SC-011）；並驗證 **canonical 序列化**（FR-009a）：對合成的 `ReflectionBank` / `EncouragementPool` 呼叫序列化路徑，斷言輸出為 2-space 縮排、檔尾恰一個 `\n`、`byTopic` 的 key 序等於 `modules.json` 的「Module 宣告序 → Module 內 Topic 宣告序」（**MUST NOT 為字典序或插入序**），且同一輸入連跑兩次 byte-identical
   > **此項不是形式主義**：SC-008 的「重跑零 diff」與 FR-026 的「不覆蓋未變更產物」都以 canonical 序列化為前提——鍵序一漂移，每次重跑都會產生假 diff，兩者皆無從觀測。
-- [ ] T057 [US3] 帶 `GEMINI_API_KEY` 執行 `npm run generate:materials`，產出並凍結 `data/reflection-bank.json`（16 Topic × 6 則）與 `data/encouragement.json`（36 則），review diff 後 commit（type `feat`、scope `008-review-extras`）
-- [ ] T058 [US3] 驗證 SC-008 與 SC-009：再次執行 `npm run generate:materials` 確認全部批次印出「跳過」且 `git status` 對 `data/` 乾淨；`git status --porcelain -- concepts/ articles/` 無輸出（SC-008、SC-009、quickstart §3.1/§3.2）
+- [X] T057 [US3] 帶 `GEMINI_API_KEY` 執行 `npm run generate:materials`，產出並凍結 `data/reflection-bank.json`（16 Topic × 6 則）與 `data/encouragement.json`（36 則），review diff 後 commit（type `feat`、scope `008-review-extras`）
+- [X] T058 [US3] 驗證 SC-008 與 SC-009：再次執行 `npm run generate:materials` 確認全部批次印出「跳過」且 `git status` 對 `data/` 乾淨；`git status --porcelain -- concepts/ articles/` 無輸出（SC-008、SC-009、quickstart §3.1/§3.2）
   > **SC-009 有兩個查驗，本任務只涵蓋第一個**（產線執行後 worktree 乾淨）。第二個——「Feature 併入前，該分支相對於 F7 基準對這兩個目錄的 diff 為空」——落在 T065，見該任務。兩者不可互相取代：worktree 乾淨只證明「這一次執行沒改」，不證明「整個 Feature 期間沒改」。
 
 **Checkpoint**: 真實素材已凍結入庫，三個 User Story 全部可對真實資料驗收
