@@ -53,6 +53,7 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 ### 2A. 參數層與型別
 
 - [X] T003 [P] 放寬 rhythm schema 於 `src/compiler/schedule-schema.ts`：`rhythm` 由 `.length(7)` 改為 `.min(2).max(14)`；`validateRhythm` 移除「MUST 含至少一個 `rest`」檢查，保留「≥1 concept」「≥1 review」「第一個 practice 晚於第一個 concept」「最後一個 review 不早於最後一個 concept」四條，違規仍以既有 `param-invalid` 回報（FR-014b/FR-014b1、research R1、contracts/schedule-revision.md §1）
+  - 補記（審查後修訂）：另補第五條「第一個 review 晚於第一個 concept」——`["review","concept","review"]` 過得了前四條卻生出 `reviewRange = [1, 0]` 的空區間，§2.4 的「reviewRange 恆非空」原本只是對現行三軌 rhythm 的假設，此條升級為參數層強制（contracts/schedule-revision.md §1）
 - [X] T004 [P] 新增三個違規 rule 於 `src/types/schedule.ts`：`practice-no-problem`、`review-no-problem`、`review-challenge-duplicate`（皆 warning 級），並把 `rhythm` 的註解由「長度 7；MUST 含 ≥1 review 與 ≥1 rest」改為「長度 2–14；MUST 含 ≥1 concept 與 ≥1 review」（data-model.md §7）
 - [X] T005 移除三軌 rest 槽於 `curriculum/track-params.json`：`foundation` / `interviewReady` / `interviewMastery` 的 `rhythm` 各刪去末槽 `"rest"`（7 → 6 槽），`targetLevel` / `maxLevel` / `problemDifficulties` / `challengeDifficulty` 一律不動（FR-014a、data-model.md §5）
 

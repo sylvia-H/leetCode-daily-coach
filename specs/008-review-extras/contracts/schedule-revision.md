@@ -16,8 +16,15 @@
 | ≥1 concept 槽 | 保留 | **保留** | — |
 | 第一個 practice 晚於第一個 concept | 保留 | **保留** | — |
 | 最後一個 review 不早於最後一個 concept | 保留 | **保留** | — |
+| 第一個 review 晚於第一個 concept | （未檢查） | **新增** | §2.4（假設升級為強制） |
 
 違規一律以既有的 `param-invalid` 具名回報（不新增 rule）。
+
+**新增第五條的理由**：原本僅「最後一個 review 不早於最後一個 concept」一條，擋不下
+`["review","concept","review"]` 這類排法——它 schema-valid，卻讓每週第一個 review 產出
+`reviewRange = [weekStart, weekStart−1]` 的空區間，錯誤延後到 `validateSchedule` 才以
+`review-range-invalid` 指向 Session 而非根因 rhythm。此條與「第一個 practice 晚於第一個 concept」
+完全對稱，把 §2.4 原本對現行三軌 rhythm 的**假設**升級為參數層強制。
 
 **`track-params.json` 三軌 rhythm 各移除末槽 `"rest"`**（7 → 6）；其餘欄位不動。
 
@@ -79,9 +86,9 @@ runtime 跳過會違反 §19 的「推播成功才 +1」與「漏跑不跳課」
 
 被跳過的槽未消耗 `sessionIndex`，`[weekStartIndex, sessionIndex − 1]` 自動收縮至該週實際產生的
 Session 範圍。**每一個被產生的週必含至少一個 concept Session**（`while` 進入條件為佇列非空，
-且三軌 rhythm 首槽皆為 `concept`），故 `reviewRange` 恆非空、`compileReview` 不會撞上
-「range 內無 concept Session」。既有的 `review-range-invalid` 與 `review-coverage-gap`
-維持為護欄，不放寬。
+且 §1 第五條約束保證第一個 review 晚於第一個 concept 槽），故 `reviewRange` 恆非空、
+`compileReview` 不會撞上「range 內無 concept Session」。既有的 `review-range-invalid` 與
+`review-coverage-gap` 維持為護欄，不放寬。
 
 ---
 
