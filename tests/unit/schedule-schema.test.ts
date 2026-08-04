@@ -110,6 +110,21 @@ describe("parseTrackParamsFile（US1 / SC-008）", () => {
     expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
   });
 
+  it("rhythm 的第一個 review 早於第一個 concept → param-invalid（該 review 的 reviewRange 內無 concept）", () => {
+    // review 落首槽是最極端的形態：reviewRange = [weekStart, weekStart−1]，start > end 的空區間。
+    // 兩處 review 使約束 3（最後一個 review 不早於最後一個 concept）成立，故只有本條擋得下它。
+    const firstSlot = makeParamsFile({ foundation: { rhythm: ["review", "concept", "review"] } });
+    expect(parseTrackParamsFile(firstSlot, MODULES).violations.some((v) => v.rule === "param-invalid")).toBe(true);
+
+    // 非首槽但仍早於第一個 concept：區間非空卻只含 challenge Session，一樣沒有 concept 可複習。
+    const beforeFirstConcept = makeParamsFile({
+      foundation: { rhythm: ["challenge", "review", "concept", "review"] },
+    });
+    expect(
+      parseTrackParamsFile(beforeFirstConcept, MODULES).violations.some((v) => v.rule === "param-invalid"),
+    ).toBe(true);
+  });
+
   it("problemDifficulties 為空 → param-invalid", () => {
     const raw = makeParamsFile({ foundation: { problemDifficulties: [] } });
     const { violations } = parseTrackParamsFile(raw, MODULES);
