@@ -213,15 +213,15 @@ Rename-Item data\reflection-bank.json.off data\reflection-bank.json
 
 ## 7. 完成判準（對照 Success Criteria）
 
-- [ ] SC-001 三軌全部 review 呈現前三段；Challenge 省略僅發生於**該週涵蓋 Concept 全無題**，且每筆有 warning。預期 **4 / 3 / 3** 筆——`programming-mindset` 開頭數週**＋各軌 1 筆課程中段**（Foundation w28、InterviewReady w21、InterviewMastery w28），中段那筆同樣合法，MUST NOT 以「是否在開頭」判定
-- [ ] SC-002 全部 review 結尾有鼓勵語；連續 30 個互異
-- [ ] SC-003 641 筆 Lesson 全數通過預算與結構檢查
-- [ ] SC-004 重複編譯 100 次 byte-identical
-- [ ] SC-005 課表 198 / 200 / 243、byte-identical、Concept 集合與順序不變
-- [ ] SC-006 零金鑰環境下推播流程與 CI Gate 皆成功
-- [ ] SC-007 素材 Gate 的 8 個具名 rule 全數有對應驗證（§6 的六個人工樣本 + T031 的兩項單元測試），100% 攔截並指名根因
-- [ ] SC-008 中斷後重跑零重複 LLM 呼叫
-- [ ] SC-009 `concepts/**` 與 `articles/**` 零變更（**兩個查驗皆須通過**：§3.2 的 `git status` 與併入前的 `git diff --stat db3f594`）
-- [ ] SC-010 單一 Track 內同一則 Reflection 只出現一次
-- [ ] SC-011 語意重複／是非題樣本 100% 被 self-check 標記；3 次不過者不進凍結產物
-- [ ] SC-012 空 `practice` / `challenge` Session 數為 0，每個跳過有 warning
+- [X] SC-001 三軌全部 review 呈現前三段；Challenge 省略僅發生於**該週涵蓋 Concept 全無題**，且每筆有 warning。預期 **4 / 3 / 3** 筆——`programming-mindset` 開頭數週**＋各軌 1 筆課程中段**（Foundation w28、InterviewReady w21、InterviewMastery w28），中段那筆同樣合法，MUST NOT 以「是否在開頭」判定（`tests/unit/schedule-warning-traceability.test.ts` 雙向驗證 + 筆數釘死 4/3/3）
+- [X] SC-002 全部 review 結尾有鼓勵語；連續 30 個互異（對真實課表與真實素材驗證，`tests/unit/material-select.test.ts`）
+- [X] SC-003 641 筆 Lesson 全數通過預算與結構檢查（`npm run validate:content` 零違規）
+- [X] SC-004 重複編譯 100 次 byte-identical（`tests/unit/compile-determinism.test.ts`，含 review Session render）
+- [X] SC-005 課表 198 / 200 / 243、byte-identical、Concept 集合與順序不變（`npm run generate:schedule` 兩次 sha256 相同；`tests/unit/schedule-concept-order.test.ts` 對 F7 基準 db3f594 逐一比對）
+- [X] SC-006 零金鑰環境下推播流程與 CI Gate 皆成功（`npm run build/typecheck/test/validate:*` 全數通過，`DRY_RUN=true node dist/main.js` 亦成功）
+- [X] SC-007 素材 Gate 的 8 個具名 rule 全數有對應驗證（§6 的六個人工樣本實測攔截 + `material-gate.test.ts`/`material-load.test.ts` 涵蓋 `material-schema`/`material-unknown-topic`），100% 攔截並指名根因、零自動截斷
+- [X] SC-008 中斷後重跑零重複 LLM 呼叫（實測：`npm run generate:materials` 第二次執行全部 17 批次印出「跳過」，`data/` 內容不變）
+- [X] SC-009 `concepts/**` 與 `articles/**` 零變更（**兩個查驗皆已通過**：`git status --porcelain` 乾淨、`git diff --stat db3f594 -- concepts/ articles/` 無輸出）
+- [X] SC-010 單一 Track 內同一則 Reflection 只出現一次（對真實課表與真實素材驗證，同一 Track 內無問題被選中 >1 次）
+- [X] SC-011 語意重複／是非題樣本 100% 被 self-check 標記；3 次不過者不進凍結產物（機制以 `tests/unit/material-generate.test.ts` 驗證：self-check 解析失敗算一次重生、3 次不過標記 needsHumanReview 且不寫入；實際生成時 16 個 Topic 首次嘗試即通過，無觸發重生案例可觀察，符合 quickstart 第二輪 CHK011 的既有判定——本項不宣稱保證真實 LLM 判斷力，只驗證機制正確運作）
+- [X] SC-012 空 `practice` / `challenge` Session 數為 0，每個跳過有 warning（`tests/unit/schedule-warning-traceability.test.ts`）

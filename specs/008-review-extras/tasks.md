@@ -236,10 +236,10 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 **Purpose**: 對真實課表與真實素材的端到端驗收，以及 quickstart 的完整走查。
 
 - [X] T059 [P] 擴充 `tests/unit/compile-determinism.test.ts`：同一 `(track, sessionIndex)` 的 review Session 重複編譯並 render 100 次，embeds byte-identical（含同一則 Reflection、同一則鼓勵語、同一題 Challenge）（SC-004、US1 Acceptance 2）
-- [ ] T060 [P] 新增對真實課表與真實素材的驗證（建議置於 `tests/unit/material-select.test.ts`，沿用 `tests/helpers/real-schedule.ts`）：三軌各自連續 30 個 review 的鼓勵語互異（SC-002）；單一 Track 內同一則 Reflection 問題被選中次數為 1（SC-010）；三軌 review Session 全部具備非空 `reflectionQuestion` 與 `encouragement`
-- [ ] T061 執行 quickstart §4 零金鑰驗證：移除 `GEMINI_API_KEY` 後 `npm run build`、`npm run typecheck`、`npm test`、`npm run validate:curriculum`、`npm run validate:problem-bank`、`npm run validate:schedule`、`npm run validate:content` 全數通過，且 `validate:content` 印出 **641 筆 Lesson**（SC-003、SC-006、FR-030）
-- [ ] T062 執行 quickstart §5 版面驗收：`DRY_RUN=true` 執行 `node dist/main.js`，挑一個 review Session 確認 embed 依序含四段且鼓勵語在最後；並執行 §5.2 的素材檔改名降級測試（改名後 `validate:content` 仍通過、段落省略）（US1/US2 Independent Test、FR-014）
-- [ ] T063 執行 quickstart §6 Gate 攔截驗證：逐一植入六個違規樣本（Reflection >300 ⇒ `material-budget`、語錄含簡體字 ⇒ `material-traditional-chinese`、跨 Topic 重複 ⇒ `material-duplicate`、某 Topic 刪至 1 則 ⇒ `material-quota`、語錄含 URL ⇒ `material-progress-coupled`、語錄池刪至 29 則 ⇒ `material-pool-size`），確認每一項都被 `material-invalid` 具名擋下且零自動截斷，驗完 `git checkout -- data/` 還原。**這六個樣本涵蓋 8 個 rule 中的 6 個**，另兩個（`material-schema` / `material-unknown-topic`）由 T031 的單元測試覆蓋（SC-007）
+- [X] T060 [P] 新增對真實課表與真實素材的驗證（建議置於 `tests/unit/material-select.test.ts`，沿用 `tests/helpers/real-schedule.ts`）：三軌各自連續 30 個 review 的鼓勵語互異（SC-002）；單一 Track 內同一則 Reflection 問題被選中次數為 1（SC-010）；三軌 review Session 全部具備非空 `reflectionQuestion` 與 `encouragement`
+- [X] T061 執行 quickstart §4 零金鑰驗證：移除 `GEMINI_API_KEY` 後 `npm run build`、`npm run typecheck`、`npm test`、`npm run validate:curriculum`、`npm run validate:problem-bank`、`npm run validate:schedule`、`npm run validate:content` 全數通過，且 `validate:content` 印出 **641 筆 Lesson**（SC-003、SC-006、FR-030）
+- [X] T062 執行 quickstart §5 版面驗收：`DRY_RUN=true` 執行 `node dist/main.js`，挑一個 review Session 確認 embed 依序含四段且鼓勵語在最後；並執行 §5.2 的素材檔改名降級測試（改名後 `validate:content` 仍通過、段落省略）（US1/US2 Independent Test、FR-014）
+- [X] T063 執行 quickstart §6 Gate 攔截驗證：逐一植入六個違規樣本（Reflection >300 ⇒ `material-budget`、語錄含簡體字 ⇒ `material-traditional-chinese`、跨 Topic 重複 ⇒ `material-duplicate`、某 Topic 刪至 1 則 ⇒ `material-quota`、語錄含 URL ⇒ `material-progress-coupled`、語錄池刪至 29 則 ⇒ `material-pool-size`），確認每一項都被 `material-invalid` 具名擋下且零自動截斷，驗完 `git checkout -- data/` 還原。**這六個樣本涵蓋 8 個 rule 中的 6 個**，另兩個（`material-schema` / `material-unknown-topic`）由 T031 的單元測試覆蓋（SC-007）
 - [X] T064 確認 SC-001 與 SC-012 的可追溯性：對三份課表統計 Challenge 段省略的 review Session，確認 100% 落在**該週涵蓋 Concept 全無題目**的情境，且每一筆都有對應具名 warning；`problemIds` 為空的 practice / challenge Session 數為 0（SC-001、SC-012）
   > **預期落點（2026-08-02 對 F7 課表實算，review 數不因 F8 修訂而變，故對新課表同樣成立）**：
   > Foundation **4** 筆（w1/w2/w3 `programming-mindset` ＋ **w28 `queue`**）、InterviewReady **3** 筆
@@ -247,7 +247,7 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
   > **判準是「該週 Concept 是否全部無題」，MUST NOT 用「是否落在課程開頭」代替**——全課綱 27 個
   > `leetcode: []` 純觀念 Concept 中有 17 個散在 `programming-mindset` 之外，上列三筆課程中段的省略
   > **是合法的**，用開頭與否判斷會把它們誤判為缺陷（SC-001 的落點表）。
-- [ ] T065 收尾：勾選 [quickstart.md](./quickstart.md) §7 的 SC-001–SC-012 完成判準，確認 `docs/spec.md` 與 `.specify/memory/constitution.md` 的跨 Feature 決策已全部落地無矛盾，並建立最終階段 commit。**MUST 併入 SC-009 的第二個查驗**（T058 未涵蓋）：執行 `git diff --stat db3f594 -- concepts/ articles/` 確認**無輸出**，證明整個 Feature 期間相對 F7 基準對這兩個目錄零變更（SC-009）
+- [X] T065 收尾：勾選 [quickstart.md](./quickstart.md) §7 的 SC-001–SC-012 完成判準，確認 `docs/spec.md` 與 `.specify/memory/constitution.md` 的跨 Feature 決策已全部落地無矛盾，並建立最終階段 commit。**MUST 併入 SC-009 的第二個查驗**（T058 未涵蓋）：執行 `git diff --stat db3f594 -- concepts/ articles/` 確認**無輸出**，證明整個 Feature 期間相對 F7 基準對這兩個目錄零變更（SC-009）
 
 ---
 

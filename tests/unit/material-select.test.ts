@@ -2,6 +2,7 @@
 // I1-I4 為 Reflection 問題選取，I5-I9 為鼓勵語選取。全部案例皆以 material.ts 的純函式直接驗證
 // （不經 compile()），並額外釘死「三軌共用同一份素材輸入、選取邏輯無 per-track 分支」（FR-013、憲章 VI）。
 import { describe, expect, it } from "vitest";
+import { loadCompilerDeps } from "../../src/compiler/lesson.js";
 import {
   reviewOrdinalOf,
   resolveReviewTopic,
@@ -145,4 +146,61 @@ describe("鼓勵語選取（FR-012，contracts/review-selection.md §4）", () =
   it("reviewOrdinalOf 對非 review 的 sessionIndex 回傳 -1（防禦性）", () => {
     expect(reviewOrdinalOf(schedule, 1)).toBe(-1);
   });
+});
+
+describe("對真實課表與真實素材的驗收（T060、SC-002、SC-010）", () => {
+  const deps = loadCompilerDeps();
+  if (!deps.reflectionBank || !deps.encouragement) {
+    throw new Error("fixture 失效：data/reflection-bank.json / data/encouragement.json 應已凍結存在");
+  }
+  const reflectionBank = deps.reflectionBank;
+  const encouragementPool = deps.encouragement;
+
+  for (const track of TRACKS) {
+    it(`${track}：連續 30 個 review 的鼓勵語互異（SC-002）`, () => {
+      const reviewIndices = deps.schedules[track].sessions
+        .filter((s) => s.type === "review")
+        .map((s) => s.sessionIndex)
+        .slice(0, 30);
+      expect(reviewIndices.length).toBeGreaterThanOrEqual(30);
+      const quotes = reviewIndices.map((idx) =>
+        selectEncouragement({ pool: encouragementPool, schedule: deps.schedules[track], track, sessionIndex: idx }),
+      );
+      expect(new Set(quotes).size).toBe(30);
+    });
+
+    it(`${track}：單一 Track 內同一則 Reflection 問題被選中次數 ≤ 1（SC-010）`, () => {
+      const reviews = deps.schedules[track].sessions.filter((s) => s.type === "review");
+      const questions = reviews.map((s) =>
+        selectReflectionQuestion({
+          bank: reflectionBank,
+          schedule: deps.schedules[track],
+          graph: deps.graph,
+          track,
+          sessionIndex: s.sessionIndex,
+        }),
+      );
+      const defined = questions.filter((q): q is string => q !== undefined);
+      const counts = new Map<string, number>();
+      for (const q of defined) counts.set(q, (counts.get(q) ?? 0) + 1);
+      const overSelected = [...counts.entries()].filter(([, count]) => count > 1);
+      expect(overSelected, `重複被選中的問題：${JSON.stringify(overSelected)}`).toEqual([]);
+    });
+
+    it(`${track}：全部 review Session 皆具備非空 reflectionQuestion 與 encouragement`, () => {
+      const reviews = deps.schedules[track].sessions.filter((s) => s.type === "review");
+      for (const s of reviews) {
+        const q = selectReflectionQuestion({
+          bank: reflectionBank,
+          schedule: deps.schedules[track],
+          graph: deps.graph,
+          track,
+          sessionIndex: s.sessionIndex,
+        });
+        const e = selectEncouragement({ pool: encouragementPool, schedule: deps.schedules[track], track, sessionIndex: s.sessionIndex });
+        expect(q, `review #${s.sessionIndex} 缺 reflectionQuestion`).toBeTruthy();
+        expect(e, `review #${s.sessionIndex} 缺 encouragement`).toBeTruthy();
+      }
+    });
+  }
 });
