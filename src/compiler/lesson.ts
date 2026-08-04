@@ -115,7 +115,14 @@ export function checkOverlayCoverage(
   }
 }
 
-function loadOptionalMaterial<T>(path: string, label: string, shape: z.ZodType<T>): T | undefined {
+/**
+ * 素材檔載入的唯一實作：檔案缺席回 `undefined`（缺席合法，FR-014），存在但壞檔／不符 schema 一律
+ * throw 具名錯誤（`material-schema` 由載入層實現，contracts/material-schema.md §3 註記）。
+ * 匯出供 `scripts/generate-materials.ts` 重用同一顆判準（憲章 IX）：生成腳本若改以
+ * `JSON.parse(...) as ReflectionBank` 硬轉，半截／舊版檔案會在後續存取欄位時以 TypeError 爆開，
+ * 而非落在腳本一貫的「✗ + exit 1」路徑上。
+ */
+export function loadOptionalMaterial<T>(path: string, label: string, shape: z.ZodType<T>): T | undefined {
   if (!existsSync(path)) return undefined;
 
   let raw: unknown;

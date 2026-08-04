@@ -54,15 +54,22 @@ export function readJsonCheckpoint<T>(path: string, validate: (parsed: unknown) 
 }
 
 /**
- * 原子寫入任意 JSON checkpoint 檔（先寫同目錄暫存檔再 rename，F8 research R11）：批次每處理完一筆
- * 就存一次檔，若在 `writeFileSync` 寫到一半被 Ctrl-C／crash 打斷，就地覆蓋會留下半截 JSON，
- * 下次續跑時整份 checkpoint 不可用。
+ * 原子寫入任意文字檔（先寫同目錄暫存檔再 rename，F8 research R11）：批次每處理完一筆就存一次檔，
+ * 若在 `writeFileSync` 寫到一半被 Ctrl-C／crash 打斷，就地覆蓋會留下半截內容，下次續跑時整份檔案
+ * 不可用。**凍結產物（`data/reflection-bank.json` 等）比 checkpoint 更需要這層保護**——它們是真實
+ * 來源，半截 JSON 會讓隔天的 `loadCompilerDeps()` 在進入 per-track 迴圈之前就 throw、三軌全部停推。
+ * 呼叫端自備序列化（canonical 欄位序 / 排序）時 MUST 走這支，不要退回 `writeFileSync`。
  */
-export function writeJsonCheckpointAtomic(path: string, data: unknown): void {
+export function writeFileAtomic(path: string, content: string): void {
   mkdirSync(dirname(path), { recursive: true });
   const tmp = `${path}.tmp`;
-  writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`, "utf-8");
+  writeFileSync(tmp, content, "utf-8");
   renameSync(tmp, path);
+}
+
+/** 原子寫入任意 JSON checkpoint 檔（序列化後委派 `writeFileAtomic`，同一顆原子寫入路徑）。 */
+export function writeJsonCheckpointAtomic(path: string, data: unknown): void {
+  writeFileAtomic(path, `${JSON.stringify(data, null, 2)}\n`);
 }
 
 function isManifestShape(parsed: unknown): parsed is Manifest {

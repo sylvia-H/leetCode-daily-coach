@@ -2,16 +2,21 @@
 // 過品質 Gate 後凍結入 data/reflection-bank.json / data/encouragement.json。
 // process.exit / 檔案寫入 / LLM 呼叫只在本檔與 scripts/lib/（唯一入口，同 generate-content.ts 的形狀）。
 // MUST NOT 寫入 concepts/**、articles/**、schedules/**、curriculum/**（FR-027、SC-009）。
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
 import { loadCurriculum } from "../src/compiler/curriculum.js";
 import { runContentGate } from "../src/compiler/gate.js";
-import { loadCompilerDeps } from "../src/compiler/lesson.js";
-import { isProgressCoupled, orderedTopicIds, type EncouragementPool, type ReflectionBank } from "../src/compiler/material.js";
+import { loadCompilerDeps, loadOptionalMaterial } from "../src/compiler/lesson.js";
+import {
+  encouragementPoolSchema,
+  isProgressCoupled,
+  orderedTopicIds,
+  reflectionBankSchema,
+  type EncouragementPool,
+  type ReflectionBank,
+} from "../src/compiler/material.js";
 import { checkTraditionalChinese } from "../src/compiler/traditional-chinese.js";
 import { MATERIAL_BUDGET_LIMITS } from "../src/renderer/budget.js";
 import type { CurriculumGraph } from "../src/types/curriculum.js";
-import { hashContent } from "./lib/checkpoint.js";
+import { hashContent, writeFileAtomic } from "./lib/checkpoint.js";
 import { createLlmClient, type LlmClient } from "./lib/llm-client.js";
 import {
   ENCOURAGEMENT_BATCH_KEY,
@@ -287,12 +292,21 @@ async function main(): Promise<void> {
   const { graph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
   const topicIds = orderedTopicIds(graph);
 
-  const byTopic: Record<string, string[]> = existsSync(REFLECTION_BANK_PATH)
-    ? (JSON.parse(readFileSync(REFLECTION_BANK_PATH, "utf-8")) as ReflectionBank).byTopic
-    : {};
-  let quotes: string[] = existsSync(ENCOURAGEMENT_PATH)
-    ? (JSON.parse(readFileSync(ENCOURAGEMENT_PATH, "utf-8")) as EncouragementPool).quotes
-    : [];
+  // 既有素材檔 MUST 過 schema 才採信（重用 runtime 同一顆載入判準，憲章 IX）：素材檔是凍結的真實
+  // 來源，壞檔 MUST NOT 降級為空物件後被整份覆蓋，也 MUST NOT 以硬轉放行讓後續存取以 TypeError
+  // 爆開——一律 fail-fast，由人確認要修復還是刪除。
+  let existingBank: ReflectionBank | undefined;
+  let existingPool: EncouragementPool | undefined;
+  try {
+    existingBank = loadOptionalMaterial(REFLECTION_BANK_PATH, "reflection bank", reflectionBankSchema);
+    existingPool = loadOptionalMaterial(ENCOURAGEMENT_PATH, "encouragement", encouragementPoolSchema);
+  } catch (err) {
+    console.error(`✗ ${(err as Error).message}；MUST 先手動修復或刪除該檔再重跑（--force 不會繞過本檢查）`);
+    process.exit(1);
+    return;
+  }
+  const byTopic: Record<string, string[]> = existingBank?.byTopic ?? {};
+  let quotes: string[] = existingPool?.quotes ?? [];
 
   // manifest 遺失（.cache/ 為 gitignored）或損毀：由現存素材檔反推重建，MUST NOT 降級為空 manifest
   // 後覆蓋全部素材（data-model.md §9）。
@@ -337,8 +351,7 @@ async function main(): Promise<void> {
           regenCount: attempts,
         });
         saveMaterialManifest(manifest);
-        mkdirSync(dirname(REFLECTION_BANK_PATH), { recursive: true });
-        writeFileSync(REFLECTION_BANK_PATH, serializeReflectionBank(byTopic, graph), "utf-8");
+        writeFileAtomic(REFLECTION_BANK_PATH, serializeReflectionBank(byTopic, graph));
         console.log(`✓ reflection:${topicId}（第 ${attempts} 次嘗試通過）`);
       } else {
         anyNeedsHumanReview = true;
@@ -377,8 +390,7 @@ async function main(): Promise<void> {
             regenCount: attempts,
           });
           saveMaterialManifest(manifest);
-          mkdirSync(dirname(ENCOURAGEMENT_PATH), { recursive: true });
-          writeFileSync(ENCOURAGEMENT_PATH, serializeEncouragementPool(quotes), "utf-8");
+          writeFileAtomic(ENCOURAGEMENT_PATH, serializeEncouragementPool(quotes));
           console.log(`✓ encouragement（第 ${attempts} 次嘗試通過）`);
         } else {
           anyNeedsHumanReview = true;
