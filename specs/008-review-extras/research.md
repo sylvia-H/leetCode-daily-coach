@@ -395,7 +395,8 @@ MUST 以重跑後的課表為準）一輪最多繞回一次」推出來的
 | 日期 | 結果 | 判定 |
 | --- | --- | --- |
 | 2026-08-01（spec 撰寫時） | 三軌 `currentSessionIndex: 2` | ≤ 3，不需遷移 |
-| **2026-08-02（最近一次）** | **`state` 分支已重置**：三軌 `currentSessionIndex: 1`、`lastPushAt: null`、`completedConceptIds: []`、`history: []` | ≤ 3，且**從未推播** ⇒ 無任何進度需對齊，遷移不適用 |
+| 2026-08-02 | **`state` 分支已重置**：三軌 `currentSessionIndex: 1`、`lastPushAt: null`、`completedConceptIds: []`、`history: []` | ≤ 3，且**從未推播** ⇒ 無任何進度需對齊，遷移不適用 |
+| **2026-08-04（`/speckit-implement` T001 執行時，最近一次）** | 每日 cron 已正式運作：三軌 `currentSessionIndex: 3`、`history` 各 2 筆（`computational-thinking-basics`、`input-output-contract`），`lastPushAt: 2026-08-03T23:14` | **仍 ≤ 3，不需遷移**，但已貼近門檻邊界（下次推播即 index 4）⇒ 課表重跑 MUST 儘快完成，不得拖延至下次 cron 執行後 |
 
 **Rationale**：spec 的 Edge Cases 已查證「三軌 rhythm 的第 1、2 槽都是 concept 且 Concept 引入順序不變
 （SC-005），故新課表的 Session 1、2 仍指向同樣兩個 Concept，不需要 state 遷移」，並明文要求

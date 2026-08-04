@@ -144,6 +144,8 @@ describe("render — 五種 Session 類型（US2）", () => {
     expect(fieldNames).not.toContain("🎯 Challenge");
   });
 
+  // F8（rest 槽移除，FR-014c）：三份正式課表已無 rest Session，validate.ts 的全課表編譯不再涵蓋
+  // buildRestBlocks 這條路徑；以下兩個測試為其唯一覆蓋來源，MUST NOT 移除。
   it("rest：固定文案 + 無 encouragement 時省略該 field", () => {
     const lesson = makeLesson({ type: "rest", problems: [] });
     const [message] = render(lesson);

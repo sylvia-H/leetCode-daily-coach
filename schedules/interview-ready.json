@@ -24,73 +24,57 @@
     },
     {
       "sessionIndex": 5,
-      "type": "challenge"
-    },
-    {
-      "sessionIndex": 6,
       "type": "review",
       "reviewRange": [
         1,
-        5
+        4
       ]
     },
     {
-      "sessionIndex": 7,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 8,
+      "sessionIndex": 6,
       "type": "concept",
       "conceptId": "conditional-branching-logic"
     },
     {
-      "sessionIndex": 9,
+      "sessionIndex": 7,
       "type": "concept",
       "conceptId": "loop-invariant-thinking"
     },
     {
-      "sessionIndex": 10,
+      "sessionIndex": 8,
       "type": "concept",
       "conceptId": "problem-simplification-strategy"
     },
     {
-      "sessionIndex": 11,
+      "sessionIndex": 9,
       "type": "concept",
       "conceptId": "edge-case-enumeration"
     },
     {
-      "sessionIndex": 12,
-      "type": "challenge"
-    },
-    {
-      "sessionIndex": 13,
+      "sessionIndex": 10,
       "type": "review",
       "reviewRange": [
-        8,
-        12
+        6,
+        9
       ]
     },
     {
-      "sessionIndex": 14,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 15,
+      "sessionIndex": 11,
       "type": "concept",
       "conceptId": "spacetime-tradeoff-awareness"
     },
     {
-      "sessionIndex": 16,
+      "sessionIndex": 12,
       "type": "concept",
       "conceptId": "error-driven-refinement"
     },
     {
-      "sessionIndex": 17,
+      "sessionIndex": 13,
       "type": "concept",
       "conceptId": "array-memory-layout"
     },
     {
-      "sessionIndex": 18,
+      "sessionIndex": 14,
       "type": "concept",
       "conceptId": "array-linear-scan",
       "problemIds": [
@@ -100,26 +84,25 @@
       ]
     },
     {
-      "sessionIndex": 19,
+      "sessionIndex": 15,
       "type": "challenge",
       "problemIds": [
         238
       ]
     },
     {
-      "sessionIndex": 20,
+      "sessionIndex": 16,
       "type": "review",
       "reviewRange": [
-        15,
-        19
+        11,
+        15
+      ],
+      "problemIds": [
+        1480
       ]
     },
     {
-      "sessionIndex": 21,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 22,
+      "sessionIndex": 17,
       "type": "concept",
       "conceptId": "array-prefix-sum-basic",
       "problemIds": [
@@ -128,7 +111,7 @@
       ]
     },
     {
-      "sessionIndex": 23,
+      "sessionIndex": 18,
       "type": "concept",
       "conceptId": "array-range-sum-query",
       "problemIds": [
@@ -138,7 +121,7 @@
       ]
     },
     {
-      "sessionIndex": 24,
+      "sessionIndex": 19,
       "type": "concept",
       "conceptId": "array-two-pointers-opposite",
       "problemIds": [
@@ -148,7 +131,7 @@
       ]
     },
     {
-      "sessionIndex": 25,
+      "sessionIndex": 20,
       "type": "concept",
       "conceptId": "array-two-pointers-sliding",
       "problemIds": [
@@ -158,26 +141,25 @@
       ]
     },
     {
-      "sessionIndex": 26,
+      "sessionIndex": 21,
       "type": "challenge",
       "problemIds": [
         15
       ]
     },
     {
-      "sessionIndex": 27,
+      "sessionIndex": 22,
       "type": "review",
       "reviewRange": [
-        22,
-        26
+        17,
+        21
+      ],
+      "problemIds": [
+        303
       ]
     },
     {
-      "sessionIndex": 28,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 29,
+      "sessionIndex": 23,
       "type": "concept",
       "conceptId": "array-two-pointers-variable",
       "problemIds": [
@@ -185,7 +167,7 @@
       ]
     },
     {
-      "sessionIndex": 30,
+      "sessionIndex": 24,
       "type": "concept",
       "conceptId": "array-in-place-removal",
       "problemIds": [
@@ -194,7 +176,7 @@
       ]
     },
     {
-      "sessionIndex": 31,
+      "sessionIndex": 25,
       "type": "concept",
       "conceptId": "array-in-place-deduplication",
       "problemIds": [
@@ -203,7 +185,7 @@
       ]
     },
     {
-      "sessionIndex": 32,
+      "sessionIndex": 26,
       "type": "concept",
       "conceptId": "array-move-zeroes",
       "problemIds": [
@@ -211,26 +193,25 @@
       ]
     },
     {
-      "sessionIndex": 33,
+      "sessionIndex": 27,
       "type": "challenge",
       "problemIds": [
         80
       ]
     },
     {
-      "sessionIndex": 34,
+      "sessionIndex": 28,
       "type": "review",
       "reviewRange": [
-        29,
-        33
+        23,
+        27
+      ],
+      "problemIds": [
+        26
       ]
     },
     {
-      "sessionIndex": 35,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 36,
+      "sessionIndex": 29,
       "type": "concept",
       "conceptId": "hash-table-concept-introduction",
       "problemIds": [
@@ -240,7 +221,7 @@
       ]
     },
     {
-      "sessionIndex": 37,
+      "sessionIndex": 30,
       "type": "concept",
       "conceptId": "hash-table-frequency-counting",
       "problemIds": [
@@ -250,7 +231,7 @@
       ]
     },
     {
-      "sessionIndex": 38,
+      "sessionIndex": 31,
       "type": "concept",
       "conceptId": "hash-table-complement-lookup",
       "problemIds": [
@@ -259,7 +240,7 @@
       ]
     },
     {
-      "sessionIndex": 39,
+      "sessionIndex": 32,
       "type": "concept",
       "conceptId": "hash-table-existence-tracking",
       "problemIds": [
@@ -269,26 +250,25 @@
       ]
     },
     {
-      "sessionIndex": 40,
+      "sessionIndex": 33,
       "type": "challenge",
       "problemIds": [
         128
       ]
     },
     {
-      "sessionIndex": 41,
+      "sessionIndex": 34,
       "type": "review",
       "reviewRange": [
-        36,
-        40
+        29,
+        33
+      ],
+      "problemIds": [
+        1
       ]
     },
     {
-      "sessionIndex": 42,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 43,
+      "sessionIndex": 35,
       "type": "concept",
       "conceptId": "hash-table-sliding-window-distinct",
       "problemIds": [
@@ -297,7 +277,7 @@
       ]
     },
     {
-      "sessionIndex": 44,
+      "sessionIndex": 36,
       "type": "concept",
       "conceptId": "hash-table-sliding-window-frequency",
       "problemIds": [
@@ -305,7 +285,7 @@
       ]
     },
     {
-      "sessionIndex": 45,
+      "sessionIndex": 37,
       "type": "concept",
       "conceptId": "hash-table-grouping-anagrams",
       "problemIds": [
@@ -314,7 +294,7 @@
       ]
     },
     {
-      "sessionIndex": 46,
+      "sessionIndex": 38,
       "type": "concept",
       "conceptId": "hash-table-prefix-sum-frequency",
       "problemIds": [
@@ -323,26 +303,25 @@
       ]
     },
     {
-      "sessionIndex": 47,
+      "sessionIndex": 39,
       "type": "challenge",
       "problemIds": [
         3
       ]
     },
     {
-      "sessionIndex": 48,
+      "sessionIndex": 40,
       "type": "review",
       "reviewRange": [
-        43,
-        47
+        35,
+        39
+      ],
+      "problemIds": [
+        219
       ]
     },
     {
-      "sessionIndex": 49,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 50,
+      "sessionIndex": 41,
       "type": "concept",
       "conceptId": "hash-table-longest-consecutive-sequence",
       "problemIds": [
@@ -351,7 +330,7 @@
       ]
     },
     {
-      "sessionIndex": 51,
+      "sessionIndex": 42,
       "type": "concept",
       "conceptId": "hash-table-design-lru-cache",
       "problemIds": [
@@ -359,7 +338,7 @@
       ]
     },
     {
-      "sessionIndex": 52,
+      "sessionIndex": 43,
       "type": "concept",
       "conceptId": "string-ascii-representation",
       "problemIds": [
@@ -368,7 +347,7 @@
       ]
     },
     {
-      "sessionIndex": 53,
+      "sessionIndex": 44,
       "type": "concept",
       "conceptId": "string-linear-scan",
       "problemIds": [
@@ -378,26 +357,25 @@
       ]
     },
     {
-      "sessionIndex": 54,
+      "sessionIndex": 45,
       "type": "challenge",
       "problemIds": [
         8
       ]
     },
     {
-      "sessionIndex": 55,
+      "sessionIndex": 46,
       "type": "review",
       "reviewRange": [
-        50,
-        54
+        41,
+        45
+      ],
+      "problemIds": [
+        217
       ]
     },
     {
-      "sessionIndex": 56,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 57,
+      "sessionIndex": 47,
       "type": "concept",
       "conceptId": "string-two-pointers-opposite",
       "problemIds": [
@@ -406,7 +384,7 @@
       ]
     },
     {
-      "sessionIndex": 58,
+      "sessionIndex": 48,
       "type": "concept",
       "conceptId": "string-two-pointers-filtering",
       "problemIds": [
@@ -415,7 +393,7 @@
       ]
     },
     {
-      "sessionIndex": 59,
+      "sessionIndex": 49,
       "type": "concept",
       "conceptId": "string-sliding-window-fixed",
       "problemIds": [
@@ -424,7 +402,7 @@
       ]
     },
     {
-      "sessionIndex": 60,
+      "sessionIndex": 50,
       "type": "concept",
       "conceptId": "string-sliding-window-variable",
       "problemIds": [
@@ -434,26 +412,25 @@
       ]
     },
     {
-      "sessionIndex": 61,
+      "sessionIndex": 51,
       "type": "challenge",
       "problemIds": [
         49
       ]
     },
     {
-      "sessionIndex": 62,
+      "sessionIndex": 52,
       "type": "review",
       "reviewRange": [
-        57,
-        61
+        47,
+        51
+      ],
+      "problemIds": [
+        125
       ]
     },
     {
-      "sessionIndex": 63,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 64,
+      "sessionIndex": 53,
       "type": "concept",
       "conceptId": "string-anagram-grouping",
       "problemIds": [
@@ -461,7 +438,7 @@
       ]
     },
     {
-      "sessionIndex": 65,
+      "sessionIndex": 54,
       "type": "concept",
       "conceptId": "string-palindrome-expansion",
       "problemIds": [
@@ -469,7 +446,7 @@
       ]
     },
     {
-      "sessionIndex": 66,
+      "sessionIndex": 55,
       "type": "concept",
       "conceptId": "string-pattern-matching-basic",
       "problemIds": [
@@ -478,7 +455,7 @@
       ]
     },
     {
-      "sessionIndex": 67,
+      "sessionIndex": 56,
       "type": "concept",
       "conceptId": "string-parsing-simulation",
       "problemIds": [
@@ -488,26 +465,25 @@
       ]
     },
     {
-      "sessionIndex": 68,
+      "sessionIndex": 57,
       "type": "challenge",
       "problemIds": [
         5
       ]
     },
     {
-      "sessionIndex": 69,
+      "sessionIndex": 58,
       "type": "review",
       "reviewRange": [
-        64,
-        68
+        53,
+        57
+      ],
+      "problemIds": [
+        14
       ]
     },
     {
-      "sessionIndex": 70,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 71,
+      "sessionIndex": 59,
       "type": "concept",
       "conceptId": "two-pointer-three-sum-basic",
       "problemIds": [
@@ -516,7 +492,7 @@
       ]
     },
     {
-      "sessionIndex": 72,
+      "sessionIndex": 60,
       "type": "concept",
       "conceptId": "two-pointer-three-sum-closest",
       "problemIds": [
@@ -524,7 +500,7 @@
       ]
     },
     {
-      "sessionIndex": 73,
+      "sessionIndex": 61,
       "type": "concept",
       "conceptId": "two-pointer-four-sum-extension",
       "problemIds": [
@@ -532,7 +508,7 @@
       ]
     },
     {
-      "sessionIndex": 74,
+      "sessionIndex": 62,
       "type": "concept",
       "conceptId": "two-pointer-container-water",
       "problemIds": [
@@ -541,31 +517,30 @@
       ]
     },
     {
-      "sessionIndex": 75,
+      "sessionIndex": 63,
       "type": "challenge",
       "problemIds": [
         11
       ]
     },
     {
-      "sessionIndex": 76,
+      "sessionIndex": 64,
       "type": "review",
       "reviewRange": [
-        71,
-        75
+        59,
+        63
+      ],
+      "problemIds": [
+        1
       ]
     },
     {
-      "sessionIndex": 77,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 78,
+      "sessionIndex": 65,
       "type": "concept",
       "conceptId": "two-pointer-trapping-rain-water"
     },
     {
-      "sessionIndex": 79,
+      "sessionIndex": 66,
       "type": "concept",
       "conceptId": "two-pointer-boats-to-save-people",
       "problemIds": [
@@ -573,7 +548,7 @@
       ]
     },
     {
-      "sessionIndex": 80,
+      "sessionIndex": 67,
       "type": "concept",
       "conceptId": "two-pointer-interval-merging-check",
       "problemIds": [
@@ -581,7 +556,7 @@
       ]
     },
     {
-      "sessionIndex": 81,
+      "sessionIndex": 68,
       "type": "concept",
       "conceptId": "two-pointer-backspace-string-compare",
       "problemIds": [
@@ -589,26 +564,25 @@
       ]
     },
     {
-      "sessionIndex": 82,
+      "sessionIndex": 69,
       "type": "challenge",
       "problemIds": [
         16
       ]
     },
     {
-      "sessionIndex": 83,
+      "sessionIndex": 70,
       "type": "review",
       "reviewRange": [
-        78,
-        82
+        65,
+        69
+      ],
+      "problemIds": [
+        844
       ]
     },
     {
-      "sessionIndex": 84,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 85,
+      "sessionIndex": 71,
       "type": "concept",
       "conceptId": "two-pointer-valid-palindrome-ii",
       "problemIds": [
@@ -616,7 +590,7 @@
       ]
     },
     {
-      "sessionIndex": 86,
+      "sessionIndex": 72,
       "type": "concept",
       "conceptId": "two-pointer-sort-array-by-parity",
       "problemIds": [
@@ -625,7 +599,7 @@
       ]
     },
     {
-      "sessionIndex": 87,
+      "sessionIndex": 73,
       "type": "concept",
       "conceptId": "binary-search-core-concept",
       "problemIds": [
@@ -634,7 +608,7 @@
       ]
     },
     {
-      "sessionIndex": 88,
+      "sessionIndex": 74,
       "type": "concept",
       "conceptId": "binary-search-inclusive-bounds",
       "problemIds": [
@@ -643,26 +617,25 @@
       ]
     },
     {
-      "sessionIndex": 89,
+      "sessionIndex": 75,
       "type": "challenge",
       "problemIds": [
         18
       ]
     },
     {
-      "sessionIndex": 90,
+      "sessionIndex": 76,
       "type": "review",
       "reviewRange": [
-        85,
-        89
+        71,
+        75
+      ],
+      "problemIds": [
+        680
       ]
     },
     {
-      "sessionIndex": 91,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 92,
+      "sessionIndex": 77,
       "type": "concept",
       "conceptId": "binary-search-overflow-prevention",
       "problemIds": [
@@ -671,7 +644,7 @@
       ]
     },
     {
-      "sessionIndex": 93,
+      "sessionIndex": 78,
       "type": "concept",
       "conceptId": "binary-search-exclusive-bounds",
       "problemIds": [
@@ -680,7 +653,7 @@
       ]
     },
     {
-      "sessionIndex": 94,
+      "sessionIndex": 79,
       "type": "concept",
       "conceptId": "binary-search-lower-bound",
       "problemIds": [
@@ -688,7 +661,7 @@
       ]
     },
     {
-      "sessionIndex": 95,
+      "sessionIndex": 80,
       "type": "concept",
       "conceptId": "binary-search-upper-bound",
       "problemIds": [
@@ -696,26 +669,25 @@
       ]
     },
     {
-      "sessionIndex": 96,
+      "sessionIndex": 81,
       "type": "challenge",
       "problemIds": [
         33
       ]
     },
     {
-      "sessionIndex": 97,
+      "sessionIndex": 82,
       "type": "review",
       "reviewRange": [
-        92,
-        96
+        77,
+        81
+      ],
+      "problemIds": [
+        35
       ]
     },
     {
-      "sessionIndex": 98,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 99,
+      "sessionIndex": 83,
       "type": "concept",
       "conceptId": "binary-search-rotated-array",
       "problemIds": [
@@ -724,7 +696,7 @@
       ]
     },
     {
-      "sessionIndex": 100,
+      "sessionIndex": 84,
       "type": "concept",
       "conceptId": "binary-search-rotated-duplicates",
       "problemIds": [
@@ -732,7 +704,7 @@
       ]
     },
     {
-      "sessionIndex": 101,
+      "sessionIndex": 85,
       "type": "concept",
       "conceptId": "binary-search-find-minimum-rotated",
       "problemIds": [
@@ -740,7 +712,7 @@
       ]
     },
     {
-      "sessionIndex": 102,
+      "sessionIndex": 86,
       "type": "concept",
       "conceptId": "binary-search-matrix-search",
       "problemIds": [
@@ -748,31 +720,30 @@
       ]
     },
     {
-      "sessionIndex": 103,
+      "sessionIndex": 87,
       "type": "challenge",
       "problemIds": [
         34
       ]
     },
     {
-      "sessionIndex": 104,
+      "sessionIndex": 88,
       "type": "review",
       "reviewRange": [
-        99,
-        103
+        83,
+        87
+      ],
+      "problemIds": [
+        33
       ]
     },
     {
-      "sessionIndex": 105,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 106,
+      "sessionIndex": 89,
       "type": "concept",
       "conceptId": "sliding-window-concept-intro"
     },
     {
-      "sessionIndex": 107,
+      "sessionIndex": 90,
       "type": "concept",
       "conceptId": "sliding-window-fixed-size",
       "problemIds": [
@@ -782,12 +753,12 @@
       ]
     },
     {
-      "sessionIndex": 108,
+      "sessionIndex": 91,
       "type": "concept",
       "conceptId": "sliding-window-variable-size-expansion"
     },
     {
-      "sessionIndex": 109,
+      "sessionIndex": 92,
       "type": "concept",
       "conceptId": "sliding-window-variable-size-contraction",
       "problemIds": [
@@ -795,26 +766,25 @@
       ]
     },
     {
-      "sessionIndex": 110,
+      "sessionIndex": 93,
       "type": "challenge",
       "problemIds": [
         56
       ]
     },
     {
-      "sessionIndex": 111,
+      "sessionIndex": 94,
       "type": "review",
       "reviewRange": [
-        106,
-        110
+        89,
+        93
+      ],
+      "problemIds": [
+        643
       ]
     },
     {
-      "sessionIndex": 112,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 113,
+      "sessionIndex": 95,
       "type": "concept",
       "conceptId": "sliding-window-longest-substring-no-repeat",
       "problemIds": [
@@ -822,7 +792,7 @@
       ]
     },
     {
-      "sessionIndex": 114,
+      "sessionIndex": 96,
       "type": "concept",
       "conceptId": "sliding-window-max-consecutive-ones",
       "problemIds": [
@@ -830,7 +800,7 @@
       ]
     },
     {
-      "sessionIndex": 115,
+      "sessionIndex": 97,
       "type": "concept",
       "conceptId": "sliding-window-fruit-into-baskets",
       "problemIds": [
@@ -838,7 +808,7 @@
       ]
     },
     {
-      "sessionIndex": 116,
+      "sessionIndex": 98,
       "type": "concept",
       "conceptId": "sliding-window-permutation-in-string",
       "problemIds": [
@@ -846,26 +816,25 @@
       ]
     },
     {
-      "sessionIndex": 117,
+      "sessionIndex": 99,
       "type": "challenge",
       "problemIds": [
         74
       ]
     },
     {
-      "sessionIndex": 118,
+      "sessionIndex": 100,
       "type": "review",
       "reviewRange": [
-        113,
-        117
+        95,
+        99
+      ],
+      "problemIds": [
+        3
       ]
     },
     {
-      "sessionIndex": 119,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 120,
+      "sessionIndex": 101,
       "type": "concept",
       "conceptId": "sliding-window-find-all-anagrams",
       "problemIds": [
@@ -873,17 +842,17 @@
       ]
     },
     {
-      "sessionIndex": 121,
+      "sessionIndex": 102,
       "type": "concept",
       "conceptId": "sliding-window-minimum-window-substring"
     },
     {
-      "sessionIndex": 122,
+      "sessionIndex": 103,
       "type": "concept",
       "conceptId": "stack-core-concept-introduction"
     },
     {
-      "sessionIndex": 123,
+      "sessionIndex": 104,
       "type": "concept",
       "conceptId": "stack-array-implementation",
       "problemIds": [
@@ -891,26 +860,25 @@
       ]
     },
     {
-      "sessionIndex": 124,
+      "sessionIndex": 105,
       "type": "challenge",
       "problemIds": [
         75
       ]
     },
     {
-      "sessionIndex": 125,
+      "sessionIndex": 106,
       "type": "review",
       "reviewRange": [
-        120,
-        124
+        101,
+        105
+      ],
+      "problemIds": [
+        155
       ]
     },
     {
-      "sessionIndex": 126,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 127,
+      "sessionIndex": 107,
       "type": "concept",
       "conceptId": "stack-valid-parentheses",
       "problemIds": [
@@ -919,7 +887,7 @@
       ]
     },
     {
-      "sessionIndex": 128,
+      "sessionIndex": 108,
       "type": "concept",
       "conceptId": "stack-asteroid-collision",
       "problemIds": [
@@ -927,7 +895,7 @@
       ]
     },
     {
-      "sessionIndex": 129,
+      "sessionIndex": 109,
       "type": "concept",
       "conceptId": "stack-evaluate-reverse-polish-notation",
       "problemIds": [
@@ -935,7 +903,7 @@
       ]
     },
     {
-      "sessionIndex": 130,
+      "sessionIndex": 110,
       "type": "concept",
       "conceptId": "stack-remove-adjacent-duplicates",
       "problemIds": [
@@ -944,26 +912,25 @@
       ]
     },
     {
-      "sessionIndex": 131,
+      "sessionIndex": 111,
       "type": "challenge",
       "problemIds": [
         81
       ]
     },
     {
-      "sessionIndex": 132,
+      "sessionIndex": 112,
       "type": "review",
       "reviewRange": [
-        127,
-        131
+        107,
+        111
+      ],
+      "problemIds": [
+        20
       ]
     },
     {
-      "sessionIndex": 133,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 134,
+      "sessionIndex": 113,
       "type": "concept",
       "conceptId": "stack-daily-temperatures",
       "problemIds": [
@@ -971,7 +938,7 @@
       ]
     },
     {
-      "sessionIndex": 135,
+      "sessionIndex": 114,
       "type": "concept",
       "conceptId": "stack-next-greater-element-ii",
       "problemIds": [
@@ -979,7 +946,7 @@
       ]
     },
     {
-      "sessionIndex": 136,
+      "sessionIndex": 115,
       "type": "concept",
       "conceptId": "stack-online-stock-span",
       "problemIds": [
@@ -987,7 +954,7 @@
       ]
     },
     {
-      "sessionIndex": 137,
+      "sessionIndex": 116,
       "type": "concept",
       "conceptId": "stack-sum-of-subarray-minimums",
       "problemIds": [
@@ -995,65 +962,60 @@
       ]
     },
     {
-      "sessionIndex": 138,
+      "sessionIndex": 117,
       "type": "challenge",
       "problemIds": [
         146
       ]
     },
     {
-      "sessionIndex": 139,
+      "sessionIndex": 118,
       "type": "review",
       "reviewRange": [
-        134,
-        138
+        113,
+        117
+      ],
+      "problemIds": [
+        503
       ]
     },
     {
-      "sessionIndex": 140,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 141,
+      "sessionIndex": 119,
       "type": "concept",
       "conceptId": "stack-maximal-rectangle-foundation"
     },
     {
-      "sessionIndex": 142,
+      "sessionIndex": 120,
       "type": "concept",
       "conceptId": "queue-core-concept-introduction"
     },
     {
-      "sessionIndex": 143,
+      "sessionIndex": 121,
       "type": "concept",
       "conceptId": "queue-array-implementation"
     },
     {
-      "sessionIndex": 144,
+      "sessionIndex": 122,
       "type": "concept",
       "conceptId": "queue-linked-list-implementation"
     },
     {
-      "sessionIndex": 145,
+      "sessionIndex": 123,
       "type": "challenge",
       "problemIds": [
         150
       ]
     },
     {
-      "sessionIndex": 146,
+      "sessionIndex": 124,
       "type": "review",
       "reviewRange": [
-        141,
-        145
+        119,
+        123
       ]
     },
     {
-      "sessionIndex": 147,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 148,
+      "sessionIndex": 125,
       "type": "concept",
       "conceptId": "queue-circular-buffer",
       "problemIds": [
@@ -1061,7 +1023,7 @@
       ]
     },
     {
-      "sessionIndex": 149,
+      "sessionIndex": 126,
       "type": "concept",
       "conceptId": "queue-using-stacks",
       "problemIds": [
@@ -1069,7 +1031,7 @@
       ]
     },
     {
-      "sessionIndex": 150,
+      "sessionIndex": 127,
       "type": "concept",
       "conceptId": "stack-using-queues",
       "problemIds": [
@@ -1077,7 +1039,7 @@
       ]
     },
     {
-      "sessionIndex": 151,
+      "sessionIndex": 128,
       "type": "concept",
       "conceptId": "queue-bfs-level-order-traversal",
       "problemIds": [
@@ -1086,26 +1048,25 @@
       ]
     },
     {
-      "sessionIndex": 152,
+      "sessionIndex": 129,
       "type": "challenge",
       "problemIds": [
         102
       ]
     },
     {
-      "sessionIndex": 153,
+      "sessionIndex": 130,
       "type": "review",
       "reviewRange": [
-        148,
-        152
+        125,
+        129
+      ],
+      "problemIds": [
+        104
       ]
     },
     {
-      "sessionIndex": 154,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 155,
+      "sessionIndex": 131,
       "type": "concept",
       "conceptId": "queue-shortest-path-unweighted",
       "problemIds": [
@@ -1114,7 +1075,7 @@
       ]
     },
     {
-      "sessionIndex": 156,
+      "sessionIndex": 132,
       "type": "concept",
       "conceptId": "queue-matrix-multi-source-bfs",
       "problemIds": [
@@ -1123,36 +1084,35 @@
       ]
     },
     {
-      "sessionIndex": 157,
+      "sessionIndex": 133,
       "type": "concept",
       "conceptId": "queue-sliding-window-maximum"
     },
     {
-      "sessionIndex": 158,
+      "sessionIndex": 134,
       "type": "concept",
       "conceptId": "linked-list-node-memory-model"
     },
     {
-      "sessionIndex": 159,
+      "sessionIndex": 135,
       "type": "challenge",
       "problemIds": [
         151
       ]
     },
     {
-      "sessionIndex": 160,
+      "sessionIndex": 136,
       "type": "review",
       "reviewRange": [
-        155,
-        159
+        131,
+        135
+      ],
+      "problemIds": [
+        111
       ]
     },
     {
-      "sessionIndex": 161,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 162,
+      "sessionIndex": 137,
       "type": "concept",
       "conceptId": "linked-list-traversal-basics",
       "problemIds": [
@@ -1161,7 +1121,7 @@
       ]
     },
     {
-      "sessionIndex": 163,
+      "sessionIndex": 138,
       "type": "concept",
       "conceptId": "linked-list-insertion-head-tail",
       "problemIds": [
@@ -1169,7 +1129,7 @@
       ]
     },
     {
-      "sessionIndex": 164,
+      "sessionIndex": 139,
       "type": "concept",
       "conceptId": "linked-list-deletion-by-value-or-index",
       "problemIds": [
@@ -1178,7 +1138,7 @@
       ]
     },
     {
-      "sessionIndex": 165,
+      "sessionIndex": 140,
       "type": "concept",
       "conceptId": "linked-list-dummy-head-pattern",
       "problemIds": [
@@ -1188,26 +1148,25 @@
       ]
     },
     {
-      "sessionIndex": 166,
+      "sessionIndex": 141,
       "type": "challenge",
       "problemIds": [
         2
       ]
     },
     {
-      "sessionIndex": 167,
+      "sessionIndex": 142,
       "type": "review",
       "reviewRange": [
-        162,
-        166
+        137,
+        141
+      ],
+      "problemIds": [
+        83
       ]
     },
     {
-      "sessionIndex": 168,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 169,
+      "sessionIndex": 143,
       "type": "concept",
       "conceptId": "linked-list-two-pointers-slow-fast",
       "problemIds": [
@@ -1216,7 +1175,7 @@
       ]
     },
     {
-      "sessionIndex": 170,
+      "sessionIndex": 144,
       "type": "concept",
       "conceptId": "linked-list-cycle-detection-floyd",
       "problemIds": [
@@ -1225,7 +1184,7 @@
       ]
     },
     {
-      "sessionIndex": 171,
+      "sessionIndex": 145,
       "type": "concept",
       "conceptId": "linked-list-cycle-start-node",
       "problemIds": [
@@ -1233,7 +1192,7 @@
       ]
     },
     {
-      "sessionIndex": 172,
+      "sessionIndex": 146,
       "type": "concept",
       "conceptId": "linked-list-reversal-iterative",
       "problemIds": [
@@ -1242,26 +1201,25 @@
       ]
     },
     {
-      "sessionIndex": 173,
+      "sessionIndex": 147,
       "type": "challenge",
       "problemIds": [
         19
       ]
     },
     {
-      "sessionIndex": 174,
+      "sessionIndex": 148,
       "type": "review",
       "reviewRange": [
-        169,
-        173
+        143,
+        147
+      ],
+      "problemIds": [
+        141
       ]
     },
     {
-      "sessionIndex": 175,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 176,
+      "sessionIndex": 149,
       "type": "concept",
       "conceptId": "linked-list-reversal-recursive",
       "problemIds": [
@@ -1269,7 +1227,7 @@
       ]
     },
     {
-      "sessionIndex": 177,
+      "sessionIndex": 150,
       "type": "concept",
       "conceptId": "linked-list-merge-two-sorted",
       "problemIds": [
@@ -1277,7 +1235,7 @@
       ]
     },
     {
-      "sessionIndex": 178,
+      "sessionIndex": 151,
       "type": "concept",
       "conceptId": "linked-list-palindrome-check",
       "problemIds": [
@@ -1286,36 +1244,35 @@
       ]
     },
     {
-      "sessionIndex": 179,
+      "sessionIndex": 152,
       "type": "concept",
       "conceptId": "tree-core-concept-introduction"
     },
     {
-      "sessionIndex": 180,
+      "sessionIndex": 153,
       "type": "challenge",
       "problemIds": [
         92
       ]
     },
     {
-      "sessionIndex": 181,
+      "sessionIndex": 154,
       "type": "review",
       "reviewRange": [
-        176,
-        180
+        149,
+        153
+      ],
+      "problemIds": [
+        21
       ]
     },
     {
-      "sessionIndex": 182,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 183,
+      "sessionIndex": 155,
       "type": "concept",
       "conceptId": "tree-binary-tree-node-representation"
     },
     {
-      "sessionIndex": 184,
+      "sessionIndex": 156,
       "type": "concept",
       "conceptId": "tree-dfs-preorder-traversal",
       "problemIds": [
@@ -1324,7 +1281,7 @@
       ]
     },
     {
-      "sessionIndex": 185,
+      "sessionIndex": 157,
       "type": "concept",
       "conceptId": "tree-dfs-inorder-traversal",
       "problemIds": [
@@ -1333,7 +1290,7 @@
       ]
     },
     {
-      "sessionIndex": 186,
+      "sessionIndex": 158,
       "type": "concept",
       "conceptId": "tree-dfs-postorder-traversal",
       "problemIds": [
@@ -1342,26 +1299,25 @@
       ]
     },
     {
-      "sessionIndex": 187,
+      "sessionIndex": 159,
       "type": "challenge",
       "problemIds": [
         114
       ]
     },
     {
-      "sessionIndex": 188,
+      "sessionIndex": 160,
       "type": "review",
       "reviewRange": [
-        183,
-        187
+        155,
+        159
+      ],
+      "problemIds": [
+        94
       ]
     },
     {
-      "sessionIndex": 189,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 190,
+      "sessionIndex": 161,
       "type": "concept",
       "conceptId": "tree-maximum-depth-bottom-up",
       "problemIds": [
@@ -1369,7 +1325,7 @@
       ]
     },
     {
-      "sessionIndex": 191,
+      "sessionIndex": 162,
       "type": "concept",
       "conceptId": "tree-maximum-depth-top-down",
       "problemIds": [
@@ -1377,7 +1333,7 @@
       ]
     },
     {
-      "sessionIndex": 192,
+      "sessionIndex": 163,
       "type": "concept",
       "conceptId": "tree-balanced-binary-tree-check",
       "problemIds": [
@@ -1385,7 +1341,7 @@
       ]
     },
     {
-      "sessionIndex": 193,
+      "sessionIndex": 164,
       "type": "concept",
       "conceptId": "tree-same-tree-validation",
       "problemIds": [
@@ -1393,26 +1349,25 @@
       ]
     },
     {
-      "sessionIndex": 194,
+      "sessionIndex": 165,
       "type": "challenge",
       "problemIds": [
         142
       ]
     },
     {
-      "sessionIndex": 195,
+      "sessionIndex": 166,
       "type": "review",
       "reviewRange": [
-        190,
-        194
+        161,
+        165
+      ],
+      "problemIds": [
+        100
       ]
     },
     {
-      "sessionIndex": 196,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 197,
+      "sessionIndex": 167,
       "type": "concept",
       "conceptId": "tree-symmetric-tree-check",
       "problemIds": [
@@ -1420,7 +1375,7 @@
       ]
     },
     {
-      "sessionIndex": 198,
+      "sessionIndex": 168,
       "type": "concept",
       "conceptId": "tree-invert-binary-tree",
       "problemIds": [
@@ -1428,12 +1383,12 @@
       ]
     },
     {
-      "sessionIndex": 199,
+      "sessionIndex": 169,
       "type": "concept",
       "conceptId": "graph-core-concept-introduction"
     },
     {
-      "sessionIndex": 200,
+      "sessionIndex": 170,
       "type": "concept",
       "conceptId": "graph-adjacency-list-representation",
       "problemIds": [
@@ -1441,31 +1396,30 @@
       ]
     },
     {
-      "sessionIndex": 201,
+      "sessionIndex": 171,
       "type": "challenge",
       "problemIds": [
         133
       ]
     },
     {
-      "sessionIndex": 202,
+      "sessionIndex": 172,
       "type": "review",
       "reviewRange": [
-        197,
-        201
+        167,
+        171
+      ],
+      "problemIds": [
+        101
       ]
     },
     {
-      "sessionIndex": 203,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 204,
+      "sessionIndex": 173,
       "type": "concept",
       "conceptId": "graph-adjacency-matrix-representation"
     },
     {
-      "sessionIndex": 205,
+      "sessionIndex": 174,
       "type": "concept",
       "conceptId": "graph-dfs-traversal",
       "problemIds": [
@@ -1473,7 +1427,7 @@
       ]
     },
     {
-      "sessionIndex": 206,
+      "sessionIndex": 175,
       "type": "concept",
       "conceptId": "graph-bfs-traversal",
       "problemIds": [
@@ -1481,7 +1435,7 @@
       ]
     },
     {
-      "sessionIndex": 207,
+      "sessionIndex": 176,
       "type": "concept",
       "conceptId": "graph-connected-components",
       "problemIds": [
@@ -1489,26 +1443,25 @@
       ]
     },
     {
-      "sessionIndex": 208,
+      "sessionIndex": 177,
       "type": "challenge",
       "problemIds": [
         143
       ]
     },
     {
-      "sessionIndex": 209,
+      "sessionIndex": 178,
       "type": "review",
       "reviewRange": [
-        204,
-        208
+        173,
+        177
+      ],
+      "problemIds": [
+        200
       ]
     },
     {
-      "sessionIndex": 210,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 211,
+      "sessionIndex": 179,
       "type": "concept",
       "conceptId": "graph-detect-cycle-undirected",
       "problemIds": [
@@ -1516,7 +1469,7 @@
       ]
     },
     {
-      "sessionIndex": 212,
+      "sessionIndex": 180,
       "type": "concept",
       "conceptId": "graph-detect-cycle-directed",
       "problemIds": [
@@ -1524,7 +1477,7 @@
       ]
     },
     {
-      "sessionIndex": 213,
+      "sessionIndex": 181,
       "type": "concept",
       "conceptId": "graph-topological-sort-dfs",
       "problemIds": [
@@ -1532,7 +1485,7 @@
       ]
     },
     {
-      "sessionIndex": 214,
+      "sessionIndex": 182,
       "type": "concept",
       "conceptId": "graph-topological-sort-bfs-kahns",
       "problemIds": [
@@ -1540,41 +1493,40 @@
       ]
     },
     {
-      "sessionIndex": 215,
+      "sessionIndex": 183,
       "type": "challenge",
       "problemIds": [
         153
       ]
     },
     {
-      "sessionIndex": 216,
+      "sessionIndex": 184,
       "type": "review",
       "reviewRange": [
-        211,
-        215
+        179,
+        183
+      ],
+      "problemIds": [
+        207
       ]
     },
     {
-      "sessionIndex": 217,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 218,
+      "sessionIndex": 185,
       "type": "concept",
       "conceptId": "heap-core-concept-introduction"
     },
     {
-      "sessionIndex": 219,
+      "sessionIndex": 186,
       "type": "concept",
       "conceptId": "heap-array-representation"
     },
     {
-      "sessionIndex": 220,
+      "sessionIndex": 187,
       "type": "concept",
       "conceptId": "heap-sift-up-insertion"
     },
     {
-      "sessionIndex": 221,
+      "sessionIndex": 188,
       "type": "concept",
       "conceptId": "heap-sift-down-extraction",
       "problemIds": [
@@ -1582,31 +1534,30 @@
       ]
     },
     {
-      "sessionIndex": 222,
+      "sessionIndex": 189,
       "type": "challenge",
       "problemIds": [
         155
       ]
     },
     {
-      "sessionIndex": 223,
+      "sessionIndex": 190,
       "type": "review",
       "reviewRange": [
-        218,
-        222
+        185,
+        189
+      ],
+      "problemIds": [
+        215
       ]
     },
     {
-      "sessionIndex": 224,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 225,
+      "sessionIndex": 191,
       "type": "concept",
       "conceptId": "heapify-linear-time-construction"
     },
     {
-      "sessionIndex": 226,
+      "sessionIndex": 192,
       "type": "concept",
       "conceptId": "heap-kth-largest-element",
       "problemIds": [
@@ -1615,7 +1566,7 @@
       ]
     },
     {
-      "sessionIndex": 227,
+      "sessionIndex": 193,
       "type": "concept",
       "conceptId": "heap-top-k-frequent-elements",
       "problemIds": [
@@ -1623,36 +1574,35 @@
       ]
     },
     {
-      "sessionIndex": 228,
+      "sessionIndex": 194,
       "type": "concept",
       "conceptId": "heap-merge-k-sorted-lists"
     },
     {
-      "sessionIndex": 229,
+      "sessionIndex": 195,
       "type": "challenge",
       "problemIds": [
         200
       ]
     },
     {
-      "sessionIndex": 230,
+      "sessionIndex": 196,
       "type": "review",
       "reviewRange": [
-        225,
-        229
+        191,
+        195
+      ],
+      "problemIds": [
+        703
       ]
     },
     {
-      "sessionIndex": 231,
-      "type": "rest"
-    },
-    {
-      "sessionIndex": 232,
+      "sessionIndex": 197,
       "type": "concept",
       "conceptId": "heap-find-median-from-data-stream"
     },
     {
-      "sessionIndex": 233,
+      "sessionIndex": 198,
       "type": "concept",
       "conceptId": "heap-task-scheduler",
       "problemIds": [
@@ -1660,23 +1610,22 @@
       ]
     },
     {
-      "sessionIndex": 234,
+      "sessionIndex": 199,
       "type": "challenge",
       "problemIds": [
         207
       ]
     },
     {
-      "sessionIndex": 235,
+      "sessionIndex": 200,
       "type": "review",
       "reviewRange": [
-        232,
-        234
+        197,
+        199
+      ],
+      "problemIds": [
+        621
       ]
-    },
-    {
-      "sessionIndex": 236,
-      "type": "rest"
     }
   ]
 }

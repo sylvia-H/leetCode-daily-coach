@@ -60,7 +60,7 @@ function makeTrackParamSchema(moduleIds: Set<string>, maxModuleLevel: number) {
       moduleAllowlist: z.array(z.string()).optional(),
       problemDifficulties: z.array(DIFFICULTY_ENUM).min(1),
       challengeDifficulty: DIFFICULTY_ENUM,
-      rhythm: z.array(SESSION_TYPE_ENUM).length(7),
+      rhythm: z.array(SESSION_TYPE_ENUM).min(2).max(14),
     })
     .strict()
     .superRefine((val, ctx) => {
@@ -84,9 +84,9 @@ function makeTrackParamSchema(moduleIds: Set<string>, maxModuleLevel: number) {
 }
 
 /**
- * rhythm 槽位順序約束：僅檢查「含 review / rest」不足以擋下 schema-valid 卻生不出合法課表的排法，
+ * rhythm 槽位順序約束：僅檢查「含 review」不足以擋下 schema-valid 卻生不出合法課表的排法，
  * 錯誤會延後到生成後才被 validateSchedule 攔下、且訊息指向 Session 而非真正的根因（rhythm 設定）。
- * 四條約束皆在此以 param-invalid 具名回報：
+ * 四條約束皆在此以 param-invalid 具名回報（F8 移除「MUST 含 rest」——rest 已非必要槽，data-model.md §5）：
  *  1. 至少一個 concept 槽——否則 emitSessions 的涵蓋佇列永遠不被消耗（無限迴圈）。
  *  2. 每個 practice 槽之前 MUST 有 concept 槽——否則該週 practice 拿到空的 weekConcepts。
  *  3. 最後一個 concept 槽 MUST 早於某個 review 槽——否則該 concept 落在 reviewRange
@@ -94,8 +94,8 @@ function makeTrackParamSchema(moduleIds: Set<string>, maxModuleLevel: number) {
  *     review-coverage-gap；此處於參數層先擋，指名根因）。此條亦排除 review 落首槽的空區間。
  */
 function validateRhythm(rhythm: readonly z.infer<typeof SESSION_TYPE_ENUM>[], ctx: z.RefinementCtx): void {
-  if (!rhythm.includes("review") || !rhythm.includes("rest")) {
-    withCustomIssue(ctx, ["rhythm"], "rhythm MUST 含至少一個 review 與一個 rest", "param-invalid");
+  if (!rhythm.includes("review")) {
+    withCustomIssue(ctx, ["rhythm"], "rhythm MUST 含至少一個 review", "param-invalid");
   }
   if (!rhythm.includes("concept")) {
     withCustomIssue(ctx, ["rhythm"], "rhythm MUST 含至少一個 concept 槽，否則涵蓋 Concept 永遠無法排入", "param-invalid");

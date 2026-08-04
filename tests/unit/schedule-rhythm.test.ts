@@ -27,13 +27,15 @@ describe("週節奏攤課（US4 / FR-011~013）", () => {
   const { schedules } = generateAllSchedules(input);
   const foundation = schedules.foundation;
 
-  it("第一週（Session 1~7）含恰一個 review 與一個 rest，reviewRange = [1, 5]（涵蓋本週全部上課日）", () => {
-    const week1 = foundation.sessions.filter((s) => s.sessionIndex <= 7);
+  it("第一週含恰一個 review 與一個 rest，reviewRange 涵蓋本週實際產生的全部上課日", () => {
+    // 空題庫下 practice/challenge 兩槽因無題可選而被跳過（F8 FR-014e），故本週實際只產生
+    // 3 個 concept（index 1-3）+ review（index 4）+ rest（index 5），reviewRange = [1, 3]。
+    const week1 = foundation.sessions.filter((s) => s.sessionIndex <= 5);
     const reviews = week1.filter((s) => s.type === "review");
     const rests = week1.filter((s) => s.type === "rest");
     expect(reviews).toHaveLength(1);
     expect(rests).toHaveLength(1);
-    expect(reviews[0]?.reviewRange).toEqual([1, 5]);
+    expect(reviews[0]?.reviewRange).toEqual([1, 3]);
   });
 
   it("每個 concept Session 皆被某個 review 的 reviewRange 涵蓋（無「教了卻永不複習」的 Concept）", () => {
@@ -49,12 +51,16 @@ describe("週節奏攤課（US4 / FR-011~013）", () => {
   it("Concept 佇列用盡後於當輪節奏走完處自然收尾，MUST NOT 填充湊滿固定長度", () => {
     // rhythm = [concept,concept,practice,concept,challenge,review,rest]，每輪 3 個 concept 槽（位置 0,1,3）；
     // 5 個 concept：第 1 輪排滿 3 個（c0/c1/c2），第 2 輪排 2 個（c3/c4，槽 0,1）後佇列已空，
-    // 槽 3 的 concept 落空、跳過（不消耗 sessionIndex），practice/challenge/review/rest 仍正常跑完（13 = 7 + 6）。
+    // 槽 3 的 concept 落空、跳過（不消耗 sessionIndex）。空題庫下 practice/challenge 兩槽亦因無題可選
+    // 而被跳過（F8 FR-014e），review 仍一律產生；故每輪僅 concept + review + rest 消耗 sessionIndex：
+    // 第 1 輪 5 個（c0/c1/c2/review/rest）、第 2 輪 4 個（c3/c4/review/rest）＝ 9。
     const conceptSessions = foundation.sessions.filter((s) => s.type === "concept");
     expect(conceptSessions).toHaveLength(5);
     expect(conceptSessions.map((s) => s.conceptId)).toEqual(["c0", "c1", "c2", "c3", "c4"]);
-    expect(foundation.sessions).toHaveLength(13);
-    // 第 2 輪仍完整跑完剩餘槽位（practice/review/challenge/rest），sessionIndex 連續無缺口
+    expect(foundation.sessions.filter((s) => s.type === "practice")).toHaveLength(0);
+    expect(foundation.sessions.filter((s) => s.type === "challenge")).toHaveLength(0);
+    expect(foundation.sessions).toHaveLength(9);
+    // 第 2 輪仍完整跑完剩餘槽位（review/rest），sessionIndex 連續無缺口
     const indices = foundation.sessions.map((s) => s.sessionIndex);
     expect(indices).toEqual(Array.from({ length: indices.length }, (_, i) => i + 1));
   });
@@ -88,10 +94,14 @@ describe("刚好整除 rhythm 的 concept 佇列（無跳過槽情境）", () =>
     const bank = buildBank([]);
     const params = makeParamsFile({ foundation: { maxLevel: 0 } });
     const { schedules } = generateAllSchedules({ graph, bank, params, overlays: makeOverlays() });
-    expect(schedules.foundation.sessions).toHaveLength(14); // 2 輪 × 7
+    // 空題庫下 practice/challenge 兩槽每輪皆因無題可選而跳過（F8 FR-014e），故每輪僅
+    // 3 個 concept + review + rest＝5 個 Session 消耗 sessionIndex；2 輪＝10（非 2 輪 × 7）。
+    expect(schedules.foundation.sessions).toHaveLength(10);
     expect(schedules.foundation.sessions.filter((s) => s.type === "concept")).toHaveLength(6);
     expect(schedules.foundation.sessions.filter((s) => s.type === "review")).toHaveLength(2);
     expect(schedules.foundation.sessions.filter((s) => s.type === "rest")).toHaveLength(2);
+    expect(schedules.foundation.sessions.filter((s) => s.type === "practice")).toHaveLength(0);
+    expect(schedules.foundation.sessions.filter((s) => s.type === "challenge")).toHaveLength(0);
   });
 });
 

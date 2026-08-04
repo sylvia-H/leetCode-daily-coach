@@ -150,8 +150,11 @@ describe("Overlay fail loud（US3 / clarify Q4，合成情境）", () => {
     const params = makeParamsFile({ foundation: { maxLevel: 0 } });
     const overlays = makeOverlays({ foundation: emptyOverlay("foundation") });
     const { violations } = generateAllSchedules({ graph, bank, params, overlays });
-    // 空題庫下 challenge 槽必然無題，會留下 challenge-no-problem 的 warning 訊號；此案例要驗的是無 error。
+    // 空題庫下 practice/challenge/review 三槽必然無題，會留下對應的 warning 訊號（F8 FR-014e/f）；
+    // 此案例要驗的是無 error、且違規全部落在已知的「無題」warning rule 集合內。
+    const knownNoProblemRules = new Set(["practice-no-problem", "challenge-no-problem", "review-no-problem"]);
     expect(violations.filter((v) => v.severity === "error")).toEqual([]);
-    expect(violations.every((v) => v.rule === "challenge-no-problem")).toBe(true);
+    expect(violations.every((v) => v.severity === "warning")).toBe(true);
+    expect(violations.every((v) => knownNoProblemRules.has(v.rule))).toBe(true);
   });
 });

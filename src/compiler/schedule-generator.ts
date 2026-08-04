@@ -3,7 +3,7 @@
 // 無檔案 I/O（讀寫只在 scripts/ 入口）。
 import type { ConceptNode, CurriculumGraph, Ordinal } from "../types/curriculum.js";
 import type { SessionType, Track } from "../types/lesson.js";
-import type { ProblemBank } from "../types/problem.js";
+import type { Difficulty, ProblemBank } from "../types/problem.js";
 import type {
   ScheduleViolation,
   SessionPlan,
@@ -254,11 +254,39 @@ function selectChallengeProblem(
   return minUnused ?? min;
 }
 
+const DIFFICULTY_RANK: Record<Difficulty, number> = { Easy: 0, Medium: 1, Hard: 2 };
+
 /**
- * 週節奏攤課（US4 / R4）：每 `rhythm.length`（7）Session 一輪，`concept` 槽依序消耗涵蓋佇列；
- * 佇列取空時該槽跳過（不消耗 sessionIndex），該輪其餘槽位（practice/review/challenge/rest）
- * 正常產出，於該輪跑完處自然收尾（不填充、不跨輪）。`reviewRange` = 本輪 [weekStartIndex,
- * reviewSessionIndex-1]（含第一週）。
+ * review 槽選題（FR-016–FR-020a、research R3/R4，contracts/schedule-revision.md §3）：候選池
+ * MUST 為 weekProblemIds（該週已產生的 concept Session 實際寫入課表的 problemIds 聯集），
+ * MUST NOT 由 concept.leetcode 重算（否則會選到被 cap 掉、使用者從未看過的題）。排序鍵為
+ * 「難度 Easy < Medium < Hard，同難度題號升冪」；對 weekChallengeIds 做**軟排除**——排除後池變空
+ * 且原池非空則退回原池（允許與 challenge 撞號），MUST NOT 硬排除（會製造 SC-001 禁止的省略）。
+ */
+function selectReviewProblem(
+  weekProblemIds: readonly number[],
+  weekChallengeIds: ReadonlySet<number>,
+  bank: ProblemBank,
+): { problemId?: number; rule?: "review-no-problem" | "review-challenge-duplicate" } {
+  if (weekProblemIds.length === 0) return { rule: "review-no-problem" };
+  const cmp = (a: number, b: number) => {
+    const da = DIFFICULTY_RANK[bank.byId.get(a)!.difficulty];
+    const db = DIFFICULTY_RANK[bank.byId.get(b)!.difficulty];
+    return da - db || a - b;
+  };
+  const sorted = [...weekProblemIds].sort(cmp);
+  const excluded = sorted.filter((id) => !weekChallengeIds.has(id));
+  if (excluded.length > 0) return { problemId: excluded[0] };
+  return { problemId: sorted[0], rule: "review-challenge-duplicate" };
+}
+
+/**
+ * 週節奏攤課（US4 / R4，F8 修訂：移除 rest 必要性、跳過無題槽、review 一律產生並選題）：每
+ * `rhythm.length` Session 一輪，`concept` 槽依序消耗涵蓋佇列；佇列取空時該槽跳過（不消耗
+ * sessionIndex），該輪其餘槽位正常產出，於該輪跑完處自然收尾（不填充、不跨輪）。`practice` /
+ * `challenge` 算出空 `problemIds` 時同樣跳過（不消耗 sessionIndex，發具名 warning，
+ * contracts/schedule-revision.md §2）；`review` MUST 一律產生（FR-014f），`reviewRange` =
+ * 本輪 [weekStartIndex, reviewSessionIndex-1]（含第一週）。
  */
 function emitSessions(
   track: Track,
@@ -290,11 +318,20 @@ function emitSessions(
   const usedChallengeIds = new Set<number>();
   let qi = 0;
   let sessionIndex = 1;
+  let weekNumber = 0;
 
   while (qi < covered.length) {
+    weekNumber++;
     const weekStartIndex = sessionIndex;
     const weekConcepts: ConceptNode[] = [];
-    for (const slotType of param.rhythm) {
+    const weekProblemIds: number[] = [];
+    const weekProblemIdSet = new Set<number>();
+    const weekChallengeIds = new Set<number>();
+
+    for (let slotPosition = 1; slotPosition <= param.rhythm.length; slotPosition++) {
+      const slotType = param.rhythm[slotPosition - 1]!;
+      const weekSlot = `${track}:week-${weekNumber}-slot-${slotPosition}`;
+
       if (slotType === "concept") {
         if (qi >= covered.length) continue; // 涵蓋佇列已空：跳過本槽，不消耗 sessionIndex（R4 補充決策）
         const concept = covered[qi]!;
@@ -303,32 +340,78 @@ function emitSessions(
         sessions.push(buildSession(sessionIndex, "concept", { conceptId: concept.id, problemIds }));
         weekConcepts.push(concept);
         introduced.push(concept);
+        for (const id of problemIds) {
+          if (!weekProblemIdSet.has(id)) {
+            weekProblemIdSet.add(id);
+            weekProblemIds.push(id);
+          }
+        }
         sessionIndex++;
       } else if (slotType === "practice") {
         const problemIds = unionProblems(weekConcepts, param.problemDifficulties, bank, overlay);
+        if (problemIds.length === 0) {
+          // FR-014e：該週涵蓋的 Concept 整週無題，跳過本槽而非產出空白的練習日（不消耗 sessionIndex，
+          // 該 index 屬於同一週的下一個槽，warning 座標故用週序 + 槽位序，見 research R2）。
+          violations.push(
+            violation(
+              "practice-no-problem",
+              weekSlot,
+              `practice 槽（第 ${weekNumber} 週、第 ${slotPosition} 槽）本週已引入 Concept 無可練習題目，已跳過該槽`,
+              { severity: "warning" },
+            ),
+          );
+          continue;
+        }
         sessions.push(buildSession(sessionIndex, "practice", { problemIds }));
         sessionIndex++;
       } else if (slotType === "review") {
-        sessions.push(buildSession(sessionIndex, "review", { reviewRange: [weekStartIndex, sessionIndex - 1] }));
+        // FR-014f：review 一律產生（即使無題），否則本週 concept Session 會落在全部 reviewRange 之外。
+        const { problemId, rule } = selectReviewProblem(weekProblemIds, weekChallengeIds, bank);
+        if (rule === "review-no-problem") {
+          violations.push(
+            violation(
+              "review-no-problem",
+              `${track}:session-${sessionIndex}`,
+              `review Session（#${sessionIndex}）本週涵蓋的 Concept 全部無題目，Challenge 段將省略`,
+              { severity: "warning" },
+            ),
+          );
+        } else if (rule === "review-challenge-duplicate") {
+          violations.push(
+            violation(
+              "review-challenge-duplicate",
+              `${track}:session-${sessionIndex}`,
+              `review Session（#${sessionIndex}）排除同週 challenge 已選題號後候選池為空，已退回原池並與 challenge 同題`,
+              { severity: "warning" },
+            ),
+          );
+        }
+        sessions.push(
+          buildSession(sessionIndex, "review", {
+            reviewRange: [weekStartIndex, sessionIndex - 1],
+            problemIds: problemId !== undefined ? [problemId] : undefined,
+          }),
+        );
         sessionIndex++;
       } else if (slotType === "challenge") {
         const id = selectChallengeProblem(introduced, param.challengeDifficulty, bank, usedChallengeIds);
         if (id === undefined) {
-          // FR-015a 明文「過濾後為空為一等合法、無 fallback」，故不 fail loud；但無題的 challenge 會讓
-          // F5 Renderer 推出一則沒有任何題目連結的「今日挑戰」，通常代表該 Track 的 challengeDifficulty
-          // 與題庫難度分布對不上。以 warning 留下訊號而不擋 CI（stub 題庫無 Hard 題為 FR-018 預期狀態）。
+          // F8 修訂（research R2）：無題的 challenge 槽改為跳過（不消耗 sessionIndex），而非產出無題目
+          // 的挑戰日——通常代表該 Track 的 challengeDifficulty 與題庫難度分布對不上（stub 題庫無 Hard
+          // 題為 FR-018 預期狀態），以 warning 留下訊號而不擋 CI。
           violations.push(
             violation(
               "challenge-no-problem",
-              `${track}:session-${sessionIndex}`,
-              `challenge Session（#${sessionIndex}）在已引入 Concept 中找不到難度為 ${param.challengeDifficulty} 的題目，將產出無題目的挑戰日`,
+              weekSlot,
+              `challenge 槽（第 ${weekNumber} 週、第 ${slotPosition} 槽）在已引入 Concept 中找不到難度為 ${param.challengeDifficulty} 的題目，已跳過該槽`,
               { severity: "warning", field: "challengeDifficulty" },
             ),
           );
-        } else {
-          usedChallengeIds.add(id);
+          continue;
         }
-        sessions.push(buildSession(sessionIndex, "challenge", { problemIds: id !== undefined ? [id] : [] }));
+        usedChallengeIds.add(id);
+        weekChallengeIds.add(id);
+        sessions.push(buildSession(sessionIndex, "challenge", { problemIds: [id] }));
         sessionIndex++;
       } else {
         sessions.push(buildSession(sessionIndex, "rest"));

@@ -30,11 +30,11 @@ MUST 有單元測試，plan.md「測試落點」已釘死落點檔名，故測�
 
 **Purpose**: 建立可比對的綠燈基線，並完成課表重跑前唯一具時效性的前置查證。
 
-- [ ] T001 查證 `state` 分支進度：執行 `git fetch origin state` 與 `git show origin/state:state.json`，確認三軌 `currentSessionIndex` ≤ 3，並把查證結果與日期追加至 `specs/008-review-extras/research.md` R14 的「查證紀錄」表；若 > 3 MUST 先依 `docs/spec.md` §9.2「指定起點」流程換算校正後才進入 Phase 2（contracts/schedule-revision.md §5）
+- [X] T001 查證 `state` 分支進度：執行 `git fetch origin state` 與 `git show origin/state:state.json`，確認三軌 `currentSessionIndex` ≤ 3，並把查證結果與日期追加至 `specs/008-review-extras/research.md` R14 的「查證紀錄」表；若 > 3 MUST 先依 `docs/spec.md` §9.2「指定起點」流程換算校正後才進入 Phase 2（contracts/schedule-revision.md §5）
   > **最近一次查證 2026-08-02：三軌 `currentSessionIndex: 1`、`history: []`（分支已重置，從未推播）** ⇒ 前提成立。本任務為**秒級指令**，MUST NOT 誤解為需要等待——「3 天餘裕」指的是 cron 每天 +1、從 1 起算要三天才會越過門檻，不是等待期。若距上次查證未再跨日，重跑一次確認即可收掉本任務。
-- [ ] T002 建立綠燈基線：於 repo root 依序執行 `npm ci`、`npm run build`、`npm run typecheck`、`npm test`、`npm run validate:schedule`、`npm run validate:content` 全數通過，並記下現行三份 `schedules/*.json` 的 Session 數作為 Phase 2 的比對起點。**F7 凍結基準為 243 / 236 / 291**（實測值，即 T018 比對用的 `db3f594` 上的內容）；spec Clarifications 提到的 208 / 202 / 249 是「已移除 rest 槽、尚未跳過無題槽」的**中間推算值**，不存在於任何 commit，MUST NOT 當成基線
+- [X] T002 建立綠燈基線：於 repo root 依序執行 `npm ci`、`npm run build`、`npm run typecheck`、`npm test`、`npm run validate:schedule`、`npm run validate:content` 全數通過，並記下現行三份 `schedules/*.json` 的 Session 數作為 Phase 2 的比對起點。**F7 凍結基準為 243 / 236 / 291**（實測值，即 T018 比對用的 `db3f594` 上的內容）；spec Clarifications 提到的 208 / 202 / 249 是「已移除 rest 槽、尚未跳過無題槽」的**中間推算值**，不存在於任何 commit，MUST NOT 當成基線
 
-- [ ] T002a 提交**規劃期已完成但尚未 commit 的產物**，使 T002 的綠燈基線建立在已提交的樹上：`specs/008-review-extras/**`（新增）、`docs/spec.md`（F8 決策回寫）、`specs/005-lesson-compiler/{contracts/renderer-contract.md,data-model.md}`（parity 測試落點改指向）、`tests/unit/budget-slot-parity.test.ts`（**目前為 untracked**）、`tests/unit/review-fixes.test.ts`（parity 區塊搬出後的殘留註記）、`.specify/feature.json`、`CLAUDE.md`。type 依主要性質分兩個 commit（規格文件 `docs`、測試檔搬移 `test`），scope `008-review-extras`
+- [X] T002a 提交**規劃期已完成但尚未 commit 的產物**，使 T002 的綠燈基線建立在已提交的樹上：`specs/008-review-extras/**`（新增）、`docs/spec.md`（F8 決策回寫）、`specs/005-lesson-compiler/{contracts/renderer-contract.md,data-model.md}`（parity 測試落點改指向）、`tests/unit/budget-slot-parity.test.ts`（**目前為 untracked**）、`tests/unit/review-fixes.test.ts`（parity 區塊搬出後的殘留註記）、`.specify/feature.json`、`CLAUDE.md`。type 依主要性質分兩個 commit（規格文件 `docs`、測試檔搬移 `test`），scope `008-review-extras`
   > **為何需要獨立任務**：parity 測試搬移（T035 / T044 的前提檔）在規劃期即完成，但 `tests/unit/budget-slot-parity.test.ts` 仍是 untracked——沒有這一步，T019 之後的任一次 `git checkout` / `git stash` 都可能讓它連同 `docs/spec.md` 的 F8 決策回寫一起消失，而**這些內容不在任何一個實作任務的檔案清單裡**。
 
 **Checkpoint**: 基線綠燈且 state 前提成立 → 可開始改動生成器
@@ -52,26 +52,26 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 
 ### 2A. 參數層與型別
 
-- [ ] T003 [P] 放寬 rhythm schema 於 `src/compiler/schedule-schema.ts`：`rhythm` 由 `.length(7)` 改為 `.min(2).max(14)`；`validateRhythm` 移除「MUST 含至少一個 `rest`」檢查，保留「≥1 concept」「≥1 review」「第一個 practice 晚於第一個 concept」「最後一個 review 不早於最後一個 concept」四條，違規仍以既有 `param-invalid` 回報（FR-014b/FR-014b1、research R1、contracts/schedule-revision.md §1）
-- [ ] T004 [P] 新增三個違規 rule 於 `src/types/schedule.ts`：`practice-no-problem`、`review-no-problem`、`review-challenge-duplicate`（皆 warning 級），並把 `rhythm` 的註解由「長度 7；MUST 含 ≥1 review 與 ≥1 rest」改為「長度 2–14；MUST 含 ≥1 concept 與 ≥1 review」（data-model.md §7）
-- [ ] T005 移除三軌 rest 槽於 `curriculum/track-params.json`：`foundation` / `interviewReady` / `interviewMastery` 的 `rhythm` 各刪去末槽 `"rest"`（7 → 6 槽），`targetLevel` / `maxLevel` / `problemDifficulties` / `challengeDifficulty` 一律不動（FR-014a、data-model.md §5）
+- [X] T003 [P] 放寬 rhythm schema 於 `src/compiler/schedule-schema.ts`：`rhythm` 由 `.length(7)` 改為 `.min(2).max(14)`；`validateRhythm` 移除「MUST 含至少一個 `rest`」檢查，保留「≥1 concept」「≥1 review」「第一個 practice 晚於第一個 concept」「最後一個 review 不早於最後一個 concept」四條，違規仍以既有 `param-invalid` 回報（FR-014b/FR-014b1、research R1、contracts/schedule-revision.md §1）
+- [X] T004 [P] 新增三個違規 rule 於 `src/types/schedule.ts`：`practice-no-problem`、`review-no-problem`、`review-challenge-duplicate`（皆 warning 級），並把 `rhythm` 的註解由「長度 7；MUST 含 ≥1 review 與 ≥1 rest」改為「長度 2–14；MUST 含 ≥1 concept 與 ≥1 review」（data-model.md §7）
+- [X] T005 移除三軌 rest 槽於 `curriculum/track-params.json`：`foundation` / `interviewReady` / `interviewMastery` 的 `rhythm` 各刪去末槽 `"rest"`（7 → 6 槽），`targetLevel` / `maxLevel` / `problemDifficulties` / `challengeDifficulty` 一律不動（FR-014a、data-model.md §5）
 
 ### 2B. 生成器變更（同一檔案，MUST 依序）
 
-- [ ] T006 於 `src/compiler/schedule-generator.ts` 的 `emitSessions` 加入輪次與槽位追蹤：1-based `weekNumber`（每進入一輪 +1，與該輪實際產出幾筆 Session 無關）、1-based `slotPosition`（rhythm 陣列位置），並累積 `weekProblemIds`（該週 concept Session 實際寫入課表的 `problemIds` 聯集）與 `weekChallengeIds`（該週 challenge 槽選用的題號）（FR-014g1、contracts/schedule-revision.md §2）
-- [ ] T007 於 `src/compiler/schedule-generator.ts` 實作無題槽跳過：`practice` 的 `unionProblems` 為空、或 `challenge` 的 `selectChallengeProblem` 回傳 undefined 時，MUST 不產生 Session 且不消耗 `sessionIndex`（`continue`），並各自發出具名 warning（`practice-no-problem` / 既有語意調整後的 `challenge-no-problem`），subject MUST 為 `{track}:week-{weekNumber}-slot-{slotPosition}`；已引入 Concept 清單與已用 challenge 題號集合 MUST 照常維持（FR-014e/g/g1、research R2）
-- [ ] T008 於 `src/compiler/schedule-generator.ts` 新增 `selectReviewProblem` 並於 `review` 槽寫入 `problemIds`：候選池取 `weekProblemIds`（MUST NOT 由 `concept.leetcode` 重算）、排序鍵為「難度 Easy<Medium<Hard，同難度題號升冪」取第一題、對 `weekChallengeIds` 行**軟排除**（排除後空且原池非空 ⇒ 退回原池並 warn `review-challenge-duplicate`）、候選池為空 ⇒ 省略 `problemIds` 並 warn `review-no-problem`（subject 用 `{track}:session-{sessionIndex}`）；`review` 槽 MUST 一律產生（FR-015–FR-018、FR-020、research R3/R4、contracts/schedule-revision.md §3）
+- [X] T006 於 `src/compiler/schedule-generator.ts` 的 `emitSessions` 加入輪次與槽位追蹤：1-based `weekNumber`（每進入一輪 +1，與該輪實際產出幾筆 Session 無關）、1-based `slotPosition`（rhythm 陣列位置），並累積 `weekProblemIds`（該週 concept Session 實際寫入課表的 `problemIds` 聯集）與 `weekChallengeIds`（該週 challenge 槽選用的題號）（FR-014g1、contracts/schedule-revision.md §2）
+- [X] T007 於 `src/compiler/schedule-generator.ts` 實作無題槽跳過：`practice` 的 `unionProblems` 為空、或 `challenge` 的 `selectChallengeProblem` 回傳 undefined 時，MUST 不產生 Session 且不消耗 `sessionIndex`（`continue`），並各自發出具名 warning（`practice-no-problem` / 既有語意調整後的 `challenge-no-problem`），subject MUST 為 `{track}:week-{weekNumber}-slot-{slotPosition}`；已引入 Concept 清單與已用 challenge 題號集合 MUST 照常維持（FR-014e/g/g1、research R2）
+- [X] T008 於 `src/compiler/schedule-generator.ts` 新增 `selectReviewProblem` 並於 `review` 槽寫入 `problemIds`：候選池取 `weekProblemIds`（MUST NOT 由 `concept.leetcode` 重算）、排序鍵為「難度 Easy<Medium<Hard，同難度題號升冪」取第一題、對 `weekChallengeIds` 行**軟排除**（排除後空且原池非空 ⇒ 退回原池並 warn `review-challenge-duplicate`）、候選池為空 ⇒ 省略 `problemIds` 並 warn `review-no-problem`（subject 用 `{track}:session-{sessionIndex}`）；`review` 槽 MUST 一律產生（FR-015–FR-018、FR-020、research R3/R4、contracts/schedule-revision.md §3）
 
 ### 2C. 課表層測試
 
-- [ ] T009 [P] 擴充 `tests/unit/schedule-schema.test.ts`：rhythm 長度 1 與 15 被 schema 擋下、2 與 14 通過、不含 `rest` 的 6 槽 rhythm 通過解析（FR-014b1）
-- [ ] T010 [P] 擴充 `tests/unit/schedule-rhythm.test.ts`：`validateRhythm` 對不含 `rest` 的 rhythm 不再違規；四條保留約束各自的違規案例仍被擋下（FR-014b）
-- [ ] T011 [P] 新增 `tests/unit/schedule-skip-empty-slot.test.ts`：practice / challenge 空池不產生 Session 且不消耗 `sessionIndex`（後續 Session 編號連續）、review 空池仍產生、跳過後 `reviewRange` 仍正確涵蓋該週全部 concept Session、warning 的 rule 與 `week-N-slot-M` subject 格式正確且能區分 practice 與 challenge（FR-014e/f/g/g1）
-- [ ] T012 [P] 新增 `tests/unit/schedule-review-problem.test.ts`：最低難度優先、同難度取最小題號、軟排除同週 challenge、排除後空池退回原池並發 `review-challenge-duplicate`、候選池為空時省略欄位（非 `[]`）並發 `review-no-problem`、review `problemIds` 長度恆為 1 或缺席、`challengeDifficulty` 未被 review 槽使用（FR-016–FR-020a）
-- [ ] T013 [P] 擴充 `tests/unit/compile-types.test.ts`：直接以 rest 類 `SessionPlan` 驗證 `compileRest` 的編譯路徑（含 `encouragement` 填入），確保三份課表已無 rest Session 後該路徑不退化為死路徑（FR-014c、spec Edge Case）
-- [ ] T014 [P] 擴充 `tests/unit/renderer.test.ts`：以 `RestLesson` 測試替身驗證 `buildRestBlocks` 的版面與 `encouragement` slot 登記維持不變（FR-014c）
+- [X] T009 [P] 擴充 `tests/unit/schedule-schema.test.ts`：rhythm 長度 1 與 15 被 schema 擋下、2 與 14 通過、不含 `rest` 的 6 槽 rhythm 通過解析（FR-014b1）
+- [X] T010 [P] 擴充 `tests/unit/schedule-rhythm.test.ts`：`validateRhythm` 對不含 `rest` 的 rhythm 不再違規；四條保留約束各自的違規案例仍被擋下（FR-014b）
+- [X] T011 [P] 新增 `tests/unit/schedule-skip-empty-slot.test.ts`：practice / challenge 空池不產生 Session 且不消耗 `sessionIndex`（後續 Session 編號連續）、review 空池仍產生、跳過後 `reviewRange` 仍正確涵蓋該週全部 concept Session、warning 的 rule 與 `week-N-slot-M` subject 格式正確且能區分 practice 與 challenge（FR-014e/f/g/g1）
+- [X] T012 [P] 新增 `tests/unit/schedule-review-problem.test.ts`：最低難度優先、同難度取最小題號、軟排除同週 challenge、排除後空池退回原池並發 `review-challenge-duplicate`、候選池為空時省略欄位（非 `[]`）並發 `review-no-problem`、review `problemIds` 長度恆為 1 或缺席、`challengeDifficulty` 未被 review 槽使用（FR-016–FR-020a）
+- [X] T013 [P] 擴充 `tests/unit/compile-types.test.ts`：直接以 rest 類 `SessionPlan` 驗證 `compileRest` 的編譯路徑（含 `encouragement` 填入），確保三份課表已無 rest Session 後該路徑不退化為死路徑（FR-014c、spec Edge Case）
+- [X] T014 [P] 擴充 `tests/unit/renderer.test.ts`：以 `RestLesson` 測試替身驗證 `buildRestBlocks` 的版面與 `encouragement` slot 登記維持不變（FR-014c）
   > **T013 / T014 的覆蓋大部分已存在**（[compile-types.test.ts:20](../../tests/unit/compile-types.test.ts#L20) 已用 rest 類 `SessionPlan` 走 `compileRest`；[renderer.test.ts:155](../../tests/unit/renderer.test.ts#L155) 與 [renderer-types.test.ts:132](../../tests/unit/renderer-types.test.ts#L132) 已測 `buildRestBlocks` 含 `encouragement`）。**本任務 MUST NOT 重寫等價測試**，只需：(a) 確認上述既有斷言在課表已無 rest Session 後仍有效；(b) 在檔案內補上一行註記，說明「三份正式課表已無 rest Session，`validate.ts` 的全課表編譯不再涵蓋此路徑，本檔為其唯一覆蓋來源」，使後續維護者不會誤刪。若確認後無缺口，本任務即以該註記收尾。
-- [ ] T014a **更新既有測試中因本 Phase 而失效的斷言**（MUST 與 T003 / T007 同批完成，否則 T019 無法在綠燈下 commit）：
+- [X] T014a **更新既有測試中因本 Phase 而失效的斷言**（MUST 與 T003 / T007 同批完成，否則 T019 無法在綠燈下 commit）：
   - [tests/unit/schedule-schema.test.ts:45](../../tests/unit/schedule-schema.test.ts#L45) `"rhythm 長度非 7 → param-invalid"` 的 fixture 為 `["concept","review","rest"]`（長度 3），放寬為 `.min(2).max(14)` 後**合法** ⇒ 斷言必失敗。MUST 改寫為長度 **1 與 15** 的違規案例（與 T009 的邊界測試合併，避免兩份重疊），並把測試名稱由「非 7」改為「超出 2–14 範圍」
   - 同檔 `"rhythm 缺 review 或 rest → param-invalid"` 的**名稱**已過時（`rest` 不再必要）；fixture（7 個 concept）仍會因缺 `review` 而違規，故斷言可留，但名稱 MUST 改為「缺 review」
   - [tests/unit/schedule-track.test.ts:155](../../tests/unit/schedule-track.test.ts#L155) `expect(violations.every((v) => v.rule === "challenge-no-problem")).toBe(true)` 在空題庫下會因新增的 `practice-no-problem` / `review-no-problem` 而失敗。MUST 改為斷言「**全部違規皆為 warning 級**」＋「rule 集合 ⊆ 三個已知的無題 rule」——該案例原本要驗的是「無 error」，不是「只有一種 warning」
@@ -79,11 +79,11 @@ T003–T008 的四項生成器變更 **MUST 在同一階段完成**——它們�
 
 ### 2D. 課表重跑與驗收（spec「實作順序約束」②）
 
-- [ ] T015 執行 `npm run generate:schedule` 重生 `schedules/foundation.json`、`schedules/interview-ready.json`、`schedules/interview-mastery.json`，並保留生成器輸出的摘要與 warning 清單供 T016 比對
-- [ ] T016 驗收 A1/A3/A5/A6/A7：Session 數為 **198 / 200 / 243**；`npm run validate:schedule` 零 error（拓樸子序列、`review-range-invalid`、`review-coverage-gap`、`forward-dependency`、`duplicate-concept`、`dangling-*`、`session-problem-overflow`）；三份課表中 `problemIds` 為空的 practice / challenge Session 數為 0；每個跳過與每個無題 review 都有對應 warning；每個 review 的 `problemIds` 長度 ∈ {缺席, 1}。數字不符 MUST 先查明課綱／參數／生成器哪一項與預期不同，**MUST NOT 調整生成器去湊數字**（FR-014d、SC-012、contracts/schedule-revision.md §4）
-- [ ] T017 驗收 A2 determinism：擴充 `tests/unit/schedule-generate.test.ts` 釘死「同輸入連跑兩次 byte-identical」，並實機重跑 `npm run generate:schedule` 後確認 `git diff --stat schedules/` 無輸出（FR-019、SC-005）
-- [ ] T018 驗收 A4 教學內容不變：以測試（建議置於 `tests/unit/schedule-generate.test.ts` 或新增 `tests/unit/schedule-concept-order.test.ts`）比對新舊三份課表的 `sessions.filter(type === "concept").map(conceptId)` 序列完全相等，舊版取自 F7 基準 commit `db3f594`；**MUST NOT 只靠目視 diff**（SC-005、contracts/schedule-revision.md §4）
-- [ ] T019 提交 Phase 2A–2D 的階段 commit（`curriculum/track-params.json`、`src/compiler/schedule-schema.ts`、`src/compiler/schedule-generator.ts`、`src/types/schedule.ts`、三份 `schedules/*.json`、對應測試），type 依主要性質（生成器能力增量為 `feat`），scope 為 `008-review-extras`
+- [X] T015 執行 `npm run generate:schedule` 重生 `schedules/foundation.json`、`schedules/interview-ready.json`、`schedules/interview-mastery.json`，並保留生成器輸出的摘要與 warning 清單供 T016 比對
+- [X] T016 驗收 A1/A3/A5/A6/A7：Session 數為 **198 / 200 / 243**；`npm run validate:schedule` 零 error（拓樸子序列、`review-range-invalid`、`review-coverage-gap`、`forward-dependency`、`duplicate-concept`、`dangling-*`、`session-problem-overflow`）；三份課表中 `problemIds` 為空的 practice / challenge Session 數為 0；每個跳過與每個無題 review 都有對應 warning；每個 review 的 `problemIds` 長度 ∈ {缺席, 1}。數字不符 MUST 先查明課綱／參數／生成器哪一項與預期不同，**MUST NOT 調整生成器去湊數字**（FR-014d、SC-012、contracts/schedule-revision.md §4）
+- [X] T017 驗收 A2 determinism：擴充 `tests/unit/schedule-generate.test.ts` 釘死「同輸入連跑兩次 byte-identical」，並實機重跑 `npm run generate:schedule` 後確認 `git diff --stat schedules/` 無輸出（FR-019、SC-005）
+- [X] T018 驗收 A4 教學內容不變：以測試（建議置於 `tests/unit/schedule-generate.test.ts` 或新增 `tests/unit/schedule-concept-order.test.ts`）比對新舊三份課表的 `sessions.filter(type === "concept").map(conceptId)` 序列完全相等，舊版取自 F7 基準 commit `db3f594`；**MUST NOT 只靠目視 diff**（SC-005、contracts/schedule-revision.md §4）
+- [X] T019 提交 Phase 2A–2D 的階段 commit（`curriculum/track-params.json`、`src/compiler/schedule-schema.ts`、`src/compiler/schedule-generator.ts`、`src/types/schedule.ts`、三份 `schedules/*.json`、對應測試），type 依主要性質（生成器能力增量為 `feat`），scope 為 `008-review-extras`
 
 ### 2E. 素材共用底座（阻擋 US1 與 US2）
 
