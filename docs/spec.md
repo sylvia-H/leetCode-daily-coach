@@ -82,7 +82,7 @@ LeetCode Daily Coach 是一套**演算法課程引擎（Learning Pipeline）**�
 
 ## 2. Product Goals
 
-- **G1**：以每天約 20 分鐘內的閱讀量，讓一個能寫 TypeScript / Python 的中階工程師，在**約 8～10 個月**（每 Track 約 236～291 個 Session，長度依該 Track 的涵蓋深度與節奏而異，見 §13）內，依所選 **Track** 達到對應的解題等級：
+- **G1**：以每天約 20 分鐘內的閱讀量，讓一個能寫 TypeScript / Python 的中階工程師，在**約 6.5～8 個月**（每 Track 約 198～243 個 Session，長度依該 Track 的涵蓋深度與節奏而異，見 §13）內，依所選 **Track** 達到對應的解題等級：
 
   | Track                | 目標等級                           |
   | -------------------- | ---------------------------------- |
@@ -568,7 +568,7 @@ MUST NOT 直接引用他人教材內容；MAY 參考其**知識架構與題目�
 
 ## 13. Session Scheduling
 
-Session 是「每日推播」的邏輯單位。**每 Track 的總量由「該 Track 的涵蓋深度（`maxLevel`）÷ 每週節奏的 concept 槽數」決定，不是固定值**（F7 定案 2026-07-31，見 §13.5）——現行三軌為 Foundation 243 / InterviewReady 236 / InterviewMastery 291 個 Session，對應約 8～10 個月的每日學習。
+Session 是「每日推播」的邏輯單位。**每 Track 的總量由「該 Track 的涵蓋深度（`maxLevel`）÷ 每週節奏的 concept 槽數」決定，不是固定值**（F7 定案 2026-07-31，見 §13.5）——現行三軌為 Foundation 198 / InterviewReady 200 / InterviewMastery 243 個 Session，對應約 6.5～8 個月的每日學習（**F8 定案 2026-08-01「移除 rest 槽」＋「跳過無題的 practice / challenge 槽」後的數值**；F7 交付時為 243 / 236 / 291）。
 
 ### 13.1 Session ≠ Concept
 
@@ -577,7 +577,9 @@ Session 是「每日推播」的邏輯單位。**每 Track 的總量由「該 Tr
   - `practice`：不引入新 Concept，複習近期 Concept、加做題目。
   - `review`：週複習（見 §15）。
   - `challenge`：Medium 綜合挑戰。
-  - `rest`：休息日（可只推一句鼓勵 / 一分本週回顧提示）。
+  - `rest`：休息日（可只推一句鼓勵 / 一分本週回顧提示）。**現行三軌的 `rhythm` 皆不含 rest 槽（F8 定案
+    2026-08-01，見 §13.2）**，故實際課表不會產生此類 Session；但 Compiler / Renderer / schema **MUST 持續
+    支援**此型別，使「是否排休息日」維持為 `track-params.json` 的參數選擇，而非寫死於程式。
 
 ### 13.2 每週節奏（建議樣板，Track 可微調）
 
@@ -588,13 +590,25 @@ Day 3  practice   練習
 Day 4  concept    補充 / 進階
 Day 5  challenge  Challenge
 Day 6  review     複習（涵蓋 Day 1–5）
-Day 7  rest       休息
 ```
 
-- 節奏 MUST 內建 Review 與 Rest（呼應 Learning Philosophy）。
+- 節奏 MUST 內建 Review（呼應 Learning Philosophy §3 的 Spaced Review）。
+- **rest 槽不再是必要槽位（MUST，F8 定案 2026-08-01）**：`rhythm` **MUST 含至少一個 `review` 槽**，
+  但 **MUST NOT 強制含 `rest` 槽**；`track-params.json` 的 zod 層（`validateRhythm`）MUST 相應放寬，
+  MUST NOT 再以 `param-invalid` 擋下不含 rest 的 rhythm。**現行三軌的 rhythm 皆已移除 rest**（每輪由
+  7 槽縮為 6 槽），課表長度因而縮短約 1/7（見 §13.5）。
+  **理由**：§3 Learning Philosophy 列出的是「內建 Practice / Review / Challenge」，**並未包含 Rest**；
+  憲章亦無任何一條要求休息日。更關鍵的是 §19 的「**漏跑不跳課**」已使任意休息零成本——使用者哪天不推進，
+  進度只會順延、不會斷、不會被跳過。既然系統本身對休息已無懲罰，再排一個固定的休息日即為重複保障，
+  代價是每 7 次推播有 1 次沒有實質教學內容。原條文「節奏 MUST 內建 Review 與 Rest」自本次修訂起**取代**之。
+  未來若要恢復休息日，只需在 `track-params.json` 的 rhythm 加回 `rest` 槽並重跑生成器（型別與版面支援皆保留）。
 - **rhythm 槽位順序約束（MUST，F4 定案）**：`reviewRange` 的定義為 `[weekStartIndex, reviewSessionIndex − 1]`（§13.4、F4 FR-013），故 rhythm 中**最後一個 `concept` 槽 MUST 早於最後一個 `review` 槽**——否則該 concept 落在所有 `reviewRange` 之外，該 Concept 在整份課表裡永遠不會被複習。同理，rhythm MUST 含至少一個 `concept` 槽（否則涵蓋佇列永不消耗），且第一個 `practice` 槽 MUST 晚於第一個 `concept` 槽（否則該週 practice 無題可練）。三者由 `track-params.json` 的 zod 層以 `param-invalid` 具名回報，並由生成器內建的 `review-coverage-gap` 不變式二次把關。**F7 課綱定稿後調整節奏時 MUST 維持此順序**（舊樣板把 review 排在第 4 槽，會使每週第三個新觀念永不被複習）。
 - Foundation Track 的 challenge 難度 SHOULD 降級；InterviewMastery 的 challenge SHOULD 升級為變體 / 綜合題。
-- **週節奏不綁日曆星期（MUST）**：上表的 Mon～Sun 僅為示意；節奏以**相對天數**計（Session 1 = 該 Track 實際開始的第一天，每 7 個 Session 一輪）。因「漏跑不跳課」（§19），漏推一天即整體順延一天，星期本來就會漂移，MUST NOT 依日曆星期決定 Session 類型。使用者若希望 rest 落在週日，SHOULD 自行選在週一啟用該 Track（§9.2）。
+- **週節奏不綁日曆星期（MUST）**：上表的 Day 1～Day 6 僅為示意；節奏以**相對天數**計（Session 1 = 該 Track 實際開始的第一天）。因「漏跑不跳課」（§19），漏推一天即整體順延一天，星期本來就會漂移，MUST NOT 依日曆星期決定 Session 類型。**節奏長度 MUST 取自 `rhythm` 陣列，MUST NOT 於程式或文件中寫死為 7**（rest 槽移除後為 6；未來調整節奏會再變）。**`track-params.json` 的 zod 層對 `rhythm` 的長度約束 MUST 為範圍而非固定值（MUST，F8 定案 2026-08-01）**：下限 **2**（「≥1 concept ＋ ≥1 review」的必然結果），上限 **14**（兩週）。原先釘死為恰好 7 的寫法，使「調整節奏」必然連帶改 schema——本次移除 rest 即因此觸發 schema 變更；改成固定 6 只是把同一個錯誤換個數字。**上限不可省略**：`rhythm.length` 即 `reviewRange` 的最大跨度，無上限時一個誤植的長陣列會生出「一次複習涵蓋數十天」的課表且零違規通過，週複習的語意會悄悄消失。
+- **`rhythm.length` 是每輪的「上限」而非固定值（MUST，F8 定案 2026-08-01）**：既有行為中，`concept` 槽在
+  涵蓋佇列取空時即跳過且不消耗 `sessionIndex`；自本次修訂起，`practice` / `challenge` 槽在**選不到任何
+  題目時**同樣 MUST 跳過（見 §13.4）。故實際每輪產生的 Session 數 MAY 少於 `rhythm.length`，
+  程式與文件 MUST NOT 假設「每輪恰為 `rhythm.length` 個 Session」。
 
 ### 13.3 Session → 內容映射
 
@@ -612,6 +626,7 @@ Day 7  rest       休息
   - **確定性（MUST）**：同一輸入 → byte-identical 輸出（不得使用未固定 seed 的隨機源）。
 - 生成器 MUST 內建驗證：產出課表為 DAG 的合法拓樸子序列、review 的 `reviewRange` 正確涵蓋本週、**每個 `concept` Session 皆被某個 `reviewRange` 涵蓋**（`review-coverage-gap`，見 §13.2 的槽位順序約束）、所有 `conceptId` / `problemIds` 參照存在、每個 Concept 的 `module` 存在於 `modules.json`（`unknown-module`；否則該 Concept 會從三份課表靜默消失）。
 - **`challenge` 槽選題（MUST，F4 定案）**：候選池 MUST 限於**該 challenge Session 之前已引入**的 Concept 的題目（取符合該 Track `challengeDifficulty` 者），避免挑戰題指向尚未教到的 Concept；取尚未被前面任一 challenge 用過的最小題號，全數用過時退回池中最小題號。候選池為空時 `problemIds` 省略為合法（沿用「無 fallback」定案），但生成器 MUST 留下 `challenge-no-problem` 的 **warning** 訊號（通常代表該 Track 的難度帶與題庫分布對不上）。
+  **⚠️ 本項末句自 F8 起被下方「無題槽 MUST 跳過」取代（2026-08-01）**：候選池為空時**不再產生一筆無題的 challenge Session**，而是**跳過該槽**；`challenge-no-problem` 的 warning 保留，但語意由「將產出無題目的挑戰日」改為「已跳過該槽」。候選池非空時的選題規則（限已引入 Concept、取未用過的最小題號、全數用過退回最小題號）**不變**。
 - **每 Session 題數上限 ≤ 3（MUST，F5 定案 2026-07-23）**：課表中**任一** Session 的 `problemIds` 長度
   MUST ≤ 3，與 §14.5 的推播預算「每題 ≤350、最多 3 題」對齊。此上限的**唯一套用點在生成器**——
   concept 槽沿用 §12.1 的 `problem-count-range`（Concept 宣告的 `leetcode` 本就 ≤3），practice / challenge
@@ -619,6 +634,33 @@ Day 7  rest       休息
   **Lesson Compiler 與 Renderer MUST NOT 截斷題目**（§14.5 明文禁止截斷）：題數超限一律是課表缺陷，
   由生成端消除、由內容 Gate 的預算檢查兜底。生成器 MUST 以 `session-problem-overflow` 具名回報任何
   超過 3 題卻未被截取的情形（不變式自檢）。
+- **無題槽 MUST 跳過，不產生空洞推播（MUST，F8 定案 2026-08-01）**：`practice` / `challenge` 槽算出的
+  `problemIds` **為空**時，生成器 MUST **不產生該 Session、且不消耗 `sessionIndex`**（與 `concept` 槽在
+  涵蓋佇列取空時的既有行為同一路徑）。
+  - **理由**：空的 practice / challenge 會推出一則「叫使用者去練習／挑戰、卻沒有給任何題目」的訊息。
+    實測 `programming-mindset` 模組的 10 個 Concept 全為 `leetcode: []`，Foundation 開課前 4 週每週有
+    2 天是這種空洞推播；InterviewMastery 因 `challengeDifficulty: Hard` 且第一個 Hard 題要到 hash-table
+    才出現，前 6 週的 challenge 皆為空。
+  - **`review` 槽 MUST 一律產生**，即使 `problemIds` 為空。跳過 review 會使該週的 concept Session 落在
+    所有 `reviewRange` 之外，直接違反 `review-coverage-gap` 不變式；且 review 具備涵蓋清單 / Reflection /
+    鼓勵語，不缺 Challenge 段仍有實質內容。
+  - **MUST NOT 於 runtime 跳過**：runtime 跳過會違反 §19 的「推播成功才 +1」與「漏跑不跳課」，
+    等同讓每日管線依內容決定是否推播。跳過 MUST 只發生在課表生成端（build-time、決定性、可被內建驗證檢查）。
+  - **跳過 MUST 留下具名 warning**（沿用並擴充既有的 `challenge-no-problem` 至 practice；MAY 為 practice
+    另立 `practice-no-problem` 規則名——兩者根因不同：challenge 空池代表難度帶與題庫分布對不上，
+    practice 空池代表該週涵蓋的 Concept 整週無題）：空槽是「題庫涵蓋不足」的訊號，跳過後該訊號從
+    「使用者看到空推播」變成「課表少一天」而**更難察覺**，不留 warning 等同把問題掃到地毯下。
+  - **跳過類 warning 的違規主體 MUST 以「輪次序 + 槽位序」定位，MUST NOT 使用 `sessionIndex`**：
+    被跳過的槽不消耗 `sessionIndex`，該編號會立刻被同一輪的下一個槽用掉——沿用 `session-{n}` 會讓
+    warning 指向一個**真實存在但完全無關**的 Session（例如報「session-3 的 challenge 無題」而
+    Session 3 實際是一堂 concept 課），比沒有訊號更糟。**輪次序**＝攤課迴圈的第幾輪（1-based，
+    被完全跳過的槽不影響輪次計數）；**槽位序**＝該槽在 `rhythm` 陣列中的位置（1-based）。
+  - **「每個被產生的輪次必含至少一個 `concept` Session」為結構保證，非假設**：輪次的進入條件是涵蓋佇列
+    非空，而佇列**只被 `concept` 槽消耗**，故該輪的第一個 `concept` 槽必然產出，`reviewRange` 因而恆非空。
+    若 rhythm 把某個 `review` 槽排在該輪第一個 `concept` 槽**之前**，該 review 的 `reviewRange` 為空區間，
+    MUST 由既有的 `review-range-invalid` 具名擋下（此護欄 MUST NOT 因跳過機制而放寬）。
+  - **`reviewRange` 不需為此另作處理**：被跳過的槽未消耗 `sessionIndex`，`[weekStartIndex, sessionIndex − 1]`
+    自動收縮至該週實際產生的 Session。
 - 插入 / 調整 Concept 時的工作流：改 Curriculum → 重跑生成器 → review diff → commit。MUST NOT 手改生成物。
 
 ### 13.5 Track 分歧的三個維度與課表長度（MUST，F7 定案 2026-07-31）
@@ -628,9 +670,9 @@ Day 7  rest       休息
 | 維度 | 欄位 | Foundation | InterviewReady | InterviewMastery |
 | --- | --- | --- | --- | --- |
 | **涵蓋深度** | `maxLevel` | 9（至 linked-list） | 12（至 heap） | 15（全量） |
-| **學習節奏** | `rhythm` | 每週 3 個新觀念（含 practice 日） | 每週 4 個 | 每週 4 個 |
+| **學習節奏** | `rhythm` | 每輪 6 槽、3 個新觀念（含 practice 日） | 每輪 6 槽、4 個 | 每輪 6 槽、4 個 |
 | **題目難度帶** | `problemDifficulties` / `challengeDifficulty` | Easy+Medium／Easy | Easy+Medium／Medium | Medium+Hard／Hard |
-| 結果 | — | 103 觀念 / **243 Session** | 134 觀念 / **236 Session** | 165 觀念 / **291 Session** |
+| 結果 | — | 103 觀念 / **198 Session** | 134 觀念 / **200 Session** | 165 觀念 / **243 Session** |
 
 - **課表長度是導出值，不是設定值**：`Session 數 = ceil(涵蓋 Concept 數 ÷ rhythm 的 concept 槽數) × rhythm 長度`。
   故新增 Concept 或調整節奏都會改變長度，**MUST NOT 在 spec 或任何設定中把長度寫死為固定值**。
@@ -642,6 +684,21 @@ Day 7  rest       休息
   Medium 題，正是練習的意義；Foundation 的難度控制改由 `challengeDifficulty: Easy` 與較淺的 `maxLevel` 承擔。
 - **InterviewMastery 的 rhythm MUST 保留 challenge 槽**：§13.2 明訂其 challenge SHOULD 升級為變體／綜合題，
   若為壓縮長度而移除 challenge 槽即違反該條。
+- **課表長度公式僅為上界（MUST，F8 定案 2026-08-01）**：上式的「× rhythm 長度」自 F8 起僅為**上界**——
+  `concept` 槽在涵蓋佇列取空時、`practice` / `challenge` 槽在選不到題目時皆會被跳過（§13.2、§13.4），
+  故實際長度 MUST 由生成器輸出決定，MUST NOT 由公式反推後寫死。
+- **F8 兩項修訂的長度效應（定案 2026-08-01）**：**涵蓋的 Concept 數完全不變**（103 / 134 / 165），
+  縮短的全部是無實質內容的日子。
+
+  | Track | F7 交付 | 移除 rest 後 | 再跳過無題槽後 | 合計 |
+  | --- | --- | --- | --- | --- |
+  | Foundation | 243 | 208（−35） | **198**（再 −10：practice 7＋challenge 3） | −45（−18.5%） |
+  | InterviewReady | 236 | 202（−34） | **200**（再 −2：challenge 2） | −36（−15.3%） |
+  | InterviewMastery | 291 | 249（−42） | **243**（再 −6：challenge 6） | −48（−16.5%） |
+
+  每軌的 **review Session 數不受任何影響**（週數不變：35 / 34 / 42）——`review` 槽 MUST 一律產生（§13.4）。
+  跳過的落點：Foundation practice 於 w1–w4（`programming-mindset`）、w24、w28、w31；
+  各軌 challenge 於課程開頭（Foundation w1–w3、InterviewReady w1–w2、InterviewMastery w1–w6）。
 
 ---
 
@@ -685,8 +742,12 @@ Day 7  rest       休息
 ### 14.3 版面（其他 Session 類型）
 
 - `practice` / `challenge`：以題目 Embed 為主，帶簡短提示（Hint 為 build-time 預生成）。
-- `review`：見 §15。
-- `rest`：一句簡短鼓勵（內建語錄池決定性輪替）+ 本週回顧提示。
+- `review`：見 §15（含一句簡短鼓勵，內建語錄池決定性輪替）。
+- `rest`：一句簡短鼓勵（內建語錄池決定性輪替）+ 本週回顧提示。**現行三軌 rhythm 已無 rest 槽**
+  （§13.2，F8 定案 2026-08-01），此版面為保留支援、實際不會被觸發。
+- **鼓勵語的掛載點為 `review`（MUST，F8 定案 2026-08-01）**：`encouragement` 原設計掛在 `rest`，rest 槽移除後
+  即失去唯一消費者。本次定案將其**改掛至 `review` Session**，使每週仍有一句鼓勵；`rest` 版面的鼓勵語欄位
+  **保留於型別與版面中不刪除**，以維持「是否排休息日」為純參數選擇（§13.1）。
 
 **`practice` / `challenge` 的題目說明來源（MUST，F5 定案 2026-07-23）**：這兩類 Session 沒有對應的 Full
 Article，但其題目仍 MUST 呈現「為什麼適合此 Pattern」與 Hint。該內容 MUST 取自**引入該題的 Concept
@@ -738,7 +799,7 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | 學習路徑 footer                | ≤ 200                   |
 | Track 補充（Overlay notes）    | ≤ 400                   |
 | Weekly Reflection 問題（review）| ≤ 300                   |
-| 鼓勵語（rest）                 | ≤ 200                   |
+| 鼓勵語（review；原 rest）      | ≤ 200                   |
 
 - **TS / Python Tip 由 ≤450 → ≤650 → ≤800（F7 兩次放寬，皆定案 2026-07-31）**：這兩個區塊 MUST 內含
   一個 fenced code block **加上**說明文字。**第一次（450 → 650）**：450 字元實測過緊——Stage 2 第一批
@@ -765,9 +826,14 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 - **Reflection / 鼓勵語的預算在素材之前就位（MUST，F5 定案 2026-07-24）**：`reflectionQuestion`（≤300）
   與 `encouragement`（≤200）的素材由 **F8** 灌入，但兩者的逐區塊預算 MUST 於 F5 即存在於 `checkBudget`，
   否則 F8 的第一批素材會在完全沒有逐區塊把關的情況下上線（只剩 field 1024 與總量 5,500 兜底）。
+  **兩者自 F8 起同時出現在 `review` Session（F8 定案 2026-08-01，見 §14.3）**：review 的各 slot 上限加總為
+  `reflectionQuestion` 300 ＋ `encouragement` 200 ＋ `problems` 350×3 ＝ 1,550，加上「本週涵蓋」清單
+  （Compiler 依課表生成、屬 slot⇄field 對等不變式的明文例外）後距總量上限 5,500 仍有大量餘裕，
+  總量檢查照舊把關。
 - **Renderer 的 slot⇄field 對等不變式（MUST，F5 定案 2026-07-24）**：Renderer 每放進 embed 的一段
   **可變長度文字**，MUST 同時於 `RenderedMessage.budgetSlots` 登記對應 slot；未登記者等同完全逃過逐區塊
-  預算。此不變式 MUST 由測試強制（`tests/unit/review-fixes.test.ts` 的 parity 測試），MUST NOT 只靠
+  預算。此不變式 MUST 由測試強制（`tests/unit/budget-slot-parity.test.ts`；F8 自
+  `tests/unit/review-fixes.test.ts` 純搬移而來，行為未變更），MUST NOT 只靠
   版面作者記得。唯一例外是**非教材自由文字**：固定標籤與由 Compiler 依課表生成的清單（如 review 的
   「本週涵蓋」）。
 - Render 後單則訊息總長 MUST ≤ **5,500** 字元（保留 500 安全餘裕）。
@@ -816,22 +882,54 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 
 ## 15. Weekly Review
 
-每週固定一個 `review` Session，MUST 包含三段（比單純 Quiz 更有價值）：
+每週固定一個 `review` Session，MUST 包含三段（比單純 Quiz 更有價值），並自 F8 起附加第四段鼓勵語：
 
 ```
-Review       本週涵蓋的 Concept 清單（帶連結回顧）
-Reflection   一個反思問題（例：本週哪兩個 Pattern 最容易混淆？為什麼？）
-Challenge    一題 Medium 綜合題（Track 難度不同）
+Review        本週涵蓋的 Concept 清單（帶連結回顧）
+Reflection    一個反思問題（例：本週哪兩個 Pattern 最容易混淆？為什麼？）
+Challenge     一題 Medium 綜合題（Track 難度不同）
+Encouragement 一句鼓勵（內建語錄池決定性輪替；F8 定案 2026-08-01 由 rest 改掛至此）
 ```
 
 - Review 段的 Concept 清單 MUST 由 Compiler 依「本週涵蓋的 sessionIndex 範圍」推導；MUST NOT 由 LLM 決定範圍。
-- Reflection 問題 MUST 來自 **build-time 預生成的題庫**（`data/reflection-bank.json`，依 Topic / 週次組織，過 Gate 凍結；§20），每日 runtime 依 sessionIndex 決定性選取。MUST NOT 於 runtime 呼叫 LLM 生成。
-- **F8 之前的過渡規則（MUST，F5 定案 2026-07-23）**：`data/reflection-bank.json` 與 `data/encouragement.json` 由 **F8** 建立，在此之前「review MUST 含三段」不適用。`Lesson` 的 `reflectionQuestion` / `encouragement` MUST 為選配欄位；素材檔缺席時 Renderer MUST **省略**該段落（MUST NOT 產生空段落或佔位字串），CI Gate MUST 照常通過。F5 MUST NOT 代 F8 建立佔位素材；F8 灌入素材後，版面 MUST 在不修改 Compiler / Renderer 版面邏輯的前提下自動長出。**理由**：素材與版面分屬不同 Feature，佔位素材會讓「決定性輪替規則」在 F8 定案前先被實作一次，形成兩套。
+- Reflection 問題 MUST 來自 **build-time 預生成的題庫**（`data/reflection-bank.json`，依 Topic 組織，過 Gate 凍結；§20），每日 runtime 決定性選取。MUST NOT 於 runtime 呼叫 LLM 生成。
+- 鼓勵語（Encouragement）MUST 來自 **build-time 預生成的語錄池**（`data/encouragement.json`，過 Gate 凍結），每日 runtime 決定性輪替。該段與課程進度無關（MUST NOT 提及具體題號或 Concept），故可安全輪替於全部 Track。
+- **兩者的輪替索引 MUST 為「序數」而非 `sessionIndex` 取模（MUST，F8 定案 2026-08-01）**：
+  - **鼓勵語**：`(reviewOrdinal + trackOffset) mod 語錄池大小`——`reviewOrdinal` 為該 Track 全部 `review` Session 依 `sessionIndex` 升冪的 0-based 序位，`trackOffset` 為 Track 在固定順序中的索引（0/1/2）。
+  - **Reflection**：`(topicOccurrence + trackOffset) mod 該 Topic 的候選集大小`——`topicOccurrence` 為同一 Track 中 `sessionIndex` 更小、且依下條規則歸屬同一 Topic 的 `review` Session 數（0-based）。
+  - **MUST NOT 改用 `sessionIndex` 對池大小取模**：`review` 槽在 rhythm 中位置固定，故其 `sessionIndex` 每輪遞增恰為 `rhythm.length`。以現行 6 槽、語錄池 30 則計，`sessionIndex mod 30` 只會取到 `30 / gcd(6,30) = 5` 個相異索引——**整輪課程只用得到 5 則語錄**；Reflection 更嚴重：同一 Topic 的數個 review 其間距為 6 的倍數，`mod 6` 恆為同值 ⇒ **同一 Topic 每次都推出同一則問題**。兩者皆使「不重複」的驗收標準在數學上不可能成立。
+  - 序數式索引的步長恆為 1，故「連續 N 次互異」（N ≤ 池大小）由算式本身保證；`trackOffset` 使三軌在同一序數必取不同素材，滿足「三軌 MUST NOT 因共用素材而推出完全相同內容」。兩式皆為 `(track, sessionIndex)` 的純函式，決定性要求不受影響。
+- **Reflection 的 Topic 歸屬規則**：取 `reviewRange` 內 `sessionIndex` 最小的 `concept` Session 所屬 Topic（「取最早引入者」，與 §14.3 的反查決勝規則同向）；仍並列時以 §16.1 的全序 `ordinalOf` 決勝。**此歸屬規則與 §20.3 Stage 3 的 Topic 配額 Gate MUST 共用同一顆實作**（憲章 IX）——兩處各寫一份必然漂移，屆時會出現「Gate 算出配額足夠、runtime 卻選到重複問題」的落差。
+- **F8 之前的過渡規則（MUST，F5 定案 2026-07-23）**：`data/reflection-bank.json` 與 `data/encouragement.json` 由 **F8** 建立，在此之前「review MUST 含三段」不適用。`Lesson` 的 `reflectionQuestion` / `encouragement` MUST 為選配欄位；素材檔缺席時 Renderer MUST **省略**該段落（MUST NOT 產生空段落或佔位字串），CI Gate MUST 照常通過。F5 MUST NOT 代 F8 建立佔位素材；F8 灌入素材後，版面 MUST 在不修改 Compiler / Renderer 版面邏輯的前提下自動長出。**理由**：素材與版面分屬不同 Feature，佔位素材會讓「決定性輪替規則」在 F8 定案前先被實作一次，形成兩套。**此「缺席即省略」規則在 F8 之後 MUST 繼續成立**，作為素材檔損毀時的降級路徑。
 - Challenge 題目 MUST 取自 Problem Bank（deterministic 選題）。**選題於課表生成階段定案（MUST，F5 定案
   2026-07-23）**：review Session 的 Challenge 題目 MUST 由該 Session 的 `problemIds`（`schedules/{track}.json`）
   提供，Lesson Compiler **MUST NOT 於 runtime 即時選題**（否則生成物失去權威、且形成「生成一套選題、
-  runtime 另一套」的雙軌，違反 §4-9／§4-13）。`generate-schedule.ts` 目前尚未為 review 槽選題，在補上之前
-  該段省略為合法狀態（與上一條的 F8 過渡規則一致）。
+  runtime 另一套」的雙軌，違反 §4-9／§4-13）。
+- **review 的 Challenge 選題規則（MUST，F8 定案 2026-08-01）**：候選池 MUST 為該 review Session 的
+  `reviewRange` 所涵蓋的 **concept Session 的 `problemIds` 聯集**；排序 MUST 為「**先依難度由低至高、
+  同難度依題號由小至大**」，取第一題（恰 1 題）。
+  候選池為空（該週涵蓋的 Concept 全為 `leetcode: []`）時省略該段為合法，但生成器 MUST 留下具名 warning。
+  - **「`problemIds` 聯集」MUST 指這些 concept Session 實際寫進課表的那份 `problemIds`**，MUST NOT 由
+    Concept 的 `leetcode` 宣告重新過濾一次。課表中的 `problemIds` 已含 Overlay 附加題並已套用每 Session
+    ≤3 題的截取；重新過濾會讓候選池含入**被截取掉、使用者當週從未收到**的題目，「review 的題必然是本週
+    已看過的題」的立論即不成立。
+  - **難度在此只作為排序鍵，MUST NOT 再作為候選池的過濾條件**——池的難度帶已由 Track 的
+    `problemDifficulties` 隱含決定，再過濾一次等同悄悄套用第二道難度限制。
+  - **排除同一週 `challenge` 槽已選題號為「軟排除」**：排除後候選池變空、而排除前非空時，MUST 退回
+    未排除的候選池取排序後第一題，並留下具名 warning。**理由**：硬排除在「該週候選池只剩 challenge
+    選走的那一題」時會讓 review 無題——那是**該週有題卻仍省略 Challenge 段**，與「省略僅發生在該週
+    全無題」的驗收標準直接衝突。此形狀與 §13.4 `challenge` 槽選題的「全數用過則退回池中最小題號」一致。
+  - **MUST NOT 排除同一週 `practice` 槽已用的題號**：practice 取的是同一份週聯集的前 3 題，該週題目
+    總數 ≤3 時排除會把候選池吃空，同樣製造上述禁止的省略；且兩者皆為本週題目的複習，重做即設計意圖。
+  - **MUST NOT 套用 `challengeDifficulty`**：該參數 MUST 維持只服務 `challenge` 槽。理由有二。
+    其一，**review 的定位是複習而非進階挑戰**——`selectConceptProblems` 已把該 Concept 在該 Track
+    難度帶內的題目全部推出，故本週的題在 concept 日即已發完，review 的題必然是本週已看過的題，
+    本質為**重做**（`practice` 槽的 `unionProblems` 早已是同一設計）。其二，**沿用 `challengeDifficulty`
+    實測不可行**：限縮本週範圍後，Foundation 有 23～29%、InterviewMastery 有 ≥67% 的 review 無題可選
+    （全 165 個 Concept 僅 14 個帶 Hard 題）。
+  - **「優先取最低難度」為 MUST**：Foundation 的 `challengeDifficulty` 是 `Easy` 而 `problemDifficulties`
+    是 `Easy+Medium`，若僅取最小題號，review 日可能拿到 Medium 而比前一天的 challenge 日更難，
+    與 review 的定位相反。
 
 ---
 
@@ -955,8 +1053,8 @@ interface Lesson {
     hint?: string; // build-time 預生成、凍結
   }>;
   path?: { prev?: string; current: string; next?: string }; // 顯示用標題
-  encouragement?: string; // 內建語錄池，依 sessionIndex 決定性輪替（rest 等）
-  reflectionQuestion?: string; // review 用，取自預生成題庫
+  encouragement?: string; // 內建語錄池，依 reviewOrdinal 序數決定性輪替（§16.4；review，F8 前原設計為 rest）
+  reflectionQuestion?: string; // review 用，取自預生成題庫；依 topicOccurrence 序數決定性輪替（§16.4）
 }
 ```
 
@@ -973,7 +1071,8 @@ interface Lesson {
 - **`Lesson` MUST 為以 `type` 為判別子的 discriminated union（MUST，F5 定案 2026-07-24）**：上方
   程式碼區塊以「選配欄位」表達的，是**每種 Session 類型各自的必備欄位**，而非任意組合皆合法。實作
   （`src/types/lesson.ts`）MUST 以 union 表達——`ConceptLesson`（`concept` / `path` 必備）、
-  `PracticeLesson`（`practice` | `challenge`）、`ReviewLesson`（`reviewConcepts` 必備）、`RestLesson`——
+  `PracticeLesson`（`practice` | `challenge`）、`ReviewLesson`（`reviewConcepts` 必備，且自 F8 起承載
+  `reflectionQuestion` / `encouragement` 兩個選配素材欄位）、`RestLesson`——
   使「`type: 'concept'` 卻沒有 `concept`」在編譯期就不成立。**理由**：以全選配欄位表達會逼 Renderer 用
   非空斷言（`!`）取回型別系統已經丟失的保證，任何非 Compiler 產生的 `Lesson`（測試替身、F8 的新版面路徑）
   都能編譯通過而在 render 時才崩潰。Renderer MUST NOT 使用 `!` 斷言取用類型專屬欄位。
@@ -1010,9 +1109,9 @@ leetcode-daily-coach/
 │   ├── track-params.json        # 三組 Track 參數（涵蓋範圍準則/難度帶/challenge/節奏微調/targetLevel）；generate-schedule.ts 輸入，zod 驗證（F4 定案）
 │   └── outline.md               # 課綱大綱表（generate-curriculum 產出；唯一人工定稿物）
 ├── schedules/                   # 每 Track 一份課表；由 script 生成後 commit（MUST NOT 手寫）
-│   ├── foundation.json          # 243 Session（maxLevel 9）；目標 Easy
-│   ├── interview-ready.json     # 236 Session（maxLevel 12）；目標 Medium
-│   └── interview-mastery.json   # 291 Session（maxLevel 15）；目標 Hard
+│   ├── foundation.json          # 198 Session（maxLevel 9）；目標 Easy
+│   ├── interview-ready.json     # 200 Session（maxLevel 12）；目標 Medium
+│   └── interview-mastery.json   # 243 Session（maxLevel 15）；目標 Hard
 ├── concepts/                    # Concept Skeleton（產線起草、大綱定稿後凍結；frontmatter + Author Hints）
 │   ├── mindset/
 │   │   ├── 001-complexity.md
@@ -1031,7 +1130,7 @@ leetcode-daily-coach/
 │   └── interview-mastery.json
 ├── data/
 │   ├── problem-bank.json        # 題目 metadata（涵蓋三 Track 難度帶）
-│   ├── encouragement.json       # 內建鼓勵語錄池（決定性輪替）
+│   ├── encouragement.json       # 內建鼓勵語錄池（決定性輪替；掛載於 review Session）
 │   └── reflection-bank.json     # Weekly Reflection 題庫（build-time 預生成、凍結）
 ├── src/
 │   ├── main.ts                  # composition root：手動組裝元件 → 逐 Track run → exit
@@ -1049,6 +1148,7 @@ leetcode-daily-coach/
 ├── scripts/
 │   ├── generate-curriculum.ts   # Stage 1：課綱 + Skeleton 批次起草（LLM）+ 結構 Gate + 大綱表輸出（§20.3）
 │   ├── generate-content.ts      # Stage 2：全文一次性批次展開（LLM）+ 品質 Gate；含節流/斷點續跑
+│   ├── generate-materials.ts    # Stage 3：Review 素材批次生成（LLM）+ 素材 Gate；含節流/斷點續跑（§20.3）
 │   ├── generate-schedule.ts     # 課表確定性生成（三份；§13.4）
 │   └── validate.ts              # Gate 入口：DAG 驗證 + 全 Track × 全 Session 完整編譯 + render 限制檢查
 ├── state/
@@ -1187,7 +1287,10 @@ LLM MAY（僅 build-time 批次生成，全部過 §20.3 Gate 後凍結）
 - Stage 2：依 Skeleton 批次展開 Full Article（含 Digest / TS Tip / Python Tip / Corner / Exit Criteria）
 - 為每個「Concept × 題目」組合生成 Hint 與 whyThisPattern 一句話
 - 生成 Weekly Reflection 題庫（data/reflection-bank.json）
-- 生成鼓勵語錄池初稿（data/encouragement.json；亦可人工撰寫）
+- 生成鼓勵語錄池（data/encouragement.json）。**F8 定案 2026-08-01：採 LLM 生成 + 自動 Gate，不採人工撰寫**
+  ——憲章 XVII 明訂唯一常態性人工檢查點是課綱大綱定稿，若語錄池改為人工撰寫，等於為每次擴充新增一道
+  人工工序，並使素材從可重生成的產物退化為不敢重生的手工資產（違反憲章 XIII）。生成後的 diff review
+  屬一般 commit review，不構成新的常態性審核關卡。把關規則見 §20.3 Stage 3。
 
 LLM MUST NOT
 - 在每日 runtime 被呼叫（每日 workflow MUST 不含任何 LLM API key；§4-8）
@@ -1240,6 +1343,45 @@ LLM MUST NOT
 7. **LLM 二次 self-check**：生成後再讓模型針對「複雜度是否正確、Pattern 適用性是否成立、是否有前後矛盾」做一次批判；不合格 ⇒ 重生成。
 8. **（例外）人工介入**：Gate 擋下或 self-check 低信心時 MUST 自動重生成、**每篇上限 3 次**（F7 定案 2026-07-30，取 §20.4 的 2～4 次緩衝內）；3 次仍不過才標記「待人工檢視」並記錄（fail loud），單篇升級 MUST NOT 阻斷其餘 Concept、MUST NOT 靜默凍結不合格產物；正常者直接凍結入庫。
 
+**Stage 3：Review 素材（`data/reflection-bank.json` / `data/encouragement.json`；F8 定案 2026-08-01）**
+
+與 Stage 2 同為 build-time 批次生成後凍結，但把關組合不同：
+
+1. **機械 Gate（兩份素材皆適用）**：schema（zod；Topic 鍵 MUST 存在於 `modules.json`）、逐區塊字元預算
+   （`reflectionQuestion` ≤300、`encouragement` ≤200，上限 MUST 取自 `src/renderer/budget.ts` 的單一來源）、
+   繁中判準（同關卡 2，門檻 MUST 沿用教材既有預設值，MUST NOT 為短句素材另立一套）、字串層級去重
+   （Reflection 為**跨 Topic 全庫**比對，非僅 Topic 內）。
+   **另加兩項僅適用於語錄池的機械檢查（F8 定案 2026-08-01）**：
+   - **池規模下限**：`quotes.length ≥ 30`。此下限同時是「連續 30 個 review 的鼓勵語互不相同」的必要條件
+     （§15 的輪替索引步長恆為 1，故「連續 N 次互異」的 N 上限即池大小）。
+   - **與課程進度無耦合**（§15 的「MUST NOT 提及具體題號或 Concept」）。**機械判準的樣態清單恰為四項**：
+     含 `http://` / `https://`、含 markdown 連結語法、含 `LeetCode`（不分大小寫）、含 `#` 接數字的題號樣式。
+     **MUST NOT 比對 Concept id 或 title 清單**——Concept title 含「Two Pointer」「Sliding Window」等
+     一般性詞彙，比對必然誤殺正常語句；本項要防的是「語錄綁定進度而無法安全輪替於全部 Track」，
+     不是「語錄不准出現任何技術名詞」。剩餘風險由生成 prompt 的明確約束承擔（同關卡 3 排除「切題性」的取捨）。
+   **素材檔的 schema MUST 允許空集合**（`quotes: []`／某 Topic 的陣列為空）：空集合是 §15「素材缺席即
+   省略」的降級路徑之一，以 `min(1)` 擋下會使 schema 與該規則互斥；空集合的把關由本關卡的池規模下限與
+   關卡 2 的配額檢查在 CI 完成。
+   **素材檔 MUST 以 canonical 形式序列化**：2-space 縮排、檔尾單一 `\n`；`reflection-bank.json` 的 Topic
+   鍵序 MUST 依 `modules.json` 的 Module 宣告序 → Module 內 Topic 宣告序（MUST NOT 用字典序或插入序）。
+   沒有 canonical 序列化，「重跑不覆蓋未變更產物」無從驗證——鍵序漂移會讓每次重跑都產生假 diff。
+2. **Topic 配額檢查（僅 Reflection 題庫）**：每個 Topic 的問題則數 MUST **≥ 該 Topic 在三軌課表中被選中的
+   最大次數**（依 §15 的「取最早引入 Topic」歸屬規則計算；現行課綱下最大為 4）。**判準 MUST 為計算式而非
+   固定值**——生成端只產固定則數（現定為每 Topic 6 則），驗證端負責確認夠不夠，課綱一改即由 Gate 指名
+   哪個 Topic 不足。MUST NOT 讓生成腳本讀課表反推配額。
+3. **LLM self-check（僅 Reflection 題庫）**：rubric 恰為兩項——(a) 本批中是否有任兩則在問同一件事
+   （僅措辭不同）；(b) 是否有任一則可用單一字詞或「是／否」回答。**MUST NOT 納入「切題性」判準**
+   （問題本依該 Topic 生成，離題風險低，且該項最主觀、最易誤退）。不通過 MUST 觸發重生，沿用關卡 8 的
+   「每批上限 3 次、3 次仍不過則標記待人工檢視」。實作 MUST 沿用既有的 `scripts/lib/prompts/self-check.ts`
+   回應型別與 `generate-content.ts` 的重生迴圈語意，MUST NOT 另建第二套。
+   **鼓勵語錄池 MUST NOT 套用 self-check**：語錄與課程內容無關，重複的可見度遠低於 Reflection 問題
+   （後者會在 3～4 週內連續出現於同一 Topic），字串去重已足夠。
+4. **完整編譯與 render 檢查**：同關卡 6，灌入素材後的 review Session 一併納入全 Track × 全 Session 檢查。
+5. **批次結束狀態（MUST 明確定義）**：(a) 未通過的批次 MUST NOT 寫入素材檔（不凍結不合格產物）；
+   (b) 已通過的批次照常寫入並記錄 checkpoint，**MUST NOT 因他批失敗而回滾**（否則一次失敗會浪費整批
+   已花的免費層額度）；(c) 只要有任一批次被標記待人工檢視，**整支腳本 MUST 以非零 exit code 結束**
+   （憲章 XV fail loud），MUST NOT 因為「多數批次成功」而回報成功。
+
 > 風險披露：課綱與解說文字未逐篇人工審核，仍可能有幻覺（尤其複雜度推導、Pattern 適用性、學習順序合理性這類**無法由編譯器擋出的錯誤**）。上列 Gate + 大綱定稿能消除大部分**結構 / 程式碼 / 參照 / 版面**類錯誤與方向性偏差，但不保證教學敘述 100% 正確；純自用場景下屬可接受的風險權衡——上線後邊用邊修（改 Skeleton → 重跑該篇展開）即可。
 
 ### 20.4 免費層額度與產線韌性（MUST）
@@ -1250,12 +1392,23 @@ LLM MUST NOT
 - **額度評估**（以官方當時公告為準；量級如下）：免費層約 10–15 RPM、每日 250–1,500 次請求。
   - Stage 1（課綱 + 156 份 Skeleton 起草）：可多 Concept 併批，約 50–200 次呼叫。
   - Stage 2（150+ 篇全文，每篇展開 + self-check + 重生成緩衝 2–4 次）：約 450–600 次呼叫。
-  - 合計 ≈ 600–800 次呼叫 ⇒ **分 2–4 天批次跑完**（一次性成本，凍結後不再發生）。
-- `generate-curriculum.ts` 與 `generate-content.ts` MUST 具備：
+  - **Stage 3（Review 素材；F8 定案 2026-08-01）**：每個 Topic 一批（現行 16 批，各含展開 + self-check）
+    加語錄池 1 批，含重生成緩衝約 **35–70 次呼叫**——量級遠小於 Stage 1／2，單次執行即可跑完，
+    不需跨日批次。
+  - 合計 ≈ 600–900 次呼叫 ⇒ **分 2–4 天批次跑完**（一次性成本，凍結後不再發生）。
+- `generate-curriculum.ts`、`generate-content.ts` 與 `generate-materials.ts`（Stage 3）MUST 具備：
   - **RPM 節流**（依免費層限制主動限速）。
   - **429 指數退避 + jitter**。
-  - **斷點續跑（checkpoint resume）**：已生成且通過 Gate 的 Concept MUST 跳過；中斷後重跑從缺漏處繼續。
-  - **冪等**：重跑不會覆蓋已凍結且未變更 Skeleton 的 Article（除非帶 `--force`）。
+  - **斷點續跑（checkpoint resume）**：已生成且通過 Gate 的單位 MUST 跳過；中斷後重跑從缺漏處繼續。
+    **比對單位依 Stage 而異**：Stage 1／2 為 Concept；**Stage 3 為批次**（一個 Topic 的一次生成，
+    或語錄池的一次生成）——一次 LLM 呼叫產出一整批，中斷只可能發生在批與批之間。
+    Stage 3 MAY 為此新增以批次為鍵的 manifest，但 **MUST 復用既有的內容雜湊與原子寫入（先寫暫存檔再
+    rename）路徑**，MUST NOT 另寫一套寫檔邏輯（實測教訓：寫到一半被中斷會留下半截 JSON，
+    導致整份 manifest 不可用）。
+  - **冪等**：重跑不會覆蓋已凍結且未變更輸入的產物（除非帶 `--force`）。Stage 1／2 的輸入為 Skeleton，
+    Stage 3 為該批次的生成輸入。
+  - **輸出被跳過的清單**：每次執行 MUST 列出因冪等而未重新生成的單位——否則「零重複消耗額度」
+    只能靠「這次好像比較快」這種不可驗證的印象來確認。
 - 只傳送公開資料（Concept 標題 / Author Hints / 題目 metadata），不涉機密。
 
 ---
@@ -1455,7 +1608,7 @@ MUST 有單元測試：
 | F5  | `005-lesson-compiler`    | Lesson Compiler（解析 / 組裝）、Renderer 全 Session 類型、CI Gate 完整編譯 + Discord 限制檢查 | §7.1、§10、§14、§16.4、§21.3 | F2、F4  | M2     |
 | F6  | `006-pipeline-mvp`       | 每日 pipeline 端到端（多 Track 逐一處理、失敗隔離）、per-track guard 與狀態推進、state 分支 commit | §9.2、§18、§19、§21       | F1、F5     | M3     |
 | F7  | `007-content-generation` | 兩階段產線：Stage 1 課綱 + Skeleton 起草（`generate-curriculum.ts`）＋大綱定稿；Stage 2 全量展開（全部 Module、含 Digest/Tips/Hints）＋品質 Gate＋節流/斷點續跑；跑 `generate-schedule.ts` 產出三份正式課表 | §8、§10、§11、§20.3、§20.4、§13.4 | F2、F3、F4 | M3     |
-| F8  | `008-review-extras`      | Weekly Reflection 題庫（build-time 生成）、鼓勵語錄池、review/rest 版面完善 | §15、§20                  | F6、F7     | M4     |
+| F8  | `008-review-extras`      | Weekly Reflection 題庫（build-time 生成）、鼓勵語錄池（掛 review）、review 版面完善、移除 rest 槽並重跑課表 | §13.2、§15、§20           | F6、F7     | M4     |
 | F9  | `009-pages-publish`      | GitHub Pages 儀表板 + 全文閱讀頁 + RSS/Atom（post-MVP）                    | §25                       | F6         | M5     |
 | F10 | `010-interactive`        | Discord Slash Commands、每週測驗、自適應推薦（Roadmap）                    | §25                       | F6、F8     | M5     |
 
@@ -1487,6 +1640,11 @@ MUST 有單元測試：
   最終三組參數與導出的課表長度見 §13.5（Foundation `maxLevel=9`／InterviewReady `maxLevel=12`／
   InterviewMastery `maxLevel=15`，Foundation `problemDifficulties` 為 `Easy+Medium`）；本 Feature 交付時
   以 stub DAG 開發的三組參數僅為佔位，已於 F7 全數改寫。
+- **rhythm 與槽位產生規則於 F8 再次修訂（2026-08-01）**：(a) 三軌 rhythm 移除 `rest` 槽（7 槽 → 6 槽），
+  `validateRhythm` 的「MUST 含一個 rest」檢查同步放寬（§13.2）；(b) `emitSessions` 對**選不到題目的
+  `practice` / `challenge` 槽 MUST 跳過**（不產生 Session、不消耗 `sessionIndex`），`review` 槽一律保留
+  （§13.4）。課表長度縮短至 **198 / 200 / 243**（§13.5）。此修訂由 **F8 執行**（改 `track-params.json`
+  + 放寬 zod 檢查 + 改 `emitSessions` + 重跑 `generate-schedule.ts` + commit 三份課表）。
 - 驗收（= M2 部分）：同輸入 → byte-identical 課表；課表全數通過 DAG 子序列驗證。
 
 **F5 `005-lesson-compiler` — Compiler、Renderer 與 CI Gate**
@@ -1511,15 +1669,22 @@ MUST 有單元測試：
 - **prompt 模板、self-check 準則與 Gate 門檻已於實作期間定案**：程式碼實測範圍、繁中判準見 §11 與
   §20.3 關卡 1–8；逐區塊字元預算（含 TS/Python Tip ≤800、觀念本體 ≤2,000 字）見 §14.5；批次大小與
   排程以 RPM 節流（預設 10）＋ checkpoint 續跑取代固定批次切分（見 §20.4、`scripts/lib/throttle.ts`）。
-- **實際產出（2026-07-30／2026-07-31 完成）**：Stage 1 交付 16 Module／165 Concept、題庫 337 題
-  （Easy 93／Medium 203／Hard 40）；Stage 2 全數 165 篇 Article 通過品質 Gate；三份正式課表
+- **實際產出（2026-07-30／2026-07-31 完成）**：Stage 1 交付 16 Module／165 Concept、題庫
+  **351 題（Easy 95／Medium 215／Hard 41）**；Stage 2 全數 165 篇 Article 通過品質 Gate；三份正式課表
   Foundation 243／InterviewReady 236／InterviewMastery 291 Session，determinism 已驗證（byte-identical）。
+  **課表長度已於 F8 因「移除 rest 槽」＋「跳過無題槽」而更新為 198／200／243**（§13.5）；
+  此處保留 F7 交付當下的數值以存記錄。
 - 驗收（= M3 並行）：三軌全部 Session 內容齊備，Gate（含 TS/Python 程式碼在 CI 實測、字元預算、全編譯）全數通過。
 
 **F8 `008-review-extras` — Weekly Review 素材與語錄池**
 
-- 範圍：`data/reflection-bank.json`（build-time LLM 生成 + Gate + 凍結）、`data/encouragement.json` 語錄池（決定性輪替規則）、review / rest Session 版面完善、Challenge deterministic 選題。
-- 驗收（= M4）：review Session 三段齊備且全部素材為凍結內容；每日 runtime 仍零 LLM。
+- 範圍：`data/reflection-bank.json`（build-time LLM 生成 + Gate + 凍結）、`data/encouragement.json` 語錄池（決定性輪替規則，**掛載於 review Session**）、review Session 版面完善、review 槽的 Challenge deterministic 選題。
+- **附帶承接的節奏修訂（F8 定案 2026-08-01）**：(a) 移除三軌 rhythm 的 `rest` 槽、放寬 `validateRhythm`；
+  (b) `emitSessions` 跳過選不到題目的 `practice` / `challenge` 槽（`review` 一律保留）；
+  (c) 重跑並 commit 三份課表（**198 / 200 / 243**）。此為 F4 / F7 的參數與生成器決策，但 (a) 會使
+  `encouragement` 失去唯一消費者、(b) 是 F8 檢視 review 空 Challenge 段時才浮現的同類問題，
+  兩者 MUST 與本 Feature 一併定案與執行（見 §13.2、§13.4、§14.3）。
+- 驗收（= M4）：review Session 四段齊備（涵蓋清單 / Reflection / Challenge / 鼓勵語）且全部素材為凍結內容；每日 runtime 仍零 LLM。
 
 **F9 `009-pages-publish` — GitHub Pages 儀表板 + 全文 + RSS/Atom（post-MVP）**
 
@@ -1571,7 +1736,8 @@ MUST 有單元測試：
 
 ### Phase 3：Review 素材與語錄池（非必要）
 
-- Weekly Reflection 題庫（build-time 生成凍結）、鼓勵語錄池、review / rest 版面完善。
+- Weekly Reflection 題庫（build-time 生成凍結）、鼓勵語錄池（掛載於 review）、review 版面完善、
+  三軌 rhythm 移除 rest 槽、跳過無題的 practice / challenge 槽，並重跑三份課表。
 
 ### Phase 4：發佈與互動化（Roadmap）
 

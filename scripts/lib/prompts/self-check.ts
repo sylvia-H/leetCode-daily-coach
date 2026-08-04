@@ -17,6 +17,18 @@ export interface SelfCheckResponse {
   issues: string[];
 }
 
+/**
+ * 剝除 LLM 回應可能夾帶的 ``` fence 後取 JSON 字面（F7 R8；F8 由 generate-content.ts 搬移至此，
+ * 純搬移無行為變更，供 self-check / Stage 2 解析與 F8 素材生成共用）。
+ */
+export function stripJsonFence(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/, "")
+    .trim();
+}
+
 export function buildSelfCheckPrompt(input: SelfCheckPromptInput): string {
   return `你是 LeetCode Daily Coach 課程引擎的教材審稿者。請複審以下已展開完成的教學文章，檢查：
 1. Complexity 區塊描述的時間/空間複雜度是否與 TypeScript/Python Corner 的程式碼實際邏輯一致。
@@ -32,5 +44,60 @@ ${input.articleMarkdown}
 回傳格式 MUST 為單一 JSON 物件：{ "confident": boolean, "issues": string[] }。
 若你對上述三項檢查皆有把握、無發現問題，回傳 { "confident": true, "issues": [] }。
 若有任何一項不確定或發現問題，回傳 confident: false 並在 issues 逐條列出具體問題（供重生參考）。
+不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。`;
+}
+
+/**
+ * 剝除 ``` fence 後解析 self-check 回應；形狀不符即具名 throw（F8 由 generate-content.ts 搬移至此，
+ * 純搬移無行為變更）。
+ *
+ * 不可對 `JSON.parse` 的結果直接 cast 後取 `response.issues.length`：LLM 回非 JSON、或回了 JSON
+ * 但漏掉 `issues`，都會在此炸出例外；呼叫端（重生迴圈）MUST 接住並算成一次重生，而非讓產線以
+ * unhandled rejection 中止（FR-028b）。
+ */
+export function parseSelfCheckResponse(raw: string): SelfCheckResponse {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stripJsonFence(raw));
+  } catch (err) {
+    throw new Error(`self-check-parse-error：LLM 回應非合法 JSON：${(err as Error).message}`);
+  }
+  const obj = parsed as Partial<SelfCheckResponse> | null;
+  if (typeof obj !== "object" || obj === null || typeof obj.confident !== "boolean") {
+    throw new Error("self-check-parse-error：LLM 回應缺少布林欄位 confident");
+  }
+  if (!Array.isArray(obj.issues) || obj.issues.some((i) => typeof i !== "string")) {
+    throw new Error("self-check-parse-error：LLM 回應缺少字串陣列欄位 issues");
+  }
+  return { confident: obj.confident, issues: obj.issues };
+}
+
+export interface ReflectionSelfCheckPromptInput {
+  topicId: string;
+  topicTitle: string;
+  /** 本批（6 則）反思問題，依宣告序。 */
+  questions: string[];
+}
+
+/**
+ * Reflection 素材的 self-check prompt（FR-028a，contracts/material-schema.md §5.3）：rubric **恰為兩項**，
+ * MUST NOT 納入「切題性」——問題本依該 Topic 生成，離題風險低，且該項最主觀、最易誤退（同 F7
+ * Stage 2 self-check 排除格式類判準的取捨）。回應型別沿用同一個 SelfCheckResponse。
+ */
+export function buildReflectionSelfCheckPrompt(input: ReflectionSelfCheckPromptInput): string {
+  const list = input.questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
+  return `你是 LeetCode Daily Coach 課程引擎的教材審稿者。請複審以下同一個 Topic 的一批反思問題，檢查恰恰兩項：
+1. 批內是否有任兩則在問同一件事（僅措辭不同）？
+2. 是否有任一則可用單一字詞或「是／否」回答（不是開放式提問）？
+
+Topic: ${input.topicTitle}（id: ${input.topicId}）
+
+--- 本批問題開始 ---
+${list}
+--- 本批問題結束 ---
+
+回傳格式 MUST 為單一 JSON 物件：{ "confident": boolean, "issues": string[] }。
+若上述兩項皆無發現問題，回傳 { "confident": true, "issues": [] }。
+若有任一項發現問題，回傳 confident: false 並在 issues 逐條列出具體問題（供重生參考）。
 不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。`;
 }

@@ -4,6 +4,7 @@
 // compile / render / checkBudget（憲章 IX），不另寫平行的編譯或版面邏輯。
 import { TRACK_ORDER } from "../config.js";
 import { compile, readArticleCached, type CompilerDeps } from "./lesson.js";
+import { checkMaterials } from "./material.js";
 import { checkBudget } from "../renderer/budget.js";
 import { render } from "../renderer/discord.js";
 import { checkTraditionalChinese } from "./traditional-chinese.js";
@@ -16,7 +17,8 @@ export type GateRule =
   | "curriculum-invalid"
   | "schedule-empty"
   | "traditional-chinese"
-  | "concept-body-too-long";
+  | "concept-body-too-long"
+  | "material-invalid";
 
 /** §10.3 觀念本體字數上限（F7 FR-008/FR-010.2）。 */
 export const CONCEPT_BODY_MAX_CHARS = 2000;
@@ -70,6 +72,25 @@ export function runContentGate(input: GateInput): GateResult {
   const violations: GateViolation[] = [];
   let compiled = 0;
   let total = 0;
+
+  // F8（research R8）：素材 Gate 掛在既有 runContentGate 最前段，兩條既有呼叫端
+  // （scripts/validate.ts 與 generate-content.ts 批次末）自動同時涵蓋，不需另立 CLI。
+  // GateRule 只新增 material-invalid 這一個；細分留在 MaterialViolationRule（data-model.md §8）。
+  const materialViolations = checkMaterials({
+    reflectionBank: deps.reflectionBank,
+    encouragement: deps.encouragement,
+    schedules: deps.schedules,
+    graph: deps.graph,
+  });
+  for (const v of materialViolations) {
+    violations.push({
+      rule: "material-invalid",
+      severity: "error",
+      subject: `${v.rule}@${v.subject}`,
+      message: v.message,
+    });
+  }
+
   // 同一 Article 可能被多個 Track/Session 引用（三軌共用正文，憲章 VI）；只在首次遇到時檢查一次，
   // 避免同一違規重複回報 3 次。
   const checkedArticlePaths = new Set<string>();

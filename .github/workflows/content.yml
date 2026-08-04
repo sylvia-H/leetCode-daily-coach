@@ -12,16 +12,18 @@ on:
         options:
           - curriculum
           - content
+          - materials
         default: curriculum
       force:
         description: "強制模式（覆蓋冪等、重生已凍結產物）"
         type: boolean
         default: false
       only:
-        # 兩個 stage 的比對單位不同，填錯不會報錯、只會「一個都沒處理」卻仍 exit 0（綠燈但空跑）：
+        # 三個 stage 的比對單位不同，填錯不會報錯、只會「一個都沒處理」卻仍 exit 0（綠燈但空跑）：
         # curriculum（Stage 1）比對 curriculum/modules.json 的 topics[].id；
-        # content（Stage 2）比對 Skeleton frontmatter 的 Concept id。
-        description: "只處理指定項目，逗號分隔，留空 = 全部（stage=curriculum 填 Topic id；stage=content 填 Concept id）"
+        # content（Stage 2）比對 Skeleton frontmatter 的 Concept id；
+        # materials（Stage 3）比對 curriculum/modules.json 的 topics[].id，或字面值 "encouragement"。
+        description: "只處理指定項目，逗號分隔，留空 = 全部（stage=curriculum/materials 填 Topic id；stage=content 填 Concept id）"
         type: string
         default: ""
 
@@ -60,6 +62,12 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
+      - name: Run Stage 3（generate:materials）
+        if: ${{ inputs.stage == 'materials' }}
+        run: npm run generate:materials -- ${{ inputs.force == true && '--force' || '' }} ${{ inputs.only != '' && format('--only {0}', inputs.only) || '' }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
       # 產線只產出檔案，不代表已核可/凍結——outline.md 定稿與最終 commit 仍是唯一人工檢查點
       # （憲章 XVII），本 workflow MUST NOT 自動 commit 或推送產線輸出。
       - name: 上傳產線輸出供人工檢視
@@ -72,4 +80,6 @@ jobs:
             curriculum/outline.md
             data/problem-bank.json
             data/leetcode-index.json
+            data/reflection-bank.json
+            data/encouragement.json
           if-no-files-found: warn

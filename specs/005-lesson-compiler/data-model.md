@@ -194,7 +194,8 @@ interface RenderedMessage {
   embeds: DiscordEmbed[];
   budgetSlots: BudgetSlots; // 值 MUST 為放進 embeds 的同一份字串實例
 }
-// 不變式（測試強制，tests/unit/review-fixes.test.ts）：Renderer 放進 embed 的每一段**可變長度文字**
+// 不變式（測試強制，tests/unit/budget-slot-parity.test.ts；F8 自 review-fixes.test.ts 純搬移）：
+// Renderer 放進 embed 的每一段**可變長度文字**
 // MUST 登記對應 slot，否則該段落完全逃過逐區塊預算。例外只給非教材自由文字（固定標籤、
 // 由 Compiler 依課表生成的清單，如 review 的「本週涵蓋」）。
 ```

@@ -222,8 +222,7 @@
     "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-array/",
     "difficulty": "Easy",
     "patterns": [
-      "array",
-      "in-place-operations"
+      "array"
     ]
   },
   "27": {
@@ -233,8 +232,7 @@
     "url": "https://leetcode.com/problems/remove-element/",
     "difficulty": "Easy",
     "patterns": [
-      "array",
-      "in-place-operations"
+      "array"
     ]
   },
   "28": {
@@ -1574,8 +1572,7 @@
     "url": "https://leetcode.com/problems/move-zeroes/",
     "difficulty": "Easy",
     "patterns": [
-      "array",
-      "in-place-operations"
+      "array"
     ]
   },
   "286": {
@@ -1655,8 +1652,7 @@
     "url": "https://leetcode.com/problems/range-sum-query-immutable/",
     "difficulty": "Easy",
     "patterns": [
-      "array",
-      "prefix-sum"
+      "array"
     ]
   },
   "304": {
@@ -2270,8 +2266,7 @@
     "url": "https://leetcode.com/problems/subarray-sum-equals-k/",
     "difficulty": "Medium",
     "patterns": [
-      "array",
-      "prefix-sum"
+      "array"
     ]
   },
   "567": {

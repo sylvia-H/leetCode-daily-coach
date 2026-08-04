@@ -38,6 +38,50 @@ export function hashFile(path: string): string {
 }
 
 /**
+ * 讀取任意 JSON checkpoint 檔的不綁型別 helper（F8 research R11）：**遺失或損毀一律回 `undefined`**，
+ * 供呼叫端區分「不可用」與「可用但無 entry」。`validate` 由呼叫端提供最小形狀驗證（例如頂層物件
+ * 是否含期待的容器欄位），避免把損毀／不符預期形狀的檔案當成合法空結果。
+ */
+export function readJsonCheckpoint<T>(path: string, validate: (parsed: unknown) => parsed is T): T | undefined {
+  if (!existsSync(path)) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"));
+    if (!validate(parsed)) return undefined;
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * 原子寫入任意文字檔（先寫同目錄暫存檔再 rename，F8 research R11）：批次每處理完一筆就存一次檔，
+ * 若在 `writeFileSync` 寫到一半被 Ctrl-C／crash 打斷，就地覆蓋會留下半截內容，下次續跑時整份檔案
+ * 不可用。**凍結產物（`data/reflection-bank.json` 等）比 checkpoint 更需要這層保護**——它們是真實
+ * 來源，半截 JSON 會讓隔天的 `loadCompilerDeps()` 在進入 per-track 迴圈之前就 throw、三軌全部停推。
+ * 呼叫端自備序列化（canonical 欄位序 / 排序）時 MUST 走這支，不要退回 `writeFileSync`。
+ */
+export function writeFileAtomic(path: string, content: string): void {
+  mkdirSync(dirname(path), { recursive: true });
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, content, "utf-8");
+  renameSync(tmp, path);
+}
+
+/** 原子寫入任意 JSON checkpoint 檔（序列化後委派 `writeFileAtomic`，同一顆原子寫入路徑）。 */
+export function writeJsonCheckpointAtomic(path: string, data: unknown): void {
+  writeFileAtomic(path, `${JSON.stringify(data, null, 2)}\n`);
+}
+
+function isManifestShape(parsed: unknown): parsed is Manifest {
+  return (
+    typeof parsed === "object" &&
+    parsed !== null &&
+    typeof (parsed as Manifest).concepts === "object" &&
+    (parsed as Manifest).concepts !== null
+  );
+}
+
+/**
  * 讀取 manifest 檔；**遺失或損毀一律回 `undefined`**，讓呼叫端能區分兩者以外的第三種狀態消失：
  * 只有「讀得到且形狀合法」才回傳內容。
  *
@@ -46,16 +90,9 @@ export function hashFile(path: string): string {
  * 重新生成並覆蓋，違反 FR-019/020 的冪等承諾。損毀時正確做法是走 `rebuildManifest` 由現存產物反推。
  */
 export function readManifestFile(path: string = DEFAULT_MANIFEST_PATH): Manifest | undefined {
-  if (!existsSync(path)) return undefined;
-  try {
-    const parsed = JSON.parse(readFileSync(path, "utf-8")) as Manifest;
-    if (typeof parsed !== "object" || parsed === null || typeof parsed.concepts !== "object" || parsed.concepts === null) {
-      return undefined;
-    }
-    return { version: parsed.version ?? MANIFEST_VERSION, concepts: parsed.concepts };
-  } catch {
-    return undefined;
-  }
+  const parsed = readJsonCheckpoint(path, isManifestShape);
+  if (!parsed) return undefined;
+  return { version: parsed.version ?? MANIFEST_VERSION, concepts: parsed.concepts };
 }
 
 /** manifest 遺失 / 損毀時回傳空 manifest（非真實來源，容許重建），不 throw。 */
@@ -68,10 +105,7 @@ export function loadManifest(path: string = DEFAULT_MANIFEST_PATH): Manifest {
  * 寫到一半被 Ctrl-C／crash 打斷，就地覆蓋會留下半截 JSON，下次續跑時整份 manifest 不可用。
  */
 export function saveManifest(manifest: Manifest, path: string = DEFAULT_MANIFEST_PATH): void {
-  mkdirSync(dirname(path), { recursive: true });
-  const tmp = `${path}.tmp`;
-  writeFileSync(tmp, `${JSON.stringify(manifest, null, 2)}\n`, "utf-8");
-  renameSync(tmp, path);
+  writeJsonCheckpointAtomic(path, manifest);
 }
 
 /** 覆蓋式寫入單一 Concept 的 checkpoint（immutable：回傳新 manifest，不就地改動）。 */

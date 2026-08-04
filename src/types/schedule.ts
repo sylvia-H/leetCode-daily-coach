@@ -38,7 +38,7 @@ export interface TrackParam {
   problemDifficulties: Difficulty[];
   /** challenge 槽選題難度。 */
   challengeDifficulty: Difficulty;
-  /** 長度 7；MUST 含 ≥1 review 與 ≥1 rest。 */
+  /** 長度 2–14；MUST 含 ≥1 concept 與 ≥1 review。 */
   rhythm: SessionType[];
 }
 
@@ -84,6 +84,9 @@ export type ScheduleViolationRule =
   | "review-range-invalid"
   | "review-coverage-gap"
   | "challenge-no-problem"
+  | "practice-no-problem"
+  | "review-no-problem"
+  | "review-challenge-duplicate"
   | "dangling-concept"
   | "dangling-problem"
   | "overlay-unknown-concept"

@@ -74,13 +74,19 @@ describe("loadCompilerDeps — F8 素材缺席 vs 壞檔的相同對照（resear
     expect(() => loadCompilerDeps({ encouragementPath: path })).toThrow(/encouragement 壞檔/);
   });
 
-  it("兩者皆存在且合法 JSON 時正常載入為 unknown 值", () => {
+  it("兩者皆存在且符合 F8 完整 schema 時正常載入為具型別值", () => {
     const reflectionPath = join(dir, "reflection-bank.json");
     const encouragementPath = join(dir, "encouragement.json");
-    writeFileSync(reflectionPath, JSON.stringify({ foo: "bar" }));
-    writeFileSync(encouragementPath, JSON.stringify(["加油"]));
+    writeFileSync(reflectionPath, JSON.stringify({ version: 1, byTopic: { array: ["這週你卡在哪一步？"] } }));
+    writeFileSync(encouragementPath, JSON.stringify({ version: 1, quotes: ["加油"] }));
     const deps = loadCompilerDeps({ reflectionBankPath: reflectionPath, encouragementPath });
-    expect(deps.reflectionBank).toEqual({ foo: "bar" });
-    expect(deps.encouragement).toEqual(["加油"]);
+    expect(deps.reflectionBank).toEqual({ version: 1, byTopic: { array: ["這週你卡在哪一步？"] } });
+    expect(deps.encouragement).toEqual({ version: 1, quotes: ["加油"] });
+  });
+
+  it("存在但不符 F8 完整 schema（缺 version／欄位型別錯）⇒ fail loud，MUST NOT 降級為缺席", () => {
+    const reflectionPath = join(dir, "reflection-bank.json");
+    writeFileSync(reflectionPath, JSON.stringify({ foo: "bar" }));
+    expect(() => loadCompilerDeps({ reflectionBankPath: reflectionPath })).toThrow(/reflection bank 壞檔/);
   });
 });

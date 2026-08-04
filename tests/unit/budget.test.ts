@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EXIT_CRITERIA_ITEM_MAX, checkBudget } from "../../src/renderer/budget.js";
+import { EXIT_CRITERIA_ITEM_MAX, MATERIAL_BUDGET_LIMITS, checkBudget } from "../../src/renderer/budget.js";
 import type { BudgetSlots, DiscordEmbed, RenderedMessage } from "../../src/types/lesson.js";
 
 function makeMessage(overrides: Partial<BudgetSlots> = {}): RenderedMessage {
@@ -196,5 +196,39 @@ describe("checkBudget — 平台硬限 6,000", () => {
   it("總長超過 6,000 時 total.hard 亦為 over", () => {
     const report = checkBudget({ embeds: [{ description: "字".repeat(6001) }], budgetSlots: {} });
     expect(report.items.find((i) => i.name === "total.hard")?.over).toBe(true);
+  });
+});
+
+describe("checkBudget — reflectionQuestion / encouragement 上限取自 MATERIAL_BUDGET_LIMITS（FR-029）", () => {
+  it("reflectionQuestion 剛好等於上限不 over，超過 1 個字元即 over（隨常數而動，非隨字面值）", () => {
+    const atLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { reflectionQuestion: "字".repeat(MATERIAL_BUDGET_LIMITS.reflectionQuestion) },
+    });
+    expect(atLimit.items.find((i) => i.name === "reflectionQuestion")?.over).toBe(false);
+
+    const overLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { reflectionQuestion: "字".repeat(MATERIAL_BUDGET_LIMITS.reflectionQuestion + 1) },
+    });
+    expect(overLimit.items.find((i) => i.name === "reflectionQuestion")?.over).toBe(true);
+    expect(overLimit.items.find((i) => i.name === "reflectionQuestion")?.limit).toBe(
+      MATERIAL_BUDGET_LIMITS.reflectionQuestion,
+    );
+  });
+
+  it("encouragement 剛好等於上限不 over，超過 1 個字元即 over（隨常數而動，非隨字面值）", () => {
+    const atLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { encouragement: "字".repeat(MATERIAL_BUDGET_LIMITS.encouragement) },
+    });
+    expect(atLimit.items.find((i) => i.name === "encouragement")?.over).toBe(false);
+
+    const overLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { encouragement: "字".repeat(MATERIAL_BUDGET_LIMITS.encouragement + 1) },
+    });
+    expect(overLimit.items.find((i) => i.name === "encouragement")?.over).toBe(true);
+    expect(overLimit.items.find((i) => i.name === "encouragement")?.limit).toBe(MATERIAL_BUDGET_LIMITS.encouragement);
   });
 });

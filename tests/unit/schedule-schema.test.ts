@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseTrackOverlay, parseTrackParamsFile } from "../../src/compiler/schedule-schema.js";
 import { makeParamsFile, makeTrackParam } from "../helpers/schedule.js";
+import type { SessionType } from "../../src/types/lesson.js";
 
 const MODULES = Array.from({ length: 16 }, (_, level) => ({ id: `module-${level}`, level }));
 
@@ -42,13 +43,41 @@ describe("parseTrackParamsFile（US1 / SC-008）", () => {
     expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
   });
 
-  it("rhythm 長度非 7 → param-invalid", () => {
-    const raw = makeParamsFile({ foundation: { rhythm: ["concept", "review", "rest"] } });
-    const { violations } = parseTrackParamsFile(raw, MODULES);
-    expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
+  it("rhythm 長度超出 2–14 範圍 → param-invalid（F8：.min(2).max(14)，research R1）", () => {
+    const tooShort = makeParamsFile({ foundation: { rhythm: ["concept"] } });
+    expect(parseTrackParamsFile(tooShort, MODULES).violations.some((v) => v.rule === "param-invalid")).toBe(true);
+
+    const tooLong = makeParamsFile({
+      foundation: {
+        rhythm: Array.from({ length: 15 }, (_, i) => (i % 2 === 0 ? "concept" : "review")) as SessionType[],
+      },
+    });
+    expect(parseTrackParamsFile(tooLong, MODULES).violations.some((v) => v.rule === "param-invalid")).toBe(true);
   });
 
-  it("rhythm 缺 review 或 rest → param-invalid", () => {
+  it("rhythm 長度 2 與 14 通過 schema（邊界值本身合法）", () => {
+    const min = makeParamsFile({ foundation: { rhythm: ["concept", "review"] } });
+    expect(parseTrackParamsFile(min, MODULES).violations).toEqual([]);
+
+    const max = makeParamsFile({
+      foundation: {
+        rhythm: [
+          "concept", "concept", "concept", "concept", "concept", "concept", "concept",
+          "concept", "concept", "concept", "concept", "concept", "concept", "review",
+        ] as SessionType[],
+      },
+    });
+    expect(parseTrackParamsFile(max, MODULES).violations).toEqual([]);
+  });
+
+  it("rhythm 不含 rest 的 6 槽通過 schema（F8：rest 已非必要槽）", () => {
+    const raw = makeParamsFile({
+      foundation: { rhythm: ["concept", "concept", "practice", "concept", "challenge", "review"] },
+    });
+    expect(parseTrackParamsFile(raw, MODULES).violations).toEqual([]);
+  });
+
+  it("rhythm 缺 review → param-invalid", () => {
     const raw = makeParamsFile({
       foundation: { rhythm: ["concept", "concept", "concept", "concept", "concept", "concept", "concept"] },
     });
@@ -79,6 +108,21 @@ describe("parseTrackParamsFile（US1 / SC-008）", () => {
     });
     const { violations } = parseTrackParamsFile(raw, MODULES);
     expect(violations.some((v) => v.rule === "param-invalid")).toBe(true);
+  });
+
+  it("rhythm 的第一個 review 早於第一個 concept → param-invalid（該 review 的 reviewRange 內無 concept）", () => {
+    // review 落首槽是最極端的形態：reviewRange = [weekStart, weekStart−1]，start > end 的空區間。
+    // 兩處 review 使約束 3（最後一個 review 不早於最後一個 concept）成立，故只有本條擋得下它。
+    const firstSlot = makeParamsFile({ foundation: { rhythm: ["review", "concept", "review"] } });
+    expect(parseTrackParamsFile(firstSlot, MODULES).violations.some((v) => v.rule === "param-invalid")).toBe(true);
+
+    // 非首槽但仍早於第一個 concept：區間非空卻只含 challenge Session，一樣沒有 concept 可複習。
+    const beforeFirstConcept = makeParamsFile({
+      foundation: { rhythm: ["challenge", "review", "concept", "review"] },
+    });
+    expect(
+      parseTrackParamsFile(beforeFirstConcept, MODULES).violations.some((v) => v.rule === "param-invalid"),
+    ).toBe(true);
   });
 
   it("problemDifficulties 為空 → param-invalid", () => {

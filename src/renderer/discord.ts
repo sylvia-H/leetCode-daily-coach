@@ -156,6 +156,12 @@ function buildReviewBlocks(lesson: ReviewLesson): Block[] {
     slots.problems = entries;
     fields.push({ name: "🎯 Challenge", value: entries.join("\n") });
   }
+  if (lesson.encouragement !== undefined) {
+    // MUST 為最後一段（FR-022）：MUST NOT 插入於 Reflection 與 Challenge 之間，避免通用文字
+    // 稀釋針對本週教材的具體提問。
+    slots.encouragement = lesson.encouragement;
+    fields.push({ name: "💬 一句話", value: lesson.encouragement });
+  }
 
   return [{ embed: { title: `🔁 Session ${lesson.sessionIndex} · 本週複習`, color: lesson.color, fields }, slots }];
 }

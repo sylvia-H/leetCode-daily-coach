@@ -1,6 +1,7 @@
 // 測試專用：建構合成 CompilerDeps（DAG / 課表 / Overlay / readArticle），供各 Story 的單元測試共用，
 // 不需依賴真實 concepts/ 與 articles/（T012）。
 import { checkOverlayCoverage, type CompilerDeps, type ProblemOrigin } from "../../src/compiler/lesson.js";
+import type { EncouragementPool, ReflectionBank } from "../../src/compiler/material.js";
 import type { ConceptNode, CurriculumGraph, ModuleNode, Ordinal, TopicNode } from "../../src/types/curriculum.js";
 import type { Track } from "../../src/types/lesson.js";
 import type { ProblemBank, ProblemMeta } from "../../src/types/problem.js";
@@ -220,6 +221,9 @@ export interface TestDepsInput {
   overlays?: Partial<Record<Track, TrackOverlay["byConcept"]>>;
   /** articlePath → raw markdown（未提供者呼叫 readArticle 時拋錯，模擬檔案不存在）。 */
   articles: Record<string, string>;
+  /** F8 素材；未提供則 deps.reflectionBank / deps.encouragement 缺席（同真實載入層的缺席語意）。 */
+  reflectionBank?: ReflectionBank;
+  encouragement?: EncouragementPool;
 }
 
 export function makeCompilerDeps(input: TestDepsInput): CompilerDeps {
@@ -238,7 +242,7 @@ export function makeCompilerDeps(input: TestDepsInput): CompilerDeps {
 
   checkOverlayCoverage(schedules, overlays);
 
-  return {
+  const deps: CompilerDeps = {
     graph,
     bank,
     schedules,
@@ -253,4 +257,7 @@ export function makeCompilerDeps(input: TestDepsInput): CompilerDeps {
     articleCache: new Map(),
     problemOrigins,
   };
+  if (input.reflectionBank !== undefined) deps.reflectionBank = input.reflectionBank;
+  if (input.encouragement !== undefined) deps.encouragement = input.encouragement;
+  return deps;
 }

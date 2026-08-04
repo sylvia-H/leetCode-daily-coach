@@ -144,6 +144,34 @@ describe("render — 五種 Session 類型（US2）", () => {
     expect(fieldNames).not.toContain("🎯 Challenge");
   });
 
+  it("review：四段全部存在時，順序恆為 本週涵蓋→Reflection→Challenge→一句話（FR-021/FR-022）", () => {
+    const lesson = makeLesson({
+      type: "review",
+      problems: PROBLEMS,
+      reviewConcepts: [{ id: "array-traversal", title: "Array Traversal" }],
+      reflectionQuestion: "這週你最常在哪一步卡住？",
+      encouragement: "做得很好，繼續保持！",
+    });
+    const [message] = render(lesson);
+    const fieldNames = message!.embeds[0]?.fields?.map((f) => f.name) ?? [];
+    expect(fieldNames).toEqual(["📚 本週涵蓋", "🤔 Reflection", "🎯 Challenge", "💬 一句話"]);
+  });
+
+  it("review：鼓勵語缺席時該段省略，其餘三段順序不變", () => {
+    const lesson = makeLesson({
+      type: "review",
+      problems: PROBLEMS,
+      reviewConcepts: [{ id: "array-traversal", title: "Array Traversal" }],
+      reflectionQuestion: "這週你最常在哪一步卡住？",
+    });
+    const [message] = render(lesson);
+    const fieldNames = message!.embeds[0]?.fields?.map((f) => f.name) ?? [];
+    expect(fieldNames).toEqual(["📚 本週涵蓋", "🤔 Reflection", "🎯 Challenge"]);
+    expect(fieldNames).not.toContain("💬 一句話");
+  });
+
+  // F8（rest 槽移除，FR-014c）：三份正式課表已無 rest Session，validate.ts 的全課表編譯不再涵蓋
+  // buildRestBlocks 這條路徑；以下兩個測試為其唯一覆蓋來源，MUST NOT 移除。
   it("rest：固定文案 + 無 encouragement 時省略該 field", () => {
     const lesson = makeLesson({ type: "rest", problems: [] });
     const [message] = render(lesson);

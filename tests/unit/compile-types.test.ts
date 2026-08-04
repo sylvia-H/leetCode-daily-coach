@@ -54,6 +54,8 @@ describe("compile — 四種非 concept 類型的 Lesson 形狀（US2、data-mod
     expect("path" in lesson).toBe(false);
   });
 
+  // F8（rest 槽移除，FR-014c）：三份正式課表已無 rest Session，validate.ts 的全課表編譯不再涵蓋
+  // compileRest 這條路徑；本檔為其唯一覆蓋來源，MUST NOT 移除。
   it("rest：problems 恆為空陣列，無 concept / path 欄位", () => {
     const lesson = compile("foundation", 6, deps);
     expect(lesson.type).toBe("rest");

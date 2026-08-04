@@ -64,6 +64,8 @@ export interface ReviewLesson extends LessonBase {
   reviewConcepts: ReviewConcept[];
   /** F8 素材；缺席即省略（spec FR-031）。 */
   reflectionQuestion?: string;
+  /** F8 素材：掛載於 review（rest 槽移除後 encouragement 的消費者）；缺席即省略。 */
+  encouragement?: string;
 }
 
 export interface RestLesson extends LessonBase {
