@@ -1,0 +1,8 @@
+# F4 Schedule Generator determinism（research.md R2 / checklist CHK010）：
+# schedules/{track}.json 由 scripts/generate-schedule.ts 以固定 LF 檔尾產生並逐位元組比對
+# （scripts/validate-schedule.ts 的 determinism drift gate）。若無此設定，Windows 本機
+# checkout 在 core.autocrlf=true 下會把工作副本轉為 CRLF，重新生成（永遠 LF）比對即產生
+# 假陽性 diff。人工維護的 track-params.json / overlays/*.json 亦納入，確保輸入端同樣穩定。
+schedules/*.json text eol=lf
+curriculum/track-params.json text eol=lf
+overlays/*.json text eol=lf

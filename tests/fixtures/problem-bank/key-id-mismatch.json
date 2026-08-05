@@ -1,0 +1,10 @@
+{
+  "27": {
+    "id": 26,
+    "slug": "key-id-mismatch-one",
+    "title": "Key Id Mismatch One",
+    "url": "https://leetcode.com/problems/key-id-mismatch-one/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  }
+}

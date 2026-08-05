@@ -1,0 +1,238 @@
+import { readFileSync } from "node:fs";
+import { z } from "zod";
+import type { CurriculumGraph } from "../types/curriculum.js";
+import type {
+  ProblemBank,
+  ProblemBankFile,
+  ProblemMeta,
+  ProblemViolation,
+  ProblemViolationRule,
+} from "../types/problem.js";
+
+// F3 單一實作（FR-014）：CI Gate 與未來 F5 runtime 共用。除 loadProblemBank 讀檔外，
+// 其餘為純函式、無副作用（無 process.exit、無其他 I/O）；process.exit 只在 scripts/validate-problem-bank.ts。
+
+// US1（FR-001/002/003、data-model.md §1）：以 zod 定義逐題 schema，.strict() 拒絕未知欄位以擋
+// 內容欄位混入（FR-004）。cross-field 檢查（key==id、slug-url 一致）於 zod 通過後另行處理。
+const ProblemMetaSchema = z
+  .object({
+    id: z.number().int(),
+    slug: z.string().min(1),
+    title: z.string().min(1),
+    url: z.string().min(1),
+    difficulty: z.enum(["Easy", "Medium", "Hard"]),
+    patterns: z.array(z.string()).min(1),
+    keywords: z.array(z.string()).optional(),
+    review_priority: z.enum(["high", "medium", "low"]).optional(),
+    estimated_minutes: z.number().optional(),
+    lists: z.array(z.string()).optional(),
+    companies: z.array(z.string()).optional(),
+  })
+  .strict();
+
+const SLUG_URL_RE = /^https?:\/\/leetcode\.com\/problems\/([^/]+)\/?$/;
+
+function bankLoadViolation(path: string, message: string): ProblemViolation {
+  return { rule: "bank-load", severity: "error", subject: path, message };
+}
+
+function cmpProblemViolation(a: ProblemViolation, b: ProblemViolation): number {
+  return (
+    a.rule.localeCompare(b.rule) ||
+    a.subject.localeCompare(b.subject) ||
+    (a.field ?? "").localeCompare(b.field ?? "")
+  );
+}
+
+/** 依 zod issue 分類為 F3 具名規則（data-model.md §4）。 */
+function classifyZodIssue(issue: z.ZodIssue): { rule: ProblemViolationRule; field?: string } {
+  if (issue.code === "unrecognized_keys") {
+    return { rule: "schema-type", field: issue.keys.join(",") };
+  }
+  const field = issue.path.length > 0 ? issue.path.join(".") : undefined;
+  if (issue.code === "invalid_type" && issue.received === "undefined") {
+    return { rule: "schema-missing-field", field };
+  }
+  if (field === "difficulty" && issue.code === "invalid_enum_value") {
+    return { rule: "difficulty-range", field };
+  }
+  if (field === "review_priority" && issue.code === "invalid_enum_value") {
+    return { rule: "review-priority-range", field };
+  }
+  if (field === "patterns" && issue.code === "too_small") {
+    return { rule: "patterns-empty", field };
+  }
+  return { rule: "schema-type", field };
+}
+
+/** 逐題驗證：zod 形狀通過後，再檢查 key==id 一致性（FR-003）。 */
+function validateEntry(key: string, raw: unknown): { meta?: ProblemMeta; violations: ProblemViolation[] } {
+  const result = ProblemMetaSchema.safeParse(raw);
+  if (!result.success) {
+    const violations = result.error.issues.map((issue) => {
+      const { rule, field } = classifyZodIssue(issue);
+      return {
+        rule,
+        severity: "error" as const,
+        subject: key,
+        field,
+        message: `題號 ${key} 的欄位 ${field ?? "(root)"} 違規：${issue.message}`,
+      };
+    });
+    return { violations };
+  }
+
+  const meta = result.data as ProblemMeta;
+  const violations: ProblemViolation[] = [];
+
+  if (String(meta.id) !== key) {
+    violations.push({
+      rule: "key-id-mismatch",
+      severity: "error",
+      subject: key,
+      field: "id",
+      target: String(meta.id),
+      message: `題庫 key「${key}」與條目 id（${meta.id}）不一致`,
+    });
+  }
+
+  // US4（FR-005）：url 所含 slug 與 slug 欄位一致，避免死鏈；無法擷取（非 LeetCode 網域或缺
+  // /problems/{slug}/ 結構）亦視為不一致。
+  const match = SLUG_URL_RE.exec(meta.url);
+  const extractedSlug = match?.[1];
+  if (!extractedSlug || extractedSlug !== meta.slug) {
+    violations.push({
+      rule: "slug-url-mismatch",
+      severity: "error",
+      subject: key,
+      field: "url",
+      target: meta.slug,
+      message: `題號 ${key} 的 url（${meta.url}）與 slug（${meta.slug}）不一致`,
+    });
+  }
+
+  return { meta, violations };
+}
+
+function buildPatternIndex(byId: Map<number, ProblemMeta>): Map<string, ProblemMeta[]> {
+  const byPattern = new Map<string, ProblemMeta[]>();
+  const sorted = [...byId.values()].sort((a, b) => a.id - b.id);
+  for (const meta of sorted) {
+    for (const pattern of meta.patterns) {
+      const list = byPattern.get(pattern);
+      if (list) list.push(meta);
+      else byPattern.set(pattern, [meta]);
+    }
+  }
+  return byPattern;
+}
+
+/**
+ * 讀取 + 索引題庫（Foundational 骨架：忽略底線前綴 key、建 byId/byPattern 升冪索引，
+ * 檔缺失/非法 JSON 回 bank-load violation，不 throw）。
+ * 逐題 schema 驗證（US1，schema-missing-field/schema-type/…）由本函式內的驗證步驟接手，見下方。
+ */
+export function loadProblemBank(path: string): { bank: ProblemBank; loadViolations: ProblemViolation[] } {
+  const empty: ProblemBank = { byId: new Map(), byPattern: new Map() };
+
+  let raw: string;
+  try {
+    raw = readFileSync(path, "utf-8");
+  } catch (err) {
+    return { bank: empty, loadViolations: [bankLoadViolation(path, `題庫檔無法讀取：${(err as Error).message}`)] };
+  }
+
+  let file: ProblemBankFile;
+  try {
+    file = JSON.parse(raw) as ProblemBankFile;
+  } catch (err) {
+    return {
+      bank: empty,
+      loadViolations: [bankLoadViolation(path, `題庫檔無法解析為 JSON：${(err as Error).message}`)],
+    };
+  }
+
+  const keys = Object.keys(file)
+    .filter((key) => !key.startsWith("_"))
+    .sort((a, b) => a.localeCompare(b));
+
+  const byId = new Map<number, ProblemMeta>();
+  const violations: ProblemViolation[] = [];
+  for (const key of keys) {
+    const { meta, violations: entryViolations } = validateEntry(key, file[key]);
+    violations.push(...entryViolations);
+    if (meta) byId.set(meta.id, meta);
+  }
+
+  violations.sort(cmpProblemViolation);
+  return { bank: { byId, byPattern: buildPatternIndex(byId) }, loadViolations: violations };
+}
+
+// 題數合法性的唯一權威守門點（§12.1）：對宣告 ≥1 題的 Concept，題數 MUST 為 1~3；
+// leetcodeIds 由 caller（CI Gate 走訪 graph、或 F5 Compiler）從 ConceptNode.leetcode 注入，
+// 本函式不讀圖、不讀檔，為對 (ids, bank) 的純映射（R4）。
+export function getProblemsForConcept(
+  conceptId: string,
+  leetcodeIds: number[],
+  bank: ProblemBank,
+): ProblemMeta[] {
+  if (leetcodeIds.length === 0) return [];
+  if (leetcodeIds.length > 3) {
+    throw new Error(
+      `problem-count-range：Concept「${conceptId}」宣告 ${leetcodeIds.length} 題，超過上限 3 題`,
+    );
+  }
+  // §12.1（F3 澄清）：同一 Concept 內 MUST NOT 重複引用同一題號——重複幾乎必為填寫失誤（漏改第二題），
+  // 靜默去重會讓「本想排兩題卻只出一題」永不被發現，違「MUST NOT 靜默截斷題數」；故在此唯一守門點 fail loud。
+  const seen = new Set<number>();
+  for (const id of leetcodeIds) {
+    if (seen.has(id)) {
+      throw new Error(`duplicate-leetcode：Concept「${conceptId}」重複引用題號 ${id}`);
+    }
+    seen.add(id);
+  }
+  return leetcodeIds.map((id) => {
+    const meta = bank.byId.get(id);
+    if (!meta) {
+      throw new Error(`unknown-leetcode：Concept「${conceptId}」引用的題號 ${id} 不存在於 Problem Bank`);
+    }
+    return meta;
+  });
+}
+
+// FR-009：把 F2 預留的可插拔 problemExists 由 deferred-to-F3 的 stub 換成以真實題庫為背景的實作，
+// 供注入 validateCurriculum(graph, { problemExists })，使 leetcode 存在性檢查由 skipped 轉為實際執行。
+export function makeProblemExists(bank: ProblemBank): (leetcodeId: number) => boolean {
+  return (leetcodeId: number) => bank.byId.has(leetcodeId);
+}
+
+// US3（R5）：由 Topic/Concept id 反查題目，byPattern 已於載入時以題號升冪建好（確定性）。
+export function getProblemsByPattern(patternId: string, bank: ProblemBank): ProblemMeta[] {
+  return bank.byPattern.get(patternId) ?? [];
+}
+
+// US3（FR-006、R6）：patterns 每項 MUST 屬於 {Topic id} ∪ {Concept id}，否則 dangling-pattern。
+// 需要 F2 的圖，以可插拔方式接受（單一真實來源，不重建課程結構）。
+export function validateProblemBank(bank: ProblemBank, graph: CurriculumGraph): ProblemViolation[] {
+  const validPatternIds = new Set<string>([...graph.topics.keys(), ...graph.concepts.keys()]);
+  const violations: ProblemViolation[] = [];
+
+  const sorted = [...bank.byId.values()].sort((a, b) => a.id - b.id);
+  for (const meta of sorted) {
+    for (const pattern of meta.patterns) {
+      if (!validPatternIds.has(pattern)) {
+        violations.push({
+          rule: "dangling-pattern",
+          severity: "error",
+          subject: String(meta.id),
+          field: "patterns",
+          target: pattern,
+          message: `題號 ${meta.id} 的 pattern「${pattern}」不存在於 Curriculum（非 Topic 亦非 Concept id）`,
+        });
+      }
+    }
+  }
+
+  violations.sort(cmpProblemViolation);
+  return violations;
+}

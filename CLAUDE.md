@@ -31,7 +31,7 @@ Discord 推播**一則解題觀念（Concept）＋ 1～3 題對應 LeetCode 題*
 
 - **唯一需求來源**：`docs/spec.md`。這是一份 AI-Friendly Engineering Specification，**實作無關但釘死
   責任邊界與資料契約**。任何需求疑問先查 spec 的章節（§1–§26），查不到才問使用者，**MUST NOT 自行推測**。
-- **最高規範**：`.specify/memory/constitution.md`（憲章，v1.0.0，2026-07-19 依 spec §4 的 17 條
+- **最高規範**：`.specify/memory/constitution.md`（憲章，現行 v1.0.2，2026-07-19 依 spec §4 的 17 條
   原則定稿）。與其他文件衝突時以憲章為準；憲章未涵蓋的需求細節回 `docs/spec.md` 查證。
 - **唯一權威狀態**：`state` 分支的 `state.json`（每 Track 的 `currentSessionIndex` / `lastPushAt` /
   `completedConceptIds` / `history`）。只經 `StateStore` 讀寫；MUST NOT 另建平行狀態或「起始課數」設定項。
@@ -175,12 +175,14 @@ Overlay 疊加不取代、Renderer 純函式性與 Discord 限制（含 6,000 �
   | F5 | `005-lesson-compiler` | Lesson Compiler、Renderer 全 Session 類型、CI Gate 完整編譯 + 限制檢查 | F2、F4 | M2 |
   | F6 | `006-pipeline-mvp` | 每日 pipeline 端到端、多 Track 失敗隔離、per-track guard 與狀態推進 | F1、F5 | M3 |
   | F7 | `007-content-generation` | 兩階段產線（課綱起草＋大綱定稿 → 全量展開）＋品質 Gate＋節流／續跑 | F2、F3、F4 | M3 |
-  | F8 | `008-review-extras` | Reflection 題庫、語錄池、review／rest 版面 | F6、F7 | M4 |
+  | F8 | `008-review-extras` | Reflection 題庫、語錄池（掛 review）、review 版面、移除 rest 槽＋跳過無題槽並重跑課表 | F6、F7 | M4 |
   | F9 | `009-pages-publish` | GitHub Pages 儀表板 + 全文閱讀 + RSS（post-MVP） | F6 | M5 |
   | F10 | `010-interactive` | Slash Commands、每週測驗、自適應（Roadmap） | F6、F8 | M5 |
   **M0 → M3 走完即 MVP**（三頻道每日自動推課）。F7 可與 F5 / F6 並行（機器批次 2～4 天）。
 - **`/speckit-constitution` 已於第一個 Feature 之前執行**（2026-07-19），spec §4 的 17 條原則
-  已寫進 `.specify/memory/constitution.md`（v1.0.0）；後續修訂依憲章 Governance 章節的程序。
+  已寫進 `.specify/memory/constitution.md`（現行 v1.0.2；v1.0.1 為 Gemini 型號釘死為
+  `gemini-3.1-flash-lite` 的 PATCH 修訂，v1.0.2 為因應官方發布 `gemini-3.5-flash-lite`
+  而更新型號的 PATCH 修訂）；後續修訂依憲章 Governance 章節的程序。
 - 不要在同一 branch 混多個大 Feature；不要貼整段 code 取代 `/speckit-implement`。
 - **`main` 不直接 commit**，只接受來自 `develop` 的合併。**唯一 bot 例外**：每日 workflow 自動 commit
   的 `state.json`，且它只進 **`state` 分支**（不進 `main` / `develop`）。

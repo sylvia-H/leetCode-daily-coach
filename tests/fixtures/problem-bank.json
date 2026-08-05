@@ -1,0 +1,26 @@
+{
+  "1": {
+    "id": 1,
+    "slug": "fixture-one",
+    "title": "Fixture One",
+    "url": "https://leetcode.com/problems/fixture-one/",
+    "difficulty": "Easy",
+    "patterns": ["array"]
+  },
+  "2": {
+    "id": 2,
+    "slug": "fixture-two",
+    "title": "Fixture Two",
+    "url": "https://leetcode.com/problems/fixture-two/",
+    "difficulty": "Medium",
+    "patterns": ["array", "two-pointer"]
+  },
+  "3": {
+    "id": 3,
+    "slug": "fixture-three",
+    "title": "Fixture Three",
+    "url": "https://leetcode.com/problems/fixture-three/",
+    "difficulty": "Hard",
+    "patterns": ["two-pointer"]
+  }
+}

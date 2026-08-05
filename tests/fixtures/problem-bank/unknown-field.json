@@ -1,0 +1,11 @@
+{
+  "1": {
+    "id": 1,
+    "slug": "unknown-field-one",
+    "title": "Unknown Field One",
+    "url": "https://leetcode.com/problems/unknown-field-one/",
+    "difficulty": "Easy",
+    "patterns": ["array"],
+    "description": "MUST NOT 出現的題目敘述內容欄位（FR-004）"
+  }
+}

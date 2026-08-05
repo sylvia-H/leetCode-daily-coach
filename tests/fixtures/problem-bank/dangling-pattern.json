@@ -1,0 +1,10 @@
+{
+  "1": {
+    "id": 1,
+    "slug": "dangling-pattern-one",
+    "title": "Dangling Pattern One",
+    "url": "https://leetcode.com/problems/dangling-pattern-one/",
+    "difficulty": "Easy",
+    "patterns": ["nonexistent-topic-xyz"]
+  }
+}

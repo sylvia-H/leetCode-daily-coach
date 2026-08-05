@@ -1,0 +1,11 @@
+{
+  "1": {
+    "id": 1,
+    "slug": "bad-review-priority-one",
+    "title": "Bad Review Priority One",
+    "url": "https://leetcode.com/problems/bad-review-priority-one/",
+    "difficulty": "Easy",
+    "patterns": ["array"],
+    "review_priority": "urgent"
+  }
+}

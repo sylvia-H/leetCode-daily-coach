@@ -1,0 +1,196 @@
+name: Daily Push
+
+on:
+  schedule:
+    - cron: "7 22 * * *" # 台北 06:07 主推
+    - cron: "37 22 * * *" # 台北 06:37 補跑
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "預覽模式（不推播、不寫入狀態）"
+        type: boolean
+        default: false
+      force:
+        description: "強制模式（繞過同日去重）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-push
+  cancel-in-progress: false
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      # `schedule` 事件只執行「repo 設定的預設分支」上的 workflow 定義與程式碼；本 repo 預設分支為
+      # `develop`（F6 FR-024）。MUST NOT 加 `ref:` 參數——加了會讓 `workflow_dispatch` 手動觸發時
+      # 固定抓 `develop`，使測試分支與正式行為分歧；不加 `ref:` 則 checkout 觸發此次 workflow 的
+      # 那個 ref，兩種觸發方式（schedule／workflow_dispatch）皆行為一致。
+      - name: Checkout default branch (develop)
+        uses: actions/checkout@v4
+
+      - name: Checkout state branch
+        uses: actions/checkout@v4
+        with:
+          ref: state
+          path: .state
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run daily push
+        run: node dist/main.js
+        env:
+          DISCORD_WEBHOOK_URL_FOUNDATION: ${{ secrets.DISCORD_WEBHOOK_URL_FOUNDATION }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_READY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_READY }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY }}
+          STATE_FILE: .state/state.json
+          DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
+
+      # `!cancelled()` MUST 保留：`if:` 運算式若不含任何 status function，GitHub 會隱式補上
+      # `success()`，使「單一 Track 失敗 → main.ts exit 1」連帶跳過本步驟，讓已成功 Track 的進度
+      # 無法提交（違反 state-schema.md §4「部分成功仍存檔」與憲章 XV 的失敗隔離）。
+      - name: Commit state changes
+        if: ${{ !cancelled() && inputs.dry_run != true }}
+        working-directory: .state
+        run: |
+          set -e
+          git config user.name "leetcode-daily-coach-bot"
+          git config user.email "leetcode-daily-coach-bot@users.noreply.github.com"
+          git add state.json
+
+          if git diff --cached --quiet; then
+            echo "state.json 無變更，略過提交"
+            exit 0
+          fi
+
+          git commit -m "chore(state): 更新每日推播進度"
+
+          attempt=0
+          max_attempts=3
+          until git push origin HEAD:state; do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "::error::state 分支推送失敗，已重試 ${max_attempts} 次後放棄"
+              exit 1
+            fi
+            echo "push 衝突，重新同步後重試（第 ${attempt} 次）"
+            # `set -e` 下，until 迴圈「本體」內的失敗會直接中止整個 step——同步失敗將使剩餘的重試
+            # 預算失效，且本地 commit 隨 runner 一併消失。故此處容錯，讓迴圈跑完 3 次重試。
+            if ! git pull --rebase --autostash origin state; then
+              echo "重新同步失敗（可能為 rebase 衝突），清理後直接重試 push"
+              git rebase --abort || true
+            fi
+          done
+
+      - name: 最後防線通知（main.ts 根本未能執行時）
+        if: failure()
+        run: |
+          WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_FOUNDATION }}"
+          if [ -z "$WEBHOOK_URL" ]; then WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_READY }}"; fi
+          if [ -z "$WEBHOOK_URL" ]; then WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY }}"; fi
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "::error::無任何已設定的 webhook，無法發送最後防線通知"
+            exit 0
+          fi
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sf -X POST -H "Content-Type: application/json" \
+            -d "{\"content\": \"⚠️ daily workflow 失敗，詳見 Actions log：${RUN_URL}\"}" \
+            "$WEBHOOK_URL"
+
+  # F9 009-pages-publish：既有每日推播流程新增的附加末段，非獨立 workflow
+  # （contracts/workflow-integration.md）。
+  pages:
+    needs: push
+    # `!cancelled()`（非 `success()`）：push job 因單一 Track 失敗以非零 exit 結束時，其餘 Track 的
+    # state 仍可能已 commit，Pages MUST 反映已 commit 的最新 state；但不用 `always()`——那會讓使用者
+    # 主動取消 workflow 後仍發生一次對外站台部署（research R6）。
+    if: ${{ !cancelled() && inputs.dry_run != true }}
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout default branch (develop)
+        uses: actions/checkout@v4
+
+      - name: Checkout state branch
+        uses: actions/checkout@v4
+        with:
+          ref: state
+          path: .state
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: 偵測 repo 可見性
+        id: visibility
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          IS_PRIVATE=$(gh api repos/${{ github.repository }} --jq .private)
+          if [ "$IS_PRIVATE" = "false" ]; then
+            echo "is_public=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build pages
+        if: steps.visibility.outputs.is_public == 'true'
+        run: npm run build:pages
+        env:
+          STATE_FILE: .state/state.json
+          PAGES_OUTPUT_DIR: pages-dist
+          PAGES_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          DISCORD_WEBHOOK_URL_FOUNDATION: ${{ secrets.DISCORD_WEBHOOK_URL_FOUNDATION }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_READY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_READY }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY }}
+
+      - name: Configure Pages
+        if: steps.visibility.outputs.is_public == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        if: steps.visibility.outputs.is_public == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-dist
+
+      - name: Deploy to GitHub Pages
+        if: steps.visibility.outputs.is_public == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 失敗通知（FR-017）
+        if: failure()
+        run: npx tsx scripts/notify-pages-failure.ts
+        env:
+          DISCORD_WEBHOOK_URL_FOUNDATION: ${{ secrets.DISCORD_WEBHOOK_URL_FOUNDATION }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_READY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_READY }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY }}

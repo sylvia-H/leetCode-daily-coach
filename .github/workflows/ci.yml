@@ -1,0 +1,42 @@
+# 工程 Gate（F2/F3，FR-028a / SC-008 / FR-015）：所有 push / PR 執行 build → test → 課程驗證 → 題庫驗證。
+# 與 daily.yml（每日推播）、content-gate.yml（F5 內容 Gate）職責分離；MUST NOT 加入任何 secrets。
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (tsc)
+        run: npm run build
+
+      # `npm run build` 只涵蓋 src/（tsconfig.json 的 include），而 vitest 不做型別檢查——
+      # tests/ 與 scripts/ 的型別漂移只有這一步擋得下來。
+      - name: Type-check tests & scripts
+        run: npm run typecheck
+
+      - name: Unit tests (vitest)
+        run: npm test
+
+      - name: Validate curriculum
+        run: npm run validate:curriculum
+
+      - name: Validate problem bank
+        run: npm run validate:problem-bank
+
+      - name: Validate schedule
+        run: npm run validate:schedule
