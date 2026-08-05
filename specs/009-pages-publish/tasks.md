@@ -233,16 +233,16 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 
 **Purpose**：跨三個 User Story 的整體不變式驗證與端到端失敗隔離驗收。
 
-- [ ] T023 撰寫並執行 `tests/unit/pages-site-determinism.test.ts`：對完整組裝後的 `buildSite()`
+- [X] T023 撰寫並執行 `tests/unit/pages-site-determinism.test.ts`：對完整組裝後的 `buildSite()`
       （T011＋T017＋T021 皆已完成）以同一 `SiteBuildInput` 呼叫 100 次，驗證 `SiteOutput` 全部鍵值
       逐 byte 相同（不讀 `Date.now()`／環境變數／隨機取樣）—— SC-007、
       [site-build-contract.md](./contracts/site-build-contract.md) §2（依賴 T011、T017、T021；
       **非 [P]**——同時依賴三個 Story 對 `site.ts` 的擴充全數完成）
-- [ ] T023a [P] 撰寫並執行 `tests/unit/pages-stateless-guard.test.ts`：掃描 `src/pages/**` 全部檔案，
+- [X] T023a [P] 撰寫並執行 `tests/unit/pages-stateless-guard.test.ts`：掃描 `src/pages/**` 全部檔案，
       驗證不出現 `node:fs`／`fs` 的 import，也不出現 `writeFileSync`／`readFileSync` 等檔案 I/O 呼叫
       （比照既有 `tests/unit/no-llm-in-src.test.ts` 的守門測試模式）—— FR-014 發佈階段完全 stateless、
       [site-build-contract.md](./contracts/site-build-contract.md) §7
-- [ ] T024 依 [quickstart.md](./quickstart.md) §5 手動驗收：本機連續執行兩次 `npm run build:pages`，
+- [X] T024 依 [quickstart.md](./quickstart.md) §5 手動驗收：本機連續執行兩次 `npm run build:pages`，
       以 `Compare-Object` 比對兩次輸出目錄，確認零差異（SC-007）（依賴 T023）
 - [ ] T024a 依 [quickstart.md](./quickstart.md) §6 手動驗收（需 CI 環境）：確認 `pages` job 與 `push`
       job 屬於同一個 workflow run、且在 `state` 分支 commit step 之後執行；該次 run 結束後**立即**開啟
@@ -255,7 +255,7 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 - [ ] T026 依 [quickstart.md](./quickstart.md) §8 手動驗收（私有 repo 或模擬 `gh api` 回傳
       `"private": true"`）：確認 `build:pages` 未被執行、無任何部署動作、**無**琥珀色通知發出（FR-001）
       （依賴 T013）
-- [ ] T027 執行 `npm test` 全量迴歸：確認既有 `tests/unit/no-llm-in-src.test.ts`（掃描整個 `src/`）與
+- [X] T027 執行 `npm test` 全量迴歸：確認既有 `tests/unit/no-llm-in-src.test.ts`（掃描整個 `src/`）與
       `tests/unit/daily-no-llm-key.test.ts`（掃描整份 `daily.yml`）自動涵蓋本 Feature 新增的檔案與
       workflow 內容並維持通過（憲章 VIII；依賴全部前述任務完成）
 
