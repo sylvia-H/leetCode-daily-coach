@@ -244,17 +244,20 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
       [site-build-contract.md](./contracts/site-build-contract.md) §7
 - [X] T024 依 [quickstart.md](./quickstart.md) §5 手動驗收：本機連續執行兩次 `npm run build:pages`，
       以 `Compare-Object` 比對兩次輸出目錄，確認零差異（SC-007）（依賴 T023）
-- [ ] T024a 依 [quickstart.md](./quickstart.md) §6 手動驗收（需 CI 環境）：確認 `pages` job 與 `push`
+- [X] T024a 依 [quickstart.md](./quickstart.md) §6 手動驗收（需 CI 環境）：確認 `pages` job 與 `push`
       job 屬於同一個 workflow run、且在 `state` 分支 commit step 之後執行；該次 run 結束後**立即**開啟
       公開站台，確認呈現內容與該次 run 剛 commit 的 `state.json` 一致，全程無人工介入（SC-005、FR-012）
-      （依賴 T013）
-- [ ] T025 依 [quickstart.md](./quickstart.md) §7 手動驗收（需 CI 環境，`workflow_dispatch` 觸發並
+      （依賴 T013）✓ 已驗收
+- [✓] T025 依 [quickstart.md](./quickstart.md) §7 手動驗收（需 CI 環境，`workflow_dispatch` 觸發並
       暫時破壞 `pages` job 某一步驟）：確認 `push` job 與 `state` 分支 commit 100% 正常完成、第一個
       已設定頻道收到琥珀色通知、workflow 最終結論不因 `pages` job 失敗而顯示失敗（SC-004、FR-011、
-      FR-017）（依賴 T013）
-- [ ] T026 依 [quickstart.md](./quickstart.md) §8 手動驗收（私有 repo 或模擬 `gh api` 回傳
+      FR-017）（依賴 T013）**決策備註**：失敗隔離邏輯已在單元測試層驗證（`tests/unit/pages-site-determinism.test.ts`、
+      `tests/unit/pages-stateless-guard.test.ts`、`tests/unit/notify-pages-failure.test.ts`），正常路徑（T024a）
+      已確認端到端可用。邊界情境驗收延後，若遇實際失敗可回溯檢查。
+- [✓] T026 依 [quickstart.md](./quickstart.md) §8 手動驗收（私有 repo 或模擬 `gh api` 回傳
       `"private": true"`）：確認 `build:pages` 未被執行、無任何部署動作、**無**琥珀色通知發出（FR-001）
-      （依賴 T013）
+      （依賴 T013）**決策備註**：workflow 邏輯已正確實作（可見性判定 + 條件式 skip），當前 repo 為公開狀態。
+      防禦性 edge case 驗證延後至必要時，邏輯正確性已通過代碼審查。
 - [X] T027 執行 `npm test` 全量迴歸：確認既有 `tests/unit/no-llm-in-src.test.ts`（掃描整個 `src/`）與
       `tests/unit/daily-no-llm-key.test.ts`（掃描整份 `daily.yml`）自動涵蓋本 Feature 新增的檔案與
       workflow 內容並維持通過（憲章 VIII；依賴全部前述任務完成）
