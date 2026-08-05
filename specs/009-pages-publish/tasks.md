@@ -31,12 +31,12 @@ User Story 均含對應的 `tests/unit/pages-*.test.ts`，MUST 先寫、先失�
 **Purpose**：本 Feature 不新增任何 npm 相依、不新增建置管線（research R1）。此階段只有兩個動作：讓建置
 產物不被誤 commit，以及把 feed 上限的唯一來源開放給 `src/pages/**` import。
 
-- [ ] T000 [P] 在 `src/state/state-store.ts` 將 `const HISTORY_LIMIT = 30` 改為
+- [X] T000 [P] 在 `src/state/state-store.ts` 將 `const HISTORY_LIMIT = 30` 改為
       `export const HISTORY_LIMIT = 30`（不改值、不改行為）。FR-016 明訂 feed 上限 MUST 與 `history`
       上限同源、MUST NOT 另行實作獨立的保留機制，而該常數目前為未 export 的私有 const，`src/pages/feed.ts`
       無法 import —— [feed-contract.md](./contracts/feed-contract.md) §4、
       [data-model.md](./data-model.md) §4
-- [ ] T001 [P] 在根目錄 `.gitignore` 新增 `pages-dist/`（比照既有 `dist/` 慣例，research R11）
+- [X] T001 [P] 在根目錄 `.gitignore` 新增 `pages-dist/`（比照既有 `dist/` 慣例，research R11）
 
 **⚠️ 一次性人工前置（非程式碼任務，MUST 於 T013 的 workflow 首次實跑前完成）**：於 GitHub
 **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions**。未完成時
@@ -53,14 +53,14 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 
 **⚠️ CRITICAL**：本階段完成前不可開始任何 User Story 的實作任務。
 
-- [ ] T002 [P] 建立 `src/pages/html.ts`：共用 HTML/XML entity escape 函式（`& < > ' "`）與共用
+- [X] T002 [P] 建立 `src/pages/html.ts`：共用 HTML/XML entity escape 函式（`& < > ' "`）與共用
       `<!doctype html>` 版面 helper（`<style>` 內嵌、不外連 CSS/JS）——
       [site-build-contract.md](./contracts/site-build-contract.md) §3
-- [ ] T003 [P] 撰寫 `tests/unit/pages-unlock.test.ts`（先寫、先失敗）：驗證解鎖集合 = 三個已知 Track
+- [X] T003 [P] 撰寫 `tests/unit/pages-unlock.test.ts`（先寫、先失敗）：驗證解鎖集合 = 三個已知 Track
       （`state.tracks` 中存在者，不限 `enabledTracks`）`completedConceptIds` 的聯集；驗證聯集單調性
       （同一批遞增輸入不會讓已解鎖的 Concept 變回未解鎖）—— research R8、
       [data-model.md](./data-model.md) §2 不變式
-- [ ] T004 [P] 撰寫 `tests/unit/pages-curriculum-view.test.ts`（先寫、先失敗）：驗證 `CurriculumEntryView`
+- [X] T004 [P] 撰寫 `tests/unit/pages-curriculum-view.test.ts`（先寫、先失敗）：驗證 `CurriculumEntryView`
       排序鍵 `(moduleIndex, topicIndex, localOrder, conceptId)` 的**語意**與 `src/compiler/lesson.ts` 內部
       `cmpOrdinal` 一致（該函式在 `curriculum.ts`／`lesson.ts`／`material.ts` 各有一份未 export 的私有
       複本，`src/pages/**` MUST 比照此既有慣例自帶一份，MUST NOT 改動既有三個檔案——收斂重複比較器屬
@@ -68,25 +68,25 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
       MUST NOT 自行重算 module／topic 索引；驗證 `unlocked === false` 的項目 MUST NOT 帶 `articleUrl`
       欄位（FR-005a 零 404 保證）—— research R9、[data-model.md](./data-model.md) §2、
       [site-build-contract.md](./contracts/site-build-contract.md) §5
-- [ ] T005 [P] 撰寫 `tests/unit/pages-progress.test.ts`（先寫、先失敗）：驗證 `TrackProgressView` 三種
+- [X] T005 [P] 撰寫 `tests/unit/pages-progress.test.ts`（先寫、先失敗）：驗證 `TrackProgressView` 三種
       狀態（`history.length===0` → not-started；`completedAt` 非空 → completed；否則 in-progress）；
       驗證最近一次推播為非 concept 類 Session 時呈現固定標籤且 MUST NOT 虛構 `conceptId`／
       `conceptTitle`／`articleUrl` —— FR-004、research R10、[data-model.md](./data-model.md) §1
-- [ ] T006 實作 `src/pages/curriculum-view.ts`：`TrackProgressView`／`CurriculumEntryView` 導出函式
+- [X] T006 實作 `src/pages/curriculum-view.ts`：`TrackProgressView`／`CurriculumEntryView` 導出函式
       （解鎖集合聯集 R8、排序與零 404 保證 R9、三狀態與非 concept 標籤 R10），使 T003–T005 由紅轉綠
       （依賴 T003、T004、T005 已存在且失敗）
-- [ ] T007 [P] 擴充 `tests/unit/alert.test.ts`（先寫、先失敗）：驗證 `renderPagesFailureNotice` 的顏色
+- [X] T007 [P] 擴充 `tests/unit/alert.test.ts`（先寫、先失敗）：驗證 `renderPagesFailureNotice` 的顏色
       與既有 `ALERT_COLOR`（紅）／`COMPLETION_COLOR`（綠）皆不同、內文明示「Pages 未更新，當日核心推播
       與 state 不受影響」、純函式且不含時間戳 —— FR-017、
       [workflow-integration.md](./contracts/workflow-integration.md) §4.1
-- [ ] T008 在 `src/renderer/alert.ts` 新增 `PAGES_FAILURE_COLOR = 0xf39c12` 與
+- [X] T008 在 `src/renderer/alert.ts` 新增 `PAGES_FAILURE_COLOR = 0xf39c12` 與
       `export function renderPagesFailureNotice(): DiscordEmbed[]`，使 T007 由紅轉綠（依賴 T007）
-- [ ] T008a [P] 撰寫 `tests/unit/notify-pages-failure.test.ts`（先寫、先失敗）：驗證發送邊界依
+- [X] T008a [P] 撰寫 `tests/unit/notify-pages-failure.test.ts`（先寫、先失敗）：驗證發送邊界依
       `TRACK_ORDER` 選出**第一個已設定**的 `DISCORD_WEBHOOK_URL_*`（以既有
       `tests/helpers/fetch-recorder.ts` 攔截請求，驗證 body 為 `{ embeds: renderPagesFailureNotice() }`）；
       驗證三個 webhook 皆未設定時不發任何請求且 exit code 0；驗證 fetch 拋錯時被 try/catch 吞下、
       exit code 仍為 0 —— FR-017、[workflow-integration.md](./contracts/workflow-integration.md) §4.2
-- [ ] T008b 實作 `scripts/notify-pages-failure.ts`：`renderPagesFailureNotice()` 只回傳 embeds、**本身
+- [X] T008b 實作 `scripts/notify-pages-failure.ts`：`renderPagesFailureNotice()` 只回傳 embeds、**本身
       不具發送能力**，本腳本是其唯一發送邊界（由 `daily.yml` 的 `if: failure()` step 以
       `npx tsx scripts/notify-pages-failure.ts` 呼叫）。MUST NOT 讀 `state.json`、MUST NOT 呼叫
       `buildSite()`、MUST NOT 呼叫任何 GitHub API。使 T008a 由紅轉綠（依賴 T008、T008a）
@@ -106,20 +106,20 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] 撰寫 `tests/unit/pages-dashboard.test.ts`（先寫、先失敗）：驗證三種 Track 狀態
+- [X] T009 [P] [US1] 撰寫 `tests/unit/pages-dashboard.test.ts`（先寫、先失敗）：驗證三種 Track 狀態
       （尚未開始／進行中／已完課）呈現、頁面不含任何時間戳字串、未解鎖 Concept 在課綱視圖中零可點連結
       —— SC-001、SC-002、FR-005a
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] 實作 `src/pages/dashboard.ts`：消費 `TrackProgressView[]` + `CurriculumEntryView[]`
+- [X] T010 [US1] 實作 `src/pages/dashboard.ts`：消費 `TrackProgressView[]` + `CurriculumEntryView[]`
       （T006）與 `html.ts`（T002）渲染儀表板 HTML，使 T009 由紅轉綠（依賴 T002、T006、T009）
-- [ ] T011 [US1] 實作 `src/pages/site.ts`：定義 `SiteBuildInput`（欄位為 `deps: CompilerDeps` +
+- [X] T011 [US1] 實作 `src/pages/site.ts`：定義 `SiteBuildInput`（欄位為 `deps: CompilerDeps` +
       `state` + `enabledTracks` + `baseUrl`，**MUST NOT** 另立名為 `readArticle` 的欄位——會與
       `CompilerDeps.readArticle: (path) => string` 同名不同型）／`SiteOutput` 型別
       （[data-model.md](./data-model.md) §5）與 `buildSite(input): SiteOutput`；此階段先組裝
       `index.html`（呼叫 T006 + T010，其餘輸出鍵留待 US2／US3 擴充）（依賴 T006、T010）
-- [ ] T012 [US1] 實作 `scripts/build-pages.ts` 並在 `package.json` 新增 `"build:pages": "tsx
+- [X] T012 [US1] 實作 `scripts/build-pages.ts` 並在 `package.json` 新增 `"build:pages": "tsx
       scripts/build-pages.ts"`：讀 `STATE_FILE`／`PAGES_OUTPUT_DIR`／`PAGES_BASE_URL`（缺任一必要項
       fail-fast，非零 exit）；以 `parseWebhooks(env)`（`src/config.ts` 既有 export）+
       `TRACK_ORDER.filter(...)` 算出 `enabledTracks`，**MUST NOT** 呼叫 `loadConfig()`（research R13：
@@ -128,7 +128,7 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
       graph／bank／schedules 三個欄位），以 `state-store.ts` 的 `load(stateFile, enabledTracks)` 取得
       `SiteBuildInput.state`；呼叫 `buildSite()`，將 `SiteOutput` 逐一寫入 `PAGES_OUTPUT_DIR`（依賴
       T011）
-- [ ] T013 [US1] 在 `.github/workflows/daily.yml` 新增 `pages` job：`needs: push`、
+- [X] T013 [US1] 在 `.github/workflows/daily.yml` 新增 `pages` job：`needs: push`、
       **`if: !cancelled() && inputs.dry_run != true`**（**MUST NOT** 用 `always()`——那會讓使用者主動
       取消 workflow 後仍發生一次對外站台部署；`!cancelled()` 仍完整涵蓋「push job 失敗但已部分 commit」
       的 FR-012 情境，且與既有 `push` job 的 commit step 慣例一致）、`continue-on-error: true`、
@@ -145,7 +145,7 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
       與 `notify-pages-failure.ts` 選擇通知目標，research R13）；最後一步 `if: failure()` 執行
       `npx tsx scripts/notify-pages-failure.ts`（T008b）發送琥珀色通知 —— 全部依
       [workflow-integration.md](./contracts/workflow-integration.md)（依賴 T008b、T012）
-- [ ] T014 [US1] 依 [quickstart.md](./quickstart.md) §1–§2 手動驗收：本機執行 `npm run build:pages`
+- [X] T014 [US1] 依 [quickstart.md](./quickstart.md) §1–§2 手動驗收：本機執行 `npm run build:pages`
       （**MUST 依 quickstart §1 一併設定三個 `DISCORD_WEBHOOK_URL_*` 佔位值**，否則 `enabledTracks` 為空
       集合、儀表板不會出現任何 Track 區塊）產生 `pages-dist/index.html`；驗證 Track A（有推播歷史）／
       Track B（剛啟用）／Track C（已完課）三種狀態正確呈現，課綱順序列表同時列出已解鎖與未解鎖 Concept
