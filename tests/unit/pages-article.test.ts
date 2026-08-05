@@ -161,6 +161,35 @@ describe("buildArticlePageView（research R2／R12）", () => {
     expect(view.takeaway).toBe("一句話帶走。");
   });
 
+  it("區塊內文的 raw HTML MUST escape 成純文字，MUST NOT 穿透進頁面（site-build-contract.md §3）", () => {
+    const raw = makeRawArticle().replace(
+      "Concept 內容 A。",
+      "Concept 內容 A。\n\n<script>alert(1)</script>\n\n行內 <img src=x onerror=alert(1)> 與 Set<number> 說明。",
+    );
+    const article = parseArticle(raw, "test-concept", ARTICLE_PATH);
+    const view = buildArticlePageView(article, makeTestBank());
+    const conceptHtml = view.sections[0]?.html ?? "";
+
+    expect(conceptHtml).not.toContain("<script>");
+    expect(conceptHtml).not.toContain("<img");
+    expect(conceptHtml).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    // 散文中的泛型寫法 MUST 如實顯示，不得被瀏覽器當成未知標籤吃掉
+    expect(conceptHtml).toContain("&lt;number&gt;");
+    expect(renderArticlePage(view)).not.toContain("<script>alert(1)</script>");
+  });
+
+  it("code fence 內的程式碼渲染不受 raw HTML escape 影響", () => {
+    const raw = makeRawArticle().replace(
+      "Concept 內容 A。",
+      "Concept 內容 A。\n\n```ts\nconst ok = 1 < 2;\n```",
+    );
+    const article = parseArticle(raw, "test-concept", ARTICLE_PATH);
+    const view = buildArticlePageView(article, makeTestBank());
+    const conceptHtml = view.sections[0]?.html ?? "";
+    expect(conceptHtml).toContain("<pre><code");
+    expect(conceptHtml).toContain("const ok = 1 &lt; 2;");
+  });
+
   it("純函式：同輸入呼叫兩次得到 deep-equal 結果", () => {
     const article = parseArticle(makeRawArticle(), "test-concept", ARTICLE_PATH);
     const bank = makeTestBank();
