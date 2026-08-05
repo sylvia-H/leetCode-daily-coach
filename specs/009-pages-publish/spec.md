@@ -8,6 +8,16 @@
 
 **Input**: User description: "feature 009-pages-publish"
 
+## Clarifications
+
+### Session 2026-08-05
+
+- Q: 文章版本記錄（首次發布日期／版號、目前版號、`updatedAt`、異動摘要）要持久化在哪裡？ → A: `state` 分支新增獨立檔案（例：`pages-registry.json`），核心 state commit 之後獨立提交（**本場次第 3 題已決議整組移除版本記錄機制，此答案不再適用**）
+- Q: 「異動摘要」由誰產生（每日 runtime 禁用 LLM）？ → A: 由發佈階段比對固定區塊層級指紋決定性產生（**同上，隨版本記錄機制一併移除，此答案不再適用**）
+- Q: 版本記錄機制（首次發布日期／版號、修訂版號遞增、異動摘要、`updatedAt`）要保留還是移除？ → A: 整組移除——發佈階段改為完全 stateless、不保留任何跨執行記憶、不新增 `state` 分支檔案、不產生第二個 commit；feed 項目一律由 `state.json` 既有的 per-Track `history` 導出，項目識別碼採 `conceptId`
+- Q: Pages 發佈階段失敗或被跳過時，維運者要如何得知？ → A: 以有別於紅色告警的顏色（琥珀色）發一則 Discord 通知至第一個已設定的頻道，明示「Pages 未更新、核心推播正常」，且 MUST NOT 影響 workflow 的 exit code；FR-001 的 private 自動停用不發通知
+- Q: FR-005 的課綱順序中，尚未解鎖的 Concept 要如何呈現？ → A: 列出全部 Concept，已解鎖者為可點連結、未解鎖者僅顯示標題與「未解鎖」標示，且 MUST NOT 輸出任何指向不存在頁面的連結、MUST NOT 為其生成佔位頁
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - 造訪儀表板查看三軌目前進度與今日課程 (Priority: P1)
@@ -73,24 +83,33 @@ Pages 發佈後，reader 會出現一筆新項目，可直接點進全文閱讀�
    Concept 頁面已存在，該項目也 MUST NOT 提前出現在這個 Track 專屬 feed 中。
 2. **Given** feed 因項目數量上限被滾動修剪（移除較舊項目），**When** reader 端下一次抓取 feed，**Then**
    既有仍保留的項目識別碼不變、不會被誤判為新項目而重複顯示。
-3. **Given** 某篇已發佈文章的內容被修訂（版號遞增），**When** reader 端下一次抓取 feed，**Then** 該項目
-   的識別碼維持不變、但更新時間戳反映最新修訂時間，讓支援「更新偵測」的 reader 能辨識內容有變動，而不是
-   被當成一筆全新項目。
+3. **Given** 某 Track 當日推播的是不引入新 Concept 的 Session（review／practice／challenge），
+   **When** reader 端下一次抓取該 Track 的 feed，**Then** 不會出現新項目，且既有項目不受影響——
+   feed 只在有新的全文閱讀頁可連結時才新增項目。
 
 ### Edge Cases
 
-- Repository 從 public 轉為 private 後，下一次發佈流程 MUST 自動跳過，那麼**先前已發佈**的公開頁面是繼續
-  留在網路上（GitHub Pages 服務本身仍可能持續服務舊快照），還是本 Feature 不處理下線、只保證不再更新？
-- 某 Concept 只完成 Skeleton（骨架）而尚未跑過 Stage 2 全文展開時，其全文閱讀頁應如何呈現（不應該連結到
-  一篇不存在的全文，也不應該讓儀表板連結指向 404）？
-- Pages 發佈階段本身失敗（例如 GitHub 服務暫時性錯誤）時，該次是否重試，以及是否讓當次 workflow 的整體
-  結束碼被判定為非零（依 §4-15，可選階段失敗 MUST NOT 中斷核心推播，但需明確：是否仍需要某種非紅色告警
-  讓維運者知道 Pages 沒更新成功）？
+- Repository 從 public 轉為 private 後，下一次發佈流程依 FR-001 自動跳過。本 Feature 的責任邊界**僅止於
+  「不再更新」**：先前已發佈的頁面是否仍可存取，取決於平台對私有 repo 的 Pages 站台處置，不在本 Feature
+  的控制範圍，系統 MUST NOT 為此另行實作下線或清除機制。
+- 某 Concept 只完成 Skeleton（骨架）而尚未跑過 Stage 2 全文展開時：此狀態的 Concept 必然尚未被任何 Track
+  推播過（否則 Lesson Compiler 會在推播當下即因讀不到 Article 而失敗），因此依 FR-006 本就不會建立閱讀頁，
+  並依 FR-005a 於課綱順序中以「未解鎖」純文字呈現，不會產生指向 404 的連結。
+- Pages 發佈階段本身失敗（例如 GitHub 服務暫時性錯誤）時，依 FR-017 發出琥珀色通知並讓該次執行的 exit
+  code 維持核心結果；此失敗**不重試**（下一次每日執行本就會以最新 state 重新產生全部產物，等同自動補回）。
 - 課表因內容調整重新生成（例如 §8 決議的跳過無題槽位）造成 byte-diff 變動、但受影響 Session 尚未被任何
-  Track 實際推播過，此時 feed 是否應該產生對應項目，還是等到真正推播後才出現？
-- 已公開的 Concept 全文若因 Skeleton／Curriculum 修訂而重新生成內容，此時「首次發布版號」與「已解鎖」
-  狀態不變，但需要遞增版號、記錄異動摘要與 `updatedAt`；若該次修訂剛好與另一個尚未推播過此 Concept 的
-  Track 之後才推播的時間點重疊，版本記錄應如何呈現才不會造成「先修訂、後首次公開」的時序混淆？
+  Track 實際推播過：依 FR-015，feed 項目一律導出自 `history`，未推播即無 `history` 項目，因此不會產生
+  對應的 feed 項目；該 Session 要等到真正推播後才會出現。
+- 已公開的 Concept 全文若因 Skeleton／Curriculum 修訂而重新生成內容，發佈階段既不保留版本記憶（FR-014），
+  即以最新內容原樣重新發佈、不遞增版號、不在 feed 產生任何變化；訂閱端不會得知該篇已被修訂。
+- 人工編輯 `state.json` 直接調高某 Track 的 `currentSessionIndex`（§19 認可的進度調整方式）時，被跳過的
+  Session 不會寫入 `history`，因此其 Concept 雖依 FR-006 建立了全文閱讀頁，卻不會出現在任何 feed 中。
+- 全文閱讀頁的解鎖（FR-006）一旦達成即永久保留，不受 `history` 滾動上限影響；但 feed 的可見範圍
+  （FR-016）僅涵蓋最近 30 筆。故一個已解鎖多時的 Concept，可能不再出現於任三份 feed 中（其對應
+  `history` 項目已滾動移除），此為兩者刻意不同步的正常行為，MUST NOT 被誤判為資料遺失或 bug。
+- 若目前完全未啟用任何 Track（三個 webhook 皆未設定），儀表板 MUST 呈現空的 Track 進度區塊而非顯示
+  錯誤或崩潰；課綱順序視圖（FR-005／FR-005a）MUST 依然完整呈現——解鎖狀態依 FR-006 取決於 `state.json`
+  中三個已知 Track 的完整歷史紀錄，不受「目前是否啟用」影響。
 
 ## Requirements *(mandatory)*
 
@@ -104,34 +123,53 @@ Pages 發佈後，reader 會出現一筆新項目，可直接點進全文閱讀�
   MUST 與 state 分支當下記錄的 `currentSessionIndex` 一致。
 - **FR-004**: 儀表板 MUST 呈現每個已啟用 Track 的今日課程（最近一次成功推播的 Session）標題與所屬
   Concept；尚未有推播記錄的 Track MUST 明確標示「尚未開始」，已完課的 Track MUST 明確標示「已完課」，
-  兩者皆 MUST NOT 以空白或誤導性文字呈現。
+  兩者皆 MUST NOT 以空白或誤導性文字呈現。當最近一次推播的 Session **不引入新 Concept**（review／
+  practice／challenge 類；`rest` 類自 F8 移除 rest 槽後現行課表已不再產生，惟型別仍保留）時，MUST
+  呈現該 Session 類型的固定標籤（例如「複習週」），MUST NOT 虛構或挪用其他 Concept 冒充「所屬
+  Concept」。
 - **FR-005**: 系統 MUST 呈現課綱順序（Curriculum 的固定順序），並在其中標示各已啟用 Track 目前的進度
   位置，讓訪客理解「已學過的部分」與「尚未推進到的部分」的相對關係。
-- **FR-006**: 系統 MUST 只為「至少已被三個 Track 其中一個實際推播過」的 Concept 建立全文閱讀頁——以三個
+- **FR-005a**: 課綱順序 MUST 完整列出全部 Concept（含尚未解鎖者）：依 FR-006 已解鎖的 Concept MUST 呈現
+  為指向其全文閱讀頁的可點連結；尚未解鎖的 Concept MUST 僅顯示標題並明確標示為「未解鎖」，且 MUST NOT
+  輸出任何指向不存在頁面的連結、MUST NOT 為其產生佔位頁面。此規則同樣適用於儀表板上任何引用 Concept 的
+  位置，公開網站 MUST NOT 存在任何指向 404 的內部連結。
+- **FR-006**: 系統 MUST 只為「已被三個 Track 中至少一個實際推播過」的 Concept 建立全文閱讀頁——以三個
   Track 中**進度最快者**為準（例如某 Track 已推進到第 50 課，即使其他 Track 仍在第 10 課，前 50 課全文
   仍一併建立閱讀頁），呈現該 Concept 的完整 Article 內容（不受 Discord 精簡版限制的完整版）；尚未被任何
   Track 推播過的 Concept MUST NOT 建立對應的全文閱讀頁。
 - **FR-007**: 全文閱讀頁 MUST 可從儀表板的今日課程區塊以連結直接前往，且 MUST NOT 要求登入或額外授權。
-- **FR-008**: 系統 MUST 產生訂閱摘要（feed），且訂閱者 MUST 能選擇訂閱「全站」（涵蓋所有依 FR-006 已解鎖
-  的 Concept）或「特定 Track」；訂閱特定 Track 的 feed MUST 只依該 Track 自己實際推播的順序與節奏出現
-  新項目——即便其他 Track 進度更快、對應 Concept 頁面已依 FR-006 存在，也 MUST NOT 提前出現在該 Track
-  專屬 feed 中。
+- **FR-008**: 系統 MUST 產生訂閱摘要（feed），且訂閱者 MUST 能選擇訂閱「全站」（涵蓋依 FR-006 已解鎖的
+  Concept，並受 FR-016 的滾動上限約束）或「特定 Track」；訂閱特定 Track 的 feed MUST 只依該 Track 自己
+  實際推播的順序與節奏出現新項目——即便其他 Track 進度更快、對應 Concept 頁面已依 FR-006 存在，也
+  MUST NOT 提前出現在該 Track 專屬 feed 中。
 - **FR-009**: Feed 中每一筆項目 MUST 具備穩定且唯一的識別碼，使同一篇內容在後續重新產生 feed 時 MUST NOT
   被訂閱端判定為新項目而重複出現。
 - **FR-010**: Feed MUST 有上限的滾動保留機制（避免項目無限增長）；被移除的舊項目 MUST NOT 導致既有訂閱
   端出現錯誤、空白項目，或使仍保留項目的識別碼一併改變。
 - **FR-011**: 本 Feature 的建置與發佈 MUST 作為每日推播流程中完全隔離的末段執行；此段的任何失敗或跳過
   （含 FR-001 的自動停用）MUST NOT 導致 Discord 每日推播失敗、MUST NOT 阻擋或延遲 `state` 分支的 commit。
-- **FR-012**: 儀表板與全文閱讀頁 MUST 在每次每日推播流程成功執行後自動重新產生並發佈，使呈現內容與最新
-  state 一致，不需要另外的人工觸發。
+- **FR-012**: 儀表板與全文閱讀頁 MUST 在每次每日推播流程的 `state` 分支 commit 步驟執行完畢後自動重新
+  產生並發佈，使呈現內容與最新 state 一致，不需要另外的人工觸發。此處「執行完畢」MUST NOT 要求該次
+  執行的**全部** Track 皆推播成功——依憲章 XV 的失敗隔離，即使部分 Track 失敗，其餘 Track 已 commit
+  的進度仍 MUST 被納入本次重新產生（呼應 FR-002：僅依已 commit 的資料決定內容）。
 - **FR-013**: 公開網站（儀表板與全文閱讀頁）MUST 可透過穩定網址直接瀏覽，MUST NOT 要求登入或額外授權。
-- **FR-014**: 每篇全文閱讀頁 MUST 標示該 Concept 內容**首次依 FR-006 解鎖公開**的日期，並記錄對應的
-  首次發布版號。
-- **FR-015**: 已公開的 Concept 全文若在首次發布後內容有修訂（例如 Skeleton／Curriculum 調整重新生成），
-  系統 MUST 遞增該篇文章的版號、MUST 於頁面上顯示本次修訂的異動摘要、MUST 標示最後修改時間
-  （`updatedAt`）；首次發布日期與首次發布版號 MUST 維持不變，不因後續修訂而改寫。
-- **FR-016**: Feed 項目 MUST 反映對應文章目前最新的 `updatedAt`，使支援「更新偵測」的訂閱端能在識別碼不
-  變的前提下辨識內容已修訂，而不是被誤判為全新項目（延續 FR-009 的識別碼穩定性）。
+- **FR-014**: 發佈階段 MUST 為完全 stateless：其產物 MUST 僅由當次執行時既有的 `state.json`、凍結課表與
+  凍結 Article 決定性導出，MUST NOT 保留任何跨執行的記憶、MUST NOT 於 `state` 分支（或任何分支）新增或
+  寫入專屬檔案、MUST NOT 產生第二個 commit。因此系統 MUST NOT 提供文章版本號、首次發布日期、修訂異動
+  摘要或內容修訂偵測——文章內容若被重新生成，發佈階段 MUST 以最新內容原樣重新發佈，不遞增版號、不在
+  feed 產生任何差異。
+- **FR-015**: Feed 項目 MUST 由各 Track `state.json` 中既有的 `history` 導出，且 MUST 只收錄帶有
+  `conceptId` 的項目（即引入新 Concept、因而有對應全文閱讀頁可連結的 Session）；不引入新 Concept 的
+  Session MUST NOT 產生 feed 項目。項目的時間戳 MUST 取自對應 `history` 項目的 `pushedAt`。
+- **FR-016**: FR-010 的滾動保留上限 MUST 與 `state.json` 的 `history` 上限（現為 30 筆／Track）一致，
+  且 MUST NOT 另行實作獨立的保留機制；per-Track feed 的可回溯範圍因此受限於該上限，超出範圍的較早項目
+  MUST 被視為已滾動移除（符合 FR-010），MUST NOT 嘗試由其他來源補建。
+- **FR-017**: 發佈階段失敗時，系統 MUST 對第一個已設定的 Discord 頻道發出一則通知，且該通知 MUST 使用
+  **單一固定、可客觀判定的顏色**，此顏色 MUST 與既有核心紅色告警、既有完課通知綠色皆不同，使維運者不會將
+  其誤讀為每日推播失敗或完課；通知內文 MUST 明示「Pages 未更新、當日核心推播與 state 不受影響」。此通知
+  MUST NOT 改變當次 workflow 的 exit code（延續 FR-011），且發佈失敗 MUST NOT 於當次執行內重試——下一次
+  每日執行會以最新 state 重新產生全部產物。FR-001 的 private 自動停用 MUST NOT 發出此通知（屬預期狀態而
+  非異常）。
 
 ### Key Entities
 
@@ -140,19 +178,19 @@ Pages 發佈後，reader 會出現一筆新項目，可直接點進全文閱讀�
 - **全文閱讀頁（Article Reading Page）**：對應單一 Concept 的完整 Article 之公開呈現版本，是 Discord
   Digest 之外、不受字數限制的完整內容；只在該 Concept 已依 FR-006 解鎖（至少被一個 Track 推播過）後才
   存在。
-- **文章版本記錄（Article Version Record）**：附屬於全文閱讀頁的版本中繼資料，記錄首次發布日期、首次發布
-  版號、目前版號、最後修訂時間（`updatedAt`）與修訂異動摘要；首次發布資訊在後續修訂中維持不變。
 - **訂閱摘要（Feed）**：以標準訂閱格式列出已發佈內容的清單，可分為「全站」與「特定 Track」兩種範疇；每筆
-  項目具備穩定識別碼供訂閱端去重判斷、並攜帶反映最新修訂的更新時間戳，同時有滾動保留上限。
-- **Track 進度**：既有實體，來自 `state` 分支的 `state.json`（§19）；本 Feature 只負責將其視覺化呈現，
-  不建立或修改其資料結構。
+  項目具備穩定識別碼（採 `conceptId`）供訂閱端去重判斷，時間戳取自該 Track 的實際推播時間，滾動保留上限
+  沿用 `history` 上限。Feed 為每次發佈時由 `history` 重新導出的衍生產物，不另存任何狀態。
+- **Track 進度**：既有實體，來自 `state` 分支的 `state.json`（§19），含各 Track 的 `currentSessionIndex`、
+  `completedAt` 與 `history`（`{ sessionIndex, pushedAt, conceptId? }`，上限 30 筆）；本 Feature 只負責
+  將其視覺化呈現與導出 feed，MUST NOT 建立、修改或擴充其資料結構。
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: 訪客造訪儀表板首頁後，無需捲動或跳轉頁面，即可在同一畫面看到三個已啟用 Track 各自的目前
-  進度與今日課程標題。
+- **SC-001**: 訪客以桌面瀏覽器視窗造訪儀表板首頁後，無需捲動或跳轉頁面，即可在同一畫面看到三個已啟用
+  Track 各自的目前進度與今日課程標題（本準則不對行動裝置小螢幕做同等保證，見 Assumptions）。
 - **SC-002**: 訪客從今日課程區塊，1 次點擊內即可進入對應 Concept 的全文閱讀頁，並看到完整文章內容。
 - **SC-003**: 訂閱摘要的使用者在課表因內容調整重新產生（項目集合有增減）後，既有仍保留的項目不會在
   reader 端被重複標示為新項目。
@@ -162,16 +200,16 @@ Pages 發佈後，reader 會出現一筆新項目，可直接點進全文閱讀�
   次人工觸發或等待下一個排程週期。
 - **SC-006**: 訂閱特定 Track feed 的使用者，收到的新項目節奏與該 Track 實際的每日推播節奏一致，不會因為
   其他 Track 進度較快而提前收到尚未輪到自己 Track 的內容。
-- **SC-007**: 訪客在任一全文閱讀頁上，皆能看到該篇內容的首次發布日期；若內容曾被修訂，亦能看到目前版號、
-  最後修改時間與異動摘要，無需另外比對原始檔或 git 歷史。
+- **SC-007**: 連續兩次執行之間若 `state.json`、課表與 Article 內容皆未變更，重新產生的儀表板、全文閱讀頁
+  與 feed MUST 為完全相同的產物（byte-identical），且該次執行對 `state` 分支的 commit 數為 0。
 
 ## Assumptions
 
 - 本 Feature 僅在 repository 為 public 時對外服務；repository 為 private 時功能自動停用，且此停用狀態
   MUST NOT 被視為錯誤（依 spec §25「限 public repo」）。
-- 訂閱摘要採業界通用格式（RSS 2.0 或 Atom 皆可），以確保主流 reader 皆可正常訂閱解析；由於 FR-016 要求
-  區分「首次發布」與「最後修訂」兩個時間點，實作選型 SHOULD 選擇能原生表達兩者差異的格式（例如 Atom 的
-  `published` / `updated`），實際格式由後續 `/speckit-plan` 技術選型階段定案。
+- 訂閱摘要採業界通用格式（RSS 2.0 或 Atom 皆可），以確保主流 reader 皆可正常訂閱解析；因 FR-014 已移除
+  修訂偵測需求，項目只需單一時間戳（推播時間），不需要格式原生區分「首次發布」與「最後修訂」，實際格式由
+  後續 `/speckit-plan` 技術選型階段定案。
 - 本 Feature 的建置與發佈是既有每日推播工作流程新增的附加末段，而非獨立排程或獨立 workflow；沿用既有
   「可選階段失敗 MUST NOT 中斷核心推播」的失敗隔離原則（§4-15、§9.2）。
 - 公開頁面的更新頻率與每日推播頻率一致（每次核心推播流程執行完成後更新一次），不支援 sub-daily 即時更新。
@@ -182,5 +220,14 @@ Pages 發佈後，reader 會出現一筆新項目，可直接點進全文閱讀�
 - 「特定 Track」訂閱以 Concept 在該 Track 的推播順序決定 feed 項目出現的先後，即便同一 Concept 已因
   FR-006（進度最快 Track 為準）建立了全文閱讀頁，該 Concept 仍要等到訂閱者所選 Track 自己實際推播到它
   時，才會出現在該 Track 專屬 feed 中。
-- 版號（FR-014／FR-015）採單調遞增的修訂序號即可滿足「可辨識是否曾修訂、修訂過幾次」的需求，不要求採用
-  語意化版本號（semver）等更複雜的版本編碼規則。
+- 本專案為單一使用者情境，且 `articles/**` 依憲章 XIII 為凍結產物、重新生成屬低頻的刻意 build-time 行為，
+  因此「文章被修訂過幾次／哪天首次公開」的閱讀價值不足以支撐一份跨執行的版本記錄；發佈階段維持 stateless
+  是本 Feature 刻意的範圍收斂（FR-014），而非疏漏。
+- 全站 feed 的項目集合由三個 Track 的 `history` 聯集後依 `conceptId` 去重、依最早的 `pushedAt` 排序取得，
+  同樣受 FR-016 的滾動上限約束；同一 Concept 在全站 feed 與各 Track feed 中使用相同的識別碼。
+- 本 Feature 的公開頁面 MUST 提供基本可讀的語意化 HTML（標題階層、連結文字有意義），但正式的無障礙
+  規範（WCAG 對比度／螢幕閱讀器逐項驗證等）不在本 Feature 範圍內——單一使用者情境下，可讀性優先於
+  正式合規驗證；行動裝置版面呈現同樣不保證與桌面等價（呼應 SC-001 的桌面視窗前提）。
+- GitHub Pages 免費層的站台大小與部署頻率限制（現行每次部署 1GB、每小時 10 次部署）在本專案現有規模
+  （200 餘篇文字為主的靜態頁面、每日至多 2 次部署嘗試）下有充分餘裕，不視為本 Feature 的風險項；
+  MUST NOT 為此預先設計任何配額監控或降級機制。
