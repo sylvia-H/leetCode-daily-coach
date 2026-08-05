@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 4,
-      "lastPushAt": "2026-08-04T23:13:29.976Z",
+      "currentSessionIndex": 5,
+      "lastPushAt": "2026-08-05T23:12:47.436Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -23,16 +23,21 @@
           "sessionIndex": 3,
           "pushedAt": "2026-08-04T23:13:29.976Z",
           "conceptId": "mental-model-variables"
+        },
+        {
+          "sessionIndex": 4,
+          "pushedAt": "2026-08-05T23:12:47.436Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 4,
-      "lastPushAt": "2026-08-04T23:13:30.136Z",
+      "currentSessionIndex": 5,
+      "lastPushAt": "2026-08-05T23:12:47.570Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
-        "mental-model-variables"
+        "mental-model-variables",
+        "tracing-execution-flow"
       ],
       "history": [
         {
@@ -49,16 +54,22 @@
           "sessionIndex": 3,
           "pushedAt": "2026-08-04T23:13:30.136Z",
           "conceptId": "mental-model-variables"
+        },
+        {
+          "sessionIndex": 4,
+          "pushedAt": "2026-08-05T23:12:47.570Z",
+          "conceptId": "tracing-execution-flow"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 4,
-      "lastPushAt": "2026-08-04T23:13:30.295Z",
+      "currentSessionIndex": 5,
+      "lastPushAt": "2026-08-05T23:12:47.677Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
-        "mental-model-variables"
+        "mental-model-variables",
+        "tracing-execution-flow"
       ],
       "history": [
         {
@@ -75,6 +86,11 @@
           "sessionIndex": 3,
           "pushedAt": "2026-08-04T23:13:30.295Z",
           "conceptId": "mental-model-variables"
+        },
+        {
+          "sessionIndex": 4,
+          "pushedAt": "2026-08-05T23:12:47.677Z",
+          "conceptId": "tracing-execution-flow"
         }
       ]
     }
