@@ -6,6 +6,9 @@ node_modules/
 dist/
 *.log
 
+# F9 Pages 建置產物：每次執行重新產生，不入庫（比照 dist/）
+pages-dist/
+
 # 本機 dry run 的 state checkout 目錄；MUST 排除以免誤入主分支
 .state/
 
