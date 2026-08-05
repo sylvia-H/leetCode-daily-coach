@@ -167,7 +167,7 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 
 ### Tests for User Story 2
 
-- [ ] T015 [P] [US2] 撰寫 `tests/unit/pages-article.test.ts`（先寫、先失敗）：驗證 8 段固定順序
+- [X] T015 [P] [US2] 撰寫 `tests/unit/pages-article.test.ts`（先寫、先失敗）：驗證 8 段固定順序
       （Concept → Thinking → Pattern Recognition → Common Mistakes → Complexity → TypeScript Corner
       → Python Corner → Tomorrow Preview）內容各自獨立、經 `parseSections(article.rawContent)`
       取得（**MUST NOT** 使用 `article.conceptBody`，research R12）；驗證 Today's Challenge 為結構化
@@ -177,15 +177,15 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] 實作 `src/pages/article-page.ts`：導出 `ArticlePageView` 建構函式 + HTML 渲染，內部對
+- [X] T016 [US2] 實作 `src/pages/article-page.ts`：導出 `ArticlePageView` 建構函式 + HTML 渲染，內部對
       `article.rawContent` 呼叫既有 export 函式 `parseSections()` 取回 8 段固定區塊原文（各自經
       `marked.parse()`），對 `article.challenge` 全部題號依 id 升冪逐題向 Problem Bank 查回
       title／url／difficulty 組成結構化清單，使 T015 由紅轉綠（依賴 T002、T015）
-- [ ] T017 [US2] 擴充 `src/pages/site.ts` 的 `buildSite()`：對每個 `unlocked === true` 的 Concept（依
+- [X] T017 [US2] 擴充 `src/pages/site.ts` 的 `buildSite()`：對每個 `unlocked === true` 的 Concept（依
       T006 解鎖集合）以既有 export 函式 `readArticleCached(node.articlePath, node.id, input.deps)` 取得
       `ArticleContent`（與 `compile()` 同一條讀檔路徑、共用 `deps.articleCache`），交給 `article-page.ts`
       （T016）產生 `articles/{conceptId}.html` 並加入 `SiteOutput`（依賴 T006、T011、T016）
-- [ ] T018 [US2] 依 [quickstart.md](./quickstart.md) §3 手動驗收：從儀表板點擊「閱讀全文」一次點擊
+- [X] T018 [US2] 依 [quickstart.md](./quickstart.md) §3 手動驗收：從儀表板點擊「閱讀全文」一次點擊
       進入全文閱讀頁；驗證含 8 段固定區塊、Today's Challenge 為可點連結清單且含難度、不含
       Digest／TypeScript Tip／Python Tip；直接以檔案路徑開啟同一頁面驗證免登入（依賴 T017）
 
