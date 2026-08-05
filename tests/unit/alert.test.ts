@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { redactWebhookUrls, renderAlert, renderCompletionNotice } from "../../src/renderer/alert.js";
+import { redactWebhookUrls, renderAlert, renderCompletionNotice, renderPagesFailureNotice } from "../../src/renderer/alert.js";
 
 describe("renderAlert", () => {
   it("為純函式，回傳單一紅色告警 embed", () => {
@@ -132,5 +132,41 @@ describe("renderCompletionNotice", () => {
     const serialized = JSON.stringify(renderCompletionNotice("foundation"));
     expect(serialized).not.toMatch(/discord\.com\/api\/webhooks/);
     expect(serialized).not.toMatch(/[A-Za-z]:\\|\/(home|Users)\//);
+  });
+});
+
+// F9 FR-017／workflow-integration.md §4.1：Pages 發佈失敗的琥珀色通知，區別於核心紅／完課綠。
+describe("renderPagesFailureNotice", () => {
+  it("純函式：連續呼叫回傳 deep-equal 的 embeds（無時間戳、無隨機、無參數）", () => {
+    const a = renderPagesFailureNotice();
+    const b = renderPagesFailureNotice();
+    expect(a).toEqual(b);
+  });
+
+  it("恰好 1 個 embed，顏色與 ALERT_COLOR（紅）、COMPLETION_COLOR（綠）皆不同", () => {
+    const embeds = renderPagesFailureNotice();
+    expect(embeds).toHaveLength(1);
+    const color = embeds[0]?.color;
+    expect(color).not.toBe(15158332); // ALERT_COLOR
+    expect(color).not.toBe(3066993); // COMPLETION_COLOR
+    expect(color).toBeDefined();
+  });
+
+  it("內文明示 Pages 未更新、當日核心推播與 state 不受影響", () => {
+    const embeds = renderPagesFailureNotice();
+    expect(embeds[0]?.description).toContain("Pages");
+    expect(embeds[0]?.description).toContain("核心推播");
+    expect(embeds[0]?.description).toContain("state");
+  });
+
+  it("embeds 文字中不含 webhook URL 或檔案系統路徑", () => {
+    const serialized = JSON.stringify(renderPagesFailureNotice());
+    expect(serialized).not.toMatch(/discord(?:app)?\.com\/api\/webhooks/);
+    expect(serialized).not.toMatch(/[A-Za-z]:\\|\/(home|Users)\//);
+  });
+
+  it("總長遠低於 6,000 字元預算", () => {
+    const serializedLength = JSON.stringify(renderPagesFailureNotice()).length;
+    expect(serializedLength).toBeLessThan(6000);
   });
 });

@@ -1260,6 +1260,10 @@ leetcode-daily-coach/
 - 狀態變更 MUST 在該 Track 推播成功後才寫入該 Track 的欄位；全部 Track 處理完後一次存檔、單次 commit（避免半套狀態與多次 commit）。
   - **「單次 commit」的精確語意（MUST，F6 澄清 2026-07-24）**：指「一次執行**至多產生一個** state commit」，而非「每次執行都必須產生一個」。全部 Track 皆被 guard 跳過或完課跳過時，存檔會寫出**內容相同**的 `state.json`，此時 workflow 的提交步驟 MUST 偵測到無變更並**略過提交**（該次執行的 commit 數為 **0**），MUST NOT 製造空 commit 汙染 `state` 分支歷史。「恰好一個 commit」只適用於**該次執行確有進度變更**的情形。
 - 各 Track 的 `history` MUST 滾動保留（上限 30 筆）。
+  - **此上限同時是 F9 `009-pages-publish` 的 RSS/Atom feed 唯一資料來源（F9 定案 2026-08-05）**：F9 的
+    發佈階段為完全 stateless，per-Track feed 項目一律由該軌 `history` 中帶 `conceptId` 的項目導出、
+    feed 的滾動保留上限即等同此上限，F9 MUST NOT 另存任何跨執行的發佈狀態。因此**調整此上限會連帶改變
+    公開 feed 的可回溯範圍**，調整前 MUST 一併評估對 F9 的影響。
 - 未在 state 中出現的啟用 Track（例：日後新啟用），StateStore MUST 以初始值（`currentSessionIndex: 1`、`lastPushAt` 為空）自動補建；`lastPushAt` 為空 ⇒ 日期 guard 放行，下一次執行即推播 Session 1（Track 生命週期語意見 §9.2）。
 - **調整進度的官方方式**：人工編輯 `state` 分支的 `state.json`（改該 Track 的 `currentSessionIndex`）並 commit。MUST NOT 另設「起始課數」等設定項——state 即唯一權威。
 - **`completedAt`（選填欄位；MUST，F6 定案 2026-07-24）**：某 Track 走完課表並發出完課通知後 MUST 寫入該欄位（見 §9.2 完課語意）；**其存在即代表該 Track 已完課，其後每次執行一律靜默跳過**。缺席或 `null` 皆代表未完課（向後相容既有 `state.json`，MUST NOT 因缺此欄位而判定損毀）。**不變式**：`completedAt` 非空 ⇒ 該軌 `currentSessionIndex` 超出目前課表的最大 `sessionIndex`；此不變式被違反（課表延長，或人工把進度調回範圍內）時，程式 MUST 依 §9.2「完課狀態的自動解除」清除該欄位並照常續推。人工把某軌 `currentSessionIndex` 調回課表範圍內以重新推播時 SHOULD 一併清除該軌的 `completedAt`（保持狀態檔語意一致；未清除亦會由自動解除處理）。DRY_RUN 下 MUST NOT 寫入、MUST NOT 清除。

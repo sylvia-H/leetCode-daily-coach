@@ -2,7 +2,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { TRACK_ORDER } from "../config.js";
 import type { Lesson, Track } from "../types/lesson.js";
 
-const HISTORY_LIMIT = 30;
+// F9 feed 上限的唯一來源（feed-contract.md §4）：src/pages/** MUST import 此常數，MUST NOT 另行宣告一個 30。
+export const HISTORY_LIMIT = 30;
 
 export interface HistoryEntry {
   sessionIndex: number;

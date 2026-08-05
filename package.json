@@ -19,6 +19,7 @@
     "generate:materials": "tsx scripts/generate-materials.ts",
     "populate:problem-bank": "tsx scripts/populate-problem-bank.ts",
     "gate:code": "tsx scripts/run-code-blocks.ts",
+    "build:pages": "tsx scripts/build-pages.ts",
     "start": "node dist/main.js",
     "supplement:problems": "tsx scripts/supplement-problems.ts"
   },
