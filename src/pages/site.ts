@@ -1,11 +1,13 @@
 // buildSite() 組裝入口（site-build-contract.md）：純函式，唯一被 scripts/build-pages.ts 呼叫。
 // US1 組裝 index.html；US2 擴充 articles/*.html；feed*.xml（US3）由後續 Phase 擴充本檔案。
 import { readArticleCached, type CompilerDeps } from "../compiler/lesson.js";
+import { TRACK_ORDER } from "../config.js";
 import type { AppState } from "../state/state-store.js";
 import type { Track } from "../types/lesson.js";
 import { buildArticlePageView, renderArticlePage } from "./article-page.js";
 import { buildCurriculumEntries, buildTrackProgress, computeUnlockedConceptIds, type TrackProgressView } from "./curriculum-view.js";
-import { renderDashboard } from "./dashboard.js";
+import { renderDashboard, TRACK_LABELS } from "./dashboard.js";
+import { buildSiteFeed, buildTrackFeed, serializeFeed, type FeedView } from "./feed.js";
 
 export interface SiteBuildInput {
   /**
@@ -22,6 +24,14 @@ export interface SiteBuildInput {
 
 /** relative output path → file content；I/O 寫檔由 scripts/build-pages.ts 負責。 */
 export type SiteOutput = Map<string, string>;
+
+// data-model.md §5：per-track feed 檔名判準 MUST 為 state.tracks 中已知的 Track，MUST NOT 為
+// enabledTracks——Track 被停用後既有訂閱者不得收到 404。
+const TRACK_FEED_FILE: Record<Track, string> = {
+  foundation: "feed-foundation.xml",
+  interviewReady: "feed-interview-ready.xml",
+  interviewMastery: "feed-interview-mastery.xml",
+};
 
 export function buildSite(input: SiteBuildInput): SiteOutput {
   const { deps, state, enabledTracks, baseUrl } = input;
@@ -49,6 +59,33 @@ export function buildSite(input: SiteBuildInput): SiteOutput {
     const view = buildArticlePageView(article, deps.bank);
     output.set(`articles/${conceptId}.html`, renderArticlePage(view));
   }
+
+  // FR-008／FR-015／FR-016：per-track feed（僅 state.tracks 中已知的 Track，非 enabledTracks）+
+  // 全站 feed（三軌聯集去重）。
+  const knownTracks = TRACK_ORDER.filter((track) => state.tracks[track] !== undefined);
+  const trackFeeds: FeedView[] = knownTracks.map((track) =>
+    buildTrackFeed(track, state.tracks[track]!, deps.graph, baseUrl),
+  );
+
+  const indexUrl = `${baseUrl}/index.html`;
+  knownTracks.forEach((track, i) => {
+    const channel = {
+      title: `LeetCode Daily Coach · ${TRACK_LABELS[track]}`,
+      link: indexUrl,
+      description: `LeetCode Daily Coach ${TRACK_LABELS[track]} Track 的最新課程發佈`,
+    };
+    output.set(TRACK_FEED_FILE[track], serializeFeed(trackFeeds[i]!, channel));
+  });
+
+  const siteFeed = buildSiteFeed(trackFeeds);
+  output.set(
+    "feed.xml",
+    serializeFeed(siteFeed, {
+      title: "LeetCode Daily Coach",
+      link: indexUrl,
+      description: "LeetCode Daily Coach 全站最新課程發佈",
+    }),
+  );
 
   return output;
 }

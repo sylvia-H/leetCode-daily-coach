@@ -202,7 +202,7 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 
 ### Tests for User Story 3
 
-- [ ] T019 [P] [US3] 撰寫 `tests/unit/pages-feed.test.ts`（先寫、先失敗）：驗證 per-track feed 只收錄
+- [X] T019 [P] [US3] 撰寫 `tests/unit/pages-feed.test.ts`（先寫、先失敗）：驗證 per-track feed 只收錄
       該 Track `history` 中帶 `conceptId` 的項目；驗證依 `pubDate` 遞減排序、截斷至
       `HISTORY_LIMIT`（**MUST 由 `src/state/state-store.ts` import，即 T000 開放的 export；MUST NOT 在
       `src/pages/**` 另宣告一個 30**——FR-016 明訂不得另行實作獨立的保留機制）；驗證同一 `conceptId`
@@ -213,14 +213,14 @@ R8／R9／R10），以及 HTML/XML escape 共用工具與 Pages 失敗通知。p
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] 實作 `src/pages/feed.ts`：導出 `FeedItemView`／`FeedView` 建構函式 + RSS 2.0 XML
+- [X] T020 [US3] 實作 `src/pages/feed.ts`：導出 `FeedItemView`／`FeedView` 建構函式 + RSS 2.0 XML
       序列化（channel 層級元素、item 排序截斷去重、guid=url、XML escape），使 T019 由紅轉綠（依賴
       T002、T019）
-- [ ] T021 [US3] 擴充 `src/pages/site.ts` 的 `buildSite()`：產生全站 `feed.xml`（三軌 `history` 聯集
+- [X] T021 [US3] 擴充 `src/pages/site.ts` 的 `buildSite()`：產生全站 `feed.xml`（三軌 `history` 聯集
       去重）與**每個 `state.tracks` 中已知 Track**（判準 MUST 為 `state.tracks`，**MUST NOT** 為
       `enabledTracks`——Track 被停用後既有訂閱者不得收到 404）的 `feed-{track}.xml`（kebab-case 對應
       `Track` 值）並加入 `SiteOutput`（依賴 T006、T011、T020）
-- [ ] T022 [US3] 依 [quickstart.md](./quickstart.md) §4 手動驗收：per-track feed 項目數 ≤ 30 且
+- [X] T022 [US3] 依 [quickstart.md](./quickstart.md) §4 手動驗收：per-track feed 項目數 ≤ 30 且
       `guid`/`link` 指向對應全文頁；新增不含 `conceptId` 的 history 項目後 feed 不變；新增帶
       `conceptId` 的項目後出現一筆新項目且既有 `guid` 不變；全站 `feed.xml` 涵蓋三軌聯集且不重複
       （依賴 T021）

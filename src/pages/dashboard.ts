@@ -4,7 +4,7 @@ import type { CurriculumEntryView, LastSessionView, TrackProgressView } from "./
 import { escapeHtml, renderPage } from "./html.js";
 import type { SessionType, Track } from "../types/lesson.js";
 
-const TRACK_LABELS: Record<Track, string> = {
+export const TRACK_LABELS: Record<Track, string> = {
   foundation: "Foundation",
   interviewReady: "Interview Ready",
   interviewMastery: "Interview Mastery",
