@@ -10,7 +10,11 @@ export const TRACK_LABELS: Record<Track, string> = {
   interviewMastery: "Interview Mastery",
 };
 
-const NON_CONCEPT_SESSION_LABELS: Partial<Record<SessionType, string>> = {
+// research R10：非 concept 類 Session 的固定標籤。`concept` 亦列入——當 concept 類 Session 的
+// conceptId 缺席（課表重跑後該 sessionIndex 的 type 改變）或該 conceptId 已不在 DAG 時，fallback
+// MUST NOT 讓未翻譯的英文 token 外洩到公開頁面（FR-004：MUST NOT 以誤導性文字呈現）。
+const SESSION_TYPE_LABELS: Record<SessionType, string> = {
+  concept: "觀念課",
   practice: "練習",
   review: "複習週",
   challenge: "挑戰",
@@ -18,11 +22,12 @@ const NON_CONCEPT_SESSION_LABELS: Partial<Record<SessionType, string>> = {
 };
 
 function renderTodaySession(session: LastSessionView): string {
+  // research R10：concept 類顯示 Concept 標題並連結全文頁；其餘顯示固定中文標籤，一律附 sessionIndex。
+  const prefix = `第 ${session.sessionIndex} 課 · `;
   if (session.type === "concept" && session.conceptTitle !== undefined && session.articleUrl !== undefined) {
-    return `<a href="${escapeHtml(session.articleUrl)}">${escapeHtml(session.conceptTitle)}</a>`;
+    return `${prefix}<a href="${escapeHtml(session.articleUrl)}">${escapeHtml(session.conceptTitle)}</a>`;
   }
-  const label = NON_CONCEPT_SESSION_LABELS[session.type] ?? session.type;
-  return escapeHtml(label);
+  return `${prefix}${escapeHtml(SESSION_TYPE_LABELS[session.type])}`;
 }
 
 function renderTrackCard(view: TrackProgressView): string {
@@ -51,12 +56,20 @@ function renderTrackCard(view: TrackProgressView): string {
 </div>`;
 }
 
+// FR-005／site-build-contract.md §5：在課綱順序中標示各已啟用 Track 目前的進度位置。
+// `atTrackPositions` 的順序由 buildCurriculumEntries 依 trackProgress（TRACK_ORDER）決定，此處不重排。
+function renderTrackPositionMarker(tracks: Track[]): string {
+  if (tracks.length === 0) return "";
+  const labels = tracks.map((track) => TRACK_LABELS[track]).join(" / ");
+  return ` <span class="badge track-marker">${escapeHtml(labels)} 目前位置</span>`;
+}
+
 function renderCurriculumEntry(entry: CurriculumEntryView): string {
   const inner =
     entry.unlocked && entry.articleUrl !== undefined
       ? `<a href="${escapeHtml(entry.articleUrl)}">${escapeHtml(entry.title)}</a>`
       : `${escapeHtml(entry.title)} <span class="badge">未解鎖</span>`;
-  return `<li class="curriculum-entry${entry.unlocked ? "" : " locked"}">${inner}</li>`;
+  return `<li class="curriculum-entry${entry.unlocked ? "" : " locked"}">${inner}${renderTrackPositionMarker(entry.atTrackPositions)}</li>`;
 }
 
 export interface DashboardInput {

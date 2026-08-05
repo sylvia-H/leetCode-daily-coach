@@ -62,6 +62,73 @@ describe("renderDashboard", () => {
     expect(html).toContain("複習");
   });
 
+  it("今日課程附上該 Session 的 sessionIndex（research R10）", () => {
+    const trackProgress: TrackProgressView[] = [
+      {
+        track: "foundation",
+        status: "in-progress",
+        completedConceptCount: 3,
+        totalConceptCount: 10,
+        lastSession: {
+          sessionIndex: 42,
+          type: "concept",
+          pushedAt: "2026-08-01T00:00:00.000Z",
+          conceptId: "concept-a",
+          conceptTitle: "Concept A 標題",
+          articleUrl: "https://example.github.io/repo/articles/concept-a.html",
+        },
+      },
+    ];
+    const html = renderDashboard({ trackProgress, curriculum: [] });
+    expect(html).toContain("第 42 課");
+  });
+
+  it("concept 類但缺 conceptTitle／articleUrl 時顯示中文標籤，MUST NOT 印出英文 token", () => {
+    const trackProgress: TrackProgressView[] = [
+      {
+        track: "foundation",
+        status: "in-progress",
+        completedConceptCount: 3,
+        totalConceptCount: 10,
+        lastSession: { sessionIndex: 5, type: "concept", pushedAt: "2026-08-02T00:00:00.000Z" },
+      },
+    ];
+    const html = renderDashboard({ trackProgress, curriculum: [] });
+    expect(html).toContain("觀念課");
+    expect(html).not.toMatch(/第 5 課 · concept/);
+  });
+
+  it("課綱視圖標示各已啟用 Track 目前的進度位置（FR-005／atTrackPositions）", () => {
+    const curriculum: CurriculumEntryView[] = [
+      {
+        conceptId: "here",
+        title: "目前所在 Concept",
+        moduleId: "m",
+        moduleTitle: "M",
+        topicId: "t",
+        topicTitle: "T",
+        unlocked: true,
+        articleUrl: "https://example.github.io/repo/articles/here.html",
+        atTrackPositions: ["foundation", "interviewReady"],
+      },
+      {
+        conceptId: "elsewhere",
+        title: "其他 Concept",
+        moduleId: "m",
+        moduleTitle: "M",
+        topicId: "t",
+        topicTitle: "T",
+        unlocked: true,
+        articleUrl: "https://example.github.io/repo/articles/elsewhere.html",
+        atTrackPositions: [],
+      },
+    ];
+    const html = renderDashboard({ trackProgress: [], curriculum });
+    expect(html).toMatch(/目前所在 Concept[\s\S]{0,160}Foundation \/ Interview Ready 目前位置/);
+    // 沒有 Track 落在此處的條目 MUST NOT 出現標記
+    expect(html).not.toMatch(/其他 Concept[\s\S]{0,160}目前位置/);
+  });
+
   it("頁面不含任何 ISO 8601 時間戳字串（不顯示 pushedAt 原文）", () => {
     const trackProgress: TrackProgressView[] = [
       {

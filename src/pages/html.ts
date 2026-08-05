@@ -36,6 +36,7 @@ a { color: inherit; }
 .track-card { border: 1px solid currentColor; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; }
 .track-card[data-status="not-started"] { opacity: 0.7; }
 .curriculum-entry.locked { opacity: 0.55; }
+.badge.track-marker { font-weight: 600; }
 .badge { display: inline-block; border-radius: 0.25rem; padding: 0.1rem 0.5rem; font-size: 0.85em; border: 1px solid currentColor; }
 section { margin-bottom: 2rem; }
 `;
