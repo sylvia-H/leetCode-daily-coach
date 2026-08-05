@@ -3,6 +3,8 @@ import type { DiscordEmbed, Track } from "../types/lesson.js";
 const ALERT_COLOR = 15158332;
 // F6 R3：與紅色告警明確對比的完課通知顏色（0x2ECC71）。
 const COMPLETION_COLOR = 3066993;
+// F9 FR-017：Pages 發佈失敗的琥珀色通知，與紅（核心失敗）、綠（完課）皆明確區分（0xF39C12）。
+const PAGES_FAILURE_COLOR = 0xf39c12;
 
 // F6 FR-019b（notice-contract.md §1.1、憲章 XIV）：Discord webhook URL 樣式遮蔽的唯一出口。
 // 底層 fetch/undici 例外訊息可能夾帶完整請求 URL（webhook URL 等同頻道寫入憑證），MUST 為通知實作
@@ -51,6 +53,20 @@ export function renderCompletionNotice(track: Track): DiscordEmbed[] {
         `本 Track 的課程已全部推播完畢，其後不再推播。\n` +
         `想重新開始，請依 runbook 編輯 state.json（調整 currentSessionIndex 並清除 completedAt）。`,
       color: COMPLETION_COLOR,
+    },
+  ];
+}
+
+// F9 FR-017（workflow-integration.md §4.1）：`pages` job 失敗時的組版，發送邊界在
+// scripts/notify-pages-failure.ts。純函式、固定文案，不含時間戳（憲章 XII）。
+export function renderPagesFailureNotice(): DiscordEmbed[] {
+  return [
+    {
+      title: "🟠 Pages 未更新",
+      description:
+        `本次執行的 Pages 發佈階段失敗，公開網站未反映最新內容。\n` +
+        `當日核心推播與 state 分支的進度**不受影響**，下一次每日執行會以最新 state 重新產生全部產物。`,
+      color: PAGES_FAILURE_COLOR,
     },
   ];
 }
