@@ -60,8 +60,10 @@ runtime 相依**（Pages 頁面沿用既有 `marked`/`gray-matter` 依賴路徑�
 每個 Concept 增加一次 O(1) 查找）；CI Gate 對既有 641 筆 Lesson 的既有壓力不變
 （quiz 欄位隨 review Lesson 一起 compile/render/checkBudget，無額外遍歷），另新增
 `checkQuizBank` 對 **165 個 Concept × 3–10 題（約 1,000–1,300 題）** 的一次性結構掃描
-（純記憶體運算，非 LLM 呼叫）。題庫生成約 **2,500 次 LLM 呼叫**（165 次列面向 + 約 1,150 次
-出題批次 + 約 1,150 次盲答驗證，spec Assumptions ③）。
+（純記憶體運算，非 LLM 呼叫）。題庫生成約 **1,500 次 LLM 呼叫**（165 次列面向 + 約 200 次出題批次
+【Stage B 為**每個 Concept 一次批次呼叫**產出全部題目，200 已含重生輪】 + 約 1,150 次盲答驗證
+【**每題各一次**】，spec Assumptions ③）。**MUST NOT 沿用初估的 2,500**——該數字把出題批次誤記為
+每題一次（1,150），與 contracts/quiz-bank-schema.md §5.2 的單次批次流程矛盾。
 
 **Constraints**:
 - 每日 runtime **零 LLM**；`daily.yml` MUST NOT 含 `GEMINI_API_KEY`（本 Feature 不修改
@@ -107,7 +109,7 @@ Pages 連結來源（R1）、Gate 覆蓋完整性（R3）、版面插入點（R5
 | XIII | Generated Artifacts Are Frozen Once Committed | ✅ | `data/quiz-bank.json` 由生成腳本產出、可重生成，綁 Skeleton 雜湊（FR-015），**不引入手工資產** |
 | XIV | Secrets Never in Repo | ✅ | `GEMINI_API_KEY` 只走 `content.yml` 的 Secrets 與本機環境變數；`PAGES_BASE_URL` 非機密（公開 URL），不需 Secrets |
 | XV | Fault Isolation & Fail Loud | ✅ | 生成腳本單一 Concept 失敗不阻斷其餘 Concept、以非零 exit code 收尾（FR-010a 一次列出全部不足量 Concept）；題庫／Pages 缺席時 Discord 推播零告警靜默省略（FR-008，刻意的「非核心素材缺席」降級，非需要告警的失敗） |
-| XVI | Free-tier Only | ✅ | 約 2,500 次 LLM 呼叫（vs F7 165 篇 × 多次呼叫的同量級），不新增服務 |
+| XVI | Free-tier Only | ✅ | 約 1,500 次 LLM 呼叫（vs F7 165 篇 × 多次呼叫的同量級），不新增服務 |
 | XVII | One Human Checkpoint | ✅ | 題庫全由自動 Gate + 交叉驗證把關，**不新增常態性人工審核關卡**（FR-010a 的人工介入是失敗後例外，非常態關卡，同 F8 既有立場） |
 
 **技術與資源約束**（憲章「Additional Constraints」）：無新選型。composition root 不變；
@@ -201,7 +203,7 @@ spec 的 User Story 優先序是價值序（僅 US1 一個 Story）；以下為*
 | --- | --- | --- | --- |
 | **P1** | `src/compiler/quiz.ts`（schema + `selectQuizItem` + `checkQuizBank`）＋ `budget.ts` 常數 ＋ 單元測試（用 fixture 題庫，不需真實生成） | — | FR-001／FR-003／FR-003a／FR-005／FR-006／FR-010／FR-010a／FR-014 |
 | **P2** | `CompilerDeps`／`CompilerPaths`／`Config` 擴充；`compileReview` 填入 `quizItems`；`src/main.ts` 併入 `pagesBaseUrl`；Gate 接線（`quiz-invalid`） | P1 | FR-002／FR-004／FR-007／FR-008／FR-012（連結部分） |
-| **P3** | Renderer 版面（`buildReviewBlocks` 新段落）＋ slot 對等測試（**可與 P1/P2 並行**，用 `tests/helpers/lesson.ts` 替身開發）。**⚠️ `renderQuizItemBody` 例外**：它被 `checkQuizBank` 共用（憲章 IX），故屬 P1／Phase 2 而非本階段——見 [tasks.md](./tasks.md) T006 與該檔 Phase 2 的澄清框 | 無硬依賴（`renderQuizItemBody` 除外） | FR-002／FR-009／SC-001／SC-004 |
+| **P3** | Renderer 版面（`buildReviewBlocks` 新段落）＋ slot 對等測試（**可與 P1/P2 並行**，用 `tests/helpers/lesson.ts` 替身開發）。**⚠️ `renderQuizItemBody` 例外**：它被 `checkQuizBank` 共用（憲章 IX），故屬 P1／Phase 2 而非本階段——見 [tasks.md](./tasks.md) T006 與該檔 Phase 2 的澄清框 | **T006（`renderQuizItemBody`）屬 P1**；其餘（版面插入）無硬依賴 | FR-002／FR-009／SC-001／SC-004 |
 | **P4** | `src/pages/quiz-page.ts` ＋ `buildSite()` 整合 ＋ determinism 測試 | P2（需要 `CompilerDeps.quizBank` 型別就位） | FR-011／FR-012（Pages 端）／SC-007 |
 | **P5** | 題庫產線（prompts、`quiz-checkpoint.ts`、交叉驗證、`generate-quiz-bank.ts`）＋ 生成並 commit 真實題庫 | P1（要先有 Gate 才知道是否通過） | FR-013／FR-013a／FR-015／FR-016／SC-008／SC-009／SC-010 |
 | **P6** | 端到端驗收（`DRY_RUN=true` 對真實課表、零金鑰 CI、SC 全項） | P1–P5 | quickstart.md §2–§6 |
@@ -212,7 +214,7 @@ spec 的 User Story 優先序是價值序（僅 US1 一個 Story）；以下為*
 | --- | --- | --- |
 | 選題公式的決定性與三軌互異 | `tests/unit/quiz-select.test.ts` | FR-003、quiz-selection.md I1–I3 |
 | 題庫缺席／某 Concept 缺題的降級路徑；壞檔 fail loud | `tests/unit/quiz-load.test.ts` | FR-007／FR-008、quiz-bank-schema.md §2 |
-| Gate 的 8 個具名 rule 全數攔截且指名根因 | `tests/unit/quiz-gate.test.ts` | quiz-bank-schema.md §3、SC-008 |
+| Gate 的 9 個具名 rule 全數攔截且指名根因（8 個由 `checkQuizBank` 輸出，`quiz-schema` 由載入層 throw） | `tests/unit/quiz-gate.test.ts`（`quiz-schema` 在 `quiz-load.test.ts`） | quiz-bank-schema.md §3、SC-008 |
 | review 版面五段順序、小測在 Challenge 後鼓勵語前、缺席即省略 | `tests/unit/renderer.test.ts`（擴充） | research R5、FR-002 |
 | slot⇄field 對等不變式涵蓋 `quizItems` | `tests/unit/budget-slot-parity.test.ts`（擴充） | FR-009 |
 | `quizItem`/`quiz` 預算檢查（含連結長度） | `tests/unit/budget.test.ts`（擴充） | FR-014、SC-004 |

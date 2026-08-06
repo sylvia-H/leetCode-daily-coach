@@ -61,6 +61,10 @@ node -e "const b=require('./data/quiz-bank.json');const counts=Object.values(b.b
 
 **預期**：恰為 3 的比例 < 40%，全庫平均 ≥ 5。未達標視為 prompt 設計失敗（FR-016）。
 
+**未達標時的重跑 MUST 帶 `--force`**：manifest 只綁 Skeleton 雜湊（FR-015），改 prompt **不會**
+使任何 Concept 失效，直接重跑會全部跳過、零 LLM 呼叫、題庫不變。建議先
+`npm run generate:quiz-bank -- --force --only <少數 conceptId>` 驗證改動方向，再全庫 `--force`。
+
 ### 1.3 不觸碰其他生成物
 
 ```powershell
@@ -143,7 +147,7 @@ npm run build:pages
 
 ## 5. Gate 攔截驗證（對照 SC-008）
 
-`QuizViolationRule` 共 **8 個**：7 個由 `checkQuizBank()` 輸出，`quiz-schema` 由載入層 throw
+`QuizViolationRule` 共 **9 個**：8 個由 `checkQuizBank()` 輸出，`quiz-schema` 由載入層 throw
 （計數口徑見 contracts/quiz-bank-schema.md §3）。逐一植入違規樣本後執行 `npm run validate:content`，
 **預期每一項都被具名擋下、零自動截斷**。`quiz-schema`／`quiz-unknown-concept` 由單元測試覆蓋
 （不在此以手改 `data/` 的方式植入，同 F8 quickstart §6 的既有慣例）：
@@ -156,6 +160,7 @@ npm run build:pages
 | 某則混入簡體字 | `quiz-invalid` / `quiz-traditional-chinese` |
 | 刪到某 Concept 只剩 2 題 | `quiz-invalid` / `quiz-count-range`（指名需要幾則、實際幾則） |
 | 複製一題到同一 Concept 內第二次 | `quiz-invalid` / `quiz-duplicate` |
+| 某題幹改寫為含「LeetCode 1」或 `https://leetcode.com/problems/two-sum/` | `quiz-invalid` / `quiz-leetcode-id` |
 
 > 驗完 MUST `git checkout -- data/quiz-bank.json` 還原。
 

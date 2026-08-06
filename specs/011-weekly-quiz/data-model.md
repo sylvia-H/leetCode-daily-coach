@@ -47,6 +47,7 @@ MUST NOT 用字典序。
 | 題數範圍 | 每個 Concept 的陣列長度 ∈ [3, 10]（FR-005） | `quiz-count-range` | FR-005／FR-010a |
 | 無重複題 | 同一 Concept 內無 `stem` 完全相同的兩題（**結構性判準只查逐字相同**；「實質等價」由生成端
   的面向/角度設計與交叉驗證共同防範，非本檔的機械判準所能偵測，見 research R2） | `quiz-duplicate` | FR-010／FR-016 |
+| 無 LeetCode 題號／連結 | `stem + options + explanation` 合併文本 MUST NOT 命中 `/leetcode\.com\/problems/i` 或 `/(LeetCode｜力扣)\s*[#第]?\s*\d+/i`（判準邊界見 quiz-bank-schema.md §3 rule 9：MUST NOT 擴大為「不得出現任何數字」） | `quiz-leetcode-id` | FR-010／§5／§11 |
 
 - **生成目標**：題數由內容推導、非固定配額（FR-016）。上限 10 僅為 code-side 保險絲。
 - **缺席語意**：整檔缺席 ⇒ `deps.quizBank === undefined` ⇒ 全部 review Session 省略小測段
@@ -72,7 +73,8 @@ export type QuizViolationRule =
   | "quiz-item-budget"
   | "quiz-traditional-chinese"
   | "quiz-count-range"
-  | "quiz-duplicate";
+  | "quiz-duplicate"
+  | "quiz-leetcode-id";      // §5／§11：題號 MUST 由程式從 Problem Bank 帶入，MUST NOT 由 LLM 生成
 
 export interface QuizViolation {
   rule: QuizViolationRule;
@@ -230,6 +232,12 @@ if (budgetSlots.quizItems !== undefined) {
 - 登記進 `quizItems[i]` 的字串 **MUST 是放進 embed field value 的同一份實例**（沿用 research R10
   的既有立場：不反解析 embeds），故不含 field name。
 - `BudgetItem` 名稱固定為 `quizItem[i]` 與 `quiz`，供 Gate 訊息具名回報。
+- **`src/renderer/discord.ts` 的 `mergeSlots()` MUST 一併新增 `quizItems` 的併入**（比照既有
+  `problems`：`if (slots.quizItems !== undefined) merged.quizItems = slots.quizItems;`）。
+  `render()` 的資料流是「各 `buildXxxBlocks` 產生 per-block `slots` → `mergeSlots` 收攏 →
+  `checkBudget(message)`」，**只在 `buildReviewBlocks` 登記而漏改 `mergeSlots`，等於本 Feature 的
+  兩格預算完全不會被檢查**，且無任何錯誤徵兆（同檔既有註解已警告「放進 embed 的每一段可變長度文字
+  都 MUST 同時登記 slot，否則會完全逃過逐區塊預算」）。
 
 ---
 

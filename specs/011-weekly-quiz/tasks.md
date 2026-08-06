@@ -31,19 +31,19 @@ Gate 判準、交叉驗證重生邏輯屬同一類別，plan.md「測試落點�
 
 ## Phase 1: Setup
 
-**Purpose**: 建立可比對的綠燈基線，並收斂本次 `/speckit-tasks` 前已完成、尚未 commit 的規格回寫。
+**Purpose**: 建立可比對的綠燈基線，並確認實作前的規格回寫確實已落地。
 
 - [ ] T001 建立綠燈基線：於 repo root 依序執行 `npm ci`、`npm run build`、`npm run typecheck`、
   `npm test`、`npm run validate:content` 全數通過，記錄現況作為後續比對基準
-- [ ] T002 提交本次 `/speckit-clarify`／checklist 檢核與 `/speckit-tasks` 前置檢核已完成、
-  尚未 commit 的規格文件：`specs/011-weekly-quiz/spec.md`（FR-002 插入點、FR-012 連結來源機制）、
-  `docs/spec.md` §15（**修正原本誤植的段落順序**——原文列 Encouragement 第四段、Quiz 第五段，
-  直接違反 F8 FR-022「鼓勵語 MUST 為最後一段」；已更正為 Quiz 第四、Encouragement 最後）、
-  `specs/011-weekly-quiz/{plan.md,research.md}`（回填「已回寫」狀態）、
-  `specs/011-weekly-quiz/checklists/prompt-design.md`（21 項逐項檢核結果）。type `docs`，
-  scope `011-weekly-quiz`，與後續實作 commit 分開（同 F8 T002a 慣例）
+- [ ] T002 **驗證**（非提交）實作前的規格回寫已全部落地——原任務要求「提交尚未 commit 的規格文件」，
+  但該批文件已於 `1f6ae72`／`abffb91`／`1e38af7` 提交完畢、worktree 乾淨，照原文執行只會產生空 commit。
+  改為逐項核對：`docs/spec.md` §14.5 含 `quizItem` **570** 與 `QUIZ_URL_RESERVE_CHARS` **120**、
+  §15 的段落順序為 **Quiz 第四段／Encouragement 最後一段**（原誤植為 Encouragement 第四、Quiz 第五，
+  直接違反 F8 FR-022）、F11 段含 `quiz-leetcode-id` 判準；`specs/011-weekly-quiz/spec.md` 含 FR-002
+  插入點與 FR-012 連結來源機制、FR-011 的 `unlockedIds` 範圍。任一項缺失才需補回寫並以 type `docs`、
+  scope `011-weekly-quiz` 單獨 commit（與實作 commit 分開，同 F8 T002a 慣例）
 
-**Checkpoint**: 基線綠燈、規格文件與 `docs/spec.md` 已對齊 → 可開始 Foundational
+**Checkpoint**: 基線綠燈、規格文件與 `docs/spec.md` 已核對一致 → 可開始 Foundational
 
 ---
 
@@ -102,8 +102,13 @@ FR-010／FR-010a／FR-014。
   `renderQuizItemBody(toReviewQuizItem(conceptId, item))` + `QUIZ_URL_RESERVE_CHARS` 保守估計，
   **MUST NOT 自行拼裝 `answerLabel`／`conclusion`**）/ `quiz-traditional-chinese`
   （復用既有 `checkTraditionalChinese`）/ `quiz-count-range`（陣列長度 ∉ [3,10]）/
-  `quiz-duplicate`（`stem` 逐字相同）。`quiz-schema` 由 §2 載入層 throw 實現，非本函式輸出
-  （quiz-bank-schema.md §3、data-model.md §1.1、FR-010／FR-010a）
+  `quiz-duplicate`（`stem` 逐字相同）/ `quiz-leetcode-id`（`stem + options + explanation` 合併文本
+  命中 `/leetcode\.com\/problems/i` 或 `/(LeetCode|力扣)\s*[#第]?\s*\d+/i`）。`quiz-schema` 由 §2
+  載入層 throw 實現，非本函式輸出（quiz-bank-schema.md §3、data-model.md §1.1、FR-010／FR-010a）
+  > **`quiz-leetcode-id` 的必要性**：§5／§11 與憲章「技術與資源約束」明訂題號 / 連結 / 難度 MUST 由
+  > 程式從 Problem Bank 帶入、MUST NOT 由 LLM 生成，而小測題三個欄位全是 LLM 產物。判準 MUST 只攔
+  > 「LeetCode／力扣 + 數字」與題目連結，**MUST NOT 擴大為「不得出現任何數字」**——複雜度、索引、
+  > 情境數值皆為合法內容（quiz-bank-schema.md §3 rule 9 的邊界說明）
   > **CHK021 對應（checklists/prompt-design.md）**：`quiz-count-range` 在題數 **>10** 時 MUST
   > 回報違規並擋下整個 Concept，**MUST NOT 自動截斷或挑選保留哪些題**——FR-005「上限為保險絲」
   > 的語意是「讓失控可見」而非「自動修剪」，測試 T011 MUST 明確斷言陣列未被截斷。
@@ -114,11 +119,13 @@ FR-010／FR-010a／FR-014。
   恆選同一題、三軌 `trackOffset` 互異取到相異題目）；`bank` 缺 Concept 或陣列為空 ⇒ `undefined`
   （FR-003、quiz-selection.md §2）。**I3（同一 `(track, sessionIndex)` byte-identical）不在本檔**
   ——`selectQuizItem` 的簽章不含 `sessionIndex`，該不變式屬 compile 層，落點見 T018a
-- [ ] T011 [P] 新增 `tests/unit/quiz-gate.test.ts`：`checkQuizBank()` 輸出的 **7 條**
-  `QuizViolationRule` 逐一被攔截且訊息指名根因（Concept、第幾則、實際值／上限）；第 8 條
+- [ ] T011 [P] 新增 `tests/unit/quiz-gate.test.ts`：`checkQuizBank()` 輸出的 **8 條**
+  `QuizViolationRule` 逐一被攔截且訊息指名根因（Concept、第幾則、實際值／上限）；第 9 條
   `quiz-schema` 由載入層 throw、覆蓋在 T012（計數口徑見 quiz-bank-schema.md §3）；**額外斷言題數 >10
   時回報 `quiz-count-range` 而非靜默截斷陣列**（CHK021）；`quiz-duplicate` 只攔逐字相同、同面向多題
-  不誤判為重複（FR-016）。
+  不誤判為重複（FR-016）；**`quiz-leetcode-id` 攔得下「LeetCode 1 / 力扣第 42 題 / leetcode.com/problems/…」
+  三種樣式，且 MUST 斷言含 `O(n²)`、`nums[3]`、情境數值的正常題目不被誤判**（守住 rule 9 不得擴大為
+  「不得出現任何數字」的邊界）。
   **另 MUST 斷言 `QUIZ_URL_RESERVE_CHARS` ≥ 實際最壞連結長度**（以最長 conceptId + 一個代表性
   base URL 實算 `` ` · [完整詳解](${url})` `` 的 code point 長度比對），釘死「Gate 恆嚴格於 runtime」
   這條憲章 IX 的方向性——初訂的 90 正是因無此斷言而低估（research R3 修訂）
@@ -158,7 +165,7 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   **MUST NOT 就地拼裝 `answerLabel`／`conclusion`**；全部略過 ⇒ **不設定** `lesson.quizItems`
   （MUST NOT 以空陣列填充，contracts/quiz-selection.md §3）
 - [ ] T017 [US1] [depends on T008] 於 `src/compiler/gate.ts` 新增 `GateRule = "quiz-invalid"`
-  （只新增這一個，8 個細分留在 `QuizViolationRule`），`runContentGate` 開頭比照
+  （只新增這一個，9 個細分留在 `QuizViolationRule`），`runContentGate` 開頭比照
   `checkMaterials` 的既有呼叫方式多呼叫一次 `checkQuizBank({ quizBank: deps.quizBank, graph })`，
   `subject` 映射為 `` `${v.rule}@${v.subject}` ``（data-model.md §8）
 - [ ] T018 [P] [US1] 擴充 `tests/unit/compile-review.test.ts`：`quizItems.length ===
@@ -180,8 +187,13 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   插入於 Challenge 之後、鼓勵語**之前**（五段順序：本週涵蓋／Reflection／Challenge／小測／
   鼓勵語，research R5、FR-002），每題一個 field（field name 含 `(i/N) · {conceptTitle}`，
   value 呼叫 T006 的 `renderQuizItemBody`）；`quizItems` 缺席或空 ⇒ 整段省略；Renderer 維持
-  stateless 純函式，MUST NOT 讀題庫／Curriculum／state（quiz-selection.md §4）
-- [ ] T021 [P] [US1] 擴充 `tests/unit/renderer.test.ts`：五段順序含「✍️ 本週小測」；spoiler
+  stateless 純函式，MUST NOT 讀題庫／Curriculum／state（quiz-selection.md §4）。
+  **同時 MUST 登記 `slots.quizItems`（逐題的 field value 原字串）並在 `mergeSlots()` 併入該欄位**
+  ——`render()` 是靠 `mergeSlots` 把各 Block 的 slot 收攏後才交給 `checkBudget`，漏改 `mergeSlots`
+  會讓小測段**完全逃過逐區塊預算**（`buildReviewBlocks` 旁的既有註解正是在警告這件事），
+  且 CI 與 runtime 都不會有任何徵兆。T022 的 slot⇄field 對等測試 MUST 能攔下此漏
+- [ ] T021 [P] [US1] 擴充 `tests/helpers/lesson.ts` 的 review fixture 使其支援 `quizItems`
+  （plan.md 檔案清單已列，供 T021／T022／T023 共用），並擴充 `tests/unit/renderer.test.ts`：五段順序含「✍️ 本週小測」；spoiler
   邊界（僅「正解：{代號} — {結論句}[ · 連結]」封於 `||…||`，題幹與四選項明碼，完整
   `explanation[1..4]` 不出現）；`quizItems` 缺席時整段省略且不留空欄位（SC-001、US1 Acceptance
   1–2）
@@ -213,11 +225,18 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   `ResponseSchema`；取材範圍 MUST 涵蓋 `learning_goal`／`exit_criteria`／Author Hints 核心觀念／
   Pattern 辨識線索／Thinking／Common Mistakes 四段／`prerequisite`-`next` 鄰居區辨點，
   **MUST NOT** 納入 TypeScript／Python 重點，**MUST NOT** 於 prompt 出現任何題數或面向數字
-  （含上限）（FR-016、quiz-bank-schema.md §5.2／§5.5）
+  （含上限）（FR-016、quiz-bank-schema.md §5.2／§5.6）。
+  **輸入契約（MUST，quiz-bank-schema.md §5.5）**：`ConceptNode` **不含 Skeleton 正文**，故本函式吃的是
+  `QuizAspectsInput`（`concept` + 已切段的 `authorHints` 四段 + `neighbors` 的 `{id,title,learningGoal}`），
+  **讀 `node.skeletonPath` 與切出 Author Hints 段落由 T032 的 `generate-quiz-bank.ts` 負責**（唯一 I/O 點），
+  本模組維持純字串組裝。**`TypeScript 重點`／`Python 重點` MUST 在輸入組裝時就不放進來**，
+  MUST NOT 只在 prompt 裡敘述性地要求模型忽略（Q14 已實證敘述性要求不可靠）
 - [ ] T029 [P] [US1] 新增 `scripts/lib/prompts/quiz-items.ts`：Stage B 據面向出題 prompt +
   `ResponseSchema`；同一面向 MAY 從不同考核角度出多題，**MUST NOT** 出現任何題數／面向數字；
   `options` MUST NOT 含代號前綴；`explanation` MUST 要求恰 5 段結構（結論句／正解成立原因／
-  其餘三選項各自為何不成立）（FR-006、FR-016）
+  其餘三選項各自為何不成立）；**MUST 明文禁止在題幹／選項／詳解中提及 LeetCode 題號或題目連結**
+  （§5／§11：題號 MUST 由程式從 Problem Bank 帶入；prompt 為第一道、`quiz-leetcode-id` 為第二道）
+  （FR-006、FR-010、FR-016）
 - [ ] T030 [P] [US1] 新增 `scripts/lib/prompts/quiz-cross-check.ts`：盲答 prompt（只送
   `stem`+`options`，MUST NOT 附 `answerIndex`／`explanation`）+ 解析為
   `{ answerIndex: 0|1|2|3 }`（結構化輸出）；復用 `self-check.ts` 既有的 `stripJsonFence`，
@@ -231,18 +250,24 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   （data-model.md §10、FR-015）
 - [ ] T032 [US1] [depends on T028, T029, T030, T031, T008] 新增 `scripts/generate-quiz-bank.ts`：
   CLI（`--force`／`--only <conceptId>,...`；缺 `GEMINI_API_KEY` fail-fast 且不寫任何檔案）；
-  對每個 Concept（`ordinalOf` 全序）執行最多 3 輪：Stage A → Stage B → 結構性 Gate（schema／
-  代號前綴／`explanation` 恰 5 段／結論句 ≤80／預算／繁中）→ 逐題交叉驗證 → 不一致者針對其
+  **讀 `node.skeletonPath` 並切出 Author Hints 四段、組出 T028 的 `QuizAspectsInput`**（唯一 I/O 點，
+  quiz-bank-schema.md §5.5）；對每個 Concept（`ordinalOf` 全序）執行最多 3 輪：Stage A → Stage B →
+  結構性 Gate（**MUST 復用 `checkQuizBank`**：把當輪草稿包成單一 Concept 的臨時 `QuizBank` 傳入，
+  並只在此階段濾掉 `quiz-count-range`；**MUST NOT 另寫一份 `structuralGate`**，憲章 IX，
+  quiz-bank-schema.md §5.2）→ 逐題交叉驗證 → 不一致者針對其
   面向重出一題（換角度）並再驗 → **存活題數 <3 才視為本輪不過**（題數檢查 MUST 在交叉驗證後才
   執行，MUST NOT 顛倒順序，FR-013a）；3 輪皆不過 ⇒ 標記 `needsHumanReview`、**不寫入該
   Concept**、繼續下一個（**MUST 一次列出全部**不足量 Concept，MUST NOT 遇到第一個即中止，
   FR-010a）；批次末呼叫 `runContentGate()`；任一 `needsHumanReview` 或批次末違規 ⇒ 非零
   exit code；MUST NOT 寫入 `concepts/**`／`articles/**`／`schedules/**`／`curriculum/**`
   （quiz-bank-schema.md §5.2、FR-013／FR-013a／FR-010a）。
-  **另有兩項具名交付**：
+  **另有三項具名交付**：
   (1) **檔頭註解 MUST 記載交叉驗證的已知限制**——同模型家族可能產生相關性錯誤，此機制**非 100%
   正確性保證**（FR-013 明文要求記錄於產線文件；只寫在 contract 而不寫在程式碼，讀 code 的人看不到）；
-  (2) **基礎設施失敗 MUST NOT 計入 3 輪內容重生上限**——交叉驗證呼叫的 API 錯誤／逾時／429／
+  (2) **CLI 說明 MUST 點明「manifest 不追蹤 prompt 版本」**——跳過條件只綁 Skeleton 雜湊（FR-015），
+  故 prompt 迭代後**必須**以 `--force`（可搭 `--only`）重跑，否則會全部跳過而看似「改了沒效果」
+  （T039、CHK020）；
+  (3) **基礎設施失敗 MUST NOT 計入 3 輪內容重生上限**——交叉驗證呼叫的 API 錯誤／逾時／429／
   回應無法解析，一律走 F7 既有的節流與退避重試，耗盡後才視為該題本輪未通過（FR-013、
   quiz-bank-schema.md §4；把網路抖動計入內容輪數會誤觸 `needsHumanReview`）
   > **CHK004／CHK011／CHK020 對應（checklists/prompt-design.md 的低成本修正）**：批次末除了
@@ -286,7 +311,12 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   <conceptId>` 只重生指定 Concept（SC-009）
 - [ ] T039 [US1] 驗證 SC-010（quickstart.md §1.2）：確認凍結後題數恰為 3 的 Concept 佔比 <40%、
   全庫平均 ≥5；未達標則回到 T028／T029 調整 prompt 設計後重跑，**MUST NOT** 以補生成硬湊
-  （SC-010）
+  （SC-010）。
+  > **重跑 MUST 帶 `--force`（CHK020 的落地）**：manifest 的失效判準只綁 Skeleton 雜湊（FR-015），
+  > **改 prompt 不會使任何 Concept 失效**——直接 `npm run generate:quiz-bank` 會全部印出「跳過」、
+  > 零 LLM 呼叫、題庫一字不變，看起來像「調了 prompt 也沒用」。故 prompt 迭代後 MUST 以
+  > `-- --force`（全庫）或 `-- --force --only <ids>`（未達標子集）重跑；先以少數 Concept 的
+  > `--force --only` 驗證 prompt 改動方向再全庫重跑，避免一次燒掉整批免費層額度
 - [ ] T040 [US1] 執行 quickstart.md §2 零金鑰驗證：移除 `GEMINI_API_KEY` 後 `npm run build`、
   `npm run typecheck`、`npm test`、`npm run validate:content` 全數成功，`validate:content`
   輸出含 `checkQuizBank` 的檢查結果（SC-006）
@@ -299,9 +329,9 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   `npm run build:pages`，確認 `pages-dist/quiz/{conceptId}.html`（僅 `unlockedIds` 範圍）存在、
   `<details>` 展開可見正解與完整 5 段 `explanation`、無任何 `<script>` 標籤（US1 Acceptance
   2a、SC-007）
-- [ ] T043 [US1] 執行 quickstart.md §5 Gate 攔截驗證：逐一植入 6 個違規樣本（代號前綴／結論句
-  超長／單題超預算／簡體字／題數 <3／逐字重複），確認每一項皆被具名擋下且零自動截斷，驗完
-  `git checkout -- data/quiz-bank.json` 還原（SC-008）
+- [ ] T043 [US1] 執行 quickstart.md §5 Gate 攔截驗證：逐一植入 7 個違規樣本（代號前綴／結論句
+  超長／單題超預算／簡體字／題數 <3／逐字重複／LeetCode 題號），確認每一項皆被具名擋下且零自動
+  截斷，驗完 `git checkout -- data/quiz-bank.json` 還原（SC-008）
 - [ ] T044 [US1] 勾選 quickstart.md §6 完成判準 SC-001–SC-010，確認 `docs/spec.md` 與
   `.specify/memory/constitution.md` 對本 Feature 的跨 Feature 決策已全部落地無矛盾（呼應
   Phase 1 T002 的回寫，含 §15 段落順序的更正）
@@ -319,7 +349,13 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   checklists/prompt-design.md` 中標記為「低成本修正」的四項（SC-010 執行者、prompt 靜態掃描、
   題數上限非截斷語意）已透過 T032／T036／T011 的實作與測試收斂；並確認 `/speckit-analyze`
   （2026-08-07）列出的 spec/contract 修訂（`quizItem` 570、reserve 120、FR-011 的 `unlockedIds`
-  範圍、`localOrder` 檔名語意）在程式碼中**無殘留舊值**（全域搜尋 `450`／`90`／「0-based」確認）
+  範圍、`localOrder` 檔名語意）在程式碼中**無殘留舊值**（全域搜尋 `450`／`90`／「0-based」確認）。
+  **第二次 `/speckit-analyze`（2026-08-07）的四項亦 MUST 逐一確認已落地**：
+  (a) `QuizViolationRule` 含 `quiz-leetcode-id` 且測試涵蓋（含「不得誤攔 `O(n²)`／索引數值」的反向斷言）；
+  (b) `mergeSlots()` 已併入 `quizItems`（否則兩格預算形同虛設）；
+  (c) `generate-quiz-bank.ts` 的逐題結構檢查是**呼叫 `checkQuizBank`**、無自寫的第二份判準
+  （全域搜尋確認無 `structuralGate` 之類的平行實作）；
+  (d) prompt 模組未從 `authorHints` 收到 `TypeScript 重點`／`Python 重點` 兩段
 
 ---
 

@@ -87,6 +87,12 @@
   （內容 450 + 連結保留 120）、`QUIZ_URL_RESERVE_CHARS` 由 90 提為 **120**；沿用舊值會使素材層 Gate
   **寬鬆於** runtime（違反憲章 IX）。同時回寫 FR-011 漏落地的「僅 `unlockedIds`」範圍（research R7），
   並更正 `localOrder` 的定義（實為 Skeleton 檔名 `NNN-` 前綴，1-based，非「Topic 內 0-based 序位」）。
+  **產線呼叫數亦一併更正**：上列「3,500 → 2,500 次」兩個估算都把 Stage B 記為「每題一次」，
+  但 §5.2 的 Stage B 是**每個 Concept 一次批次呼叫**；正確估算為 **約 1,500 次**
+  （165 列面向 + 約 200 出題批次 + 約 1,150 盲答驗證），以 spec Assumptions ③ 為準。
+  **另補上 FR-010 早已要求、卻在 8 條 Gate 判準中漏列的 `quiz-leetcode-id`**（無 LeetCode 題號／
+  題目連結）——§5／§11 明訂題號 MUST 由程式從 Problem Bank 帶入、MUST NOT 由 LLM 生成，
+  而小測題三個欄位全為 LLM 產物；判準總數因此由 8 條改為 **9 條**（8 條由 `checkQuizBank` 輸出）。
   **本節其餘數字為當時的歷史記錄，以 spec 現行條文為準。**
 - FR 由 10 條擴為 19 條（含 FR-003a / FR-010a / FR-013a）、SC 由 6 條擴為 10 條；新增 F9 依賴（單向可降級）。
 - 全部數字均為**實測**而非估算（三軌 111 個 review Session 編譯 + render + `checkBudget`）。

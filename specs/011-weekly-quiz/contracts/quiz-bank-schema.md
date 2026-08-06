@@ -64,7 +64,7 @@ CI Gate（`runContentGate`）MUST 依同一份 schema 與同一組上限常數�
 
 ## 3. Gate 判準（`checkQuizBank()`）
 
-**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **8 個**，其中 **7 個由 `checkQuizBank()` 輸出**，
+**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **9 個**，其中 **8 個由 `checkQuizBank()` 輸出**，
 `quiz-schema` 這 1 個由 §2 的載入層 throw 實現。凡提及數量處一律採此說法。
 
 純函式，輸入 `{ quizBank?, graph }`，輸出具名違規陣列。**對 `byConcept` 的每一個陣列元素逐一檢查**
@@ -80,7 +80,8 @@ export type QuizViolationRule =
   | "quiz-item-budget"
   | "quiz-traditional-chinese"
   | "quiz-count-range"
-  | "quiz-duplicate";
+  | "quiz-duplicate"
+  | "quiz-leetcode-id";
 
 export interface QuizViolation {
   rule: QuizViolationRule;
@@ -102,10 +103,16 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
 | 6 | `quiz-traditional-chinese` | `checkTraditionalChinese` 對 `stem + options + explanation` 合併文本有任一違規 | §11 |
 | 7 | `quiz-count-range` | `byConcept[id].length` 不在 `[3,10]` | FR-005／FR-010a |
 | 8 | `quiz-duplicate` | 同一 Concept 內兩題 `stem` 逐字相同 | FR-010／FR-016 |
+| 9 | `quiz-leetcode-id` | `stem + options + explanation` 合併文本命中 `/leetcode\.com\/problems/i` 或 `/(LeetCode｜力扣)\s*[#第]?\s*\d+/i`（題號 / 題目連結轉載） | FR-010／§5／§11 |
+
+**rule 9 的判準邊界（MUST）**：只攔「LeetCode／力扣 + 數字」與題目連結兩種樣式，**MUST NOT** 擴大為
+「文本中不得出現任何數字」——複雜度（`O(n²)`）、陣列索引、題目情境中的數值都是合法且必要的內容，
+過寬的判準會攔下大量好題並逼出無意義的重生。反向的漏網（模型只寫「Two Sum 這題」而不帶題號）
+不在結構性判準的能力範圍內，與 FR-016 已明文承認的語意層限制同類，MUST NOT 以擴大正則來假裝覆蓋。
 
 **映射進 `GateViolation`**（`src/compiler/gate.ts`）：`rule` 固定 `quiz-invalid`，
 `subject` MUST 為 `` `${v.rule}@${v.subject}` ``，`message` 沿用 `v.message`。**Gate 層不新增
-8 個 `GateRule`**——素材違規對 Gate 的意義一致（擋下、非零 exit code），細分留在 `QuizViolationRule`。
+9 個 `GateRule`**——素材違規對 Gate 的意義一致（擋下、非零 exit code），細分留在 `QuizViolationRule`。
 
 **違規訊息 MUST 指名根因**：哪一個 Concept、第幾則、實際值 / 上限。**MUST NOT 自動截斷**：
 任一項不通過即擋下（生成期觸發重生、CI 期以非零 exit code 結束）。
@@ -157,16 +164,15 @@ for each concept in ordinalOf 全序:
 
   for attempt in 1..3:
     // Stage A：面向列舉（MUST NOT 於 prompt 提及任何題數或面向數字，含上限，FR-016）
-    aspects = LLM(buildQuizAspectsPrompt(concept))         // 取材：learning_goal／exit_criteria／
-                                                            //   Author Hints 核心觀念/Pattern 辨識線索/
-                                                            //   Thinking/Common Mistakes／prerequisite-next 區辨點
-                                                            //  （MUST NOT 納入 TypeScript/Python 重點，FR-016）
+    aspects = LLM(buildQuizAspectsPrompt(buildAspectsInput(concept, graph)))   // 輸入組裝見 §5.6
 
     // Stage B：據面向出題（每面向 ≥1 題，同面向 MAY 多角度出題；MUST NOT 提及題數/面向數字）
     draft = LLM(buildQuizItemsPrompt(concept, aspects), responseSchema)
 
-    f = structuralGate(draft)      // schema／代號前綴／explanation 恰 5 段／結論句 ≤80／預算／繁中
-    if f → retryFeedback = f.reason; continue
+    // 逐題結構性檢查 MUST 復用 checkQuizBank，MUST NOT 另寫一份（憲章 IX）
+    f = checkQuizBank({ quizBank: { version: 1, byConcept: { [concept.id]: draft.items } }, graph })
+          .filter(v => v.rule !== "quiz-count-range")   // 題數留到交叉驗證後才驗（FR-013a）
+    if f.length > 0 → retryFeedback = f.map(v => v.message); continue
 
     survivors = []
     for item in draft.items:
@@ -189,6 +195,17 @@ for each concept in ordinalOf 全序:
 **最後才檢查題數**。**MUST NOT** 顛倒順序（顛倒會讓「生成恰 3 題 → 題數合格 → 交叉驗證棄 1 題 →
 入庫 2 題」無人察覺，SC-003 靜默失效）。
 
+**逐題結構性檢查 MUST 復用 `checkQuizBank`（憲章 IX，MUST NOT 另立 `structuralGate`）**：生成端把當輪草稿
+包成一份**單一 Concept 的臨時 `QuizBank`**（`{ version: 1, byConcept: { [concept.id]: draft.items } }`）
+餵給 `src/compiler/quiz.ts` 匯出的同一顆 `checkQuizBank`，並**只在此階段濾掉 `quiz-count-range`**
+（其執行時機由 FR-013a 移到交叉驗證後）。理由：生成端與 CI Gate 若各寫一份逐題判準，兩者必然漂移，
+屆時「生成期放行、CI 擋下」極難查（同 §14.5 對預算常數單一來源的既有教訓）。`quiz-schema` 這一條
+在生成端由 Stage B 的 `responseSchema` 與 zod 解析承擔，不需另行呼叫。
+
+**題數檢查一律只有一個落點**：交叉驗證後以 `survivors.length` 判定（見上方流程），
+**MUST NOT** 在此階段以 `quiz-count-range` 提前判定；批次末的 `runContentGate` 對已寫入的題庫全量
+重跑完整 9 條判準（含 `quiz-count-range`），為最後一道。
+
 ### 5.3 交叉驗證回應 schema
 
 ```ts
@@ -209,7 +226,37 @@ export interface QuizCrossCheckResponse {
 - manifest 遺失／損毀 ⇒ 由現存 `quiz-bank.json` 反推重建（既有 Concept 視為已凍結且過 Gate），
   MUST NOT 降級為空 manifest 後覆蓋全部題庫。
 
-### 5.5 邊界
+### 5.5 Stage A 的輸入組裝（`buildAspectsInput`）
+
+FR-016 要求面向取材涵蓋 Author Hints 的四段與鄰居區辨點，但 **`ConceptNode` 不含 Skeleton 正文**
+（只有 `learningGoal` / `exitCriteria` / `prerequisite` / `next` / `skeletonPath` 等 frontmatter 欄位）。
+故 Stage A 的 prompt 輸入 MUST 由生成腳本先組裝：
+
+```ts
+export interface QuizAspectsInput {
+  concept: ConceptNode;                       // learning_goal / exit_criteria 直接取自既有欄位
+  /** 由 node.skeletonPath 讀入後切出的 Author Hints 段落，key 為段落標題。 */
+  authorHints: {
+    核心觀念: string;
+    Pattern辨識線索: string;
+    Thinking: string;
+    CommonMistakes: string;
+  };
+  /** prerequisite / next 鄰居的 { id, title, learningGoal }，只供「區辨點」使用。 */
+  neighbors: { prerequisite: ConceptBrief[]; next: ConceptBrief[] };
+}
+```
+
+- **讀檔與切段 MUST 發生在 `scripts/generate-quiz-bank.ts`**（唯一 I/O 點），
+  `scripts/lib/prompts/quiz-aspects.ts` 維持**純字串組裝**（§ Structure Decision 的既有歸屬）。
+- **`TypeScript 重點` / `Python 重點` 兩段 MUST NOT 進入 `authorHints`**（FR-016：排除語言 API 記誦類考題）
+  ——在**輸入組裝時就不放進去**，MUST NOT 只靠 prompt 敘述性地要求模型忽略（Q14 已實證敘述性要求不可靠）。
+- 缺段（某標題不存在）⇒ 該欄位為空字串，**MUST NOT** 中止；其後果依 FR-016 落入
+  「交叉驗證後存活題數 <3 ⇒ FR-010a 具名失敗」既有路徑，MUST NOT 另立降級規則。
+- `neighbors` MUST 只傳 `id` / `title` / `learningGoal`，**MUST NOT** 傳鄰居的 Author Hints 全文
+  ——降低模型把鄰居正題整體搬入的誘因（FR-016，實測曾出現此越界）。
+
+### 5.6 邊界
 
 - 生成腳本 MUST NOT 寫入 `concepts/**`、`articles/**`、`schedules/**`、`curriculum/**`（同 FR-027／SC-009 精神）。
 - `@google/genai` 只出現在 `scripts/` 依賴路徑（憲章 VIII，`tests/unit/no-llm-in-src.test.ts` 守）。
