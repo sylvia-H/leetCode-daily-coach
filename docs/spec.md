@@ -800,7 +800,7 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 | Track 補充（Overlay notes）    | ≤ 400                   |
 | Weekly Reflection 問題（review）| ≤ 300                   |
 | 鼓勵語（review；原 rest）      | ≤ 200                   |
-| 每小測題 `quizItem`（review）  | ≤ 450                   |
+| 每小測題 `quizItem`（review）  | ≤ 570（內容 450 + 連結保留 120）|
 | 小測段 `quiz` 合計（review）   | ≤ 3,000                 |
 
 - **TS / Python Tip 由 ≤450 → ≤650 → ≤800（F7 兩次放寬，皆定案 2026-07-31）**：這兩個區塊 MUST 內含
@@ -818,17 +818,25 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
   Discord 硬限 6,000 有 1,330；總量檢查（`total` / `total.hard`）照舊把關，故單項放寬不會讓整則訊息失控。
   **上限值 MUST 以 `src/renderer/budget.ts` 的 `ARTICLE_BUDGET_LIMITS` 為唯一來源**（Stage 2 的
   per-article Gate 與 `checkBudget` 共用），MUST NOT 在生成端另寫一份數字。
-- **小測段的兩格 slot（MUST，F11 定案 2026-08-06）**：`quizItem` 為單題（題幹 + 選項 + spoiler 內容 +
-  連結），`quiz` 為該則訊息全部小測題的合計。**兩格都設是必要的**——小測段長度為「該週 Concept 數 ×
-  單題長度」，而 `rhythm.length` 上限為 14（§13.2），僅設單題上限擋不住節奏調長後一週涵蓋十餘個
-  Concept 的失控；僅設整段上限則默許單題寫到 2,900 而擠掉其餘題目。
-  **數值依據**：三軌 111 個 review Session 實測現況為 204～612 字元；以真實 LLM 產出實測
-  （`array-memory-layout`）單題最長 **362**、平均 **336**（已剝除選項代號前綴）。初訂的 `quizItem` ≤350
-  仍使 7 題中 2 題超標，且超標者為選項需寫入實質差異的好題——此與本節 TS / Python Tip 兩次放寬
-  （450 → 650 → 800）同因，**壓預算只會逼出「砍到失去教學價值」或「反覆重生燒額度」**，
-  故定為 450（實測最長 + 約 24% 餘裕）。`quiz` 定為 3,000
-  而非 2,500：後者配 450 僅容 5 題，一週涵蓋 6 個 Concept（2,700）即被擋，但該則訊息實際僅
-  612 + 2,700 = 3,312、距 5,500 尚遠，屬誤殺；3,000 仍攔得住真正的失控（`rhythm` 拉至 14 將達 6,300）。
+- **小測段的兩格 slot（MUST，F11 定案 2026-08-06，數值於 2026-08-07 修訂）**：`quizItem` 為單題
+  （題幹 + 選項 + spoiler 內容 + 連結），`quiz` 為該則訊息全部小測題的合計。兩格**皆只計 embed field
+  value，不含 field name**——field name 由 Renderer 以固定樣板產生、長度不由素材決定，其對總長的貢獻
+  由既有的 `total` ≤5,500 與 `embed[i].field[j].name` ≤256 兜底。**兩格都設是必要的**——小測段長度為
+  「該週 Concept 數 × 單題長度」，而 `rhythm.length` 上限為 14（§13.2），僅設單題上限擋不住節奏調長後
+  一週涵蓋十餘個 Concept 的失控；僅設整段上限則默許單題寫到 2,900 而擠掉其餘題目。
+  **數值依據（內容側 450）**：三軌 111 個 review Session 實測現況為 204～612 字元；以真實 LLM 產出實測
+  （`array-memory-layout`）單題**內容**最長 **362**、平均 **336**（已剝除選項代號前綴；**該次實測未設定
+  `PAGES_BASE_URL`，故不含連結**）。初訂的 ≤350 仍使 7 題中 2 題超標，且超標者為選項需寫入實質差異的
+  好題——此與本節 TS / Python Tip 兩次放寬（450 → 650 → 800）同因，**壓預算只會逼出「砍到失去教學價值」
+  或「反覆重生燒額度」**，故內容側定為 450（實測最長 + 約 24% 餘裕）。
+  **連結側另計 120（修訂 2026-08-07）**：spoiler 內連結片段的最壞長度為 base URL（47）+ `/quiz/`（6）+
+  最長 conceptId（42）+ `.html`（5）+ ` · [完整詳解]()` 裝飾（11）= **111**，取整為 120 作為保留額度
+  （`QUIZ_URL_RESERVE_CHARS`）。故 `quizItem` = 450 + 120 = **570**。**MUST NOT 沿用初訂的 450**——
+  該數字從未計入連結，沿用會使實測最長的題目在啟用 `PAGES_BASE_URL` 後（362 + 111 = 473 > 450）當場
+  變成 Gate 違規，而屆時題庫已凍結、無重生路徑。**素材層 Gate 對逐題預算的估算 MUST 一律假設連結存在
+  且佔滿保留額度**，使 Gate 恆嚴格於 runtime（§4-9：Gate 通過 ⇒ runtime 不會因內容問題失敗）。
+  `quiz` 維持 3,000：最壞週次 4 個 Concept × 570 = 2,280 仍在額度內，該則訊息合計 612 + 2,280 =
+  **2,892**、距 5,500 餘約 47%；3,000 仍攔得住真正的失控（`rhythm` 拉至 14 將達 7,980）。
   超標 MUST 於 Gate 具名失敗，**MUST NOT 自動截斷，亦 MUST NOT 靜默略過超出的題目**（後者是無聲的
   內容遺漏，違反 §4-15）。
 - **逐區塊預算 MUST 在 per-article Gate 就檢查（MUST，F7 定案 2026-07-31）**：MUST NOT 只依賴批次末的
@@ -897,15 +905,17 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
 
 ## 15. Weekly Review
 
-每週固定一個 `review` Session，MUST 包含三段（比單純 Quiz 更有價值），並自 F8 起附加第四段鼓勵語、
-自 F11 起附加第五段小測：
+每週固定一個 `review` Session，MUST 包含三段（比單純 Quiz 更有價值），並自 F8 起附加鼓勵語、
+自 F11 起附加小測。**鼓勵語 MUST 為最後一段（FR-022，F8 定案 2026-08-01）**：F11 的小測 MUST
+插入於 Challenge 之後、鼓勵語之前，使鼓勵語順延但仍維持最後一段，MUST NOT 插在鼓勵語之後
+（F11 定案 2026-08-06，見 `specs/011-weekly-quiz/research.md` R5）：
 
 ```
 Review        本週涵蓋的 Concept 清單（帶連結回顧）
 Reflection    一個反思問題（例：本週哪兩個 Pattern 最容易混淆？為什麼？）
 Challenge     一題 Medium 綜合題（Track 難度不同）
-Encouragement 一句鼓勵（內建語錄池決定性輪替；F8 定案 2026-08-01 由 rest 改掛至此）
 Quiz          本週每個 Concept 各一道選擇題（spoiler 自評；F11 定案 2026-08-06）
+Encouragement 一句鼓勵（內建語錄池決定性輪替；F8 定案 2026-08-01 由 rest 改掛至此，MUST 為最後一段）
 ```
 
 - Review 段的 Concept 清單 MUST 由 Compiler 依「本週涵蓋的 sessionIndex 範圍」推導；MUST NOT 由 LLM 決定範圍。
@@ -953,8 +963,10 @@ Quiz          本週每個 Concept 各一道選擇題（spoiler 自評；F11 定
     Discord 明碼呈現題幹與四選項，spoiler `||…||` 內封【正解代號 + `explanation[0]` 的 ≤80 字結論句 +
     指向 `quiz/{conceptId}.html` 的連結】；**完整 `explanation` 只出現在 Pages**。此為對**同一份素材的
     決定性擷取**，MUST NOT 生成長短兩版解說。
-  - **選題索引 MUST 為 `(localOrder + trackOffset) mod 該 Concept 題數`**——`localOrder` 為該 Concept 在其
-    Topic 內的 0-based 序位（`ConceptNode` 既有整數欄位），`trackOffset` 同上文的 0/1/2。
+  - **選題索引 MUST 為 `(localOrder + trackOffset) mod 該 Concept 題數`**——`localOrder` 為 `ConceptNode`
+    既有的整數欄位，其值由 **Skeleton 檔名的 `NNN-` 前綴**解析而得（`001-…` ⇒ `1`，**1-based**，範圍為
+    `concepts/{dirName}/` 目錄；無前綴者為 `0`），**MUST NOT 另行計算「Concept 在 Topic 內的序位」**
+    （現行資料兩者數值相同，但真實來源是檔名，檔名跳號時即不相等）；`trackOffset` 同上文的 0/1/2。
     **MUST NOT 隨機**（違反憲章 XI 的 Renderer 純函式性）。
     **MUST NOT 改用 `sessionIndex` / `reviewOrdinal` 取模**——實測三軌全部 Concept（103 / 134 / 165）
     **皆恰好被 review 涵蓋 1 次、0 個從未被複習**，故 per-Concept 不存在時間輪替維度，唯一變化軸為 Track；
@@ -963,8 +975,8 @@ Quiz          本週每個 Concept 各一道選擇題（spoiler 自評；F11 定
     **MUST NOT 改用 §16.1 的 `ordinalOf`**：它回傳複合鍵 `{ moduleIndex, topicIndex, localOrder, id }`，
     僅供 `cmpOrdinal` 比較，**非可取模的純量**。**亦 MUST NOT 改用「Concept 在 DAG 全序中的名次」**：
     在 DAG 前段插入一個 Concept 會使其後全部名次位移，導致內容一字未改的 Concept 全數換題；
-    `localOrder` 僅在其所屬 Topic 被重排時變動。（Topic 內插入新 Concept 仍會使其後 `localOrder` 位移、
-    題目隨之更換——此為**已知性質而非缺陷**，仍是凍結輸入的純函式。）
+    `localOrder` 僅在其所屬目錄的 Skeleton 檔案被重新編號時變動。（同一目錄插入新檔並重編號仍會使其後
+    `localOrder` 位移、題目隨之更換——此為**已知性質而非缺陷**，仍是凍結輸入的純函式。）
   - **索引 MUST 由 Compiler 於 runtime 現算，MUST NOT 固化進 `schedules/{track}.json` 或題庫**。
     **與上文「Compiler MUST NOT 於 runtime 即時選題」不衝突**：該規則的對象是 **LeetCode 題**——選題會
     影響課程排程本身（跨槽去重、難度帶、每 Session ≤3 題截取），故必須固化為生成物；Quiz 與 Reflection /
@@ -974,6 +986,11 @@ Quiz          本週每個 Concept 各一道選擇題（spoiler 自評；F11 定
   - **降級**：某 Concept 在題庫中無題 ⇒ 略過該 Concept、其餘照出；該週全部 Concept 皆無題或題庫檔缺席
     ⇒ 省略整段（沿用上文「缺席即省略」）。Pages 停用或該頁缺席 ⇒ 題目照出、僅省略連結。
     上述任一情形 MUST NOT 使 review 推播失敗。
+  - **Pages 題庫頁的產出範圍 MUST 與 `articles/{conceptId}.html` 同構**：僅對 `unlockedIds`
+    （三軌 `completedConceptIds` 的聯集）且題庫中有題的 Concept 產出，**MUST NOT 對全部 165 個
+    Concept 產出**——unlock 是全站一致的呈現模型，題庫頁破例會劇透未解鎖 Concept 的考點。
+    此限制不造成死連結：review 只涵蓋已上過的 concept Session，該 Session 推播成功時 `advance()`
+    已將其寫入 `completedConceptIds`。
   - **重生成的失效判準 MUST 為 Concept Skeleton 雜湊**（沿用 F7 既有機制）：Skeleton 未變更 ⇒ 題庫
     byte-identical；某 Concept 的 Skeleton 變更 ⇒ 該 Concept 全部題目失效重生，其餘不受影響。
     **MUST NOT 綁 Article 雜湊**——Article 為 LLM 產物、每次重生雜湊皆變，將造成大量假性失效。
@@ -1792,14 +1809,15 @@ MUST 有單元測試：
 
 > 以下為 F11 `/speckit-clarify`（2026-08-06）的定案，取代本段初稿。
 
-- 範圍：`data/quiz-bank.json`（build-time LLM 生成 + Gate + 凍結，**以 Concept id 為組織鍵**，每 Concept **3～10 題**；每題含題幹、A/B/C/D 四選項、唯一正解、`explanation` 段落陣列）、review Session 版面於既有四段後**附加第五段「✍️ 本週小測」**、Pages 新增 `quiz/{conceptId}.html` 完整題庫頁。
+- 範圍：`data/quiz-bank.json`（build-time LLM 生成 + Gate + 凍結，**以 Concept id 為組織鍵**，每 Concept **3～10 題**；每題含題幹、A/B/C/D 四選項、唯一正解、`explanation` 段落陣列）、review Session 版面於既有四段後**附加第五段「✍️ 本週小測」**、Pages 新增 `quiz/{conceptId}.html` 完整題庫頁（**產出範圍與 `articles/` 同構、僅 `unlockedIds`**，見 §15）。
 - **產線 prompt 設計（MUST）**：題數 MUST 由內容推導而非由配額決定——生成 prompt **MUST NOT 陳述下限 3**（該數字只存在於 Gate；回饋為生成目標必然使模型「達標即停」收在下限）。MUST 採兩階段：先列舉該 Concept 值得單獨考核的**面向**，再據以出題；上限 10 僅以「截斷點」形式呈現。**MUST NOT 改以「請盡量出滿 10 題」處理**（換來灌水湊數）。可量測訊號：題數恰為 3 的 Concept 佔比 **<40%**、全庫平均 **≥5**。詳細的面向取材範圍與「面向數 MUST NOT 成為題數上限」見 §15。
+  **防線完整性的已知限制（MUST 明文承認，2026-08-07 定調）**：「重生 MUST 換考核角度」「鄰居 MUST NOT 搬入正題」「MUST NOT 產出實質等價的題目」等要求**僅由 prompt 敘述性指示與交叉驗證部分兜底，MUST NOT 被描述為完整防線**——結構性 Gate 只攔得下題幹逐字相同，語意層重複不可機械偵測。此為刻意取捨（補 Gate 需將面向清單持久化為中繼產物，與續跑粒度衝突）。同理，「165 個 Concept 皆具備六段 Author Hints 且皆有鄰居」MUST 視為**現況實測而非不變式**；日後不足時，其後果 MUST 落入既有的「存活題數 <3 ⇒ 具名失敗、不入庫」路徑，**MUST NOT 另立降級規則**。
 - **兩層呈現（MUST）**：**Discord** 為該週 `reviewRange` 涵蓋的**每個 Concept 各出恰 1 題**（現行課表 3～4 題），題幹與選項明碼，spoiler `||…||` 內封【正解代號 + `explanation[0]` 的 ≤80 字結論句 + 指向 quiz 頁的連結】；**Pages** 呈現該 Concept 全部題目與完整 `explanation`。**單一素材來源、決定性擷取**，MUST NOT 生成長短兩版解說。此設計使 **Discord 版面長度與題庫規模脫鉤**——題庫可長，版面不變。
-- **選題規則（MUST）**：**`(localOrder + trackOffset) mod 該 Concept 題數`**（`localOrder` 為該 Concept 在其 Topic 內的 0-based 序位，`trackOffset` 沿用 §15 的 0/1/2），索引由 Compiler **runtime 現算、MUST NOT 固化進課表**（屬素材路徑，理由詳見 §15）。**MUST NOT 隨機**（違反憲章 XI 與決定性驗收）；**MUST NOT 改用 §16.1 的 `ordinalOf`**（其為複合比較鍵、非可取模的純量）或「DAG 全序名次」（前段插入一個 Concept 即令其後全部換題）；**MUST NOT 改用 `sessionIndex` 或 `reviewOrdinal` 取模**——實測三軌全部 Concept（103 / 134 / 165）**皆恰好被 review 涵蓋 1 次、0 個從未被複習**，per-Concept 不存在時間輪替維度，唯一變化軸為 Track。每 Concept **≥3 題**的下限即由此推導（三軌需落在相異題目上）。**Quiz Item 無難度、無題號**，MUST NOT 借用 review Challenge 的「難度 + 題號」排序鍵。
+- **選題規則（MUST）**：**`(localOrder + trackOffset) mod 該 Concept 題數`**（`localOrder` 為 Skeleton 檔名 `NNN-` 前綴解析出的整數，1-based、目錄範圍，詳見 §15；`trackOffset` 沿用 §15 的 0/1/2），索引由 Compiler **runtime 現算、MUST NOT 固化進課表**（屬素材路徑，理由詳見 §15）。**MUST NOT 隨機**（違反憲章 XI 與決定性驗收）；**MUST NOT 改用 §16.1 的 `ordinalOf`**（其為複合比較鍵、非可取模的純量）或「DAG 全序名次」（前段插入一個 Concept 即令其後全部換題）；**MUST NOT 改用 `sessionIndex` 或 `reviewOrdinal` 取模**——實測三軌全部 Concept（103 / 134 / 165）**皆恰好被 review 涵蓋 1 次、0 個從未被複習**，per-Concept 不存在時間輪替維度，唯一變化軸為 Track。每 Concept **≥3 題**的下限即由此推導（三軌需落在相異題目上）。**Quiz Item 無難度、無題號**，MUST NOT 借用 review Challenge 的「難度 + 題號」排序鍵。
 - **MUST 沿用、MUST NOT 另立**：`reviewRange` 推導重用 §13.4 / §15；素材缺席降級沿用 §15 的「缺席即省略」（某 Concept 無題則略過該 Concept，全數無題才省略整段）；重生成的失效判準沿用 F7 的 **Concept Skeleton 雜湊**——**MUST NOT 綁 Article 雜湊**（LLM 產物每次重生雜湊皆變，將造成大量假性失效並白燒免費層額度）。
-- **品質把關（MUST）**：§4-17 規定內容產線唯一的常態人工檢查點是課綱定稿，這 800～1,200 道題不會有人逐題審，而結構性檢查攔不住「正解標錯」。故 Gate 除結構檢查外 MUST 對每題執行**獨立二次作答交叉驗證**（build-time 以獨立 LLM 呼叫盲答、**不提供標記的正解**，不一致者丟棄重生）。此機制非 100% 覆蓋（同模型家族有相關性錯誤），MUST NOT 被描述為正確性保證。
+- **品質把關（MUST）**：§4-17 規定內容產線唯一的常態人工檢查點是課綱定稿，這 800～1,200 道題不會有人逐題審，而結構性檢查攔不住「正解標錯」。故 Gate 除結構檢查外 MUST 對每題執行**獨立二次作答交叉驗證**（build-time 以獨立 LLM 呼叫盲答、**不提供標記的正解**，不一致者丟棄重生）。此機制非 100% 覆蓋（同模型家族有相關性錯誤），MUST NOT 被描述為正確性保證。**per-Concept 內容重生上限 3 輪**；**交叉驗證呼叫本身的基礎設施失敗（API 錯誤／逾時／回應無法解析）MUST 走 §20.4 既有的節流與 429 退避重試，MUST NOT 計入該 3 輪上限**——否則網路抖動會被誤判為「這個 Concept 出不出好題」而觸發具名失敗。
 - **不改動**：Curriculum DAG、三份課表、Article 正文、`daily.yml` 推播機制、`state.json` 結構與 commit 路徑一律不動；每日 runtime 仍**零 LLM**（§4-8）。對 F9 的依賴為**單向且可降級**——Pages 停用或該頁缺席時照常推題、僅省略連結，維持 F9「完全隔離的末段」定位。
-- 字元預算：§14.5 新增 `quizItem` ≤ 450 與 `quiz` ≤ 3,000 兩格具名 slot。實測基準（2026-08-06）：三軌 111 個 review Session 現況為 **204～612** 字元、僅用掉 5,500 的約 11%；真實 LLM 產出單題最長 **362**、平均 336；最壞週次（4 Concept）合計 1,448，總計 2,060，餘裕 3,440。
+- 字元預算：§14.5 新增 `quizItem` ≤ 570（內容 450 + 連結保留 120，2026-08-07 修訂）與 `quiz` ≤ 3,000 兩格具名 slot，兩者皆只計 field value。實測基準（2026-08-06）：三軌 111 個 review Session 現況為 **204～612** 字元、僅用掉 5,500 的約 11%；真實 LLM 產出單題**內容**最長 **362**、平均 336（不含連結，連結最壞另加 111）。最壞週次（4 Concept）：未啟用 `PAGES_BASE_URL` 時合計 1,448、總計 2,060；啟用後合計 1,892、總計 2,504；上限側最壞 4 × 570 = 2,280、總計 2,892，距 5,500 餘 47%。
 - **`options` MUST 儲存純選項文字、MUST NOT 內含 `A.` / `B.` 代號前綴**——代號由 Renderer 產生（憲章 XI）。smoke test 實測模型會自行加上前綴，與 Renderer 疊加後輸出 `A. A. …`；Gate MUST 擋下自帶前綴的素材。
 - 驗收（= M5）：某週 review 推出時第五段為各 Concept 各 1 題且 spoiler 正確封藏；同一 `(track, sessionIndex)` 的 render 結果 byte-identical；同一 Concept 在三軌取到相異題目；題庫缺席時推播照常、小測段靜默省略；Pages 停用時題目照出、僅無連結。
 
