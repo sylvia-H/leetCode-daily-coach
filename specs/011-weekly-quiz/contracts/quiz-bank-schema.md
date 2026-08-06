@@ -64,6 +64,9 @@ CI Gate（`runContentGate`）MUST 依同一份 schema 與同一組上限常數�
 
 ## 3. Gate 判準（`checkQuizBank()`）
 
+**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **8 個**，其中 **7 個由 `checkQuizBank()` 輸出**，
+`quiz-schema` 這 1 個由 §2 的載入層 throw 實現。凡提及數量處一律採此說法。
+
 純函式，輸入 `{ quizBank?, graph }`，輸出具名違規陣列。**對 `byConcept` 的每一個陣列元素逐一檢查**
 （不依賴課表是否實際選中該題，理由見 research R3——單一 Concept 最多只有 3 個索引會被
 `compile()→render()` 觸達，題數 >3 時題庫內未被觸達的題目完全不會經過 runtime `checkBudget`）。
@@ -95,7 +98,7 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
 | 2 | `quiz-unknown-concept` | `byConcept` 的 key 不存在於 `graph.concepts` | FR-010 |
 | 3 | `quiz-option-prefix` | 任一 `options[i]` 匹配 `/^[A-D][.、)]\s*/` | FR-006 |
 | 4 | `quiz-conclusion-length` | `explanation[0]` code point 長度 > 80 | FR-006 |
-| 5 | `quiz-item-budget` | 模擬呈現長度（data-model.md §3 公式）> `QUIZ_BUDGET_LIMITS.quizItem`（450） | FR-014 |
+| 5 | `quiz-item-budget` | 模擬呈現長度（data-model.md §3 公式：`renderQuizItemBody(toReviewQuizItem(...))` + `QUIZ_URL_RESERVE_CHARS` 120）> `QUIZ_BUDGET_LIMITS.quizItem`（**570**） | FR-014 |
 | 6 | `quiz-traditional-chinese` | `checkTraditionalChinese` 對 `stem + options + explanation` 合併文本有任一違規 | §11 |
 | 7 | `quiz-count-range` | `byConcept[id].length` 不在 `[3,10]` | FR-005／FR-010a |
 | 8 | `quiz-duplicate` | 同一 Concept 內兩題 `stem` 逐字相同 | FR-010／FR-016 |
@@ -122,8 +125,15 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
 - 不通過 ⇒ 針對該題所屬**面向**（見 §5.2）重出一題（換考核角度），**重生的題 MUST 再次通過本驗證**，
   MUST NOT 直接入庫。
 - per-Concept 總生成輪數上限 **3 輪**（初次 + 最多 2 次補生成，FR-013）。
+- **基礎設施失敗 MUST NOT 計入該 3 輪上限**（FR-013，CHK014）：交叉驗證呼叫本身失敗——
+  HTTP／API 錯誤、逾時、429、回應無法解析為 `QuizCrossCheckResponse`——屬基礎設施層失敗，
+  MUST 走 F7 既有的 RPM 節流與 429 指數退避 + jitter 重試路徑（`scripts/lib/throttle.ts` 等既有工具），
+  **MUST NOT** 計入內容重生輪數。理由：3 輪上限的語意是「這個 Concept 出不出得了 3 道通過驗證的題」，
+  把網路抖動算進去等於用基礎設施狀況去判定內容品質，會誤觸 FR-010a 的具名失敗與 `needsHumanReview`。
+  基礎設施重試**耗盡後**，才將該題視為本輪未通過（回到內容路徑：丟棄重生）。
 - **已知限制**：同模型家族可能有相關性錯誤，非 100% 正確性保證，MUST 記錄於產線文件
-  （本契約 + `scripts/generate-quiz-bank.ts` 檔頭註解）。
+  （本契約 + `scripts/generate-quiz-bank.ts` **檔頭註解**——後者為 T032 的交付項之一，
+  MUST NOT 只寫在契約而讓讀程式碼的人看不到）。
 
 ---
 

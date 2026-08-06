@@ -51,6 +51,10 @@ npm run generate:quiz-bank -- --force --only two-pointer-technique
 
 ### 1.2 SC-010（題數分布）
 
+`npm run generate:quiz-bank` 於批次末**已自行計算並印出**此統計（T032）；未達標會印出具名警示，
+但 **MUST NOT** 因此以非零 exit 中止（SC-010 是 prompt 設計品質的觀察訊號，與 `checkQuizBank`
+的結構性 Gate 屬不同層級）。以下指令為獨立複核用：
+
 ```powershell
 node -e "const b=require('./data/quiz-bank.json');const counts=Object.values(b.byConcept).map(a=>a.length);const at3=counts.filter(c=>c===3).length;console.log('題數恰為3的比例:', (at3/counts.length*100).toFixed(1)+'%');console.log('全庫平均:', (counts.reduce((a,c)=>a+c,0)/counts.length).toFixed(2));"
 ```
@@ -137,17 +141,18 @@ npm run build:pages
 
 ---
 
-## 5. Gate 攔截驗證（對照 SC-008，8 個 `QuizViolationRule`）
+## 5. Gate 攔截驗證（對照 SC-008）
 
-逐一植入違規樣本後執行 `npm run validate:content`，**預期每一項都被具名擋下、零自動截斷**。
-`quiz-schema`／`quiz-unknown-concept` 由單元測試覆蓋（不在此以手改 `data/` 的方式植入，
-同 F8 quickstart §6 的既有慣例）：
+`QuizViolationRule` 共 **8 個**：7 個由 `checkQuizBank()` 輸出，`quiz-schema` 由載入層 throw
+（計數口徑見 contracts/quiz-bank-schema.md §3）。逐一植入違規樣本後執行 `npm run validate:content`，
+**預期每一項都被具名擋下、零自動截斷**。`quiz-schema`／`quiz-unknown-concept` 由單元測試覆蓋
+（不在此以手改 `data/` 的方式植入，同 F8 quickstart §6 的既有慣例）：
 
 | 樣本 | 預期 rule |
 | --- | --- |
 | 某選項加上 `A. ` 前綴 | `quiz-invalid` / `quiz-option-prefix` |
 | `explanation[0]` 加長至 > 80 字元 | `quiz-invalid` / `quiz-conclusion-length` |
-| 某題幹＋選項＋詳解合計加長至超過模擬呈現上限 | `quiz-invalid` / `quiz-item-budget` |
+| 某題幹＋選項＋結論句合計加長至超過模擬呈現上限（內容 + `QUIZ_URL_RESERVE_CHARS` 120 > 570） | `quiz-invalid` / `quiz-item-budget` |
 | 某則混入簡體字 | `quiz-invalid` / `quiz-traditional-chinese` |
 | 刪到某 Concept 只剩 2 題 | `quiz-invalid` / `quiz-count-range`（指名需要幾則、實際幾則） |
 | 複製一題到同一 Concept 內第二次 | `quiz-invalid` / `quiz-duplicate` |
@@ -161,7 +166,7 @@ npm run build:pages
 - [ ] SC-001 100% 的小測 embeds render 結果正解／結論句／連結封藏於 `||…||`，題幹選項不封藏，完整詳解不出現於訊息內
 - [ ] SC-002 同一 `(track, sessionIndex)` 編譯 & render byte-identical
 - [ ] SC-003 同一 Concept 三軌取到相異題目
-- [ ] SC-004 review 全 embeds 字元總和（含小測段）≤5,500，`quizItem`≤450、`quiz`≤3,000 逐格通過
+- [ ] SC-004 review 全 embeds 字元總和（含小測段）≤5,500，`quizItem`≤570、`quiz`≤3,000 逐格通過
 - [ ] SC-005 題庫或素材缺席時推播照常、零提示零告警
 - [ ] SC-006 無 LLM API key 環境下推播不變
 - [ ] SC-007 Pages 停用或 quiz 頁缺席時小測仍推出全部題目、僅省略連結

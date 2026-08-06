@@ -39,12 +39,18 @@ index       = (node.localOrder + trackOffset) mod items.length
 | --- | --- | --- |
 | I1 | 同一 `(track, conceptId)` 永遠選到同一題 | 純函式；索引由 `localOrder`（凍結課程結構欄位）與 `trackOffset` 唯一決定 |
 | I2 | 三軌在同一 Concept 取得相異題目 | `trackOffset` 互異（0/1/2）且 `items.length ≥ 3`（`quiz-count-range` 保證，對應 SC-003） |
-| I3 | 同一 `(track, sessionIndex)` 重複編譯 render 結果 byte-identical | I1 + `compileReview` 不含任何時間／隨機依賴（對應 SC-002） |
+| I3 | 同一 `(track, sessionIndex)` 重複編譯 render 結果 byte-identical | I1 + `compileReview` 不含任何時間／隨機依賴（對應 SC-002）。**此不變式的驗證落點是 compile 層**（`tests/unit/compile-determinism.test.ts`），非 `selectQuizItem`——後者的簽章不含 `sessionIndex` |
+
+**`localOrder` 的實際來源（MUST 依既有實作，勿另算）**：`ConceptNode.localOrder` 由
+`src/compiler/curriculum.ts` 從 Skeleton **檔名的 `NNN-` 前綴**解析而得（`001-…` ⇒ `1`，**1-based**，
+範圍為 `concepts/{dirName}/` 目錄；無前綴者為 `0`）。現行資料恰為「一個目錄對應一個 Topic、
+編號自 `001` 連續」，故其值與「Topic 內序位」相同，但**真實來源是檔名**——檔名跳號時兩者即不相等，
+測試 MUST 以檔名語意撰寫斷言。
 
 **為何用 `localOrder` 而非 `ordinalOf` 或 DAG 全序名次**：`ordinalOf` 回傳複合鍵
 `{moduleIndex, topicIndex, localOrder, id}`，僅供 `cmpOrdinal` 比較用，不是可取模的純量；
 DAG 全序名次會使前段插入一個 Concept 導致其後全部 Concept 換題，`localOrder` 僅在其所屬
-Topic 被重排時變動，影響面遠小得多（完整推導見 spec FR-003）。
+目錄的 Skeleton 檔案被重新編號時變動，影響面遠小得多（完整推導見 spec FR-003）。
 
 **為何唯一變化軸是 Track**：三軌全部 Concept 皆恰好被 review 涵蓋 1 次、0 個從未被複習
 （spec Q2 實測），per-Concept 不存在時間輪替維度（對比 F8 Reflection／Encouragement 的
@@ -55,24 +61,24 @@ Topic 被重排時變動，影響面遠小得多（完整推導見 spec FR-003�
 
 ## 3. Compiler 填入（`compileReview`）
 
+**本節為此段組裝的權威落點**（data-model.md §7 只記錄額外約束，MUST NOT 重複程式碼）。
+
 ```ts
 if (deps.quizBank) {
   const quizItems: ReviewQuizItem[] = [];
   for (const c of reviewConcepts) {                          // 沿用既有順序（sessionIndex 升冪）
     const item = selectQuizItem({ bank: deps.quizBank, graph: deps.graph, track, conceptId: c.id });
     if (!item) continue;                                     // FR-007：該 Concept 略過
-    const answerLabel = "ABCD"[item.answerIndex] as "A" | "B" | "C" | "D";
     const quizUrl = deps.pagesBaseUrl ? `${deps.pagesBaseUrl}/quiz/${c.id}.html` : undefined;
-    const quizItem: ReviewQuizItem = {
-      conceptId: c.id, stem: item.stem, options: item.options,
-      answerLabel, conclusion: item.explanation[0],
-    };
-    if (quizUrl !== undefined) quizItem.quizUrl = quizUrl;
-    quizItems.push(quizItem);
+    quizItems.push(toReviewQuizItem(c.id, item, quizUrl));   // 唯一轉換點，data-model.md §3.1
   }
   if (quizItems.length > 0) lesson.quizItems = quizItems;
 }
 ```
+
+- **`toReviewQuizItem` MUST 為 `QuizItem → ReviewQuizItem` 的唯一實作**（`src/compiler/quiz.ts` 匯出）：
+  `answerLabel = "ABCD"[item.answerIndex]`、`conclusion = item.explanation[0]`、`quizUrl` 未給即不設欄位。
+  `checkQuizBank` 估算單題預算時呼叫同一個函式（不帶 `quizUrl`），**MUST NOT 各自組一份**（憲章 IX）。
 
 - **MUST NOT 以空陣列填充**：全部略過 ⇒ 完全不設定 `lesson.quizItems`（`undefined`），
   Renderer 據此整段省略（沿用 `overlayNotes` 既有處置的空值慣例）。
@@ -121,11 +127,13 @@ D. {options[3]}
 ### 4.1 預算
 
 單題最大理論長度 ≈ 題幹 + 4 個選項 + spoiler（正解代號 + ≤80 字結論句 + 連結）
-≤ `QUIZ_BUDGET_LIMITS.quizItem`（450，含連結，FR-014）；整段合計 ≤
-`QUIZ_BUDGET_LIMITS.quiz`（3000）。逐區塊與總量檢查一律走既有的同一顆 `checkBudget`
-（`src/renderer/budget.ts`），超限 MUST 視為失敗，MUST NOT 自動截斷。
+≤ `QUIZ_BUDGET_LIMITS.quizItem`（**570** = 內容 450 + 連結保留 120，FR-014）；整段合計 ≤
+`QUIZ_BUDGET_LIMITS.quiz`（3000）。**兩格皆只計 field value，不含 field name**——後者由固定樣板
+產生，其長度由既有的 `embed[i].field[j].name` ≤256 與 `total` ≤5,500 兜底。逐區塊與總量檢查一律
+走既有的同一顆 `checkBudget`（`src/renderer/budget.ts`，登記方式見 data-model.md §4），
+超限 MUST 視為失敗，MUST NOT 自動截斷。
 
 review 段落最大理論長度（既有四段 ≈1,000 出頭，見 F8 review-selection.md §6.1）+ 小測段
-（最壞情況 4 題 × 450 = 1,800）≈ **2,800 出頭**，距單則自訂上限 5,500 仍有餘裕
-（spec SC-004 的實測基準：最壞週次合計 2,060，餘裕 3,440，估算方式一致但本契約另計入
-`quizItem` 已放寬至 450 後的上限情境）。
+（最壞情況 4 題 × 570 = 2,280）≈ **3,300 出頭**，距單則自訂上限 5,500 仍有餘裕
+（spec SC-004 的實測基準：啟用連結後最壞週次合計 1,892、總計 2,504；本契約另計入 `quizItem`
+取滿上限的極端情境）。

@@ -75,18 +75,27 @@ quiz 選項一旦掛進 `ReviewLesson`，理論上不是「順便」就把每一
 生命週期**中只會被三個 Track 各選中一次（Q2/Q3 已實測「三軌全部 Concept 皆恰好被 review
 涵蓋 1 次」），即最多只有 **3 個相異索引** `(localOrder+0/1/2) mod itemCount` 会被
 `compile()→render()` 實際觸達。當 `itemCount > 3` 時，題庫中**未被觸達的題目完全不會經過
-`checkBudget`**——若這些題目超出 `quizItem` 450 上限，不會在現行迴圈中被發現，只會在未來
+`checkBudget`**——若這些題目超出 `quizItem` 上限（現為 570），不會在現行迴圈中被發現，只會在未來
 Topic 重排導致 `localOrder` 位移、選中索引改變時才爆出（届时是 runtime 或下一次 CI，而非
 本次生成即發現）。`checkQuizBank` 因此 MUST 對 `byConcept` 的**每一個陣列元素**逐一檢查，
 不依賴課表選中與否——這與 F8 `checkMaterials` 對 `ReflectionBank.byTopic` 的每一則都檢查
 （而非只查被選中的那則）同一設計動機。
 
-**連帶決策**：`checkQuizBank` 對逐題預算檢查（450）需要模擬「附連結後的呈現長度」，但
+**連帶決策**：`checkQuizBank` 對逐題預算檢查需要模擬「附連結後的呈現長度」，但
 Gate 執行當下不知道實際的 `PAGES_BASE_URL`（R1 已定案為 runtime 選填）。**採保守估計**：
 以常數 `QUIZ_URL_RESERVE_CHARS`（見 data-model.md §3）代表連結欄位的保留字元數上限，
 在計算 `quizItem` 預算時一律假設連結存在且佔滿保留額度——這使結構性 Gate 恆比 runtime
 實際檢查更嚴格（連結缺席時 runtime 的 `checkBudget` 只會更寬鬆，不會有「Gate 過但 runtime 爆」
 的落差方向）。
+
+**數值修訂（2026-08-07，`/speckit-analyze` C1）**：該常數初訂為 **90，低於實際最壞值**，
+使上述「Gate 恆嚴格」的方向**反轉**——實測最壞連結長度為 **111** = base URL 47
+（`https://sylvia-h.github.io/leetcode-daily-coach`）+ `/quiz/` 6 + 最長 conceptId 42
+（`sliding-window-longest-substring-no-repeat`）+ `.html` 5 + ` · [完整詳解]()` 裝飾 11；
+即使取中位長度的 conceptId 也達 99。以 90 保留即代表 Gate 估算**短於** runtime 實際長度，
+可能出現「CI 過、正式推播才爆」，直接違反憲章 IX。**已更正為 120**（最壞值 + 約 8% 餘裕），
+且 `quizItem` 上限同步由 450 提為 **570**（內容 450 + 連結 120，見 spec FR-014）。
+**此常數 MUST NOT 低於實際最壞值**；未來若 base URL 或 conceptId 命名變長，MUST 一併重估。
 
 ---
 
@@ -144,7 +153,8 @@ A/B/C/D 前綴」，Renderer 只需 `String.fromCharCode(65 + answerIndex)` 即�
 
 ## R7：Pages 的 quiz 頁涵蓋範圍——是否為「全部 165 個 Concept」還是「僅 unlocked」
 
-**問題**：FR-011 字面是「GitHub Pages MUST 為每個 Concept 產出一頁完整題庫頁」，
+**問題**：FR-011 **修訂前**的字面是「GitHub Pages MUST 為每個 Concept 產出一頁完整題庫頁」
+（本節的決策已於 2026-08-07 回寫該 FR），
 但既有 `buildArticlePageView`／`articles/{conceptId}.html` 只對 `unlockedIds`
 （`state.tracks[*].completedConceptIds` 的聯集，經 `computeUnlockedConceptIds` 計算）產出，
 避免提前洩漏尚未解鎖的課程內容（dashboard 的「解鎖」模型）。
@@ -190,7 +200,10 @@ FR-013 的交叉驗證性質不同：**不是複審，而是重新作答**（盲
 | --- | --- | --- |
 | FR-002 小測段插入點 | 「於第四段（Challenge 後）附加第五段」（讀法歧義） | 明訂為 Challenge 之後、鼓勵語之前（R5），版面五段順序：本週涵蓋／Reflection／Challenge／小測／鼓勵語 |
 | Pages 連結來源 | 未提及機制 | 新增：沿用 `PAGES_BASE_URL` 環境變數（R1），`push` job 缺席該變數即全部省略連結，本 Feature 不修改 `daily.yml` |
+| FR-011 quiz 頁產出範圍 | 「MUST 為**每個** Concept 產出一頁」 | 明訂為僅 `unlockedIds` 且題庫中有題者（R7），與 `articles/{conceptId}.html` 同構；**此項於 2026-08-07 `/speckit-analyze` 才發現漏回寫**，現已補入 spec FR-011 與 `docs/spec.md` §15 |
 
-上述修訂已同步至本 plan 與 `data-model.md`／`contracts/`；`docs/spec.md` 與
-`specs/011-weekly-quiz/spec.md` 的正式回寫留待 `/speckit-tasks` 前以獨立段落追加
-（同 F8 plan.md 的「規格修訂」節慣例），不在此 research 階段直接改寫 spec 條文本身。
+上述修訂已同步至本 plan 與 `data-model.md`／`contracts/`，並已於 `/speckit-tasks` 前回寫
+`docs/spec.md` 與 `specs/011-weekly-quiz/spec.md`（見 spec.md FR-002／FR-012）。
+**回寫時另發現 `docs/spec.md` §15 的段落順序圖誤植**（Encouragement 排第四、Quiz 排第五，
+直接違反 F8 FR-022「鼓勵語 MUST 為最後一段」，與本節 R5 的決策矛盾）——已一併更正為
+Quiz 第四、Encouragement 最後。

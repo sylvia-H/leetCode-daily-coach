@@ -82,6 +82,12 @@
   兩次多個變因同動且各僅一個樣本）。三處修正：FR-016 禁止 prompt 出現任何數量、新增「鄰居只能作為
   區辨點」、FR-006 改為明訂 `explanation` 恰 5 段並由 Gate 檢查。數值更正為單題最長 362、全庫 1,000～1,300 題、
   產線約 2,500 次呼叫；題數上限維持 10（自然值 7，留 43% 餘裕）。
+- **追加（2026-08-07，`/speckit-analyze` 後的修訂）**：上列 Q13／Q14 的預算數字**已再次更正**——
+  該批量測未含 spoiler 內的 Pages 連結（最壞 111 字元），故 `quizItem` 由 450 提為 **570**
+  （內容 450 + 連結保留 120）、`QUIZ_URL_RESERVE_CHARS` 由 90 提為 **120**；沿用舊值會使素材層 Gate
+  **寬鬆於** runtime（違反憲章 IX）。同時回寫 FR-011 漏落地的「僅 `unlockedIds`」範圍（research R7），
+  並更正 `localOrder` 的定義（實為 Skeleton 檔名 `NNN-` 前綴，1-based，非「Topic 內 0-based 序位」）。
+  **本節其餘數字為當時的歷史記錄，以 spec 現行條文為準。**
 - FR 由 10 條擴為 19 條（含 FR-003a / FR-010a / FR-013a）、SC 由 6 條擴為 10 條；新增 F9 依賴（單向可降級）。
 - 全部數字均為**實測**而非估算（三軌 111 個 review Session 編譯 + render + `checkBudget`）。
 

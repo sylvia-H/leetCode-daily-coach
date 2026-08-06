@@ -42,7 +42,7 @@ MUST NOT 用字典序。
 | Concept 存在 | 每個 key MUST 存在於 `graph.concepts` | `quiz-unknown-concept` | FR-010 |
 | 無代號前綴 | 每個 `options[i]` MUST NOT 以 `/^[A-D][.、)]\s*/` 開頭 | `quiz-option-prefix` | FR-006 |
 | 結論句長度 | `explanation[0]` 的 code point 長度 ≤ 80 | `quiz-conclusion-length` | FR-006 |
-| 單題預算 | 模擬呈現後長度（見 §3）≤ `QUIZ_BUDGET_LIMITS.quizItem`（450） | `quiz-item-budget` | FR-014 |
+| 單題預算 | 模擬呈現後長度（見 §3）≤ `QUIZ_BUDGET_LIMITS.quizItem`（570） | `quiz-item-budget` | FR-014 |
 | 繁中判準 | `checkTraditionalChinese(stem + options.join + explanation.join)` 無違規 | `quiz-traditional-chinese` | §11（沿用既有判準） |
 | 題數範圍 | 每個 Concept 的陣列長度 ∈ [3, 10]（FR-005） | `quiz-count-range` | FR-005／FR-010a |
 | 無重複題 | 同一 Concept 內無 `stem` 完全相同的兩題（**結構性判準只查逐字相同**；「實質等價」由生成端
@@ -132,27 +132,47 @@ index       = (node.localOrder + trackOffset) mod items.length
 
 ```ts
 export const QUIZ_BUDGET_LIMITS = {
-  quizItem: 450,
+  /** 內容 450（實測最長 362 + 約 24% 餘裕）+ 連結保留 120 = 570（FR-014）。 */
+  quizItem: 570,
   quiz: 3000,
 } as const;
 
-/** checkQuizBank 對「附連結」情境的保守估計（research R3）：Gate 恆比 runtime 實際檢查更嚴格。 */
-export const QUIZ_URL_RESERVE_CHARS = 90;
+/**
+ * checkQuizBank 對「附連結」情境的保守估計（research R3）：Gate 恆比 runtime 實際檢查更嚴格。
+ * 最壞實測 111 = base URL 47 + `/quiz/` 6 + 最長 conceptId 42 + `.html` 5 + ` · [完整詳解]()` 11，
+ * 取整為 120。**MUST NOT 低於實際最壞值**——低估會使 Gate 寬鬆於 runtime，違反憲章 IX
+ * 「Gate 通過 ⇒ runtime 不會因內容問題失敗」。
+ */
+export const QUIZ_URL_RESERVE_CHARS = 120;
 ```
 
+- **量測範圍**：兩格 slot 皆只計 embed **field value**，不含 field name（FR-014）。
 - `checkBudget`（render 後，runtime 與 CI 共用）、`checkQuizBank`（素材層，生成端與 CI 共用）
   **MUST 全部 import 此常數**，MUST NOT 出現第二處字面值（同 F8 `MATERIAL_BUDGET_LIMITS` 的單一來源要求）。
 - `checkQuizBank` 對逐題預算的估計公式（不依賴實際 `PAGES_BASE_URL`，見 research R3）：
 
   ```
-  估計長度 = len(renderQuizItemBody(item))     // 題幹＋四個帶字母前綴的選項＋spoiler 內的
-                                                //   「正解：{letter} — {explanation[0]}」
+  估計長度 = len(renderQuizItemBody(toReviewQuizItem(conceptId, item)))
+                                                //  題幹＋四個帶字母前綴的選項＋spoiler 內的
+                                                //   「正解：{letter} — {explanation[0]}」（無 quizUrl）
              + QUIZ_URL_RESERVE_CHARS           // 保留給連結（含 spoiler 內的 markdown link 語法）
   ```
 
   `renderQuizItemBody` 為 `src/renderer/discord.ts` 匯出的純函式，供 `checkQuizBank`（生成期/CI，
   無實際 track/url）與 `buildReviewBlocks`（runtime，有實際 url）**共用同一份呈現邏輯**（憲章 IX），
   後者呼叫時另外拼接 `[完整詳解]({quizUrl})` 或省略。
+
+### 3.1 `toReviewQuizItem`（`QuizItem → ReviewQuizItem` 的唯一轉換點）
+
+```ts
+/** 純函式；quizUrl 省略即代表 Renderer 不附連結（FR-012）。 */
+export function toReviewQuizItem(conceptId: string, item: QuizItem, quizUrl?: string): ReviewQuizItem;
+```
+
+`renderQuizItemBody` 吃的是 `ReviewQuizItem`（含 `answerLabel` / `conclusion`），而 `checkQuizBank`
+手上只有 `QuizItem`。**此轉換 MUST 只有一份實作**（`src/compiler/quiz.ts` 匯出），由 `compileReview`
+（§7）與 `checkQuizBank`（§1）共用——`answerLabel = "ABCD"[item.answerIndex]`、
+`conclusion = item.explanation[0]` 這組對應若各寫一份，即是憲章 IX 禁止的「Gate 一套、runtime 另一套」。
 
 ---
 
@@ -191,6 +211,25 @@ export const QUIZ_URL_RESERVE_CHARS = 90;
 - `quizItems` 為空陣列與缺席同義（**MUST NOT** 以空陣列填充，統一用「缺席」表示無小測段，
   沿用 `overlayNotes`／F8 素材欄位的既有處置）。
 - `SessionType` **不變**。
+
+**`checkBudget` 的兩格對應（FR-014，MUST）**：`BudgetSlots` **只新增 `quizItems` 一個欄位**，
+`quiz` 為由它導出的彙總項，不另立欄位（避免同一份字串登記兩次而漂移）。比照既有 `problems`
+的處置方式：
+
+```ts
+if (budgetSlots.quizItems !== undefined) {
+  budgetSlots.quizItems.forEach((entry, i) => {
+    items.push(makeItem(`quizItem[${i}]`, codePointLength(entry), QUIZ_BUDGET_LIMITS.quizItem));
+  });
+  items.push(
+    makeItem("quiz", budgetSlots.quizItems.reduce((sum, e) => sum + codePointLength(e), 0), QUIZ_BUDGET_LIMITS.quiz),
+  );
+}
+```
+
+- 登記進 `quizItems[i]` 的字串 **MUST 是放進 embed field value 的同一份實例**（沿用 research R10
+  的既有立場：不反解析 embeds），故不含 field name。
+- `BudgetItem` 名稱固定為 `quizItem[i]` 與 `quiz`，供 Gate 訊息具名回報。
 
 ---
 
@@ -266,24 +305,8 @@ fail-fast 條件（webhooks／stateFile），MUST NOT 令其成為必要欄位�
 
 ## 7. `compileReview` 的小測組裝（`src/compiler/lesson.ts`）
 
-```ts
-if (deps.quizBank) {
-  const quizItems: ReviewQuizItem[] = [];
-  for (const c of reviewConcepts) {
-    const item = selectQuizItem({ bank: deps.quizBank, graph: deps.graph, track, conceptId: c.id });
-    if (!item) continue;                                    // FR-007：該 Concept 略過
-    const answerLabel = "ABCD"[item.answerIndex] as "A" | "B" | "C" | "D";
-    const quizUrl = deps.pagesBaseUrl ? `${deps.pagesBaseUrl}/quiz/${c.id}.html` : undefined;
-    const quizItem: ReviewQuizItem = {
-      conceptId: c.id, stem: item.stem, options: item.options,
-      answerLabel, conclusion: item.explanation[0],
-    };
-    if (quizUrl !== undefined) quizItem.quizUrl = quizUrl;
-    quizItems.push(quizItem);
-  }
-  if (quizItems.length > 0) lesson.quizItems = quizItems;    // 全空 ⇒ 省略整段（FR-007 全空情境）
-}
-```
+**組裝程式碼的權威落點為 [contracts/quiz-selection.md](./contracts/quiz-selection.md) §3**——本檔
+MUST NOT 重複同一段程式碼（重複必然漂移）。以下只記錄該段程式碼**未**表達的約束：
 
 - **順序**：`quizItems` 依 `reviewConcepts` 的既有順序（`sessionIndex` 升冪，已在既有程式碼決定），
   MUST NOT 另排序——與「本週涵蓋」段的 Concept 順序一致，降低使用者對照題目與涵蓋清單的認知負擔。
@@ -322,7 +345,7 @@ export interface QuizPageView {
   items: QuizPageItem[];
 }
 
-export function buildQuizPageView(conceptId: string, node: ConceptNode, items: QuizItem[]): QuizPageView;
+export function buildQuizPageView(node: ConceptNode, items: QuizItem[]): QuizPageView;
 export function renderQuizPage(view: QuizPageView): string;
 ```
 

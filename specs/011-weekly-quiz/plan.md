@@ -66,8 +66,11 @@ runtime 相依**（Pages 頁面沿用既有 `marked`/`gray-matter` 依賴路徑�
 **Constraints**:
 - 每日 runtime **零 LLM**；`daily.yml` MUST NOT 含 `GEMINI_API_KEY`（本 Feature 不修改
   `daily.yml`，此約束自動維持）。
-- Discord 單則訊息全部 embeds 文字總和 ≤ **5,500**；新增 `quizItem` ≤450（單題，含連結）、
-  `quiz` ≤3,000（整段合計）。**MUST NOT 自動截斷**。
+- Discord 單則訊息全部 embeds 文字總和 ≤ **5,500**；新增 `quizItem` ≤**570**（單題 field value，
+  = 內容 450 + 連結保留 120）、`quiz` ≤3,000（整段合計）。**MUST NOT 自動截斷**。
+  素材層 Gate 估算單題長度時 MUST 一律假設連結存在且佔滿 `QUIZ_URL_RESERVE_CHARS`（**120**，
+  實測最壞 111），使 Gate 恆嚴格於 runtime（憲章 IX；初訂的 90／450 已於 2026-08-07 更正，
+  見 research R3）。
 - 選題 MUST 為 `(track, conceptId)` 的純函式；Renderer MUST 為 stateless 純函式。
 - 生成物凍結：`data/quiz-bank.json` MUST NOT 手改，一律「改 Skeleton → 重跑 → review diff → commit」。
 - Free-tier only：僅 GitHub Actions + Discord Webhook + Gemini 免費層（`gemini-3.5-flash-lite`，僅 build-time）。
@@ -198,7 +201,7 @@ spec 的 User Story 優先序是價值序（僅 US1 一個 Story）；以下為*
 | --- | --- | --- | --- |
 | **P1** | `src/compiler/quiz.ts`（schema + `selectQuizItem` + `checkQuizBank`）＋ `budget.ts` 常數 ＋ 單元測試（用 fixture 題庫，不需真實生成） | — | FR-001／FR-003／FR-003a／FR-005／FR-006／FR-010／FR-010a／FR-014 |
 | **P2** | `CompilerDeps`／`CompilerPaths`／`Config` 擴充；`compileReview` 填入 `quizItems`；`src/main.ts` 併入 `pagesBaseUrl`；Gate 接線（`quiz-invalid`） | P1 | FR-002／FR-004／FR-007／FR-008／FR-012（連結部分） |
-| **P3** | Renderer 版面（`renderQuizItemBody` + `buildReviewBlocks` 新段落）＋ slot 對等測試（**可與 P1/P2 並行**，用 `tests/helpers/lesson.ts` 替身開發） | 無硬依賴 | FR-002／FR-009／SC-001／SC-004 |
+| **P3** | Renderer 版面（`buildReviewBlocks` 新段落）＋ slot 對等測試（**可與 P1/P2 並行**，用 `tests/helpers/lesson.ts` 替身開發）。**⚠️ `renderQuizItemBody` 例外**：它被 `checkQuizBank` 共用（憲章 IX），故屬 P1／Phase 2 而非本階段——見 [tasks.md](./tasks.md) T006 與該檔 Phase 2 的澄清框 | 無硬依賴（`renderQuizItemBody` 除外） | FR-002／FR-009／SC-001／SC-004 |
 | **P4** | `src/pages/quiz-page.ts` ＋ `buildSite()` 整合 ＋ determinism 測試 | P2（需要 `CompilerDeps.quizBank` 型別就位） | FR-011／FR-012（Pages 端）／SC-007 |
 | **P5** | 題庫產線（prompts、`quiz-checkpoint.ts`、交叉驗證、`generate-quiz-bank.ts`）＋ 生成並 commit 真實題庫 | P1（要先有 Gate 才知道是否通過） | FR-013／FR-013a／FR-015／FR-016／SC-008／SC-009／SC-010 |
 | **P6** | 端到端驗收（`DRY_RUN=true` 對真實課表、零金鑰 CI、SC 全項） | P1–P5 | quickstart.md §2–§6 |
@@ -226,10 +229,13 @@ spec 的 User Story 優先序是價值序（僅 US1 一個 Story）；以下為*
 | --- | --- | --- | --- |
 | FR-002 | 「於第四段（Challenge 後）附加第五段」（插入點有兩種讀法） | 若插入在鼓勵語之後，會與 F8 既有不變式「鼓勵語 MUST 為最後一段」（FR-022）衝突，需先廢止該規則但 spec 無此意圖 | 明訂插入點為 Challenge 之後、鼓勵語之前（research R5）；五段順序：本週涵蓋／Reflection／Challenge／小測／鼓勵語 |
 | （新增，非修改既有 FR） | spec 未指明 Discord 連結如何取得 Pages Base URL | 若比照 Pages job 做可見性偵測，需修改 `daily.yml`，牴觸「daily workflow 推播機制零改」 | 沿用既有 `PAGES_BASE_URL` 環境變數（research R1），本 Feature 不修改 `daily.yml`；變數缺席即全部省略連結，為本 Feature 的驗收基準狀態 |
+| FR-011 | 「MUST 為**每個** Concept 產出一頁完整題庫頁」 | 與 research R7 定案的「僅 `unlockedIds`」直接衝突；**此項於 2026-08-07 `/speckit-analyze` 才發現漏列本表、漏回寫 spec** | 明訂僅對 `unlockedIds` 且題庫中有題的 Concept 產出，與 `articles/{conceptId}.html` 同構；已回寫 spec FR-011 與 `docs/spec.md` §15 |
+| FR-014（數值） | `quizItem` ≤450、`QUIZ_URL_RESERVE_CHARS` 90 | 兩個數字皆未計入 spoiler 內 Pages 連結的實際長度（最壞 111），使 Gate 寬鬆於 runtime（違憲章 IX），且實測最長題目在啟用連結後即超標 | `quizItem` ≤**570**（內容 450 + 連結 120）、reserve **120**；已回寫 spec FR-014／SC-004 與 `docs/spec.md` §14.5（research R3） |
 
-上述修訂已同步至本 plan、`data-model.md`、`contracts/`；`specs/011-weekly-quiz/spec.md`
-（與 `docs/spec.md` 對應章節，若涉及跨 Feature 決策）的正式回寫留待實作前以獨立段落追加
-（同 F8 plan.md 的「規格修訂」節慣例）。
+上述修訂已同步至本 plan、`data-model.md`、`contracts/`，並已於 `/speckit-tasks` 前正式回寫
+`specs/011-weekly-quiz/spec.md`（FR-002、FR-012）與 `docs/spec.md` §15（**修正該節原本誤植的
+段落順序**——原文列為「Encouragement 第四段、Quiz 第五段」，直接違反 F8 FR-022「鼓勵語 MUST 為
+最後一段」；已更正為「Quiz 第四段、Encouragement 最後一段」，與本表決策一致）。
 
 ## Complexity Tracking
 
