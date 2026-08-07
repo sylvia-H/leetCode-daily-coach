@@ -62,6 +62,7 @@ export type QuizViolationRule =
   | "quiz-schema" // ★ 由 §2 載入層 throw 實現，非本函式輸出（同 material-schema 的既有註記）
   | "quiz-unknown-concept"
   | "quiz-option-prefix"
+  | "quiz-option-cross-reference" // 選項參照其他選項／位置 ⇒ 產線重排正解位置後必然語意錯亂
   | "quiz-conclusion-length"
   | "quiz-item-budget"
   | "quiz-traditional-chinese"
@@ -139,8 +140,15 @@ function codePointLength(text: string): number {
  * 故成本極低而收益明確。
  *
  * **門檻取 50%**：隨機均勻分派下，正解位置的期望佔比為 25%、「唯一最長」的期望佔比亦約 25%；
- * 取 50% 留有一倍餘裕，只攔明顯的系統性偏誤，不會因抽樣波動誤殺。**MUST NOT 收緊到接近 25%**
- * ——那會讓正常波動頻繁觸發重生、白燒免費層額度。
+ * 取 50% 留有一倍餘裕，只攔明顯的系統性偏誤。**MUST NOT 收緊到接近 25%**——那會讓正常波動頻繁
+ * 觸發重生、白燒免費層額度。
+ *
+ * ⚠️ **「50% 不會誤殺」只對 `quiz-longest-option-bias` 成立**（單一二項分布，n=7 時誤殺率約 7%）。
+ * 對 `quiz-answer-position-bias` 不成立：它取的是四格的**最大值**，n=7 時即使 answerIndex 完全均勻
+ * 隨機也有 **27%** 機率違規（`quiz-answer-position-coverage` 在 n=8 更高達 37.7%）。故位置類的兩條
+ * **MUST NOT 靠重生達成**——產線改以 `scripts/lib/quiz-balance.ts` 在寫入前確定性重排正解位置，
+ * 使兩條由建構保證通過；它們在此保留為**防手改題庫、防未來新來源**的 CI 守衛
+ * （quiz-bank-schema.md §3／§5.2a）。**MUST NOT 因「產線一定會通過」而移除。**
  */
 export const QUIZ_BIAS_MAX_SHARE = 0.5;
 /** 題數低於此下界時不套用偏誤判準：樣本太小時佔比本身沒有統計意義（3 題有 2 題同位置即 67%）。 */
@@ -163,6 +171,25 @@ export const QUIZ_POSITION_COVERAGE_MIN = 3;
 export const QUIZ_POSITION_FULL_COVERAGE_ITEMS = 8;
 
 const OPTION_PREFIX_PATTERN = /^[A-D][.、)]\s*/;
+
+/**
+ * rule 13（`quiz-option-cross-reference`）：選項 MUST 各自獨立可讀。
+ *
+ * **為何是硬性判準而非風格建議**：產線在寫入題庫前會以確定性演算法重排選項順序、把正解平均分配到
+ * 四個位置（`scripts/lib/quiz-balance.ts`，quiz-bank-schema.md §5.2a）。任何依賴「選項在清單中的
+ * 位置或彼此關係」的寫法——「以上皆是」「同選項 A」「A 和 B 都對」——重排後必然語意錯亂，
+ * 且錯得無聲無息。這是重排機制的前提條件，MUST NOT 只以 prompt 敘述防範（spec Q14 已實證）。
+ *
+ * **判準刻意保守**：只攔明確的自我參照樣式。MUST NOT 擴大為「不得出現『以上』二字」——
+ * 「10 以上」「上述情境」這類正常敘述是合法內容，過寬會逼出無意義的重生。
+ */
+const OPTION_CROSS_REFERENCE_PATTERNS = [
+  /以上(皆|都|各項|選項|所有)/,
+  /上述(皆|都|各項|選項)/,
+  /前述(皆|都|各項|選項)/,
+  /選項\s*[A-D](?![A-Za-z0-9_])/,
+  /[A-D]\s*(和|與|及)\s*[A-D]\s*(皆|都|均|兩者|二者)/,
+];
 // rule 9 的判準邊界（MUST）：只攔「LeetCode／力扣 + 數字」與題目連結兩種樣式，MUST NOT 擴大為
 // 「不得出現任何數字」——複雜度（O(n²)）、陣列索引、題目情境數值皆為合法內容。
 const LEETCODE_URL_PATTERN = /leetcode\.com\/problems/i;
@@ -262,6 +289,15 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
             rule: "quiz-option-prefix",
             subject,
             message: `「${subject}」的 options[${oi}] 含代號前綴：「${opt}」`,
+          });
+        }
+        if (OPTION_CROSS_REFERENCE_PATTERNS.some((p) => p.test(opt))) {
+          violations.push({
+            rule: "quiz-option-cross-reference",
+            subject,
+            message:
+              `「${subject}」的 options[${oi}] 參照了其他選項或位置：「${opt}」；` +
+              `選項順序會在寫入題庫前被確定性重排，這種寫法重排後必然語意錯亂，MUST 改寫為可獨立閱讀的敘述`,
           });
         }
       });

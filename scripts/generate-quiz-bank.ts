@@ -27,6 +27,7 @@ import {
 import type { ConceptNode, CurriculumGraph, Ordinal } from "../src/types/curriculum.js";
 import { hashFile, writeFileAtomic } from "./lib/checkpoint.js";
 import { createLlmClient, type LlmClient } from "./lib/llm-client.js";
+import { rebalanceAnswerPositions } from "./lib/quiz-balance.js";
 import {
   readQuizManifestFile,
   rebuildQuizManifest,
@@ -63,7 +64,8 @@ const INFRA_RETRY_ATTEMPTS = 3;
 /**
  * **集合層**判準：判斷對象是「該 Concept 的整個題目集合」而非單一題目，故 MUST 在交叉驗證丟棄
  * 題目之後、以存活集合為對象執行（FR-013a）。在草稿階段先判會用錯集合——交叉驗證可能改變題數、
- * 正解位置分布與選項長度分布，草稿通過不代表存活集合通過。
+ * 正解位置分布與選項長度分布，草稿通過不代表存活集合通過。兩條位置類判準另由
+ * `rebalanceAnswerPositions` 於同一時點確定性滿足（quiz-bank-schema.md §5.2a）。
  */
 const SET_LEVEL_RULES: ReadonlySet<QuizViolationRule> = new Set([
   "quiz-count-range",
@@ -347,12 +349,20 @@ export async function generateQuizForConcept(
       lastFailure = { reason: `交叉驗證後存活題數不足 3（實際 ${survivors.length}）` };
       continue;
     }
-    // 對存活集合重跑**完整**判準：涵蓋題數上限（>10）與兩條猜答偏誤（quiz-answer-position-bias／
-    // quiz-longest-option-bias）。少了這一步，違規內容會先被寫入題庫、直到批次末 runContentGate
-    // 才爆出來——屆時已無法在該 Concept 的重生迴圈內修正，只能整批非零 exit（實測 2026-08-07：
-    // 3 個 Concept 產出 11～12 題就是這樣漏進檔案的）。
+
+    // 正解位置的確定性重排（quiz-bank-schema.md §5.2a）：MUST 在交叉驗證之後、集合層 Gate 之前。
+    // 之前 MUST NOT——交叉驗證會丟棄題目而改變題數，先排會排錯份數；之後 MUST NOT——那等於讓
+    // Gate 檢查一份不是最終要寫入的內容。位置不帶語意，故 MUST NOT 交給 LLM 決定再事後拒絕
+    // （靠重生達成均勻分布的誤殺率見 quiz-balance.ts 檔頭）。
+    const balanced = rebalanceAnswerPositions(node.id, survivors);
+
+    // 對重排後的集合重跑**完整**判準：涵蓋題數上限（>10）與 quiz-longest-option-bias。少了這一步，
+    // 違規內容會先被寫入題庫、直到批次末 runContentGate 才爆出來——屆時已無法在該 Concept 的重生
+    // 迴圈內修正，只能整批非零 exit（實測 2026-08-07：3 個 Concept 產出 11～12 題就是這樣漏進檔案的）。
+    // 兩條位置類判準此時已由 rebalanceAnswerPositions 保證通過，此處重跑是防禦性複驗（憲章 IX：
+    // 判準只有一顆實作，MUST NOT 因「理應通過」就跳過）。
     const setLevelViolations = checkQuizBank({
-      quizBank: { version: 1, byConcept: { [node.id]: survivors } },
+      quizBank: { version: 1, byConcept: { [node.id]: balanced } },
       graph,
     });
     if (setLevelViolations.length > 0) {
@@ -360,7 +370,7 @@ export async function generateQuizForConcept(
       continue;
     }
 
-    return { items: survivors, attempts: attempt };
+    return { items: balanced, attempts: attempt };
   }
 
   return { failure: lastFailure, attempts: MAX_REGEN };
@@ -400,9 +410,47 @@ function parseOnlyFlag(argv: string[]): Set<string> | undefined {
   return new Set(argv[idx + 1]!.split(","));
 }
 
+/**
+ * `--rebalance-only`（quiz-bank-schema.md §5.1）：對**已凍結**的題庫就地重排正解位置，
+ * **零 LLM 呼叫、零 manifest 變動**（重排不改題數也不改 Skeleton 雜湊，跳過條件不受影響）。
+ * 用途：`quiz-balance.ts` 的位置指派邏輯調整後，讓既有題庫跟上而不必 `--force` 整批重生。
+ */
+function runRebalanceOnly(): number {
+  const { graph } = loadCurriculum({ modulesPath: MODULES_PATH, conceptsDir: CONCEPTS_DIR });
+  let bank: QuizBank | undefined;
+  try {
+    bank = loadOptionalMaterial(QUIZ_BANK_PATH, "quiz bank", quizBankSchema);
+  } catch (err) {
+    console.error(`✗ ${(err as Error).message}`);
+    return 1;
+  }
+  if (!bank) {
+    console.error(`✗ ${QUIZ_BANK_PATH} 不存在，無可重排的題庫`);
+    return 1;
+  }
+
+  const byConcept: Record<string, QuizItem[]> = {};
+  for (const [conceptId, items] of Object.entries(bank.byConcept)) {
+    byConcept[conceptId] = rebalanceAnswerPositions(conceptId, items);
+  }
+  writeFileAtomic(QUIZ_BANK_PATH, serializeQuizBank(byConcept, graph));
+  console.log(`✓ 已重排 ${Object.keys(byConcept).length} 個 Concept 的正解位置（零 LLM 呼叫）`);
+
+  // 重排後 MUST 立刻複驗：位置類判準理應由建構保證通過，但長度／題數等其餘判準不受重排影響，
+  // 若原本就違規，此處 MUST 讓它以非零 exit code 現形，MUST NOT 靜默寫出。
+  const violations = checkQuizBank({ quizBank: { version: 1, byConcept }, graph });
+  for (const v of violations) console.error(`✗ ${v.rule}@${v.subject}：${v.message}`);
+  return violations.length > 0 ? 1 : 0;
+}
+
 async function main(): Promise<void> {
   const force = process.argv.includes("--force");
   const only = parseOnlyFlag(process.argv);
+
+  if (process.argv.includes("--rebalance-only")) {
+    process.exit(runRebalanceOnly());
+    return;
+  }
 
   // 缺 GEMINI_API_KEY MUST fail-fast、不寫任何檔案（憲章 VIII）：建構期即檢查。
   let llmClient: LlmClient;
