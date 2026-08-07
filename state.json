@@ -1,13 +1,14 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 6,
-      "lastPushAt": "2026-08-07T01:32:35.160Z",
+      "currentSessionIndex": 7,
+      "lastPushAt": "2026-08-07T22:49:24.970Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
-        "tracing-execution-flow"
+        "tracing-execution-flow",
+        "conditional-branching-logic"
       ],
       "history": [
         {
@@ -33,17 +34,23 @@
           "sessionIndex": 5,
           "pushedAt": "2026-08-07T01:32:35.160Z",
           "conceptId": "tracing-execution-flow"
+        },
+        {
+          "sessionIndex": 6,
+          "pushedAt": "2026-08-07T22:49:24.970Z",
+          "conceptId": "conditional-branching-logic"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 6,
-      "lastPushAt": "2026-08-07T01:32:35.323Z",
+      "currentSessionIndex": 7,
+      "lastPushAt": "2026-08-07T22:49:25.290Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
-        "tracing-execution-flow"
+        "tracing-execution-flow",
+        "conditional-branching-logic"
       ],
       "history": [
         {
@@ -69,17 +76,23 @@
         {
           "sessionIndex": 5,
           "pushedAt": "2026-08-07T01:32:35.323Z"
+        },
+        {
+          "sessionIndex": 6,
+          "pushedAt": "2026-08-07T22:49:25.290Z",
+          "conceptId": "conditional-branching-logic"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 6,
-      "lastPushAt": "2026-08-07T01:32:35.521Z",
+      "currentSessionIndex": 7,
+      "lastPushAt": "2026-08-07T22:49:25.648Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
-        "tracing-execution-flow"
+        "tracing-execution-flow",
+        "conditional-branching-logic"
       ],
       "history": [
         {
@@ -105,6 +118,11 @@
         {
           "sessionIndex": 5,
           "pushedAt": "2026-08-07T01:32:35.521Z"
+        },
+        {
+          "sessionIndex": 6,
+          "pushedAt": "2026-08-07T22:49:25.648Z",
+          "conceptId": "conditional-branching-logic"
         }
       ]
     }
