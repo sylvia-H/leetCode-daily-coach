@@ -1,12 +1,13 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 5,
-      "lastPushAt": "2026-08-05T23:12:47.436Z",
+      "currentSessionIndex": 6,
+      "lastPushAt": "2026-08-07T01:32:35.160Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
-        "mental-model-variables"
+        "mental-model-variables",
+        "tracing-execution-flow"
       ],
       "history": [
         {
@@ -27,12 +28,17 @@
         {
           "sessionIndex": 4,
           "pushedAt": "2026-08-05T23:12:47.436Z"
+        },
+        {
+          "sessionIndex": 5,
+          "pushedAt": "2026-08-07T01:32:35.160Z",
+          "conceptId": "tracing-execution-flow"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 5,
-      "lastPushAt": "2026-08-05T23:12:47.570Z",
+      "currentSessionIndex": 6,
+      "lastPushAt": "2026-08-07T01:32:35.323Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -59,12 +65,16 @@
           "sessionIndex": 4,
           "pushedAt": "2026-08-05T23:12:47.570Z",
           "conceptId": "tracing-execution-flow"
+        },
+        {
+          "sessionIndex": 5,
+          "pushedAt": "2026-08-07T01:32:35.323Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 5,
-      "lastPushAt": "2026-08-05T23:12:47.677Z",
+      "currentSessionIndex": 6,
+      "lastPushAt": "2026-08-07T01:32:35.521Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -91,6 +101,10 @@
           "sessionIndex": 4,
           "pushedAt": "2026-08-05T23:12:47.677Z",
           "conceptId": "tracing-execution-flow"
+        },
+        {
+          "sessionIndex": 5,
+          "pushedAt": "2026-08-07T01:32:35.521Z"
         }
       ]
     }
