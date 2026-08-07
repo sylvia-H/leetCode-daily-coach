@@ -7,6 +7,8 @@ import {
   toReviewQuizItem,
   QUIZ_BIAS_MAX_SHARE,
   QUIZ_BIAS_MIN_ITEMS,
+  QUIZ_POSITION_COVERAGE_MIN,
+  QUIZ_POSITION_FULL_COVERAGE_ITEMS,
   type QuizBank,
   type QuizItem,
   type QuizViolationRule,
@@ -188,6 +190,51 @@ describe("checkQuizBank（quiz-bank-schema.md §3）", () => {
       const bank = makeBank(makeItems([1, 1, 1])); // 3 題全同位置 = 100%，但低於下界
       expect(rulesOf(checkQuizBank({ quizBank: bank, graph }))).not.toContain("quiz-answer-position-bias");
       expect(QUIZ_BIAS_MIN_ITEMS).toBe(4);
+    });
+  });
+
+  describe("quiz-answer-position-coverage（rule 12）：正解位置覆蓋不足", () => {
+    function makeItems(answerIndices: (0 | 1 | 2 | 3)[]): QuizItem[] {
+      return answerIndices.map((answerIndex, i) => makeItem({ stem: `題目變體 ${i}`, answerIndex }));
+    }
+
+    it("僅用 2 個位置（4 題）⇒ 攔下並指名未使用的位置", () => {
+      const violations = checkQuizBank({ quizBank: makeBank(makeItems([0, 0, 1, 1])), graph });
+      const v = violations.find((v) => v.rule === "quiz-answer-position-coverage");
+      expect(v).toBeDefined();
+      expect(v?.message).toMatch(/只用到 2 個位置/);
+      expect(v?.message).toMatch(/C、D/);
+    });
+
+    it("4～7 題用滿 3 個位置 ⇒ 不攔（n < 8 只需 QUIZ_POSITION_COVERAGE_MIN）", () => {
+      const violations = checkQuizBank({ quizBank: makeBank(makeItems([0, 1, 2, 0, 1, 2, 0])), graph });
+      expect(rulesOf(violations)).not.toContain("quiz-answer-position-coverage");
+      expect(QUIZ_POSITION_COVERAGE_MIN).toBe(3);
+    });
+
+    it("≥8 題僅用 3 個位置 ⇒ 攔下（題數達下界時四個位置 MUST 全用到）", () => {
+      const violations = checkQuizBank({ quizBank: makeBank(makeItems([0, 0, 1, 1, 2, 2, 0, 1])), graph });
+      const v = violations.find((v) => v.rule === "quiz-answer-position-coverage");
+      expect(v).toBeDefined();
+      expect(v?.message).toMatch(/需 ≥4/);
+      expect(QUIZ_POSITION_FULL_COVERAGE_ITEMS).toBe(8);
+    });
+
+    it("≥8 題用滿 4 個位置 ⇒ 不攔", () => {
+      const violations = checkQuizBank({ quizBank: makeBank(makeItems([0, 1, 2, 3, 0, 1, 2, 3])), graph });
+      expect(rulesOf(violations)).not.toContain("quiz-answer-position-coverage");
+    });
+
+    it("題數低於 QUIZ_BIAS_MIN_ITEMS 時不套用", () => {
+      const violations = checkQuizBank({ quizBank: makeBank(makeItems([0, 0, 0])), graph });
+      expect(rulesOf(violations)).not.toContain("quiz-answer-position-coverage");
+    });
+
+    it("與 quiz-answer-position-bias 互補：50/50 兩格分布通過佔比判準、但被覆蓋判準攔下", () => {
+      // A=4 B=4：最高佔比恰 50%（不違反 bias），但 C／D 從未使用（違反 coverage）
+      const violations = checkQuizBank({ quizBank: makeBank(makeItems([0, 0, 0, 0, 1, 1, 1, 1])), graph });
+      expect(rulesOf(violations)).not.toContain("quiz-answer-position-bias");
+      expect(rulesOf(violations)).toContain("quiz-answer-position-coverage");
     });
   });
 

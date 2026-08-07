@@ -69,6 +69,7 @@ export type QuizViolationRule =
   | "quiz-duplicate"
   | "quiz-leetcode-id" // §5／§11：題號 MUST 由程式從 Problem Bank 帶入，MUST NOT 由 LLM 生成
   | "quiz-answer-position-bias" // 正解位置過度集中 ⇒ 不讀題也能猜對
+  | "quiz-answer-position-coverage" // 正解只用到少數位置（實測 D 幾乎從未被使用）
   | "quiz-longest-option-bias"; // 正解恆為最長選項 ⇒ 可用長度猜答案
 
 export interface QuizViolation {
@@ -142,8 +143,24 @@ function codePointLength(text: string): number {
  * ——那會讓正常波動頻繁觸發重生、白燒免費層額度。
  */
 export const QUIZ_BIAS_MAX_SHARE = 0.5;
-/** 題數低於此下界時不套用兩條偏誤判準：樣本太小時佔比本身沒有統計意義（3 題有 2 題同位置即 67%）。 */
+/** 題數低於此下界時不套用偏誤判準：樣本太小時佔比本身沒有統計意義（3 題有 2 題同位置即 67%）。 */
 export const QUIZ_BIAS_MIN_ITEMS = 4;
+
+/**
+ * 正解位置**覆蓋數**下界（`quiz-answer-position-coverage`，quiz-bank-schema.md §3 rule 12）。
+ *
+ * **為何 `quiz-answer-position-bias`（佔比 ≤50%）不足以涵蓋**：佔比上限只約束「最集中的那一格」，
+ * 一份 `A=50% B=50% C=0 D=0` 的題庫完全合規，但 C／D 兩格從未出現，猜答空間仍被砍半。
+ * 實測（2026-08-07，242 題）：**A 佔 66.9%、B 26.4%、C 6.2%、D 僅 1 題（0.4%）**——模型幾乎
+ * 從不把正解放在最後一格，這是佔比判準看不見的第二種系統性偏誤。
+ *
+ * **分層而非一律要求四格**：`n=4` 時要求用滿四格等於「每格恰一題」，交叉驗證丟掉任一題就必然違規，
+ * 過於脆弱；`n≥8` 時四格各至少一題則相當寬鬆（期望各 2 題）。實測攔截率 27/31，且對照組
+ * （刻意平衡的 10 題手寫版本，分布 2/3/2/3）通過。
+ */
+export const QUIZ_POSITION_COVERAGE_MIN = 3;
+/** 題數達此下界時，四個位置 MUST 全部被使用（見 `QUIZ_POSITION_COVERAGE_MIN` 的分層理由）。 */
+export const QUIZ_POSITION_FULL_COVERAGE_ITEMS = 8;
 
 const OPTION_PREFIX_PATTERN = /^[A-D][.、)]\s*/;
 // rule 9 的判準邊界（MUST）：只攔「LeetCode／力扣 + 數字」與題目連結兩種樣式，MUST NOT 擴大為
@@ -204,6 +221,21 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
             `Concept「${conceptId}」的正解位置過度集中：${items.length} 題中有 ${maxPositionCount} 題（${((maxPositionCount / items.length) * 100).toFixed(0)}%）` +
             `正解為「${label}」，超過上限 ${QUIZ_BIAS_MAX_SHARE * 100}%（分布 A=${positionCounts[0]} B=${positionCounts[1]} C=${positionCounts[2]} D=${positionCounts[3]}）；` +
             `MUST 將正解平均分散到四個位置，否則學習者不讀題也能猜對`,
+        });
+      }
+
+      const usedPositions = positionCounts.filter((c) => c > 0).length;
+      const requiredCoverage =
+        items.length >= QUIZ_POSITION_FULL_COVERAGE_ITEMS ? 4 : QUIZ_POSITION_COVERAGE_MIN;
+      if (usedPositions < requiredCoverage) {
+        const unused = QUIZ_ANSWER_LABELS.filter((_, i) => positionCounts[i] === 0).join("、");
+        violations.push({
+          rule: "quiz-answer-position-coverage",
+          subject: conceptSubject,
+          message:
+            `Concept「${conceptId}」的正解只用到 ${usedPositions} 個位置（需 ≥${requiredCoverage}）：` +
+            `分布 A=${positionCounts[0]} B=${positionCounts[1]} C=${positionCounts[2]} D=${positionCounts[3]}，` +
+            `位置「${unused}」從未被使用；MUST 讓正解涵蓋更多位置，否則猜答空間被縮小`,
         });
       }
 

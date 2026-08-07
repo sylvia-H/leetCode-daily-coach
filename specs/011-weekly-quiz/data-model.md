@@ -50,8 +50,10 @@ MUST NOT 用字典序。
 | 無 LeetCode 題號／連結 | `stem + options + explanation` 合併文本 MUST NOT 命中 `/leetcode\.com\/problems/i` 或 `/(LeetCode｜力扣)\s*[#第]?\s*\d+/i`（判準邊界見 quiz-bank-schema.md §3 rule 9：MUST NOT 擴大為「不得出現任何數字」） | `quiz-leetcode-id` | FR-010／§5／§11 |
 | 正解位置不集中 | **集合層**：任一 `answerIndex` 佔比 ≤ `QUIZ_BIAS_MAX_SHARE`（50%）；題數 < `QUIZ_BIAS_MIN_ITEMS`（4）時不套用 | `quiz-answer-position-bias` | FR-010b |
 | 正解不恆為最長選項 | **集合層**：「正解恰為該題唯一最長選項」的題數佔比 ≤ 50%；題數 < 4 時不套用 | `quiz-longest-option-bias` | FR-010b |
+| 正解位置覆蓋足夠 | **集合層**：正解用到的位置數 ≥ `QUIZ_POSITION_COVERAGE_MIN`（3）；題數 ≥ `QUIZ_POSITION_FULL_COVERAGE_ITEMS`（8）時 MUST 用滿 4 個位置 | `quiz-answer-position-coverage` | FR-010b |
 
-**集合層判準（`quiz-count-range` / `quiz-answer-position-bias` / `quiz-longest-option-bias`）的執行時機**：
+**集合層判準（`quiz-count-range` / `quiz-answer-position-bias` / `quiz-answer-position-coverage` /
+`quiz-longest-option-bias`）的執行時機**：
 對象是整個題目集合而非單題，故生成端 MUST 在**交叉驗證後、以存活集合**執行（FR-013a，
 quiz-bank-schema.md §3「判準的兩個層級」）；草稿階段先判會用錯集合。
 
@@ -81,8 +83,9 @@ export type QuizViolationRule =
   | "quiz-count-range"
   | "quiz-duplicate"
   | "quiz-leetcode-id"              // §5／§11：題號 MUST 由程式從 Problem Bank 帶入，MUST NOT 由 LLM 生成
-  | "quiz-answer-position-bias"     // 集合層：正解位置過度集中 ⇒ 不讀題也能猜對
-  | "quiz-longest-option-bias";     // 集合層：正解恆為唯一最長選項 ⇒ 可用長度猜答案
+  | "quiz-answer-position-bias"      // 集合層：正解位置過度集中 ⇒ 不讀題也能猜對
+  | "quiz-answer-position-coverage"  // 集合層：正解只用到少數位置（實測 D 幾乎從未被使用）
+  | "quiz-longest-option-bias";      // 集合層：正解恆為唯一最長選項 ⇒ 可用長度猜答案
 
 export interface QuizViolation {
   rule: QuizViolationRule;

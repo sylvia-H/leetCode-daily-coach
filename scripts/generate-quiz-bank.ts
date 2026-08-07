@@ -68,6 +68,7 @@ const INFRA_RETRY_ATTEMPTS = 3;
 const SET_LEVEL_RULES: ReadonlySet<QuizViolationRule> = new Set([
   "quiz-count-range",
   "quiz-answer-position-bias",
+  "quiz-answer-position-coverage",
   "quiz-longest-option-bias",
 ]);
 

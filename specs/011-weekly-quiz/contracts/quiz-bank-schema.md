@@ -64,13 +64,13 @@ CI Gate（`runContentGate`）MUST 依同一份 schema 與同一組上限常數�
 
 ## 3. Gate 判準（`checkQuizBank()`）
 
-**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **11 個**，其中 **10 個由 `checkQuizBank()` 輸出**，
+**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **12 個**，其中 **11 個由 `checkQuizBank()` 輸出**，
 `quiz-schema` 這 1 個由 §2 的載入層 throw 實現。凡提及數量處一律採此說法。
-（rule 10／11 為 2026-08-07 實測後新增，見該兩列的理由欄。）
+（rule 10～12 為 2026-08-07 實測後新增，見各列的理由欄。）
 
 **判準的兩個層級（MUST 區分）**：
 - **逐題判準**（rule 2–6、8–9）：對象是單一 `QuizItem`，可在草稿階段直接判。
-- **集合層判準**（rule 7、10、11）：對象是**該 Concept 的整個題目集合**，MUST 在交叉驗證丟棄題目
+- **集合層判準**（rule 7、10、11、12）：對象是**該 Concept 的整個題目集合**，MUST 在交叉驗證丟棄題目
   **之後**、以**存活集合**為對象執行（FR-013a）。在草稿階段先判會用錯集合——交叉驗證會改變題數、
   正解位置分布與選項長度分布，草稿通過不代表存活集合通過。生成端 MUST 於存活集合上重跑一次
   完整 `checkQuizBank`，**MUST NOT 只判題數下限就寫入**（實測 2026-08-07：正因只判了 `<3`
@@ -93,6 +93,7 @@ export type QuizViolationRule =
   | "quiz-duplicate"
   | "quiz-leetcode-id"
   | "quiz-answer-position-bias"
+  | "quiz-answer-position-coverage"
   | "quiz-longest-option-bias";
 
 export interface QuizViolation {
@@ -118,18 +119,35 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
 | 9 | `quiz-leetcode-id` | `stem + options + explanation` 合併文本命中 `/leetcode\.com\/problems/i` 或 `/(LeetCode｜力扣)\s*[#第]?\s*\d+/i`（題號 / 題目連結轉載） | FR-010／§5／§11 |
 | 10 | `quiz-answer-position-bias` | **集合層**：該 Concept 內任一 `answerIndex` 的出現次數佔比 > **50%**（`QUIZ_BIAS_MAX_SHARE`）；題數 < **4**（`QUIZ_BIAS_MIN_ITEMS`）時不套用 | FR-010b |
 | 11 | `quiz-longest-option-bias` | **集合層**：該 Concept 內「正解恰為該題**唯一**最長選項」的題數佔比 > **50%**；題數 < 4 時不套用 | FR-010b |
+| 12 | `quiz-answer-position-coverage` | **集合層**：正解實際用到的位置數 < **3**（`QUIZ_POSITION_COVERAGE_MIN`）；題數 ≥ **8**（`QUIZ_POSITION_FULL_COVERAGE_ITEMS`）時 MUST 用滿 **4** 個位置。題數 < 4 時不套用 | FR-010b |
 
-**rule 10／11 的存在理由（MUST NOT 移除或放寬至接近隨機期望值）**：實測（2026-08-07，
+**rule 12 與 rule 10 為何都需要（互補而非重複）**：rule 10 的佔比上限只約束「最集中的那一格」——
+一份 `A=50% B=50% C=0 D=0` 的題庫完全通過 rule 10，但 C／D 兩格從未出現，猜答空間仍被砍半。
+實測（2026-08-07，242 題全庫）：**A 佔 66.9%、B 26.4%、C 6.2%、D 僅 1 題（0.4%）**——模型幾乎
+從不把正解放在最後一格，這是佔比判準看不見的第二種系統性偏誤。**分層而非一律要求四格**：`n=4`
+時要求用滿四格等於「每格恰一題」，交叉驗證丟掉任一題就必然違規、過於脆弱；`n≥8` 時四格各至少
+一題相當寬鬆（期望各兩題）。實測攔截 27/31，且刻意平衡的手寫對照組（分布 2/3/2/3）通過。
+
+**rule 10～12 的存在理由（MUST NOT 移除或放寬至接近隨機期望值）**：實測（2026-08-07，
 `array-two-pointers-variable`）產出的 10 題**全數通過當時既有的 9 條判準**，卻有 **80% 正解落在 B、
 90% 正解是該題唯一最長選項**——學習者只要「一律選最長的 B」就能得 80 分而完全不必理解內容。
 本題庫的全部價值在於**誠實的自我訊號**（SC-001～SC-003 的共同前提），這種題目量測不到任何東西，
 等同素材失效卻無任何徵兆。同批 31 個已產出 Concept 以此判準複驗為 **31/31 違規**，證實這是
 **系統性偏誤而非個案**。
 
-**為何這兩條可以是結構性判準**（與 checklists/prompt-design.md CHK006／018 那批不同）：兩者皆為
+**為何這三條可以是結構性判準**（與 checklists/prompt-design.md CHK006／018 那批不同）：三者皆為
 **純計數**，不需要把 Stage A 的面向清單持久化為中繼產物（那正是當初否決補 Gate 的理由，research R6），
 故成本極低而收益明確。**MUST NOT 只靠 prompt 敘述防範**——spec Q14 已實證敘述性要求無法穩定落實，
 且此偏誤是「把正解寫得比干擾項完整」這種下意識行為，連人工撰寫也會發生。
+
+**刻意不納入 Gate 的一項偏誤：「絕對化用詞只出現在干擾項」**。實測同批 242 題有 **54.1%** 的題目
+呈現此樣態（干擾項充斥「完全不需要」「必然」「永遠」「只能」「絕對」而正解從不使用），學習者
+只要刪掉語氣最強的選項就能大幅提高命中率，看似是理想的第四條判準。**但校準顯示它不是好壞的
+鑑別器**：刻意平衡撰寫的手寫對照組在同一指標上是 **70%**，比被判定為劣質的那批更高。根因是
+「過度一般化」本來就是**優良干擾項的合法設計**（用來測試學習者是否知道例外），把它機械化禁止
+會與正確的出題原則衝突。故此項 **MUST 僅以 prompt 規則處置**（要求干擾項具備實質觀念錯誤、
+而非靠極端修飾語製造錯誤），**MUST NOT 加入 `checkQuizBank`**。此段記錄的是「已評估並否決」，
+MUST NOT 被後人當成遺漏而補上。
 
 **門檻取 50% 的理由**：隨機均勻分派下，正解位置與「唯一最長」的期望佔比皆約 **25%**；取 50% 留有
 一倍餘裕，只攔明顯的系統性偏誤。**MUST NOT 收緊到接近 25%**——那會讓正常抽樣波動頻繁觸發重生、
@@ -142,8 +160,9 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
 不在結構性判準的能力範圍內，與 FR-016 已明文承認的語意層限制同類，MUST NOT 以擴大正則來假裝覆蓋。
 
 **映射進 `GateViolation`**（`src/compiler/gate.ts`）：`rule` 固定 `quiz-invalid`，
-`subject` MUST 為 `` `${v.rule}@${v.subject}` ``，`message` 沿用 `v.message`。**Gate 層不新增
-9 個 `GateRule`**——素材違規對 Gate 的意義一致（擋下、非零 exit code），細分留在 `QuizViolationRule`。
+`subject` MUST 為 `` `${v.rule}@${v.subject}` ``，`message` 沿用 `v.message`。**`GateRule` 只新增
+`quiz-invalid` 這一個、MUST NOT 為每條判準各開一個**——素材違規對 Gate 的意義一致（擋下、非零
+exit code），細分留在 `QuizViolationRule`。
 
 **違規訊息 MUST 指名根因**：哪一個 Concept、第幾則、實際值 / 上限。**MUST NOT 自動截斷**：
 任一項不通過即擋下（生成期觸發重生、CI 期以非零 exit code 結束）。
@@ -213,7 +232,7 @@ for each concept in ordinalOf 全序:
 
     if survivors.length < 3 → lastFailure = "存活題數不足 3"; continue        // 訊息較貼近產線語境
     // 集合層判準 MUST 以**存活集合**為對象重跑完整 checkQuizBank（FR-013a）：涵蓋題數上限（>10）
-    // 與兩條猜答偏誤（rule 10／11）。MUST NOT 只判下限就寫入——見 §3「判準的兩個層級」的實測教訓。
+    // 與三條猜答偏誤（rule 10～12）。MUST NOT 只判下限就寫入——見 §3「判準的兩個層級」的實測教訓。
     g = checkQuizBank({ quizBank: { version: 1, byConcept: { [concept.id]: survivors } }, graph })
     if g.length > 0 → retryFeedback = g.map(v => v.message); continue
     → 通過，寫入 byConcept[concept.id] = survivors，checkpoint 標記 frozen/gatePassed
@@ -238,7 +257,7 @@ for each concept in ordinalOf 全序:
 在生成端由 Stage B 的 `responseSchema` 與 zod 解析承擔，不需另行呼叫。
 
 **集合層判準一律只有一個落點**：交叉驗證後以**存活集合**重跑一次完整 `checkQuizBank`（見上方流程），
-**MUST NOT** 在草稿階段提前判定；批次末的 `runContentGate` 對已寫入的題庫全量重跑完整 11 條判準，
+**MUST NOT** 在草稿階段提前判定；批次末的 `runContentGate` 對已寫入的題庫全量重跑完整 12 條判準，
 為最後一道。**生成端 MUST NOT 只判 `survivors.length < 3` 就寫入**——那會讓題數上限與兩條猜答偏誤
 完全逃過生成期把關，只能在批次末以整批非零 exit 的形式爆出（實測 2026-08-07 的實際故障模式）。
 

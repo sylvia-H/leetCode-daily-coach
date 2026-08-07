@@ -147,7 +147,7 @@ npm run build:pages
 
 ## 5. Gate 攔截驗證（對照 SC-008）
 
-`QuizViolationRule` 共 **11 個**：10 個由 `checkQuizBank()` 輸出，`quiz-schema` 由載入層 throw
+`QuizViolationRule` 共 **12 個**：11 個由 `checkQuizBank()` 輸出，`quiz-schema` 由載入層 throw
 （計數口徑見 contracts/quiz-bank-schema.md §3）。逐一植入違規樣本後執行 `npm run validate:content`，
 **預期每一項都被具名擋下、零自動截斷**。`quiz-schema`／`quiz-unknown-concept` 由單元測試覆蓋
 （不在此以手改 `data/` 的方式植入，同 F8 quickstart §6 的既有慣例）：
@@ -163,6 +163,7 @@ npm run build:pages
 | 某題幹改寫為含「LeetCode 1」或 `https://leetcode.com/problems/two-sum/` | `quiz-invalid` / `quiz-leetcode-id` |
 | 把某 Concept（≥4 題）的多數題 `answerIndex` 改為同一值，使佔比 >50% | `quiz-invalid` / `quiz-answer-position-bias`（指名分布與佔比） |
 | 把某 Concept（≥4 題）多數題的正解選項加長至唯一最長，使佔比 >50% | `quiz-invalid` / `quiz-longest-option-bias`（指名佔比） |
+| 把某 Concept（≥8 題）的 `answerIndex` 全部集中到 3 個以內的位置 | `quiz-invalid` / `quiz-answer-position-coverage`（指名未使用的位置） |
 
 > 驗完 MUST `git checkout -- data/quiz-bank.json` 還原。
 
