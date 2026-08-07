@@ -61,6 +61,28 @@ describe("checkQuizBank（quiz-bank-schema.md §3）", () => {
     expect(v?.subject).toBe("quiz-bank:two-pointer-technique[0]");
   });
 
+  describe("quiz-option-cross-reference（rule 13）：選項參照其他選項或位置", () => {
+    // 產線會在寫入前確定性重排選項順序（quiz-bank-schema.md §5.2a），這類寫法重排後必然語意錯亂。
+    it.each(["以上皆是", "以上皆非", "上述選項都正確", "同選項 A 的敘述", "A 和 B 都成立"])(
+      "攔下自我參照樣式：「%s」",
+      (bad) => {
+        const bank = makeBank([makeItem({ options: ["正常選項一", "正常選項二", "正常選項三", bad] }), makeItem(), makeItem()]);
+        const v = checkQuizBank({ quizBank: bank, graph }).find((v) => v.rule === "quiz-option-cross-reference");
+        expect(v).toBeDefined();
+        expect(v?.subject).toBe("quiz-bank:two-pointer-technique[0]");
+      },
+    );
+
+    it("判準 MUST NOT 過寬：正常敘述中的「以上」「上述」不攔（否則會逼出無意義的重生）", () => {
+      const bank = makeBank([
+        makeItem({ options: ["長度在十以上時改用雜湊表", "上述情境不適用雙指標", "維持左右指標單調移動", "先排序再掃描一次"] }),
+        makeItem(),
+        makeItem(),
+      ]);
+      expect(rulesOf(checkQuizBank({ quizBank: bank, graph }))).not.toContain("quiz-option-cross-reference");
+    });
+  });
+
   it("quiz-conclusion-length：explanation[0] 超過 80 字元", () => {
     const longConclusion = "結".repeat(81);
     const bank = makeBank([makeItem({ explanation: [longConclusion, "a", "b", "c", "d"] }), makeItem(), makeItem()]);

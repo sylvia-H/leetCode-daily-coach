@@ -168,15 +168,20 @@ describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存�
     expect(result.failure?.reason).toMatch(/需落在 \[3,10\] 區間/);
   });
 
-  it("存活集合正解位置過度集中 ⇒ 本輪不通過（quiz-answer-position-bias）", async () => {
+  it("存活集合正解全部集中在同一位置 ⇒ 由確定性重排修正、第 1 輪即通過（MUST NOT 觸發重生）", async () => {
     const { graph, node } = makeNode();
-    // 8 題全部正解在 index 0（100% > 50%）
+    // 8 題全部正解在 index 0（重排前 100%，遠超 50%）。位置不帶語意，MUST NOT 靠重生賭模型
+    // 下一輪突然變均勻——那在 n=8 時即使模型完全無偏誤也有約 4 成機率再次違規（quiz-balance.ts 檔頭）。
     const items = Array.from({ length: 8 }, (_, i) => draftItem(`面向${i}`, 0));
-    const client = sequentialClient([...oneAttempt(items), ...oneAttempt(items), ...oneAttempt(items)]);
+    const client = sequentialClient(oneAttempt(items));
 
     const result = await generateQuizForConcept(client, node, graph, fakeAspectsInput());
-    expect(result.items).toBeUndefined();
-    expect(result.failure?.reason).toMatch(/正解位置過度集中/);
+    expect(result.items).toHaveLength(8);
+    expect(result.attempts).toBe(1);
+
+    const counts = [0, 0, 0, 0];
+    for (const item of result.items!) counts[item.answerIndex]!++;
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
   });
 
   it("存活集合正解過度集中於最長選項 ⇒ 本輪不通過（quiz-longest-option-bias）", async () => {
@@ -191,7 +196,8 @@ describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存�
 
   it("失敗原因 MUST 回饋進下一輪的 Stage B prompt（讓模型知道要修正什麼）", async () => {
     const { graph, node } = makeNode();
-    const items = Array.from({ length: 8 }, (_, i) => draftItem(`面向${i}`, 0));
+    // 用 longest-option-bias 當觸發源：位置類判準已由重排消化，只剩內容類判準會真正驅動重生。
+    const items = Array.from({ length: 8 }, (_, i) => longestAnswerDraftItem(`面向${i}`));
     const prompts: string[] = [];
     let i = 0;
     const responses = [...oneAttempt(items), ...oneAttempt(items), ...oneAttempt(items)];
@@ -205,8 +211,8 @@ describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存�
     }));
 
     await generateQuizForConcept(client, node, graph, fakeAspectsInput());
-    // 第二輪的 Stage B prompt（第 12 次呼叫起算之前）MUST 含上一輪的違規原因
-    expect(prompts.some((p) => p.includes("正解位置過度集中"))).toBe(true);
+    // 第二輪的 Stage B prompt MUST 含上一輪的違規原因
+    expect(prompts.some((p) => p.includes("正解過度集中於最長選項"))).toBe(true);
   });
 });
 
