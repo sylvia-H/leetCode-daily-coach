@@ -2,6 +2,7 @@
 // 不需依賴真實 concepts/ 與 articles/（T012）。
 import { checkOverlayCoverage, type CompilerDeps, type ProblemOrigin } from "../../src/compiler/lesson.js";
 import type { EncouragementPool, ReflectionBank } from "../../src/compiler/material.js";
+import type { QuizBank } from "../../src/compiler/quiz.js";
 import type { ConceptNode, CurriculumGraph, ModuleNode, Ordinal, TopicNode } from "../../src/types/curriculum.js";
 import type { Track } from "../../src/types/lesson.js";
 import type { ProblemBank, ProblemMeta } from "../../src/types/problem.js";
@@ -224,6 +225,10 @@ export interface TestDepsInput {
   /** F8 素材；未提供則 deps.reflectionBank / deps.encouragement 缺席（同真實載入層的缺席語意）。 */
   reflectionBank?: ReflectionBank;
   encouragement?: EncouragementPool;
+  /** F11 素材；未提供則 deps.quizBank 缺席（同真實載入層的缺席語意）。 */
+  quizBank?: QuizBank;
+  /** F11 research R1；未提供則 deps.pagesBaseUrl 缺席（小測連結全部省略）。 */
+  pagesBaseUrl?: string;
 }
 
 export function makeCompilerDeps(input: TestDepsInput): CompilerDeps {
@@ -259,5 +264,7 @@ export function makeCompilerDeps(input: TestDepsInput): CompilerDeps {
   };
   if (input.reflectionBank !== undefined) deps.reflectionBank = input.reflectionBank;
   if (input.encouragement !== undefined) deps.encouragement = input.encouragement;
+  if (input.quizBank !== undefined) deps.quizBank = input.quizBank;
+  if (input.pagesBaseUrl !== undefined) deps.pagesBaseUrl = input.pagesBaseUrl;
   return deps;
 }

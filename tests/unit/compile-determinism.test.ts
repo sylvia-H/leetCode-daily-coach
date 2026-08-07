@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compile, loadCompilerDeps } from "../../src/compiler/lesson.js";
 import { render } from "../../src/renderer/discord.js";
+import { makeArticleMarkdown, makeCompilerDeps } from "../helpers/compiler.js";
 
 describe("compile — determinism（SC-003）", () => {
   it("同一 (track, sessionIndex) 連續 compile 10 次，JSON.stringify 全等", () => {
@@ -33,5 +34,41 @@ describe("compile — determinism（SC-003）", () => {
       const again = JSON.stringify(render(compile("foundation", reviewSession.sessionIndex, deps)));
       expect(again).toBe(first);
     }
+  });
+
+  // F11（不變式 I3、SC-002）：既有 fixture 不含 quizBank，小測路徑不會被觸達——此為唯一含
+  // quizBank 的 determinism 自動化落點（quiz-selection.md §2 I3）。
+  it("含 quizBank 的 review Session 重複 compile + render 兩次，byte-identical（SC-002）", () => {
+    const concepts = [
+      { id: "alpha", title: "Alpha", localOrder: 1, topic: "test-topic" },
+      { id: "beta", title: "Beta", localOrder: 2, topic: "test-topic" },
+    ];
+    const articles = {
+      "articles/test-topic/001-alpha.md": makeArticleMarkdown({ id: "alpha" }),
+      "articles/test-topic/002-beta.md": makeArticleMarkdown({ id: "beta" }),
+    };
+    const quizItem = {
+      stem: "stem",
+      options: ["a", "b", "c", "d"] as [string, string, string, string],
+      answerIndex: 0 as const,
+      explanation: ["結論", "正解", "選2", "選3", "選4"] as [string, string, string, string, string],
+    };
+    const deps = makeCompilerDeps({
+      concepts,
+      schedules: {
+        foundation: [
+          { sessionIndex: 1, type: "concept", conceptId: "alpha" },
+          { sessionIndex: 2, type: "concept", conceptId: "beta" },
+          { sessionIndex: 3, type: "review", reviewRange: [1, 2] },
+        ],
+      },
+      articles,
+      quizBank: { version: 1, byConcept: { alpha: [quizItem, quizItem, quizItem], beta: [quizItem, quizItem, quizItem] } },
+      pagesBaseUrl: "https://example.github.io/leetcode-daily-coach",
+    });
+
+    const first = JSON.stringify(render(compile("foundation", 3, deps)));
+    const second = JSON.stringify(render(compile("foundation", 3, deps)));
+    expect(second).toBe(first);
   });
 });

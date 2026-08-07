@@ -150,34 +150,34 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
 
 ### 3A. Compiler 整合（plan P2；依賴 Phase 2）
 
-- [ ] T013 [US1] 擴充 `CompilerDeps`（`quizBank?: QuizBank`、`pagesBaseUrl?: string`）與
+- [X] T013 [US1] 擴充 `CompilerDeps`（`quizBank?: QuizBank`、`pagesBaseUrl?: string`）與
   `CompilerPaths`（`quizBankPath: "data/quiz-bank.json"`）於 `src/compiler/lesson.ts`
   （data-model.md §5）
-- [ ] T014 [P] [US1] 擴充 `Config.pagesBaseUrl?: string` 於 `src/config.ts`：
+- [X] T014 [P] [US1] 擴充 `Config.pagesBaseUrl?: string` 於 `src/config.ts`：
   `loadConfig` 讀取 `env.PAGES_BASE_URL?.trim() || undefined`；**不列為必要欄位**，缺席不影響
   既有 fail-fast 條件（data-model.md §6、research R1）
-- [ ] T015 [US1] [depends on T014] `src/main.ts` 的 `run()` 於 `loadCompilerDeps()` 後併入
+- [X] T015 [US1] [depends on T014] `src/main.ts` 的 `run()` 於 `loadCompilerDeps()` 後併入
   `deps.pagesBaseUrl = config.pagesBaseUrl`（data-model.md §6）
-- [ ] T016 [US1] [depends on T007, T007a, T013] `compileReview` 組裝 `quizItems` 於
+- [X] T016 [US1] [depends on T007, T007a, T013] `compileReview` 組裝 `quizItems` 於
   `src/compiler/lesson.ts`：依 `reviewConcepts` 既有順序逐一呼叫 `selectQuizItem`，缺題 Concept
   略過（FR-007）；`quizUrl = deps.pagesBaseUrl ? "${deps.pagesBaseUrl}/quiz/${conceptId}.html" :
   undefined`（FR-012）；轉換一律走 T007a 的 `toReviewQuizItem(c.id, item, quizUrl)`，
   **MUST NOT 就地拼裝 `answerLabel`／`conclusion`**；全部略過 ⇒ **不設定** `lesson.quizItems`
   （MUST NOT 以空陣列填充，contracts/quiz-selection.md §3）
-- [ ] T017 [US1] [depends on T008] 於 `src/compiler/gate.ts` 新增 `GateRule = "quiz-invalid"`
+- [X] T017 [US1] [depends on T008] 於 `src/compiler/gate.ts` 新增 `GateRule = "quiz-invalid"`
   （只新增這一個，9 個細分留在 `QuizViolationRule`），`runContentGate` 開頭比照
   `checkMaterials` 的既有呼叫方式多呼叫一次 `checkQuizBank({ quizBank: deps.quizBank, graph })`，
   `subject` 映射為 `` `${v.rule}@${v.subject}` ``（data-model.md §8）
-- [ ] T018 [P] [US1] 擴充 `tests/unit/compile-review.test.ts`：`quizItems.length ===
+- [X] T018 [P] [US1] 擴充 `tests/unit/compile-review.test.ts`：`quizItems.length ===
   reviewConcepts.length`（除非某 Concept 題庫缺席）；`pagesBaseUrl` 缺席／存在對 `quizUrl` 的
   影響；某 Concept 題庫無題時該 Concept 略過、其餘正常；題庫檔缺席時 `quizItems` 整體不設定
   （FR-002／FR-004／FR-007／FR-008／FR-012）
-- [ ] T018a [P] [US1] 擴充 `tests/unit/compile-determinism.test.ts`：以含 `quizBank` 的 deps
+- [X] T018a [P] [US1] 擴充 `tests/unit/compile-determinism.test.ts`：以含 `quizBank` 的 deps
   fixture，對同一 `(track, sessionIndex)` 的 review Session **重複 compile + render 兩次，
   斷言結果 byte-identical**（不變式 I3、**SC-002**）。**此為 SC-002 唯一的自動化落點**——既有
   determinism 測試的 fixture 不含 `quizBank`，小測路徑不會被觸達；T041 的人工快照 MUST NOT
   作為 SC-002 的唯一保證（quiz-selection.md §2 I3）
-- [ ] T019 [P] [US1] 擴充 `tests/unit/content-gate-additions.test.ts`：注入違規 `quizBank`
+- [X] T019 [P] [US1] 擴充 `tests/unit/content-gate-additions.test.ts`：注入違規 `quizBank`
   fixture，斷言 `runContentGate` 回報 `rule === "quiz-invalid"` 且 `subject` 具 `{原rule}@` 前綴
   （data-model.md §8）
 
