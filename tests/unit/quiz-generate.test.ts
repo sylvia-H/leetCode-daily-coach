@@ -38,6 +38,17 @@ function draftItem(aspect: string, answerIndex = 0) {
   };
 }
 
+/** 正解為唯一最長選項的題（用於觸發 quiz-longest-option-bias）。 */
+function longestAnswerDraftItem(aspect: string) {
+  return {
+    stem: `題幹（${aspect}）`,
+    options: ["短", "短乙", "短丙", "這是一個明顯比其他三個選項都要長上許多的正確答案"],
+    answerIndex: 3,
+    explanation: ["結論", "正解說明", "選2說明", "選3說明", "選4說明"],
+    aspect,
+  };
+}
+
 /** 依序回應的假 LLM：每次呼叫回傳陣列中下一筆（依序取用，用完即拋錯以利測試發現漏配置）。 */
 function sequentialClient(responses: { text: string }[]) {
   let i = 0;
@@ -133,6 +144,69 @@ describe("generateQuizForConcept — 3 輪皆不過（含驗證後仍 <3 題）�
     expect(result.items).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);
     expect(result.failure?.reason).toMatch(/存活題數不足 3/);
+  });
+});
+
+describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存活集合」為對象（FR-013a）", () => {
+  /** 產一輪：Stage A 面向 + Stage B 出題 + 逐題交叉驗證全數一致。 */
+  function oneAttempt(items: ReturnType<typeof draftItem>[]) {
+    return [
+      { text: JSON.stringify({ aspects: items.map((it) => it.aspect) }) },
+      { text: JSON.stringify({ items }) },
+      ...items.map((it) => ({ text: JSON.stringify({ answerIndex: it.answerIndex }) })),
+    ];
+  }
+
+  it("存活集合題數 >10 ⇒ 本輪不通過（quiz-count-range），MUST NOT 讓超量題目漏進題庫", async () => {
+    const { graph, node } = makeNode();
+    const items = Array.from({ length: 11 }, (_, i) => draftItem(`面向${i}`, (i % 4) as 0 | 1 | 2 | 3));
+    const client = sequentialClient([...oneAttempt(items), ...oneAttempt(items), ...oneAttempt(items)]);
+
+    const result = await generateQuizForConcept(client, node, graph, fakeAspectsInput());
+    expect(result.items).toBeUndefined();
+    expect(result.attempts).toBe(MAX_REGEN);
+    expect(result.failure?.reason).toMatch(/需落在 \[3,10\] 區間/);
+  });
+
+  it("存活集合正解位置過度集中 ⇒ 本輪不通過（quiz-answer-position-bias）", async () => {
+    const { graph, node } = makeNode();
+    // 8 題全部正解在 index 0（100% > 50%）
+    const items = Array.from({ length: 8 }, (_, i) => draftItem(`面向${i}`, 0));
+    const client = sequentialClient([...oneAttempt(items), ...oneAttempt(items), ...oneAttempt(items)]);
+
+    const result = await generateQuizForConcept(client, node, graph, fakeAspectsInput());
+    expect(result.items).toBeUndefined();
+    expect(result.failure?.reason).toMatch(/正解位置過度集中/);
+  });
+
+  it("存活集合正解過度集中於最長選項 ⇒ 本輪不通過（quiz-longest-option-bias）", async () => {
+    const { graph, node } = makeNode();
+    const items = Array.from({ length: 8 }, (_, i) => longestAnswerDraftItem(`面向${i}`));
+    const client = sequentialClient([...oneAttempt(items), ...oneAttempt(items), ...oneAttempt(items)]);
+
+    const result = await generateQuizForConcept(client, node, graph, fakeAspectsInput());
+    expect(result.items).toBeUndefined();
+    expect(result.failure?.reason).toMatch(/正解過度集中於最長選項/);
+  });
+
+  it("失敗原因 MUST 回饋進下一輪的 Stage B prompt（讓模型知道要修正什麼）", async () => {
+    const { graph, node } = makeNode();
+    const items = Array.from({ length: 8 }, (_, i) => draftItem(`面向${i}`, 0));
+    const prompts: string[] = [];
+    let i = 0;
+    const responses = [...oneAttempt(items), ...oneAttempt(items), ...oneAttempt(items)];
+    const client = makeClient(() => ({
+      models: {
+        generateContent: async (args: { contents: string }) => {
+          prompts.push(args.contents);
+          return responses[i++]!;
+        },
+      },
+    }));
+
+    await generateQuizForConcept(client, node, graph, fakeAspectsInput());
+    // 第二輪的 Stage B prompt（第 12 次呼叫起算之前）MUST 含上一輪的違規原因
+    expect(prompts.some((p) => p.includes("正解位置過度集中"))).toBe(true);
   });
 });
 

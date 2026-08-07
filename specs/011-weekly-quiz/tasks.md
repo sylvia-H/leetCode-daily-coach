@@ -133,6 +133,21 @@ FR-010／FR-010a／FR-014。
   缺 key 或陣列為空 ⇒ 該 Concept 略過（由 Gate 擋下，不在 runtime 失敗）；壞檔／不符 schema ⇒
   throw 具名錯誤（quiz-bank-schema.md §2）
 
+- [X] T012a **（2026-08-07 實測後新增）** 新增兩條**集合層**猜答偏誤判準於 `src/compiler/quiz.ts`
+  （FR-010b、quiz-bank-schema.md §3 rule 10／11）：`quiz-answer-position-bias`（任一 `answerIndex`
+  佔比 >50%）與 `quiz-longest-option-bias`（「正解為該題**唯一**最長選項」的題數佔比 >50%），
+  題數 < `QUIZ_BIAS_MIN_ITEMS`（4）時不套用；門檻常數 `QUIZ_BIAS_MAX_SHARE` = 0.5 具名匯出。
+  同步修正 `scripts/generate-quiz-bank.ts`：集合層判準（`SET_LEVEL_RULES`）MUST 於交叉驗證後
+  **以存活集合重跑完整 `checkQuizBank`**，MUST NOT 只判 `survivors.length < 3` 就寫入；
+  `scripts/lib/prompts/quiz-items.ts` 補上選項長度相近與正解位置分散的要求；
+  測試落於 `tests/unit/quiz-gate.test.ts`（兩條判準的攔截／門檻／下界／並列最長不誤判）與
+  `tests/unit/quiz-generate.test.ts`（存活集合超量與兩種偏誤皆觸發重生、失敗原因回饋進 prompt）
+  > **實測證據（MUST NOT 移除本註記）**：首輪產出的 31 個 Concept **全數（31/31）違反這兩條**，
+  > 其中 `array-two-pointers-variable` 的 10 題有 **80% 正解落在 B、90% 正解是唯一最長選項**，
+  > 卻**全數通過當時既有的 9 條判準**——學習者「一律選最長的 B」即得 80 分而不必理解內容。
+  > 同一輪另有 3 個 Concept 帶著 11～12 題寫入題庫（超過上限 10），根因是產線只判了題數下限。
+  > 該批題庫已整份作廢重生（備份留於 scratchpad，未入庫）。
+
 **Checkpoint**: `src/compiler/quiz.ts` 與 `renderQuizItemBody` 就位且通過測試 → Phase 3
 的各子系統可平行開始
 

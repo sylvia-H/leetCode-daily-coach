@@ -2,7 +2,15 @@
 // 逐一被攔截且訊息指名根因；quiz-count-range 對 >10 題 MUST 回報違規而非自動截斷（CHK021）；
 // quiz-duplicate 只攔逐字相同；quiz-leetcode-id 攔得下三種樣式且不誤判正常數值（quiz-bank-schema.md §3）。
 import { describe, expect, it } from "vitest";
-import { checkQuizBank, toReviewQuizItem, type QuizBank, type QuizItem, type QuizViolationRule } from "../../src/compiler/quiz.js";
+import {
+  checkQuizBank,
+  toReviewQuizItem,
+  QUIZ_BIAS_MAX_SHARE,
+  QUIZ_BIAS_MIN_ITEMS,
+  type QuizBank,
+  type QuizItem,
+  type QuizViolationRule,
+} from "../../src/compiler/quiz.js";
 import { renderQuizItemBody } from "../../src/renderer/discord.js";
 import { QUIZ_BUDGET_LIMITS, QUIZ_URL_RESERVE_CHARS } from "../../src/renderer/budget.js";
 import { makeGraph } from "../helpers/compiler.js";
@@ -149,6 +157,92 @@ describe("checkQuizBank（quiz-bank-schema.md §3）", () => {
       const violations = checkQuizBank({ quizBank: bank, graph });
       expect(rulesOf(violations)).not.toContain("quiz-leetcode-id");
     });
+  });
+
+  describe("quiz-answer-position-bias（rule 10）：正解位置過度集中", () => {
+    function makeItems(answerIndices: (0 | 1 | 2 | 3)[]): QuizItem[] {
+      return answerIndices.map((answerIndex, i) => makeItem({ stem: `題目變體 ${i}`, answerIndex }));
+    }
+
+    it("10 題中 8 題正解同位置（80% > 50%）⇒ 攔下並指名分布", () => {
+      const bank = makeBank(makeItems([1, 1, 1, 1, 1, 1, 1, 1, 0, 2]));
+      const violations = checkQuizBank({ quizBank: bank, graph });
+      const v = violations.find((v) => v.rule === "quiz-answer-position-bias");
+      expect(v).toBeDefined();
+      expect(v?.message).toMatch(/80%/);
+      expect(v?.message).toMatch(/B=8/);
+      expect(v?.subject).toBe("quiz-bank:two-pointer-technique");
+    });
+
+    it("平均分散（最高 30%）⇒ 不攔", () => {
+      const bank = makeBank(makeItems([0, 0, 1, 1, 1, 2, 2, 3, 3, 3]));
+      expect(rulesOf(checkQuizBank({ quizBank: bank, graph }))).not.toContain("quiz-answer-position-bias");
+    });
+
+    it("恰好 50% ⇒ 不攔（門檻為「超過」而非「達到」）", () => {
+      const bank = makeBank(makeItems([0, 0, 0, 0, 1, 2, 3, 3]));
+      expect(rulesOf(checkQuizBank({ quizBank: bank, graph }))).not.toContain("quiz-answer-position-bias");
+    });
+
+    it("題數低於 QUIZ_BIAS_MIN_ITEMS 時不套用（樣本太小佔比無統計意義）", () => {
+      const bank = makeBank(makeItems([1, 1, 1])); // 3 題全同位置 = 100%，但低於下界
+      expect(rulesOf(checkQuizBank({ quizBank: bank, graph }))).not.toContain("quiz-answer-position-bias");
+      expect(QUIZ_BIAS_MIN_ITEMS).toBe(4);
+    });
+  });
+
+  describe("quiz-longest-option-bias（rule 11）：正解過度集中於最長選項", () => {
+    /** 正解為唯一最長選項的題（其餘選項明顯較短）。 */
+    function longestAnswerItem(i: number): QuizItem {
+      return makeItem({
+        stem: `題目變體 ${i}`,
+        options: ["短選項", "短選項乙", "短選項丙", "這是一個明顯比其他三個選項都長很多的正確答案"],
+        answerIndex: 3,
+      });
+    }
+    /** 四個選項等長的題（長度不構成線索）。 */
+    function balancedItem(i: number): QuizItem {
+      return makeItem({
+        stem: `題目變體 ${i}`,
+        options: ["長度相近的選項甲", "長度相近的選項乙", "長度相近的選項丙", "長度相近的選項丁"],
+        answerIndex: (i % 4) as 0 | 1 | 2 | 3,
+      });
+    }
+
+    it("8 題中 6 題正解為唯一最長選項（75% > 50%）⇒ 攔下", () => {
+      const items = [...Array.from({ length: 6 }, (_, i) => longestAnswerItem(i)), balancedItem(6), balancedItem(7)];
+      const violations = checkQuizBank({ quizBank: makeBank(items), graph });
+      const v = violations.find((v) => v.rule === "quiz-longest-option-bias");
+      expect(v).toBeDefined();
+      expect(v?.message).toMatch(/75%/);
+    });
+
+    it("四個選項等長 ⇒ 不攔（長度不構成可利用線索）", () => {
+      const items = Array.from({ length: 8 }, (_, i) => balancedItem(i));
+      expect(rulesOf(checkQuizBank({ quizBank: makeBank(items), graph }))).not.toContain("quiz-longest-option-bias");
+    });
+
+    it("正解與其他選項並列最長 ⇒ 不計入偏誤（僅「唯一最長」才算線索）", () => {
+      const tied = Array.from({ length: 8 }, (_, i) =>
+        makeItem({
+          stem: `題目變體 ${i}`,
+          // 正解（index 0）與 index 1 並列最長
+          options: ["這是一個比較長的選項內容", "這是一個比較長的選項內容乙", "短選項", "短選項乙"],
+          answerIndex: 0,
+        }),
+      );
+      // index 1 才是唯一最長 ⇒ 正解不是唯一最長 ⇒ 不計入
+      expect(rulesOf(checkQuizBank({ quizBank: makeBank(tied), graph }))).not.toContain("quiz-longest-option-bias");
+    });
+
+    it("題數低於 QUIZ_BIAS_MIN_ITEMS 時不套用", () => {
+      const items = Array.from({ length: 3 }, (_, i) => longestAnswerItem(i)); // 100% 但低於下界
+      expect(rulesOf(checkQuizBank({ quizBank: makeBank(items), graph }))).not.toContain("quiz-longest-option-bias");
+    });
+  });
+
+  it("QUIZ_BIAS_MAX_SHARE 為 0.5：MUST NOT 收緊到接近隨機期望值 25%（會因正常波動誤殺而白燒額度）", () => {
+    expect(QUIZ_BIAS_MAX_SHARE).toBe(0.5);
   });
 
   it("QUIZ_URL_RESERVE_CHARS MUST >= 實際最壞連結長度（憲章 IX：Gate 恆嚴格於 runtime）", () => {

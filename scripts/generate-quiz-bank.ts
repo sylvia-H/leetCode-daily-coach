@@ -17,7 +17,13 @@ import matter from "gray-matter";
 import { loadCurriculum } from "../src/compiler/curriculum.js";
 import { runContentGate } from "../src/compiler/gate.js";
 import { loadCompilerDeps, loadOptionalMaterial } from "../src/compiler/lesson.js";
-import { checkQuizBank, quizBankSchema, type QuizBank, type QuizItem } from "../src/compiler/quiz.js";
+import {
+  checkQuizBank,
+  quizBankSchema,
+  type QuizBank,
+  type QuizItem,
+  type QuizViolationRule,
+} from "../src/compiler/quiz.js";
 import type { ConceptNode, CurriculumGraph, Ordinal } from "../src/types/curriculum.js";
 import { hashFile, writeFileAtomic } from "./lib/checkpoint.js";
 import { createLlmClient, type LlmClient } from "./lib/llm-client.js";
@@ -53,6 +59,17 @@ const QUIZ_BANK_PATH = "data/quiz-bank.json";
 export const MAX_REGEN = 3;
 /** 單一 LLM 呼叫的基礎設施重試上限（解析失敗／逾時等，MUST NOT 計入 MAX_REGEN，FR-013、CHK014）。 */
 const INFRA_RETRY_ATTEMPTS = 3;
+
+/**
+ * **集合層**判準：判斷對象是「該 Concept 的整個題目集合」而非單一題目，故 MUST 在交叉驗證丟棄
+ * 題目之後、以存活集合為對象執行（FR-013a）。在草稿階段先判會用錯集合——交叉驗證可能改變題數、
+ * 正解位置分布與選項長度分布，草稿通過不代表存活集合通過。
+ */
+const SET_LEVEL_RULES: ReadonlySet<QuizViolationRule> = new Set([
+  "quiz-count-range",
+  "quiz-answer-position-bias",
+  "quiz-longest-option-bias",
+]);
 
 interface GenerateFailure {
   reason: string;
@@ -309,10 +326,13 @@ export async function generateQuizForConcept(
       continue;
     }
 
-    // 逐題結構性檢查 MUST 復用 checkQuizBank（憲章 IX，MUST NOT 另寫一份 structuralGate）；
-    // 只在此階段濾掉 quiz-count-range——題數檢查移到交叉驗證後才做（FR-013a）。
+    // 逐題結構性檢查 MUST 復用 checkQuizBank（憲章 IX，MUST NOT 另寫一份 structuralGate）。
+    // 此階段濾掉 SET_LEVEL_RULES——它們的判斷對象是「交叉驗證後的存活集合」而非草稿（FR-013a），
+    // 在草稿階段先判會用錯集合：交叉驗證可能丟棄題目，改變題數與正解位置／長度分布。
     const tempBank: QuizBank = { version: 1, byConcept: { [node.id]: draftItems.map(toQuizItem) } };
-    const structuralViolations = checkQuizBank({ quizBank: tempBank, graph }).filter((v) => v.rule !== "quiz-count-range");
+    const structuralViolations = checkQuizBank({ quizBank: tempBank, graph }).filter(
+      (v) => !SET_LEVEL_RULES.has(v.rule),
+    );
     if (structuralViolations.length > 0) {
       lastFailure = { reason: structuralViolations.map((v) => v.message).join("; ") };
       continue;
@@ -320,9 +340,22 @@ export async function generateQuizForConcept(
 
     const survivors = await crossCheckAndRegenerate(llmClient, node.id, node.title, draftItems);
 
-    // FR-013a：題數檢查 MUST 在交叉驗證之後才做，MUST NOT 顛倒順序。
+    // FR-013a：集合層判準 MUST 在交叉驗證之後、以存活集合為對象執行，MUST NOT 顛倒順序。
+    // 題數不足 3 單獨先判，訊息比 quiz-count-range 更貼近產線語境（指名是「交叉驗證後」不足）。
     if (survivors.length < 3) {
       lastFailure = { reason: `交叉驗證後存活題數不足 3（實際 ${survivors.length}）` };
+      continue;
+    }
+    // 對存活集合重跑**完整**判準：涵蓋題數上限（>10）與兩條猜答偏誤（quiz-answer-position-bias／
+    // quiz-longest-option-bias）。少了這一步，違規內容會先被寫入題庫、直到批次末 runContentGate
+    // 才爆出來——屆時已無法在該 Concept 的重生迴圈內修正，只能整批非零 exit（實測 2026-08-07：
+    // 3 個 Concept 產出 11～12 題就是這樣漏進檔案的）。
+    const setLevelViolations = checkQuizBank({
+      quizBank: { version: 1, byConcept: { [node.id]: survivors } },
+      graph,
+    });
+    if (setLevelViolations.length > 0) {
+      lastFailure = { reason: setLevelViolations.map((v) => v.message).join("; ") };
       continue;
     }
 

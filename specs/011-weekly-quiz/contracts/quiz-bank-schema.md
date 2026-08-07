@@ -64,8 +64,18 @@ CI Gate（`runContentGate`）MUST 依同一份 schema 與同一組上限常數�
 
 ## 3. Gate 判準（`checkQuizBank()`）
 
-**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **9 個**，其中 **8 個由 `checkQuizBank()` 輸出**，
+**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **11 個**，其中 **10 個由 `checkQuizBank()` 輸出**，
 `quiz-schema` 這 1 個由 §2 的載入層 throw 實現。凡提及數量處一律採此說法。
+（rule 10／11 為 2026-08-07 實測後新增，見該兩列的理由欄。）
+
+**判準的兩個層級（MUST 區分）**：
+- **逐題判準**（rule 2–6、8–9）：對象是單一 `QuizItem`，可在草稿階段直接判。
+- **集合層判準**（rule 7、10、11）：對象是**該 Concept 的整個題目集合**，MUST 在交叉驗證丟棄題目
+  **之後**、以**存活集合**為對象執行（FR-013a）。在草稿階段先判會用錯集合——交叉驗證會改變題數、
+  正解位置分布與選項長度分布，草稿通過不代表存活集合通過。生成端 MUST 於存活集合上重跑一次
+  完整 `checkQuizBank`，**MUST NOT 只判題數下限就寫入**（實測 2026-08-07：正因只判了 `<3`
+  而未重判上限，3 個 Concept 帶著 11～12 題寫進題庫，直到批次末 Gate 才爆出、已無法在該 Concept
+  的重生迴圈內修正）。
 
 純函式，輸入 `{ quizBank?, graph }`，輸出具名違規陣列。**對 `byConcept` 的每一個陣列元素逐一檢查**
 （不依賴課表是否實際選中該題，理由見 research R3——單一 Concept 最多只有 3 個索引會被
@@ -81,7 +91,9 @@ export type QuizViolationRule =
   | "quiz-traditional-chinese"
   | "quiz-count-range"
   | "quiz-duplicate"
-  | "quiz-leetcode-id";
+  | "quiz-leetcode-id"
+  | "quiz-answer-position-bias"
+  | "quiz-longest-option-bias";
 
 export interface QuizViolation {
   rule: QuizViolationRule;
@@ -104,6 +116,25 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
 | 7 | `quiz-count-range` | `byConcept[id].length` 不在 `[3,10]` | FR-005／FR-010a |
 | 8 | `quiz-duplicate` | 同一 Concept 內兩題 `stem` 逐字相同 | FR-010／FR-016 |
 | 9 | `quiz-leetcode-id` | `stem + options + explanation` 合併文本命中 `/leetcode\.com\/problems/i` 或 `/(LeetCode｜力扣)\s*[#第]?\s*\d+/i`（題號 / 題目連結轉載） | FR-010／§5／§11 |
+| 10 | `quiz-answer-position-bias` | **集合層**：該 Concept 內任一 `answerIndex` 的出現次數佔比 > **50%**（`QUIZ_BIAS_MAX_SHARE`）；題數 < **4**（`QUIZ_BIAS_MIN_ITEMS`）時不套用 | FR-010b |
+| 11 | `quiz-longest-option-bias` | **集合層**：該 Concept 內「正解恰為該題**唯一**最長選項」的題數佔比 > **50%**；題數 < 4 時不套用 | FR-010b |
+
+**rule 10／11 的存在理由（MUST NOT 移除或放寬至接近隨機期望值）**：實測（2026-08-07，
+`array-two-pointers-variable`）產出的 10 題**全數通過當時既有的 9 條判準**，卻有 **80% 正解落在 B、
+90% 正解是該題唯一最長選項**——學習者只要「一律選最長的 B」就能得 80 分而完全不必理解內容。
+本題庫的全部價值在於**誠實的自我訊號**（SC-001～SC-003 的共同前提），這種題目量測不到任何東西，
+等同素材失效卻無任何徵兆。同批 31 個已產出 Concept 以此判準複驗為 **31/31 違規**，證實這是
+**系統性偏誤而非個案**。
+
+**為何這兩條可以是結構性判準**（與 checklists/prompt-design.md CHK006／018 那批不同）：兩者皆為
+**純計數**，不需要把 Stage A 的面向清單持久化為中繼產物（那正是當初否決補 Gate 的理由，research R6），
+故成本極低而收益明確。**MUST NOT 只靠 prompt 敘述防範**——spec Q14 已實證敘述性要求無法穩定落實，
+且此偏誤是「把正解寫得比干擾項完整」這種下意識行為，連人工撰寫也會發生。
+
+**門檻取 50% 的理由**：隨機均勻分派下，正解位置與「唯一最長」的期望佔比皆約 **25%**；取 50% 留有
+一倍餘裕，只攔明顯的系統性偏誤。**MUST NOT 收緊到接近 25%**——那會讓正常抽樣波動頻繁觸發重生、
+白燒免費層額度。「唯一最長」而非「並列最長」是刻意的：若有其他選項與正解等長，長度就不構成
+可利用的線索。
 
 **rule 9 的判準邊界（MUST）**：只攔「LeetCode／力扣 + 數字」與題目連結兩種樣式，**MUST NOT** 擴大為
 「文本中不得出現任何數字」——複雜度（`O(n²)`）、陣列索引、題目情境中的數值都是合法且必要的內容，
@@ -171,7 +202,7 @@ for each concept in ordinalOf 全序:
 
     // 逐題結構性檢查 MUST 復用 checkQuizBank，MUST NOT 另寫一份（憲章 IX）
     f = checkQuizBank({ quizBank: { version: 1, byConcept: { [concept.id]: draft.items } }, graph })
-          .filter(v => v.rule !== "quiz-count-range")   // 題數留到交叉驗證後才驗（FR-013a）
+          .filter(v => !SET_LEVEL_RULES.has(v.rule))    // 集合層判準留到交叉驗證後（FR-013a）
     if f.length > 0 → retryFeedback = f.map(v => v.message); continue
 
     survivors = []
@@ -180,8 +211,11 @@ for each concept in ordinalOf 全序:
       if crossCheck.answerIndex === item.answerIndex → survivors.push(item)
       else → 針對該題面向重出一題（換角度），MUST 再次通過交叉驗證才計入 survivors
 
-    if survivors.length < 3 → lastFailure = "存活題數不足 3"; continue        // FR-013a：題數檢查
-                                                                              //   MUST 在交叉驗證後才做
+    if survivors.length < 3 → lastFailure = "存活題數不足 3"; continue        // 訊息較貼近產線語境
+    // 集合層判準 MUST 以**存活集合**為對象重跑完整 checkQuizBank（FR-013a）：涵蓋題數上限（>10）
+    // 與兩條猜答偏誤（rule 10／11）。MUST NOT 只判下限就寫入——見 §3「判準的兩個層級」的實測教訓。
+    g = checkQuizBank({ quizBank: { version: 1, byConcept: { [concept.id]: survivors } }, graph })
+    if g.length > 0 → retryFeedback = g.map(v => v.message); continue
     → 通過，寫入 byConcept[concept.id] = survivors，checkpoint 標記 frozen/gatePassed
 
   3 次皆不過（含「驗證後仍 <3 題」）→ 標記 needsHumanReview，**不寫入該 Concept**，
@@ -192,19 +226,21 @@ for each concept in ordinalOf 全序:
 ```
 
 **執行順序 MUST 為**（FR-013a）：生成 → 交叉驗證 → 丟棄不一致者 → 補生成 → 補生成的題再驗 →
-**最後才檢查題數**。**MUST NOT** 顛倒順序（顛倒會讓「生成恰 3 題 → 題數合格 → 交叉驗證棄 1 題 →
-入庫 2 題」無人察覺，SC-003 靜默失效）。
+**最後才執行全部集合層判準**（題數上下限、兩條猜答偏誤）。**MUST NOT** 顛倒順序（顛倒會讓
+「生成恰 3 題 → 題數合格 → 交叉驗證棄 1 題 → 入庫 2 題」無人察覺，SC-003 靜默失效）。
 
 **逐題結構性檢查 MUST 復用 `checkQuizBank`（憲章 IX，MUST NOT 另立 `structuralGate`）**：生成端把當輪草稿
 包成一份**單一 Concept 的臨時 `QuizBank`**（`{ version: 1, byConcept: { [concept.id]: draft.items } }`）
-餵給 `src/compiler/quiz.ts` 匯出的同一顆 `checkQuizBank`，並**只在此階段濾掉 `quiz-count-range`**
-（其執行時機由 FR-013a 移到交叉驗證後）。理由：生成端與 CI Gate 若各寫一份逐題判準，兩者必然漂移，
+餵給 `src/compiler/quiz.ts` 匯出的同一顆 `checkQuizBank`，並**只在此階段濾掉集合層判準**
+（`SET_LEVEL_RULES` = `quiz-count-range` / `quiz-answer-position-bias` / `quiz-longest-option-bias`；
+其執行時機由 FR-013a 移到交叉驗證後）。理由：生成端與 CI Gate 若各寫一份逐題判準，兩者必然漂移，
 屆時「生成期放行、CI 擋下」極難查（同 §14.5 對預算常數單一來源的既有教訓）。`quiz-schema` 這一條
 在生成端由 Stage B 的 `responseSchema` 與 zod 解析承擔，不需另行呼叫。
 
-**題數檢查一律只有一個落點**：交叉驗證後以 `survivors.length` 判定（見上方流程），
-**MUST NOT** 在此階段以 `quiz-count-range` 提前判定；批次末的 `runContentGate` 對已寫入的題庫全量
-重跑完整 9 條判準（含 `quiz-count-range`），為最後一道。
+**集合層判準一律只有一個落點**：交叉驗證後以**存活集合**重跑一次完整 `checkQuizBank`（見上方流程），
+**MUST NOT** 在草稿階段提前判定；批次末的 `runContentGate` 對已寫入的題庫全量重跑完整 11 條判準，
+為最後一道。**生成端 MUST NOT 只判 `survivors.length < 3` 就寫入**——那會讓題數上限與兩條猜答偏誤
+完全逃過生成期把關，只能在批次末以整批非零 exit 的形式爆出（實測 2026-08-07 的實際故障模式）。
 
 ### 5.3 交叉驗證回應 schema
 

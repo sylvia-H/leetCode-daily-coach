@@ -67,7 +67,9 @@ export type QuizViolationRule =
   | "quiz-traditional-chinese"
   | "quiz-count-range"
   | "quiz-duplicate"
-  | "quiz-leetcode-id"; // §5／§11：題號 MUST 由程式從 Problem Bank 帶入，MUST NOT 由 LLM 生成
+  | "quiz-leetcode-id" // §5／§11：題號 MUST 由程式從 Problem Bank 帶入，MUST NOT 由 LLM 生成
+  | "quiz-answer-position-bias" // 正解位置過度集中 ⇒ 不讀題也能猜對
+  | "quiz-longest-option-bias"; // 正解恆為最長選項 ⇒ 可用長度猜答案
 
 export interface QuizViolation {
   rule: QuizViolationRule;
@@ -121,6 +123,28 @@ function codePointLength(text: string): number {
   return Array.from(text).length;
 }
 
+/**
+ * 「猜答偏誤」判準的門檻與適用下界（quiz-bank-schema.md §3 rule 10／11）。
+ *
+ * **為何需要這兩條**：實測（2026-08-07，`array-two-pointers-variable`）產出的 10 題全部通過當時
+ * 既有的 9 條判準，卻有 **80% 正解落在 B、90% 正解是該題最長選項**——學習者只要「一律選最長的 B」
+ * 就能得 80 分而完全不必理解內容。本題庫的全部價值在於「誠實的自我訊號」（SC 系列的前提），
+ * 這種題目量測不到任何東西，等同素材失效卻無任何徵兆。
+ *
+ * **為何是結構性判準而非 prompt 敘述**：同一次實測顯示，這是**任何模型寫選擇題的系統性偏誤**
+ * （把正解寫得比干擾項完整是下意識行為），而 spec Q14 已實證「敘述性要求無法穩定落實」。
+ * 這兩條與 checklists/prompt-design.md CHK006／018 那批「無法結構化偵測」的語意層判準不同——
+ * 它們是**純計數**，不需要把 Stage A 面向清單持久化為中繼產物（那正是當初否決補 Gate 的理由），
+ * 故成本極低而收益明確。
+ *
+ * **門檻取 50%**：隨機均勻分派下，正解位置的期望佔比為 25%、「唯一最長」的期望佔比亦約 25%；
+ * 取 50% 留有一倍餘裕，只攔明顯的系統性偏誤，不會因抽樣波動誤殺。**MUST NOT 收緊到接近 25%**
+ * ——那會讓正常波動頻繁觸發重生、白燒免費層額度。
+ */
+export const QUIZ_BIAS_MAX_SHARE = 0.5;
+/** 題數低於此下界時不套用兩條偏誤判準：樣本太小時佔比本身沒有統計意義（3 題有 2 題同位置即 67%）。 */
+export const QUIZ_BIAS_MIN_ITEMS = 4;
+
 const OPTION_PREFIX_PATTERN = /^[A-D][.、)]\s*/;
 // rule 9 的判準邊界（MUST）：只攔「LeetCode／力扣 + 數字」與題目連結兩種樣式，MUST NOT 擴大為
 // 「不得出現任何數字」——複雜度（O(n²)）、陣列索引、題目情境數值皆為合法內容。
@@ -154,6 +178,45 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
         subject: conceptSubject,
         message: `Concept「${conceptId}」題數 ${items.length}，需落在 [3,10] 區間`,
       });
+    }
+
+    // 猜答偏誤（rule 10／11）：per-Concept 的統計性判準，與逐題判準分開計算。
+    if (items.length >= QUIZ_BIAS_MIN_ITEMS) {
+      const positionCounts = [0, 0, 0, 0];
+      let uniqueLongestAsAnswer = 0;
+      for (const item of items) {
+        positionCounts[item.answerIndex]!++;
+        const lengths = item.options.map(codePointLength);
+        const maxLength = Math.max(...lengths);
+        // 「唯一最長」才算偏誤：若有其他選項與正解等長，長度就不構成可利用的線索。
+        if (lengths[item.answerIndex] === maxLength && lengths.filter((l) => l === maxLength).length === 1) {
+          uniqueLongestAsAnswer++;
+        }
+      }
+
+      const maxPositionCount = Math.max(...positionCounts);
+      if (maxPositionCount / items.length > QUIZ_BIAS_MAX_SHARE) {
+        const label = QUIZ_ANSWER_LABELS[positionCounts.indexOf(maxPositionCount) as 0 | 1 | 2 | 3];
+        violations.push({
+          rule: "quiz-answer-position-bias",
+          subject: conceptSubject,
+          message:
+            `Concept「${conceptId}」的正解位置過度集中：${items.length} 題中有 ${maxPositionCount} 題（${((maxPositionCount / items.length) * 100).toFixed(0)}%）` +
+            `正解為「${label}」，超過上限 ${QUIZ_BIAS_MAX_SHARE * 100}%（分布 A=${positionCounts[0]} B=${positionCounts[1]} C=${positionCounts[2]} D=${positionCounts[3]}）；` +
+            `MUST 將正解平均分散到四個位置，否則學習者不讀題也能猜對`,
+        });
+      }
+
+      if (uniqueLongestAsAnswer / items.length > QUIZ_BIAS_MAX_SHARE) {
+        violations.push({
+          rule: "quiz-longest-option-bias",
+          subject: conceptSubject,
+          message:
+            `Concept「${conceptId}」的正解過度集中於最長選項：${items.length} 題中有 ${uniqueLongestAsAnswer} 題（${((uniqueLongestAsAnswer / items.length) * 100).toFixed(0)}%）` +
+            `的正解是該題唯一最長的選項，超過上限 ${QUIZ_BIAS_MAX_SHARE * 100}%；` +
+            `MUST 讓四個選項的長度相近，否則學習者可用長度猜答案`,
+        });
+      }
     }
 
     const firstSeenAt = new Map<string, number>();

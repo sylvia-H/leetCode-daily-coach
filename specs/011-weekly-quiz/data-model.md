@@ -48,6 +48,12 @@ MUST NOT 用字典序。
 | 無重複題 | 同一 Concept 內無 `stem` 完全相同的兩題（**結構性判準只查逐字相同**；「實質等價」由生成端
   的面向/角度設計與交叉驗證共同防範，非本檔的機械判準所能偵測，見 research R2） | `quiz-duplicate` | FR-010／FR-016 |
 | 無 LeetCode 題號／連結 | `stem + options + explanation` 合併文本 MUST NOT 命中 `/leetcode\.com\/problems/i` 或 `/(LeetCode｜力扣)\s*[#第]?\s*\d+/i`（判準邊界見 quiz-bank-schema.md §3 rule 9：MUST NOT 擴大為「不得出現任何數字」） | `quiz-leetcode-id` | FR-010／§5／§11 |
+| 正解位置不集中 | **集合層**：任一 `answerIndex` 佔比 ≤ `QUIZ_BIAS_MAX_SHARE`（50%）；題數 < `QUIZ_BIAS_MIN_ITEMS`（4）時不套用 | `quiz-answer-position-bias` | FR-010b |
+| 正解不恆為最長選項 | **集合層**：「正解恰為該題唯一最長選項」的題數佔比 ≤ 50%；題數 < 4 時不套用 | `quiz-longest-option-bias` | FR-010b |
+
+**集合層判準（`quiz-count-range` / `quiz-answer-position-bias` / `quiz-longest-option-bias`）的執行時機**：
+對象是整個題目集合而非單題，故生成端 MUST 在**交叉驗證後、以存活集合**執行（FR-013a，
+quiz-bank-schema.md §3「判準的兩個層級」）；草稿階段先判會用錯集合。
 
 - **生成目標**：題數由內容推導、非固定配額（FR-016）。上限 10 僅為 code-side 保險絲。
 - **缺席語意**：整檔缺席 ⇒ `deps.quizBank === undefined` ⇒ 全部 review Session 省略小測段
@@ -74,7 +80,9 @@ export type QuizViolationRule =
   | "quiz-traditional-chinese"
   | "quiz-count-range"
   | "quiz-duplicate"
-  | "quiz-leetcode-id";      // §5／§11：題號 MUST 由程式從 Problem Bank 帶入，MUST NOT 由 LLM 生成
+  | "quiz-leetcode-id"              // §5／§11：題號 MUST 由程式從 Problem Bank 帶入，MUST NOT 由 LLM 生成
+  | "quiz-answer-position-bias"     // 集合層：正解位置過度集中 ⇒ 不讀題也能猜對
+  | "quiz-longest-option-bias";     // 集合層：正解恆為唯一最長選項 ⇒ 可用長度猜答案
 
 export interface QuizViolation {
   rule: QuizViolationRule;
