@@ -102,3 +102,9 @@
 
 仍留給 `/speckit-plan` 的項目（皆為實作層，非規格空缺）：題庫生成腳本的歸屬（新 script 或併入
 `generate-materials.ts`）、Pages quiz 頁的導覽入口設計、二次作答交叉驗證的 prompt 與重試上限。
+
+**2026-08-07 `/speckit-clarify` 後複驗**：13 項維持全數通過（13/13 → 13/13，無新增未勾選、無回歸）。
+本輪 1 問（Q15）：使用者提議「課綱順序」清單也掛 quiz 連結（原範圍只有 Discord 小測段 + quiz 頁本身），
+討論並以互動預覽定案呈現方式後，新增 **FR-017** 與 **SC-011**，並補一則 Edge Case。範圍明確排除同頁
+「今日課程」欄位，避免無對應需求的改動面擴張。FR 由 19 條擴為 20 條、SC 由 10 條擴為 11 條；
+Dependencies 段落補上本 Feature 對 F9 儀表板（`curriculum-view.ts` / `dashboard.ts`）的擴充範圍。

@@ -218,6 +218,22 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   結構存在、HTML entity escape、同一 Concept 多題依宣告序呈現不重排（pages-quiz.md §3）
 - [ ] T027 [P] [US1] 擴充 `tests/unit/pages-site-determinism.test.ts`：同一 `SiteBuildInput`
   呼叫兩次 `quiz/*.html` byte-identical；範圍限 `unlockedIds`（pages-quiz.md §4）
+- [ ] T027a [US1] [depends on T025] 課綱順序清單掛 quiz 連結（FR-017、Q15、pages-quiz.md §6）：
+  `src/pages/curriculum-view.ts` 的 `CurriculumEntryView` 新增 `quizUrl?: string`；
+  `buildCurriculumEntries()` 新增 `quizBank: QuizBank | undefined` 參數，
+  `unlocked && quizBank?.byConcept[node.id]?.length` 為真時賦值
+  `${baseUrl}/quiz/${node.id}.html`（與 §1 Discord 端拼接規則一致，MUST NOT 另立格式）；
+  `src/pages/dashboard.ts` 的 `renderCurriculumEntry` 新增 `renderQuizLink()`，`quizUrl` 缺席時
+  回傳空字串；`src/pages/html.ts` 的 `SHARED_STYLE` 新增 `.divider` / `.quiz-chip`（底色
+  `color-mix(in srgb, currentColor 12%, transparent)`，MUST NOT 寫死色號）；`src/pages/site.ts`
+  呼叫 `buildCurriculumEntries()` 改傳入 `deps.quizBank`。**範圍 MUST NOT 觸及**
+  `LastSessionView` / `renderTodaySession`（今日課程欄位維持現狀）
+- [ ] T027b [P] [US1] [depends on T027a] 擴充
+  `tests/unit/pages-curriculum-view.test.ts`：`quizUrl` 僅在「已解鎖且題庫非空」時賦值，
+  `quizBank` 缺席時全部 `quizUrl` 為 `undefined`，URL 拼接與 Discord 端一致；擴充
+  `tests/unit/pages-dashboard.test.ts`：`quizUrl` 缺席時無 `.divider` / `.quiz-chip` 輸出、
+  出現時 HTML 結構與 escape 正確；`LastSessionView` / `renderTodaySession` 相關既有測試
+  斷言不變（今日課程欄位不受影響）
 
 ### 3D. 題庫產線（plan P5；依賴 Phase 2 的 `checkQuizBank`）
 

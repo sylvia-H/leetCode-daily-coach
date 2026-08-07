@@ -125,6 +125,24 @@
   **與 §15「MUST NOT 於 runtime 即時選題」不衝突**：該條對象為 LeetCode 題（選題影響課程排程，故須固化為
   生成物）；Quiz 與 Reflection / 鼓勵語同屬**素材**，§15 明文允許每日 runtime 決定性選取。
 
+### Session 2026-08-07
+
+- Q15 課綱頁（Pages 儀表板）的「課綱順序」清單（`src/pages/dashboard.ts` 的 `#curriculum`
+  區塊、資料來自 `src/pages/curriculum-view.ts` 的 `CurriculumEntryView`）要不要一併掛上
+  quiz 連結，而不只是 Discord 小測段？涵蓋範圍與呈現方式？
+  A: **要**。範圍**僅限「課綱順序」清單**，**MUST NOT** 一併擴充到同頁「今日課程」欄位
+  （`LastSessionView` / `renderTodaySession`）——原始需求聚焦於課綱清單本身；「今日課程」當天
+  即可從 Discord 小測段取得等價連結，一併擴充只會放大本次改動面而無對應需求支撐。
+  條件比照 `articleUrl`（`entry.unlocked` 為真）**再疊加**「該 Concept 在 `quizBank.byConcept`
+  有題目」——與 F11 既有的 `quiz/{conceptId}.html` 產出範圍規則（FR-011、research R7）同一組
+  判準，MUST NOT 另立一套解鎖或有題判斷。
+  呈現：標題連結後接 `|` 分隔符號（左右各留 margin，僅作視覺分隔、不可點擊），再接一個指向
+  `quiz/{conceptId}.html` 的連結「✍️ 小測」。連結底色 MUST 用
+  `color-mix(in srgb, currentColor 12%, transparent)`，MUST NOT 寫死固定色號——與現有
+  `.badge`（`border: 1px solid currentColor`）「用 currentColor 換算、同一份規則自動適配明暗
+  主題」的既有慣例一致，不需另寫 dark-mode media query override。決策定案前已用互動預覽
+  （pipe 分隔 + 淡底色 chip）與使用者確認呈現效果。
+
 ## 定位與邊界
 
 F10 互動化「評估後否決」。原方案需要 Discord Slash Command 互動端點（edge worker）+ 表現訊號存儲 + 自適應排序，投入與 F7 相當，但核心價值卻只有「US2 每週測驗」一個——US1 已由 F9 Pages 覆蓋（儀表板 + 全文 + 即時查閱），US3 自適應因違反生成物凍結原則（spec §4-13）而不可行。
@@ -166,6 +184,9 @@ F10 互動化「評估後否決」。原方案需要 Discord Slash Command 互�
 - 某週僅涵蓋 1 個 Concept（實測三軌各有 1 週如此）→ 小測段僅 1 題，合法，MUST NOT 因題數少而省略整段。
 - 題庫某 Concept id 在 Curriculum 中不存在（改名 / 刪除後未重跑）→ Gate 的參照完整性檢查擋下（FR-010）。
 - Pages 已啟用但該 Concept 的 quiz 頁缺席 → 該題省略連結，其餘題目的連結不受影響（FR-012）。
+- 課綱順序清單中，某已解鎖 Concept 在題庫中無任何題目 → 該筆只顯示標題連結，不掛「✍️ 小測」
+  chip；其餘已解鎖且有題的 Concept 不受影響（FR-017，與 FR-007 的降級精神呼應，但屬 Pages
+  呈現規則，非推播邏輯）。
 
 ## Requirements *(mandatory)*
 
@@ -188,7 +209,12 @@ F10 互動化「評估後否決」。原方案需要 Discord Slash Command 互�
   **理由（smoke test 實測 2026-08-06）**：以**逐字相同**的指令「其餘段落說明正解為何成立，並逐一說明其餘三個選項為何不成立」跑兩次，一次全部產出 **2 段**、另一次全部產出 **5 段**——**同一條敘述性要求無法穩定落實**，僅寫要求而不驗結構即攔不住。5 段的產出恰好對應「結論句 / 正解為何對 / 其餘三選項各自為何錯」，故將此結構明訂為契約。
   （兩次之間題數與 prompt 其他行亦有變動且各僅一個樣本，**故 MUST NOT 將段落數差異歸因於題數配額**；此處只採認「敘述性要求不可靠」這項已確立的事實。）**MUST NOT 另生成一份短版解說**——Discord 與 Pages 共用同一份 `explanation`，前者取 `[0]`、後者取全部。
 - **FR-007**: 某 Concept 在題庫中無任何題目時，MUST **略過該 Concept**（其餘 Concept 照常出題）；該週全部 Concept 皆無題時 MUST 省略整個小測段，該則 review 原有四段 MUST 完全不受影響。
-- **FR-008**: 題庫素材缺席或無法解析時 MUST 降級為「無題」（同 FR-007 的整段省略），MUST NOT 使該週 review 推播失敗。
+- **FR-008**: 題庫素材**缺席**時 MUST 降級為「無題」（同 FR-007 的整段省略），MUST NOT 使該週 review 推播失敗。
+  **壞檔（非合法 JSON 或不符 schema）MUST NOT 降級為缺席**，一律 fail loud（`throw` 具名錯誤、非零 exit code）——
+  此語意沿用 F8 既有 `loadOptionalMaterial` 的全域行為（`reflectionBank`／`encouragement` 同受此規則，
+  contracts/quiz-bank-schema.md §2），**MUST NOT 為 quiz bank 另立一套降級規則**（憲章 IX：同一份載入邏輯，
+  MUST NOT 因素材種類而分歧）。此為既有架構已承擔的風險，非本 Feature 新增（2026-08-07
+  `/speckit-analyze` 後修訂，修正原文字面過度承諾「無法解析」亦會降級的誤述）。
 - **FR-009**: Discord spoiler 語法 `||…||` 需由 Renderer 產生；Discord 原生支援，無需額外用戶端互動。單題 MUST 獨占一個 embed field（實測 258 < field value 上限 1,024）。
 - **FR-010**: 測驗素材 MUST 通過**結構性**自動品質檢查（繁體中文、參照 Concept id 存在、正解唯一且在選項中、**`options` 不含代號前綴**、**`explanation` 恰 5 段且 `[0]` ≤80 字**、每 Concept 題數落在 3～10、**同一 Concept 內無實質等價的題目**、**無 LeetCode 題號或題目連結**）。Gate 未過 MUST NOT 凍結入庫。題數一項的執行時機受 FR-013a 約束。**「同一面向的多題」MUST NOT 被判為違規**（FR-016）——禁的是同面向且同考核角度、僅換句話說的重複題。
   **「無 LeetCode 題號或題目連結」MUST 為一條具名 Gate 判準**（`quiz-leetcode-id`），檢查對象為 `stem` + `options` + `explanation` 的合併文本，MUST NOT 只寫在需求裡而無對應規則。**理由**：§5／§11 與憲章「技術與資源約束」明訂題號 / 連結 / 難度 **MUST 由程式從 Problem Bank 帶入、MUST NOT 由 LLM 生成**，而小測題的題幹、選項與詳解**全部**是 LLM 產物（Assumptions ⑥：Quiz Item 無題號、無難度）；沒有這條規則，模型自行寫入的題號會直接落進凍結產物。**且此類違規的補救成本不對稱**——題庫綁 Skeleton 雜湊（FR-015），內容問題不會觸發失效，凍結後只能以 `--force` 重生該 Concept 並重燒一次免費層額度。
@@ -229,13 +255,27 @@ F10 互動化「評估後否決」。原方案需要 Discord Slash Command 互�
   - **「165 個 Concept 皆完整具備六段 Author Hints、且皆有 `prerequisite`／`next` 鄰居」MUST 視為現況實測、而非恆定不變式**：日後新增或改寫的 Concept 若因缺段或無鄰居而使面向來源不足，其後果 MUST 以「交叉驗證後存活題數 < 3」的形式落入 **FR-010a 既有的具名失敗路徑**（Gate 擋下、非零 exit、該 Concept 不以不足量入庫）。**MUST NOT 為此另立降級規則**——不足量入庫會使 SC-003 靜默失效，正是 FR-013a 要防的同一類問題。
   **附帶一致性**：面向的來源即 Skeleton，與 FR-015 的「Skeleton 雜湊變更即失效重生」同源——Skeleton 改動代表面向需重新盤點，題目理應重生。
   **附帶效益**：本條同時是**對交叉驗證誤殺的緩衝**。FR-013 的丟棄是保守作法（不一致未必是題錯，也可能是驗證模型答錯），若每個 Concept 都只生成 3 題，任何一次誤殺即跌破下限並觸發 FR-010a 失敗；SC-010 要求全庫平均 ≥5 正是為此提供餘裕。
+- **FR-017**：GitHub Pages 課綱頁（`src/pages/dashboard.ts` 的「課綱順序」清單）MUST 對每個
+  `entry.unlocked` 為真**且** `quizBank?.byConcept[entry.conceptId]` 非空的 Concept，於標題連結
+  後追加一個指向 `quiz/{conceptId}.html` 的連結（文字「✍️ 小測」），與標題連結以 `|` 分隔符號區隔
+  （左右各留視覺 margin，分隔符本身不可點擊）。不滿足上述任一條件時 MUST 只顯示標題連結（或
+  `未解鎖` badge，沿用既有規則），MUST NOT 顯示空連結或死連結（Q15）。
+  **範圍限定**：本條 MUST NOT 擴及同頁「今日課程」欄位（`LastSessionView` /
+  `renderTodaySession`）——僅「課綱順序」清單在本 Feature 範圍內（Q15）。
+  **呈現樣式**：新增 `.quiz-chip`（底色 `color-mix(in srgb, currentColor 12%, transparent)`、
+  無 border）與 `.divider`（純分隔符號）兩個 CSS token，MUST 沿用 `.badge` 既有的
+  「用 `currentColor` 換算、單一規則自動適配明暗主題」慣例，MUST NOT 寫死固定色號或另寫
+  `prefers-color-scheme` override（Q15）。
+  **資料流**：`CurriculumEntryView` 新增選填欄位 `quizUrl?: string`，由
+  `buildCurriculumEntries()` 依上述條件計算並帶入既有的 `deps.quizBank`（`buildSite()` 既有傳遞
+  路徑，MUST NOT 另立欄位名稱，同 FR-011 對 `deps` 的既有處置）。
 
 ### Key Entities
 
 - **Quiz Bank**（`data/quiz-bank.json`）：build-time 凍結的測驗題庫，**以 Concept id 為組織鍵**，每個 Concept 對應一個有序的 Quiz Item 陣列（≥3 題）。
 - **Quiz Item**：一道選擇題。屬性：題幹、四選項（A/B/C/D）、唯一正解、`explanation` 段落陣列（`[0]` 為 ≤80 字結論句供 Discord，其餘段落為完整詳解供 Pages）。陣列中的位置即其穩定索引，供 FR-003 取模。
 - **Quiz**：某週某 Track 實際推出的題組——該週 `reviewRange` 涵蓋的每個 Concept 各 1 題，由 FR-003 的公式決定性選出。
-- **Quiz Page**（`quiz/{conceptId}.html`）：Pages 上該 Concept 的完整題庫頁，列出全部 Quiz Item 與 spoiler 封藏的正解與詳解。Discord 每題連結至此。
+- **Quiz Page**（`quiz/{conceptId}.html`）：Pages 上該 Concept 的完整題庫頁，列出全部 Quiz Item 與 spoiler 封藏的正解與詳解。Discord 每題連結至此，課綱順序清單的「✍️ 小測」連結（FR-017）亦連結至此。
 
 ## Success Criteria *(mandatory)*
 
@@ -245,12 +285,15 @@ F10 互動化「評估後否決」。原方案需要 Discord Slash Command 互�
 - **SC-002**: 對同一 `(track, sessionIndex)`，編譯 & render 結果 **byte-identical**（決定性驗收）；重跑或補跑 MUST NOT 換題。
 - **SC-003**: 同一個 Concept 在三個 Track 被複習時，**三軌各取到相異題目**（由 `trackOffset` 與 FR-005 的 ≥3 題下限共同保證）。
 - **SC-004**: review Session 全 embeds 字元總和（含小測段）**≤ 5,500**（自訂上限），且 `quizItem` ≤ 570、`quiz` ≤ 3,000 逐格通過。實測基準（2026-08-06）：現行 review 為 204～612 字元；真實產出單題**內容**最長 362、平均 336（不含連結）。最壞週次（4 Concept）：**未啟用 `PAGES_BASE_URL`** 時合計 1,448、總計 2,060、餘裕 3,440；**啟用後**每題另加最壞 111 字元的連結，合計 1,892、總計 2,504、餘裕 2,996。上限側最壞（4 × 570 = 2,280）總計 2,892，仍餘 2,608。
-- **SC-005**: 題庫缺席或素材損毀時，推播照常進行、小測段自動省略，**零提示、零告警**（降級為無素材狀態）。
+- **SC-005**: 題庫**缺席**時，推播照常進行、小測段自動省略，**零提示、零告警**（降級為無素材狀態）。
+  **素材損毀（壞檔）不在此列**——依 FR-008 一律 fail loud（具名錯誤 + 非零 exit code），MUST NOT 被視為
+  「零告警降級」的情境。
 - **SC-006**: 小測段的題幹、選項、`explanation` MUST 來自凍結 Quiz Bank，在**無 LLM API key** 的環境下推播不變（spec §4-8 延伸至本 Feature）。
 - **SC-007**: Pages 停用或 quiz 頁缺席時，小測段仍推出全部題目、僅省略連結，推播成功率不受影響。
 - **SC-008**: 凍結入庫的題目 **100%** 通過獨立二次作答交叉驗證（FR-013）——未通過者不存在於 `data/quiz-bank.json`；且 `data/quiz-bank.json` 中**不存在題數 < 3 的 Concept**（FR-010a）。此二者 MUST 以「交叉驗證後的存活集合」為判斷對象（FR-013a）。
 - **SC-009**: Skeleton 未變更時重跑產線，`data/quiz-bank.json` **byte-identical**（冪等）；單一 Concept 的 Skeleton 變更時，**僅該 Concept** 的題目被重生，其餘 Concept 的位元組不變。
 - **SC-010**: 全庫題數分布**不得堆積於下限**——凍結後 `data/quiz-bank.json` 中題數恰為 3 的 Concept 佔比 **< 40%**，且全庫平均題數 **≥ 5**。此為 FR-016「達標即停」防制是否生效的可量測訊號；未達標 MUST 視為 prompt 設計失敗並重新調整，MUST NOT 以補生成硬湊。
+- **SC-011**（FR-017）：課綱順序清單中，**100%** 滿足「已解鎖且題庫有題」的 Concept 項目顯示「✍️ 小測」連結並指向對應 `quiz/{conceptId}.html`；**0%** 的未解鎖或題庫無題項目顯示該連結。`buildSite()` 對同一 `SiteBuildInput` 重複呼叫兩次，課綱頁（含新增的 quiz 連結）**byte-identical**。
 
 ## Assumptions
 
@@ -262,13 +305,17 @@ F10 互動化「評估後否決」。原方案需要 Discord Slash Command 互�
 5. **沒有成績記錄**：自評版本完全無回收機制、無作答記錄。若需表現訊號支撐日後自適應，那已超出本 Feature（屬 Roadmap「多使用者」等後續項目）。
 6. **Quiz Item 無難度屬性**：小測題是自製選擇題，不是 LeetCode 題——**沒有題號、不套用 §12.1 難度帶**，選題也 MUST NOT 借用 review Challenge 的「難度 + 題號」排序鍵。
 7. **短期單軌**：本專案維持單人多 Track；題庫設計不為多使用者預留擴展。
+8. **壞檔 fail loud 為既有架構行為，非本 Feature 新增風險**：`data/quiz-bank.json` 壞檔（非合法 JSON／
+   不符 schema）時的 `throw` 語意沿用 F8 `loadOptionalMaterial`（`reflectionBank`／`encouragement`
+   同受此規則），為系統既有的全域素材載入行為，**MUST NOT 為 quiz bank 另立規則**（憲章 IX）。
+   FR-008／SC-005 的「降級」承諾僅涵蓋「缺席」情境，不涵蓋壞檔（2026-08-07 `/speckit-analyze` 後修訂）。
 
 ## Dependencies
 
 - **F8 `008-review-extras`**（已完成）：review Session 的既有四段版面、`data/reflection-bank.json` 的題庫形狀與「決定性索引、MUST NOT 隨機」的既有立場（§15）。本 Feature 的索引基底改用 `localOrder`，但同屬決定性純函式，MUST NOT 引入隨機。
 - **F5 `005-lesson-compiler`**（已完成）：單一 Lesson Compiler + Renderer。小測段的內容組裝 MUST 重用同一套編譯路徑。
 - **F7 `007-content-generation`**（已完成）：內容產線框架（Stage 1 + Stage 2 + Gate）、RPM 節流 / 429 退避 / 斷點續跑，以及**以 Skeleton 雜湊判斷是否重生的冪等機制**。題庫生成與失效判定 MUST 沿用同一套工具鏈與同一個雜湊判準（FR-015），MUST NOT 另立一套。
-- **F9 `009-pages-publish`**（已完成）：Pages 產出管線與 `articles/{conceptId}.html` 的既有頁面骨架（`src/pages/site.ts`）。`quiz/{conceptId}.html` MUST 為其同構擴充。**此依賴為單向且可降級**——Pages 停用時 Discord 推播完全不受影響（FR-012）。
+- **F9 `009-pages-publish`**（已完成）：Pages 產出管線與 `articles/{conceptId}.html` 的既有頁面骨架（`src/pages/site.ts`）。`quiz/{conceptId}.html` MUST 為其同構擴充。**此依賴為單向且可降級**——Pages 停用時 Discord 推播完全不受影響（FR-012）。本 Feature 亦擴充 F9 的儀表板（`src/pages/curriculum-view.ts` 的 `CurriculumEntryView`、`src/pages/dashboard.ts` 的 `renderCurriculumEntry` / `SHARED_STYLE`）以掛上 quiz 連結（FR-017），範圍限「課綱順序」清單。
 
 ## Out of Scope
 

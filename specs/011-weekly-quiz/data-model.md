@@ -366,6 +366,33 @@ export function renderQuizPage(view: QuizPageView): string;
 - `SiteBuildInput` 新增選填欄位 `quizBank?: QuizBank`（由 `deps.quizBank` 傳入，與既有
   `deps` 傳遞方式一致，MUST NOT 另立欄位名稱）。
 
+### 9.1 課綱順序清單的 quiz 連結（FR-017，`curriculum-view.ts` / `dashboard.ts`，已完成 F9 檔案的擴充）
+
+```diff
+ export interface CurriculumEntryView {
+   …
+   articleUrl?: string;
++  quizUrl?: string;
+   atTrackPositions: Track[];
+ }
+```
+
+```diff
+ export function buildCurriculumEntries(
+   graph: CurriculumGraph,
+   unlockedIds: Set<string>,
+   trackProgress: TrackProgressView[],
+   baseUrl: string,
++  quizBank: QuizBank | undefined,
+ ): CurriculumEntryView[];
+```
+
+`quizUrl` 賦值條件（`unlocked && quizBank?.byConcept[node.id]?.length`）與 §2 的 `quiz/{conceptId}.html`
+產出範圍**同一組判準**，MUST NOT 另立第二套；URL 拼接規則與 §1 Discord 端一致
+（`${baseUrl}/quiz/${conceptId}.html`）。呈現細節（`.divider` / `.quiz-chip` 兩個 CSS token、
+`renderCurriculumEntry` 的 diff）見 pages-quiz.md §6，範圍**不含**同頁「今日課程」欄位
+（`LastSessionView` / `renderTodaySession` 不受影響，Q15）。
+
 ---
 
 ## 10. `MaterialManifest` 對應：`QuizManifest`（新增快取 `.cache/quiz-manifest.json`）
@@ -412,7 +439,10 @@ export interface QuizManifest {
 | `src/renderer/discord.ts` | 變更 | `buildReviewBlocks` 新增小測欄位（Challenge 後、鼓勵語前）；匯出 `renderQuizItemBody` |
 | `src/types/lesson.ts` | 變更 | `ReviewLesson.quizItems`、`ReviewQuizItem`、`BudgetSlots.quizItems` |
 | `src/pages/quiz-page.ts` | 新增 | `quiz/{conceptId}.html` 視圖與 render |
-| `src/pages/site.ts` | 變更 | `buildSite()` 對 `unlockedIds` 額外輸出 quiz 頁 |
+| `src/pages/site.ts` | 變更 | `buildSite()` 對 `unlockedIds` 額外輸出 quiz 頁；`buildCurriculumEntries()` 呼叫改傳 `deps.quizBank` |
+| `src/pages/curriculum-view.ts` | 變更 | `CurriculumEntryView.quizUrl`；`buildCurriculumEntries()` 新增 `quizBank` 參數（§9.1、pages-quiz.md §6） |
+| `src/pages/dashboard.ts` | 變更 | `renderCurriculumEntry` 新增 `renderQuizLink`（pages-quiz.md §6.2） |
+| `src/pages/html.ts` | 變更 | `SHARED_STYLE` 新增 `.divider` / `.quiz-chip`（pages-quiz.md §6.3） |
 | `scripts/generate-quiz-bank.ts` | 新增 | 產線入口（唯一寫檔／LLM 呼叫／process.exit 點） |
 | `scripts/lib/prompts/quiz-aspects.ts` | 新增 | Stage A：面向列舉 prompt + response schema |
 | `scripts/lib/prompts/quiz-items.ts` | 新增 | Stage B：據面向出題 prompt + response schema |

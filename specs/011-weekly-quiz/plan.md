@@ -149,7 +149,12 @@ src/
 │   └── discord.ts                   # 變更：review 版面補「✍️ 本週小測」段（Challenge 後、鼓勵語前）；匯出 renderQuizItemBody
 ├── pages/
 │   ├── quiz-page.ts                 # ★ 新增：QuizPageView 導出 + HTML 渲染（<details> 呈現正解）
-│   └── site.ts                      # 變更：buildSite() 對 unlockedIds 額外輸出 quiz 頁
+│   ├── site.ts                      # 變更：buildSite() 對 unlockedIds 額外輸出 quiz 頁；
+│   │                                 #      buildCurriculumEntries() 呼叫改傳 deps.quizBank（FR-017）
+│   ├── curriculum-view.ts           # 變更：CurriculumEntryView.quizUrl；buildCurriculumEntries()
+│   │                                 #      新增 quizBank 參數（FR-017、Q15）
+│   ├── dashboard.ts                 # 變更：renderCurriculumEntry 新增 renderQuizLink()（FR-017）
+│   └── html.ts                      # 變更：SHARED_STYLE 新增 .divider／.quiz-chip（FR-017）
 ├── config.ts                        # 變更：Config.pagesBaseUrl（選填，讀 PAGES_BASE_URL）
 ├── main.ts                          # 變更：run() 併入 deps.pagesBaseUrl
 └── types/
@@ -204,7 +209,7 @@ spec 的 User Story 優先序是價值序（僅 US1 一個 Story）；以下為*
 | **P1** | `src/compiler/quiz.ts`（schema + `selectQuizItem` + `checkQuizBank`）＋ `budget.ts` 常數 ＋ 單元測試（用 fixture 題庫，不需真實生成） | — | FR-001／FR-003／FR-003a／FR-005／FR-006／FR-010／FR-010a／FR-014 |
 | **P2** | `CompilerDeps`／`CompilerPaths`／`Config` 擴充；`compileReview` 填入 `quizItems`；`src/main.ts` 併入 `pagesBaseUrl`；Gate 接線（`quiz-invalid`） | P1 | FR-002／FR-004／FR-007／FR-008／FR-012（連結部分） |
 | **P3** | Renderer 版面（`buildReviewBlocks` 新段落）＋ slot 對等測試（**可與 P1/P2 並行**，用 `tests/helpers/lesson.ts` 替身開發）。**⚠️ `renderQuizItemBody` 例外**：它被 `checkQuizBank` 共用（憲章 IX），故屬 P1／Phase 2 而非本階段——見 [tasks.md](./tasks.md) T006 與該檔 Phase 2 的澄清框 | **T006（`renderQuizItemBody`）屬 P1**；其餘（版面插入）無硬依賴 | FR-002／FR-009／SC-001／SC-004 |
-| **P4** | `src/pages/quiz-page.ts` ＋ `buildSite()` 整合 ＋ determinism 測試 | P2（需要 `CompilerDeps.quizBank` 型別就位） | FR-011／FR-012（Pages 端）／SC-007 |
+| **P4** | `src/pages/quiz-page.ts` ＋ `buildSite()` 整合 ＋ determinism 測試 ＋ 課綱順序清單掛 quiz 連結（`curriculum-view.ts` / `dashboard.ts` / `html.ts`，Q15） | P2（需要 `CompilerDeps.quizBank` 型別就位） | FR-011／FR-012（Pages 端）／FR-017／SC-007／SC-011 |
 | **P5** | 題庫產線（prompts、`quiz-checkpoint.ts`、交叉驗證、`generate-quiz-bank.ts`）＋ 生成並 commit 真實題庫 | P1（要先有 Gate 才知道是否通過） | FR-013／FR-013a／FR-015／FR-016／SC-008／SC-009／SC-010 |
 | **P6** | 端到端驗收（`DRY_RUN=true` 對真實課表、零金鑰 CI、SC 全項） | P1–P5 | quickstart.md §2–§6 |
 
@@ -221,6 +226,8 @@ spec 的 User Story 優先序是價值序（僅 US1 一個 Story）；以下為*
 | `pagesBaseUrl` 缺席／存在對 `quizUrl` 的影響 | `tests/unit/compile-review.test.ts`（擴充或新增） | FR-012、pages-quiz.md §1 |
 | quiz 頁視圖組裝、`<details>` 結構、escape | `tests/unit/pages-quiz-page.test.ts` | FR-011、pages-quiz.md §3 |
 | `buildSite` 對 quiz 頁的 determinism 與 unlockedIds 範圍 | `tests/unit/pages-site-determinism.test.ts`（擴充） | pages-quiz.md §2／§4 |
+| 課綱順序清單 `quizUrl` 賦值條件（已解鎖且題庫有題）、`quizBank` 缺席時全部 `undefined` | `tests/unit/pages-curriculum-view.test.ts`（擴充） | FR-017、pages-quiz.md §6 |
+| `renderCurriculumEntry` 的 `.divider`／`.quiz-chip` 呈現、`quizUrl` 缺席時不輸出；今日課程欄位不受影響 | `tests/unit/pages-dashboard.test.ts`（擴充） | FR-017、SC-011、pages-quiz.md §6 |
 | 交叉驗證：一致即通過、不一致觸發重生、3 輪耗盡標記 needsHumanReview | `tests/unit/quiz-generate.test.ts` | FR-013／FR-013a／FR-010a |
 | 續跑跳過已通過 Concept；`--force` 覆蓋；Skeleton 雜湊變更觸發重生 | 同上 | FR-015、SC-009 |
 | `no-llm-in-src.test.ts` / `daily-no-llm-key.test.ts` 既有測試維持通過（不需修改判準對象） | 既有檔案 | 憲章 VIII |

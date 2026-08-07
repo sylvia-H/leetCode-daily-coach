@@ -178,3 +178,4 @@ npm run build:pages
 - [ ] SC-008 凍結入庫題目 100% 通過交叉驗證；`data/quiz-bank.json` 無題數 <3 的 Concept
 - [ ] SC-009 Skeleton 未變更時重跑 byte-identical；單一 Concept 變更時僅該 Concept 重生
 - [ ] SC-010 題數恰為 3 的 Concept 佔比 <40%，全庫平均 ≥5
+- [ ] SC-011 課綱順序清單中，100% 已解鎖且題庫有題的 Concept 顯示「✍️ 小測」連結；未解鎖或無題者 0% 顯示；`buildSite()` 重複呼叫 byte-identical
