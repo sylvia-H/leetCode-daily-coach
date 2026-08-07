@@ -44,6 +44,32 @@ describe("slot⇄field 對等不變式（全版面）", () => {
         problems: [{ id: 1, title: "T", url: "https://x/", difficulty: "Easy" }],
         encouragement: "加油！",
       }),
+      // F11：quizItems 逐題登記對應 budget slot（FR-009、quiz-selection.md §4）。
+      makeLesson({
+        type: "review",
+        reviewConcepts: [
+          { id: "a", title: "A" },
+          { id: "b", title: "B" },
+        ],
+        problems: [],
+        quizItems: [
+          {
+            conceptId: "a",
+            stem: "題幹",
+            options: ["1", "2", "3", "4"],
+            answerLabel: "A",
+            conclusion: "結論",
+          },
+          {
+            conceptId: "b",
+            stem: "題幹二",
+            options: ["a", "b", "c", "d"],
+            answerLabel: "B",
+            conclusion: "結論二",
+            quizUrl: "https://example.github.io/x/quiz/b.html",
+          },
+        ],
+      }),
       makeLesson({ type: "rest", encouragement: "加油！" }),
     ];
 

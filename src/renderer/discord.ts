@@ -170,6 +170,16 @@ function buildReviewBlocks(lesson: ReviewLesson): Block[] {
     slots.problems = entries;
     fields.push({ name: "🎯 Challenge", value: entries.join("\n") });
   }
+  if (lesson.quizItems !== undefined && lesson.quizItems.length > 0) {
+    // F11（research R5）：插入於 Challenge 之後、鼓勵語之前，使鼓勵語順延但仍維持最後一段。
+    const bodies = lesson.quizItems.map(renderQuizItemBody);
+    slots.quizItems = bodies;
+    const n = lesson.quizItems.length;
+    lesson.quizItems.forEach((item, i) => {
+      const conceptTitle = lesson.reviewConcepts.find((c) => c.id === item.conceptId)?.title ?? item.conceptId;
+      fields.push({ name: `✍️ 本週小測 (${i + 1}/${n}) · ${conceptTitle}`, value: bodies[i]! });
+    });
+  }
   if (lesson.encouragement !== undefined) {
     // MUST 為最後一段（FR-022）：MUST NOT 插入於 Reflection 與 Challenge 之間，避免通用文字
     // 稀釋針對本週教材的具體提問。
@@ -227,6 +237,7 @@ function mergeSlots(blocks: Block[]): BudgetSlots {
     if (slots.reflectionQuestion !== undefined) merged.reflectionQuestion = slots.reflectionQuestion;
     if (slots.encouragement !== undefined) merged.encouragement = slots.encouragement;
     if (slots.problems !== undefined) merged.problems = slots.problems;
+    if (slots.quizItems !== undefined) merged.quizItems = slots.quizItems;
   }
   return merged;
 }

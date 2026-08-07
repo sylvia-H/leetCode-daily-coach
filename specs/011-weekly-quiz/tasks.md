@@ -183,7 +183,7 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
 
 ### 3B. Renderer 版面（plan P3；僅依賴 Phase 2 的 T006，可與 3A/3C/3D 平行）
 
-- [ ] T020 [P] [US1] `buildReviewBlocks` 新增「✍️ 本週小測」段於 `src/renderer/discord.ts`：
+- [X] T020 [P] [US1] `buildReviewBlocks` 新增「✍️ 本週小測」段於 `src/renderer/discord.ts`：
   插入於 Challenge 之後、鼓勵語**之前**（五段順序：本週涵蓋／Reflection／Challenge／小測／
   鼓勵語，research R5、FR-002），每題一個 field（field name 含 `(i/N) · {conceptTitle}`，
   value 呼叫 T006 的 `renderQuizItemBody`）；`quizItems` 缺席或空 ⇒ 整段省略；Renderer 維持
@@ -192,14 +192,14 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   ——`render()` 是靠 `mergeSlots` 把各 Block 的 slot 收攏後才交給 `checkBudget`，漏改 `mergeSlots`
   會讓小測段**完全逃過逐區塊預算**（`buildReviewBlocks` 旁的既有註解正是在警告這件事），
   且 CI 與 runtime 都不會有任何徵兆。T022 的 slot⇄field 對等測試 MUST 能攔下此漏
-- [ ] T021 [P] [US1] 擴充 `tests/helpers/lesson.ts` 的 review fixture 使其支援 `quizItems`
+- [X] T021 [P] [US1] 擴充 `tests/helpers/lesson.ts` 的 review fixture 使其支援 `quizItems`
   （plan.md 檔案清單已列，供 T021／T022／T023 共用），並擴充 `tests/unit/renderer.test.ts`：五段順序含「✍️ 本週小測」；spoiler
   邊界（僅「正解：{代號} — {結論句}[ · 連結]」封於 `||…||`，題幹與四選項明碼，完整
   `explanation[1..4]` 不出現）；`quizItems` 缺席時整段省略且不留空欄位（SC-001、US1 Acceptance
   1–2）
-- [ ] T022 [P] [US1] 擴充 `tests/unit/budget-slot-parity.test.ts`：`quizItems` 逐題登記對應
+- [X] T022 [P] [US1] 擴充 `tests/unit/budget-slot-parity.test.ts`：`quizItems` 逐題登記對應
   budget slot（FR-009、quiz-selection.md §4）
-- [ ] T023 [P] [US1] 擴充 `tests/unit/budget.test.ts`：`quizItem` ≤570（含連結）、`quiz` ≤3000
+- [X] T023 [P] [US1] 擴充 `tests/unit/budget.test.ts`：`quizItem` ≤570（含連結）、`quiz` ≤3000
   （全部小測題合計）逐格檢查隨 `QUIZ_BUDGET_LIMITS` 常數而動，非隨字面值；並斷言 `quizItem[i]`
   與彙總項 `quiz` 兩者皆只計 field value、不含 field name（FR-014、SC-004、data-model.md §4）
 
