@@ -13,7 +13,7 @@ describe("buildCurriculumEntries（research R9／FR-005a）", () => {
       { id: "a-first", localOrder: 1 },
       { id: "b-second", localOrder: 2 },
     ]);
-    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL);
+    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL, undefined);
     expect(entries.map((e) => e.conceptId)).toEqual(["a-first", "b-second", "c-third"]);
   });
 
@@ -22,20 +22,20 @@ describe("buildCurriculumEntries（research R9／FR-005a）", () => {
       { id: "zeta", localOrder: 1 },
       { id: "alpha", localOrder: 1 },
     ]);
-    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL);
+    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL, undefined);
     expect(entries.map((e) => e.conceptId)).toEqual(["alpha", "zeta"]);
   });
 
   it("unlocked === false 的項目 MUST NOT 帶 articleUrl 欄位", () => {
     const graph = makeGraph([{ id: "locked-concept" }]);
-    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL);
+    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL, undefined);
     expect(entries[0]?.unlocked).toBe(false);
     expect(entries[0]).not.toHaveProperty("articleUrl");
   });
 
   it("unlocked === true 的項目 MUST 帶正確的 articleUrl", () => {
     const graph = makeGraph([{ id: "unlocked-concept" }]);
-    const entries = buildCurriculumEntries(graph, new Set(["unlocked-concept"]), [], BASE_URL);
+    const entries = buildCurriculumEntries(graph, new Set(["unlocked-concept"]), [], BASE_URL, undefined);
     expect(entries[0]?.unlocked).toBe(true);
     expect(entries[0]?.articleUrl).toBe(`${BASE_URL}/articles/unlocked-concept.html`);
   });
@@ -51,7 +51,7 @@ describe("buildCurriculumEntries（research R9／FR-005a）", () => {
         currentOrdinalConceptId: "concept-a",
       },
     ];
-    const entries = buildCurriculumEntries(graph, new Set(["concept-a"]), trackProgress, BASE_URL);
+    const entries = buildCurriculumEntries(graph, new Set(["concept-a"]), trackProgress, BASE_URL, undefined);
     const a = entries.find((e) => e.conceptId === "concept-a");
     const b = entries.find((e) => e.conceptId === "concept-b");
     expect(a?.atTrackPositions).toEqual(["foundation"]);
@@ -60,7 +60,7 @@ describe("buildCurriculumEntries（research R9／FR-005a）", () => {
 
   it("moduleId／topicId／title 正確帶入", () => {
     const graph = makeGraph([{ id: "concept-a", title: "Concept A 標題" }]);
-    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL);
+    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL, undefined);
     expect(entries[0]).toMatchObject({
       conceptId: "concept-a",
       title: "Concept A 標題",
@@ -74,8 +74,43 @@ describe("buildCurriculumEntries（research R9／FR-005a）", () => {
   it("純函式：同輸入呼叫兩次得到 deep-equal 結果", () => {
     const graph = makeGraph([{ id: "a" }, { id: "b" }]);
     const unlocked = new Set(["a"]);
-    const first = buildCurriculumEntries(graph, unlocked, [], BASE_URL);
-    const second = buildCurriculumEntries(graph, unlocked, [], BASE_URL);
+    const first = buildCurriculumEntries(graph, unlocked, [], BASE_URL, undefined);
+    const second = buildCurriculumEntries(graph, unlocked, [], BASE_URL, undefined);
     expect(first).toEqual(second);
+  });
+});
+
+describe("buildCurriculumEntries — F11 quizUrl（FR-017、pages-quiz.md §6）", () => {
+  it("quizBank 缺席 ⇒ 全部 entry.quizUrl 為 undefined", () => {
+    const graph = makeGraph([{ id: "unlocked-concept" }]);
+    const entries = buildCurriculumEntries(graph, new Set(["unlocked-concept"]), [], BASE_URL, undefined);
+    expect(entries[0]).not.toHaveProperty("quizUrl");
+  });
+
+  it("已解鎖且題庫非空 ⇒ quizUrl = `${baseUrl}/quiz/${conceptId}.html`（與 Discord 端拼接規則一致）", () => {
+    const graph = makeGraph([{ id: "unlocked-concept" }]);
+    const quizBank = {
+      version: 1 as const,
+      byConcept: { "unlocked-concept": [{ stem: "s", options: ["a", "b", "c", "d"] as [string, string, string, string], answerIndex: 0 as const, explanation: ["1", "2", "3", "4", "5"] as [string, string, string, string, string] }] },
+    };
+    const entries = buildCurriculumEntries(graph, new Set(["unlocked-concept"]), [], BASE_URL, quizBank);
+    expect(entries[0]?.quizUrl).toBe(`${BASE_URL}/quiz/unlocked-concept.html`);
+  });
+
+  it("已解鎖但題庫該 Concept 為空陣列 ⇒ quizUrl 為 undefined", () => {
+    const graph = makeGraph([{ id: "unlocked-concept" }]);
+    const quizBank = { version: 1 as const, byConcept: { "unlocked-concept": [] } };
+    const entries = buildCurriculumEntries(graph, new Set(["unlocked-concept"]), [], BASE_URL, quizBank);
+    expect(entries[0]).not.toHaveProperty("quizUrl");
+  });
+
+  it("未解鎖 ⇒ 即使題庫有題，quizUrl 仍為 undefined（死連結防護）", () => {
+    const graph = makeGraph([{ id: "locked-concept" }]);
+    const quizBank = {
+      version: 1 as const,
+      byConcept: { "locked-concept": [{ stem: "s", options: ["a", "b", "c", "d"] as [string, string, string, string], answerIndex: 0 as const, explanation: ["1", "2", "3", "4", "5"] as [string, string, string, string, string] }] },
+    };
+    const entries = buildCurriculumEntries(graph, new Set(), [], BASE_URL, quizBank);
+    expect(entries[0]).not.toHaveProperty("quizUrl");
   });
 });

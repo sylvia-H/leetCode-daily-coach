@@ -38,6 +38,16 @@ a { color: inherit; }
 .curriculum-entry.locked { opacity: 0.55; }
 .badge.track-marker { font-weight: 600; }
 .badge { display: inline-block; border-radius: 0.25rem; padding: 0.1rem 0.5rem; font-size: 0.85em; border: 1px solid currentColor; }
+.divider { margin: 0 0.55em; opacity: 0.35; }
+.quiz-chip {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.55em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.quiz-chip:hover { background: color-mix(in srgb, currentColor 20%, transparent); }
+.quiz-chip:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 section { margin-bottom: 2rem; }
 `;
 
