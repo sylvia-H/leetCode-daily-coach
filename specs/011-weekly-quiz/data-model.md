@@ -41,6 +41,7 @@ MUST NOT 用字典序。
 | schema 合法 | zod strict：`version===1`、`options` 恰 4 個非空字串、`answerIndex ∈ [0,3]`、`explanation` 恰 5 個非空字串 | `quiz-schema` | FR-006 |
 | Concept 存在 | 每個 key MUST 存在於 `graph.concepts` | `quiz-unknown-concept` | FR-010 |
 | 無代號前綴 | 每個 `options[i]` MUST NOT 以 `/^[A-D][.、)]\s*/` 開頭 | `quiz-option-prefix` | FR-006 |
+| 選項可獨立閱讀 | 每個 `options[i]` MUST NOT 參照其他選項或位置（「以上皆是」「同選項 A」「A 和 B 都…」）——選項順序會被 §5.2a 的確定性重排改動 | `quiz-option-cross-reference` | quiz-bank-schema.md §5.2a |
 | 結論句長度 | `explanation[0]` 的 code point 長度 ≤ 80 | `quiz-conclusion-length` | FR-006 |
 | 單題預算 | 模擬呈現後長度（見 §3）≤ `QUIZ_BUDGET_LIMITS.quizItem`（570） | `quiz-item-budget` | FR-014 |
 | 繁中判準 | `checkTraditionalChinese(stem + options.join + explanation.join)` 無違規 | `quiz-traditional-chinese` | §11（沿用既有判準） |
@@ -56,6 +57,13 @@ MUST NOT 用字典序。
 `quiz-longest-option-bias`）的執行時機**：
 對象是整個題目集合而非單題，故生成端 MUST 在**交叉驗證後、以存活集合**執行（FR-013a，
 quiz-bank-schema.md §3「判準的兩個層級」）；草稿階段先判會用錯集合。
+
+**兩條位置類判準 MUST NOT 靠重生達成**（2026-08-07 修正）：`quiz-answer-position-bias` 取四格的最大值、
+`quiz-answer-position-coverage` 取覆蓋數，在 n=4～10 的樣本量下，即使 `answerIndex` 完全均勻隨機也有
+**23%–45%** 的誤殺率（推導與實測見 quiz-bank-schema.md §3 的修正段）。生成端改為在交叉驗證後、
+集合層 Gate 前呼叫 `rebalanceAnswerPositions()` 確定性重排正解位置（§5.2a），使兩條由建構保證通過；
+它們在 `checkQuizBank()` 中保留為 CI 守衛。`quiz-longest-option-bias` 是**內容**問題，重排改不了，
+MUST 繼續由 prompt 與重生迴圈處置。
 
 - **生成目標**：題數由內容推導、非固定配額（FR-016）。上限 10 僅為 code-side 保險絲。
 - **缺席語意**：整檔缺席 ⇒ `deps.quizBank === undefined` ⇒ 全部 review Session 省略小測段
@@ -77,6 +85,7 @@ export type QuizViolationRule =
   | "quiz-schema"              // ★ 由載入層 throw 實現，非 checkQuizBank() 的輸出（同 material-schema 的既有註記）
   | "quiz-unknown-concept"
   | "quiz-option-prefix"
+  | "quiz-option-cross-reference"     // 選項參照其他選項／位置 ⇒ §5.2a 重排後必然語意錯亂
   | "quiz-conclusion-length"
   | "quiz-item-budget"
   | "quiz-traditional-chinese"

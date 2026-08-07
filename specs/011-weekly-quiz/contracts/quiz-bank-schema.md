@@ -64,12 +64,12 @@ CI Gate（`runContentGate`）MUST 依同一份 schema 與同一組上限常數�
 
 ## 3. Gate 判準（`checkQuizBank()`）
 
-**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **12 個**，其中 **11 個由 `checkQuizBank()` 輸出**，
+**計數口徑（全文一致，MUST）**：`QuizViolationRule` 共 **13 個**，其中 **12 個由 `checkQuizBank()` 輸出**，
 `quiz-schema` 這 1 個由 §2 的載入層 throw 實現。凡提及數量處一律採此說法。
-（rule 10～12 為 2026-08-07 實測後新增，見各列的理由欄。）
+（rule 10～12 為 2026-08-07 實測後新增，rule 13 為同日確定性重排（§5.2a）導入時新增，見各列的理由欄。）
 
 **判準的兩個層級（MUST 區分）**：
-- **逐題判準**（rule 2–6、8–9）：對象是單一 `QuizItem`，可在草稿階段直接判。
+- **逐題判準**（rule 2–6、8–9、13）：對象是單一 `QuizItem`，可在草稿階段直接判。
 - **集合層判準**（rule 7、10、11、12）：對象是**該 Concept 的整個題目集合**，MUST 在交叉驗證丟棄題目
   **之後**、以**存活集合**為對象執行（FR-013a）。在草稿階段先判會用錯集合——交叉驗證會改變題數、
   正解位置分布與選項長度分布，草稿通過不代表存活集合通過。生成端 MUST 於存活集合上重跑一次
@@ -86,6 +86,7 @@ export type QuizViolationRule =
   | "quiz-schema"              // ★ 由 §2 的載入層 throw 實現，非本函式輸出（同 material-schema 的既有註記）
   | "quiz-unknown-concept"
   | "quiz-option-prefix"
+  | "quiz-option-cross-reference"
   | "quiz-conclusion-length"
   | "quiz-item-budget"
   | "quiz-traditional-chinese"
@@ -120,6 +121,7 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
 | 10 | `quiz-answer-position-bias` | **集合層**：該 Concept 內任一 `answerIndex` 的出現次數佔比 > **50%**（`QUIZ_BIAS_MAX_SHARE`）；題數 < **4**（`QUIZ_BIAS_MIN_ITEMS`）時不套用 | FR-010b |
 | 11 | `quiz-longest-option-bias` | **集合層**：該 Concept 內「正解恰為該題**唯一**最長選項」的題數佔比 > **50%**；題數 < 4 時不套用 | FR-010b |
 | 12 | `quiz-answer-position-coverage` | **集合層**：正解實際用到的位置數 < **3**（`QUIZ_POSITION_COVERAGE_MIN`）；題數 ≥ **8**（`QUIZ_POSITION_FULL_COVERAGE_ITEMS`）時 MUST 用滿 **4** 個位置。題數 < 4 時不套用 | FR-010b |
+| 13 | `quiz-option-cross-reference` | 任一 `options[i]` 出現參照其他選項或位置的寫法（「以上皆是」「以上皆非」「上述選項都…」「同選項 A」「A 和 B 都…」）。**這是 §5.2a 確定性重排的前提條件**：選項順序會被重排，這類寫法重排後必然語意錯亂且錯得無聲無息 | §5.2a |
 
 **rule 12 與 rule 10 為何都需要（互補而非重複）**：rule 10 的佔比上限只約束「最集中的那一格」——
 一份 `A=50% B=50% C=0 D=0` 的題庫完全通過 rule 10，但 C／D 兩格從未出現，猜答空間仍被砍半。
@@ -153,6 +155,25 @@ MUST NOT 被後人當成遺漏而補上。
 一倍餘裕，只攔明顯的系統性偏誤。**MUST NOT 收緊到接近 25%**——那會讓正常抽樣波動頻繁觸發重生、
 白燒免費層額度。「唯一最長」而非「並列最長」是刻意的：若有其他選項與正解等長，長度就不構成
 可利用的線索。
+
+**⚠️ 修正（2026-08-07）：「50% 留有一倍餘裕故不會誤殺」只對 rule 11 成立，對 rule 10／12 不成立。**
+rule 11 是單一二項分布（`p≈0.25`），n=7 時誤殺率約 **7%**，判準健康。但 rule 10 取的是四格的
+**最大值**、rule 12 取的是**覆蓋數**，兩者在 n=4～10 這種小樣本下即使 `answerIndex` 完全均勻隨機
+也頻繁違規：
+
+| 題數 n | rule 10 誤殺 | rule 12 誤殺 | 合計約 |
+| --- | --- | --- | --- |
+| 4 | 20% | 34% | ~45% |
+| 5 | 41% | 18% | ~50% |
+| 7 | 27%（4/7 = 57%） | 5% | ~30% |
+| 8 | 11% | **38%**（需滿四格） | ~42% |
+| 10 | 14% | 22% | ~32% |
+
+`MAX_REGEN = 3` 之下，**純統計噪音就會讓約 4%–12% 的 Concept 被誤判為 `needsHumanReview`**
+（實測 2026-08-07 首跑：5 個 Concept 中 4 個因 rule 10／11／12 耗盡 3 輪）。這不是門檻鬆緊問題，
+是**樣本量問題**——放寬門檻只會連真實偏誤一起放過。故位置類的 rule 10／12 **MUST NOT 靠重生達成**，
+改由 §5.2a 的確定性重排在寫入前保證；兩條保留為 CI 守衛（見 §5.2a 末段）。rule 11 是**內容**問題
+（把正解寫得比干擾項完整），重排改不了，**MUST 繼續由 prompt 與重生迴圈處置**。
 
 **rule 9 的判準邊界（MUST）**：只攔「LeetCode／力扣 + 數字」與題目連結兩種樣式，**MUST NOT** 擴大為
 「文本中不得出現任何數字」——複雜度（`O(n²)`）、陣列索引、題目情境中的數值都是合法且必要的內容，
@@ -200,10 +221,15 @@ exit code），細分留在 `QuizViolationRule`。
 
 ```
 npm run generate:quiz-bank -- [--force] [--only <conceptId>,...]
+npm run generate:quiz-bank -- --rebalance-only
 ```
 
 - `--force`：唯一覆蓋冪等的路徑（§20.4）。
 - `--only`：逗號分隔的 Concept id。
+- `--rebalance-only`：對**已凍結**的題庫就地重跑 §5.2a 的正解位置重排，**零 LLM 呼叫、零 manifest
+  變動**（重排不改題數也不改 Skeleton 雜湊，跳過條件不受影響），完成後 MUST 立刻以 `checkQuizBank`
+  複驗、有違規即非零 exit code。用途：位置指派邏輯調整後讓既有題庫跟上，不必 `--force` 整批重生。
+  此路徑 **MUST NOT** 建構 `LlmClient`（缺 `GEMINI_API_KEY` 亦 MUST 可執行）。
 - **缺 `GEMINI_API_KEY` MUST fail-fast**（`createLlmClient` 建構期即拋），且**不寫任何檔案**。
 
 ### 5.2 兩階段流程（FR-016，Concept 為續跑單位，research R6）
@@ -231,11 +257,17 @@ for each concept in ordinalOf 全序:
       else → 針對該題面向重出一題（換角度），MUST 再次通過交叉驗證才計入 survivors
 
     if survivors.length < 3 → lastFailure = "存活題數不足 3"; continue        // 訊息較貼近產線語境
-    // 集合層判準 MUST 以**存活集合**為對象重跑完整 checkQuizBank（FR-013a）：涵蓋題數上限（>10）
-    // 與三條猜答偏誤（rule 10～12）。MUST NOT 只判下限就寫入——見 §3「判準的兩個層級」的實測教訓。
-    g = checkQuizBank({ quizBank: { version: 1, byConcept: { [concept.id]: survivors } }, graph })
+
+    // §5.2a：正解位置的確定性重排。MUST 在交叉驗證之後（題數已定）、集合層 Gate 之前（Gate 檢查的
+    // MUST 是最終要寫入的內容）。
+    balanced = rebalanceAnswerPositions(concept.id, survivors)
+
+    // 集合層判準 MUST 以**最終集合**為對象重跑完整 checkQuizBank（FR-013a）：涵蓋題數上限（>10）
+    // 與 rule 11。rule 10／12 此時已由重排保證通過，重跑是防禦性複驗（憲章 IX：判準只有一顆實作，
+    // MUST NOT 因「理應通過」就跳過）。MUST NOT 只判下限就寫入——見 §3「判準的兩個層級」的實測教訓。
+    g = checkQuizBank({ quizBank: { version: 1, byConcept: { [concept.id]: balanced } }, graph })
     if g.length > 0 → retryFeedback = g.map(v => v.message); continue
-    → 通過，寫入 byConcept[concept.id] = survivors，checkpoint 標記 frozen/gatePassed
+    → 通過，寫入 byConcept[concept.id] = balanced，checkpoint 標記 frozen/gatePassed
 
   3 次皆不過（含「驗證後仍 <3 題」）→ 標記 needsHumanReview，**不寫入該 Concept**，
     繼續下一個 Concept（FR-010a：MUST 一次列出全部不足量的 Concept，MUST NOT 遇到第一個即中止）
@@ -260,6 +292,41 @@ for each concept in ordinalOf 全序:
 **MUST NOT** 在草稿階段提前判定；批次末的 `runContentGate` 對已寫入的題庫全量重跑完整 12 條判準，
 為最後一道。**生成端 MUST NOT 只判 `survivors.length < 3` 就寫入**——那會讓題數上限與兩條猜答偏誤
 完全逃過生成期把關，只能在批次末以整批非零 exit 的形式爆出（實測 2026-08-07 的實際故障模式）。
+
+### 5.2a 正解位置的確定性重排（`scripts/lib/quiz-balance.ts`）
+
+**正解落在哪一格不帶任何語意**，因此 MUST NOT 交給 LLM 決定再由 Gate 事後拒絕——那是一個
+「取樣＋拒絕」機制，在 n=4～10 的樣本量下誤殺率高達 23%–45%（數字與推導見 §3 的修正段）。
+改為在寫入前以確定性演算法重排，讓 rule 10／12 **由建構保證通過**。
+
+```ts
+// 純函式：無 I/O、無隨機源、無時間依賴。PRNG 種子 = FNV-1a(conceptId) ⇒ 同輸入 → byte-identical。
+export function buildBalancedTargets(count: number, seed: number): number[];
+export function moveAnswerTo(item: QuizItem, target: 0 | 1 | 2 | 3): QuizItem;
+export function rebalanceAnswerPositions(conceptId: string, items: QuizItem[]): QuizItem[];
+```
+
+MUST 遵守的四項不變量：
+
+1. **干擾項 MUST 維持原相對順序**。`explanation[2]`–`[4]` 的契約是「依序說明其餘三個選項**在 `options`
+   中的出現順序**各自為何不成立」；只要三個干擾項相對順序不變，這份對應自動維持正確，
+   **MUST NOT 一併重排 `explanation`**。若日後改成任意置換選項，**MUST 同步置換 `explanation[2..4]`**，
+   否則詳解會對錯選項且無任何徵兆。
+2. **四格次數最多相差 1**，且餘數格 MUST 由旋轉輪流承擔（`count` 非 4 的倍數時，A MUST NOT 恆為最多）。
+3. **MUST 洗牌，MUST NOT 用 `i % 4`**。固定輪替雖同樣平衡，卻讓「第幾題 → 正解在第幾格」變成可
+   預測規律；題庫會經 Pages 全文公開，那等於把「一律選 A」換成一個更好猜的規律，比原偏誤更糟。
+4. **MUST 為確定性**：種子只綁 `conceptId`，`Math.random()` / `Date` MUST NOT 出現（憲章「生成物
+   同輸入 → byte-identical」）。重排 MUST 為冪等（同一份題庫重跑 `--rebalance-only` 逐位元不變）。
+
+**前提條件**：選項必須能獨立閱讀。由 §3 rule 13（`quiz-option-cross-reference`）在 Gate 層強制，
+並於 Stage B prompt 明文要求——**兩者 MUST 同時存在**，MUST NOT 只靠 prompt（spec Q14 已實證）。
+
+**rule 10／12 MUST NOT 因此移除**：對產線產出它們此後恆真，但仍是防「手改題庫」「未來新增其他
+題目來源」「重排邏輯本身被改壞」的 CI 守衛，成本為純計數。移除等於拆掉唯一的回歸偵測。
+
+**Stage B prompt 的對應修改（MUST 同步）**：既有「正解 MUST 用滿四個位置、刻意選沒用過的位置」
+這條規則 MUST 改為「位置由系統重排、不必也 MUST NOT 花心思分散」——留著會與重排機制矛盾，
+並白白佔用模型對**選項品質**（rule 11 才是真正需要它注意的地方）的注意力。
 
 ### 5.3 交叉驗證回應 schema
 

@@ -49,6 +49,24 @@ npm run generate:quiz-bank -- --force --only two-pointer-technique
 
 **預期**：只重生該 Concept。
 
+### 1.1a 正解位置重排（`--rebalance-only`）
+
+```powershell
+npm run generate:quiz-bank -- --rebalance-only
+```
+
+**預期**：對既有題庫就地重排正解位置（quiz-bank-schema.md §5.2a），印出重排的 Concept 數、
+**零 LLM 呼叫、零 manifest 變動**，並在完成後以 `checkQuizBank` 複驗（有違規即非零 exit）。
+**MUST 為冪等**：連跑兩次，`data/quiz-bank.json` 逐位元不變。此路徑 MUST NOT 需要 `GEMINI_API_KEY`。
+
+驗證分布用：
+
+```powershell
+node -e "const b=require('./data/quiz-bank.json');for(const [k,v] of Object.entries(b.byConcept)){const c=[0,0,0,0];v.forEach(i=>c[i.answerIndex]++);console.log(k,v.length,'A='+c[0],'B='+c[1],'C='+c[2],'D='+c[3]);}"
+```
+
+**預期**：每個 Concept 的四格次數最多相差 1。
+
 ### 1.2 SC-010（題數分布）
 
 `npm run generate:quiz-bank` 於批次末**已自行計算並印出**此統計（T032）；未達標會印出具名警示，
@@ -164,7 +182,12 @@ npm run build:pages
 | 把某 Concept（≥4 題）的多數題 `answerIndex` 改為同一值，使佔比 >50% | `quiz-invalid` / `quiz-answer-position-bias`（指名分布與佔比） |
 | 把某 Concept（≥4 題）多數題的正解選項加長至唯一最長，使佔比 >50% | `quiz-invalid` / `quiz-longest-option-bias`（指名佔比） |
 | 把某 Concept（≥8 題）的 `answerIndex` 全部集中到 3 個以內的位置 | `quiz-invalid` / `quiz-answer-position-coverage`（指名未使用的位置） |
+| 把某選項改寫為「以上皆是」／「同選項 A」／「A 和 B 都成立」 | `quiz-invalid` / `quiz-option-cross-reference`（指名該選項） |
 
+> 三條位置／參照類判準對**產線產出**恆真（正解位置由 quiz-bank-schema.md §5.2a 的確定性重排保證、
+> 互相參照的選項在草稿階段即被擋下），故此處**只能以手改題庫的方式**驗證——它們在 Gate 中的角色
+> 正是「防手改、防未來新來源、防重排邏輯被改壞」。
+>
 > 驗完 MUST `git checkout -- data/quiz-bank.json` 還原。
 
 ---
