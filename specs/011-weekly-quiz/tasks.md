@@ -237,7 +237,7 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
 
 ### 3D. 題庫產線（plan P5；依賴 Phase 2 的 `checkQuizBank`）
 
-- [ ] T028 [P] [US1] 新增 `scripts/lib/prompts/quiz-aspects.ts`：Stage A 面向列舉 prompt +
+- [X] T028 [P] [US1] 新增 `scripts/lib/prompts/quiz-aspects.ts`：Stage A 面向列舉 prompt +
   `ResponseSchema`；取材範圍 MUST 涵蓋 `learning_goal`／`exit_criteria`／Author Hints 核心觀念／
   Pattern 辨識線索／Thinking／Common Mistakes 四段／`prerequisite`-`next` 鄰居區辨點，
   **MUST NOT** 納入 TypeScript／Python 重點，**MUST NOT** 於 prompt 出現任何題數或面向數字
@@ -247,24 +247,24 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   **讀 `node.skeletonPath` 與切出 Author Hints 段落由 T032 的 `generate-quiz-bank.ts` 負責**（唯一 I/O 點），
   本模組維持純字串組裝。**`TypeScript 重點`／`Python 重點` MUST 在輸入組裝時就不放進來**，
   MUST NOT 只在 prompt 裡敘述性地要求模型忽略（Q14 已實證敘述性要求不可靠）
-- [ ] T029 [P] [US1] 新增 `scripts/lib/prompts/quiz-items.ts`：Stage B 據面向出題 prompt +
+- [X] T029 [P] [US1] 新增 `scripts/lib/prompts/quiz-items.ts`：Stage B 據面向出題 prompt +
   `ResponseSchema`；同一面向 MAY 從不同考核角度出多題，**MUST NOT** 出現任何題數／面向數字；
   `options` MUST NOT 含代號前綴；`explanation` MUST 要求恰 5 段結構（結論句／正解成立原因／
   其餘三選項各自為何不成立）；**MUST 明文禁止在題幹／選項／詳解中提及 LeetCode 題號或題目連結**
   （§5／§11：題號 MUST 由程式從 Problem Bank 帶入；prompt 為第一道、`quiz-leetcode-id` 為第二道）
   （FR-006、FR-010、FR-016）
-- [ ] T030 [P] [US1] 新增 `scripts/lib/prompts/quiz-cross-check.ts`：盲答 prompt（只送
+- [X] T030 [P] [US1] 新增 `scripts/lib/prompts/quiz-cross-check.ts`：盲答 prompt（只送
   `stem`+`options`，MUST NOT 附 `answerIndex`／`explanation`）+ 解析為
   `{ answerIndex: 0|1|2|3 }`（結構化輸出）；復用 `self-check.ts` 既有的 `stripJsonFence`，
   不沿用 `SelfCheckResponse` 形狀（quiz-bank-schema.md §4／§5.3、research R8）
-- [ ] T031 [US1] 新增 `scripts/lib/quiz-checkpoint.ts`：`QuizConceptCheckpoint`
+- [X] T031 [US1] 新增 `scripts/lib/quiz-checkpoint.ts`：`QuizConceptCheckpoint`
   （`skeletonHash`／`frozen`／`gatePassed`／`needsHumanReview`／`regenCount`／`itemCount`）與
   `QuizManifest`，落於 `.cache/quiz-manifest.json`；跳過條件為「已存在於 `quiz-bank.json` 且
   `skeletonHash` 相符且 `frozen && gatePassed`」，`--force` 一律不跳；復用
   `scripts/lib/checkpoint.ts` 既有的 `hashFile`／`writeFileAtomic`／`readJsonCheckpoint`；
   manifest 遺失／損毀 ⇒ 由現存 `quiz-bank.json` 反推重建，MUST NOT 降級為空 manifest 後覆蓋
   （data-model.md §10、FR-015）
-- [ ] T032 [US1] [depends on T028, T029, T030, T031, T008] 新增 `scripts/generate-quiz-bank.ts`：
+- [X] T032 [US1] [depends on T028, T029, T030, T031, T008] 新增 `scripts/generate-quiz-bank.ts`：
   CLI（`--force`／`--only <conceptId>,...`；缺 `GEMINI_API_KEY` fail-fast 且不寫任何檔案）；
   **讀 `node.skeletonPath` 並切出 Author Hints 四段、組出 T028 的 `QuizAspectsInput`**（唯一 I/O 點，
   quiz-bank-schema.md §5.5）；對每個 Concept（`ordinalOf` 全序）執行最多 3 輪：Stage A → Stage B →
@@ -292,8 +292,8 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   > 未達標（佔比 ≥40% 或平均 <5）MUST 印出具名警示，但 **MUST NOT** 視為非零 exit 的 CI 失敗
   > 條件——SC-010 是「prompt 設計品質」的觀察訊號，與 `checkQuizBank` 的結構性 Gate 判準
   > 屬不同層級，兩者的失敗語意 MUST 分開回報，避免把「prompt 該調整了」與「資料損毀」混為一談。
-- [ ] T033 [P] [US1] `package.json` 新增 `"generate:quiz-bank": "tsx scripts/generate-quiz-bank.ts"`
-- [ ] T034 [P] [US1] `.github/workflows/content.yml` 接上新 stage（**三處都要改，缺一即綠燈空跑**）：
+- [X] T033 [P] [US1] `package.json` 新增 `"generate:quiz-bank": "tsx scripts/generate-quiz-bank.ts"`
+- [X] T034 [P] [US1] `.github/workflows/content.yml` 接上新 stage（**三處都要改，缺一即綠燈空跑**）：
   (a) `stage` choice 新增 `quiz-bank` 選項；
   (b) **新增執行 step**「Run Stage 4（generate:quiz-bank）」，比照既有三個 stage 的寫法：
   `if: ${{ inputs.stage == 'quiz-bank' }}`、轉發 `--force`／`--only`、`env: GEMINI_API_KEY`；
@@ -301,7 +301,7 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   另更新 `only` 欄位描述的比對單位說明（`stage=quiz-bank` 填 **Concept id**）。
   > **理由**：既有三個 stage 各自對應一個 `if:` step，只加 choice 而不加 step 會讓該選項跑完
   > 什麼都沒做卻 exit 0——正是該 workflow 自身註解已警告的「綠燈但空跑」失敗模式
-- [ ] T035 [P] [US1] 新增 `tests/unit/quiz-generate.test.ts`（以 `GenAiLike` 假物件替身，
+- [X] T035 [P] [US1] 新增 `tests/unit/quiz-generate.test.ts`（以 `GenAiLike` 假物件替身，
   **MUST NOT** 打真實 API）：交叉驗證一致 ⇒ 存活、不一致 ⇒ 針對面向重出且再驗；**替身模擬
   交叉驗證呼叫拋錯／回傳無法解析的內容 ⇒ 走退避重試且 `regenCount` 不增加**（FR-013 的基礎設施
   失敗不計入 3 輪，CHK014）；3 輪耗盡
@@ -309,7 +309,7 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   整體非零 exit；續跑跳過已通過 Concept（零重複 LLM 呼叫）；`--force` 覆蓋；Skeleton 雜湊
   變更觸發該 Concept 重生、其餘不受影響；manifest 遺失時由現存題庫反推重建（FR-013／FR-013a／
   FR-010a／FR-015、SC-008／SC-009）
-- [ ] T036 [P] [US1] 新增 `tests/unit/quiz-prompt-no-numbers.test.ts`（CHK012 對應）：靜態掃描
+- [X] T036 [P] [US1] 新增 `tests/unit/quiz-prompt-no-numbers.test.ts`（CHK012 對應）：靜態掃描
   `quiz-aspects.ts` 與 `quiz-items.ts` 匯出的 prompt 模板字串，斷言其中不含代表題數或面向數的
   數字樣式（排除程式碼本身的型別標註／縮排／版本號等非 prompt 內容），將 FR-016「MUST NOT
   出現任何題數或面向數字」從人工審閱 prompt 原始碼升級為可自動測試的判準
