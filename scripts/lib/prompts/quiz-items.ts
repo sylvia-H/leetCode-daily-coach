@@ -65,7 +65,7 @@ export function buildQuizItemsPrompt(input: QuizItemsPromptInput): string {
   const aspectsList = input.aspects.map((a) => `- ${a}`).join("\n");
 
   return `${feedback}你是 LeetCode Daily Coach 課程引擎的測驗設計者。請針對以下 Concept 的每一個面向，
-出選擇題（單選、四選項）。同一面向 MAY 從不同考核角度出多題，MUST NOT 為了填數量而重複同一角度。
+出選擇題（單選、四選項）。
 
 Concept: ${input.conceptTitle}（id: ${input.conceptId}）
 
@@ -73,23 +73,27 @@ Concept: ${input.conceptTitle}（id: ${input.conceptId}）
 ${aspectsList}
 
 規則（MUST 遵守）：
-1. 每一題 MUST 有恰好 4 個選項，唯一正解由 answerIndex（0-based）指出。
-2. options 的文字 MUST NOT 含 "A."、"B."、"1."、"(a)" 等代號前綴——呈現層會自行加上，你只需提供
+1. **面向清單中的每一項 MUST 至少對應一題**——這是逐項覆蓋的完整性要求，MUST NOT 挑選其中幾項
+   出題、略過其餘。若某面向底下其實還能問出考法不同、答案不同的第二道題，MAY 從不同考核角度
+   為同一面向多出一題，但 MUST NOT 為了填數量而重複同一角度、也 MUST NOT 為了省事而把兩個面向
+   合併成同一題（那違反了規則 9 的一對一對應）。
+2. 每一題 MUST 有恰好 4 個選項，唯一正解由 answerIndex（0-based）指出。
+3. options 的文字 MUST NOT 含 "A."、"B."、"1."、"(a)" 等代號前綴——呈現層會自行加上，你只需提供
    純文字選項內容。
-3. explanation MUST 恰為 5 段，依序為：
+4. explanation MUST 恰為 5 段，依序為：
    [0] 結論句，MUST ≤80 字，直接說出正解是什麼（不含理由）；
    [1] 正解為何成立的完整說明；
    [2]-[4] 依序說明其餘三個選項各自為何不成立（一段對應一個錯誤選項，順序與 options 中除正解外
    的其餘選項一致）。
-4. MUST NOT 在題幹、選項或詳解中提及任何 LeetCode 題號或題目連結——這是自製選擇題，不是 LeetCode
+5. MUST NOT 在題幹、選項或詳解中提及任何 LeetCode 題號或題目連結——這是自製選擇題，不是 LeetCode
    題目改寫。複雜度標記（如 O(n²)）、陣列索引、題目情境中的數值可以正常出現，這不是題號。
-5. MUST NOT 考核任何程式語言 API 用法或語法細節；MUST 考核可遷移的觀念性理解。
-6. 全文以繁體中文撰寫；技術術語、Pattern 名稱、程式碼片段 MUST 保留英文原文（§11）。
-7. MUST NOT 提及任何題數或面向數字（含上限）——出多少題完全由涵蓋上述面向自然決定。
-8. 每一題的 aspect 欄位 MUST 逐字等於上方面向清單中的一項，供後續系統對應該題所屬面向。
-9. 回傳格式 MUST 為單一 JSON 物件：{ "items": [{ "stem": string, "options": string[4],
-   "answerIndex": number, "explanation": string[5], "aspect": string }] }，不得包含 JSON 以外的
-   文字或 markdown code fence 包裹整個回應。
+6. MUST NOT 考核任何程式語言 API 用法或語法細節；MUST 考核可遷移的觀念性理解。
+7. 全文以繁體中文撰寫；技術術語、Pattern 名稱、程式碼片段 MUST 保留英文原文（§11）。
+8. MUST NOT 提及任何題數或面向數字（含上限）——出多少題完全由規則 1 的逐項覆蓋自然決定。
+9. 每一題的 aspect 欄位 MUST 逐字等於上方面向清單中的一項，供後續系統對應該題所屬面向。
+10. 回傳格式 MUST 為單一 JSON 物件：{ "items": [{ "stem": string, "options": string[4],
+    "answerIndex": number, "explanation": string[5], "aspect": string }] }，不得包含 JSON 以外的
+    文字或 markdown code fence 包裹整個回應。
 
 請開始出題。`;
 }

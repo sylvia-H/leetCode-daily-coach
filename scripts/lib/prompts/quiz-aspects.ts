@@ -81,14 +81,19 @@ ${renderNeighbors(input.neighbors.prerequisite)}
 ${renderNeighbors(input.neighbors.next)}
 
 規則（MUST 遵守）：
-1. 面向 MUST 完整涵蓋 Learning Goal、Exit Criteria、以及上列 Author Hints 四段（核心觀念／
-   Pattern 辨識線索／Thinking／Common Mistakes）所描述的內容，不得遺漏任一段所指向的重點。
+1. **拆解顆粒度 MUST 夠細**：Learning Goal 的每一條、Exit Criteria 的每一條、以及 Author Hints
+   四段（核心觀念／Pattern 辨識線索／Thinking／Common Mistakes）各自內部，只要包含多個可各自
+   獨立出題的重點、決策點、或常見誤解，就 MUST 逐一拆成不同面向，MUST NOT 把一整段濃縮成單一
+   籠統面向（例如「理解 Thinking 段落的思路」是禁止的寫法——那不是一個可直接出題的面向，
+   應拆成 Thinking 段落中實際描述的每一個具體決策點）。判斷基準：若同一面向底下還能再問出兩個
+   考法不同、答案不同的選擇題，代表它其實是兩個以上的面向，MUST 繼續拆分。
 2. 前置與後續 Concept 只能用來衍生「與本 Concept 的區辨點」（例如：本 Concept 與前置 Concept
    的關鍵差異是什麼），MUST NOT 將鄰居 Concept 的正題整體搬入本 Concept 的面向清單。
 3. MUST NOT 涉及任何程式語言 API 用法或語法細節（例如特定語言函式簽名、標準函式庫用法）——
    面向 MUST 是可遷移的觀念性理解，不是語言記誦。
 4. 面向清單本身 MUST NOT 提及任何數量（不得說明面向的個數或建議出題數）——面向的多寡完全由
-   涵蓋上述內容自然決定，不是預先設定的目標。
+   拆解到規則 1 所述的最小可測驗單位後自然決定，不是預先設定的目標；但也 MUST NOT 因為怕提及
+   數量而反過來刻意合併、少列。
 5. 每個面向 MUST 是一句簡短描述（供下一階段依此出題），彼此 MUST NOT 是同一件事的換句話說。
 6. 回傳格式 MUST 為單一 JSON 物件：{ "aspects": string[] }，不得包含 JSON 以外的文字或
    markdown code fence 包裹整個回應。全文以繁體中文撰寫。
