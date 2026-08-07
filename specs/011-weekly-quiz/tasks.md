@@ -33,9 +33,9 @@ Gate 判準、交叉驗證重生邏輯屬同一類別，plan.md「測試落點�
 
 **Purpose**: 建立可比對的綠燈基線，並確認實作前的規格回寫確實已落地。
 
-- [ ] T001 建立綠燈基線：於 repo root 依序執行 `npm ci`、`npm run build`、`npm run typecheck`、
+- [X] T001 建立綠燈基線：於 repo root 依序執行 `npm ci`、`npm run build`、`npm run typecheck`、
   `npm test`、`npm run validate:content` 全數通過，記錄現況作為後續比對基準
-- [ ] T002 **驗證**（非提交）實作前的規格回寫已全部落地——原任務要求「提交尚未 commit 的規格文件」，
+- [X] T002 **驗證**（非提交）實作前的規格回寫已全部落地——原任務要求「提交尚未 commit 的規格文件」，
   但該批文件已於 `1f6ae72`／`abffb91`／`1e38af7` 提交完畢、worktree 乾淨，照原文執行只會產生空 commit。
   改為逐項核對：`docs/spec.md` §14.5 含 `quizItem` **570** 與 `QUIZ_URL_RESERVE_CHARS` **120**、
   §15 的段落順序為 **Quiz 第四段／Encouragement 最後一段**（原誤植為 Encouragement 第四、Quiz 第五，
@@ -62,14 +62,14 @@ FR-010／FR-010a／FR-014。
 > 本 Phase 而非 Phase 3B；Renderer 真正「無硬依賴」的部分是**版面插入**（`buildReviewBlocks` 的
 > 段落順序），那才排入 Phase 3B。
 
-- [ ] T003 [P] 新增 `ReviewQuizItem` 型別與 `ReviewLesson.quizItems?` / `BudgetSlots.quizItems?`
+- [X] T003 [P] 新增 `ReviewQuizItem` 型別與 `ReviewLesson.quizItems?` / `BudgetSlots.quizItems?`
   欄位於 `src/types/lesson.ts`（data-model.md §4；`quizItems` 空陣列與缺席同義，MUST NOT 以空
   陣列填充）
-- [ ] T004 [P] 新增 `QuizItem` / `QuizBank` / `QuizViolationRule` / `QuizViolation` 型別與 zod
+- [X] T004 [P] 新增 `QuizItem` / `QuizBank` / `QuizViolationRule` / `QuizViolation` 型別與 zod
   strict schema 於 `src/compiler/quiz.ts`（data-model.md §1）：`options` 恰 4 個非空字串、
   `answerIndex ∈ [0,3]`、`explanation` 恰 5 個非空字串；`byConcept` 陣列本身 **MAY 為空，
   schema MUST NOT 用 `min(1)`**（同 F8 `ReflectionBank` 既有理由，FR-007 的降級路徑）
-- [ ] T005 [P] 新增 `QUIZ_BUDGET_LIMITS = { quizItem: 570, quiz: 3000 }` 與
+- [X] T005 [P] 新增 `QUIZ_BUDGET_LIMITS = { quizItem: 570, quiz: 3000 }` 與
   `QUIZ_URL_RESERVE_CHARS = 120` 常數於 `src/renderer/budget.ts`（data-model.md §3、FR-014）；
   `checkBudget` 改為 import 此常數，MUST NOT 出現第二處字面值。
   `checkBudget` 對 `budgetSlots.quizItems` 的登記方式 MUST 比照既有 `problems`：逐題
@@ -79,23 +79,23 @@ FR-010／FR-010a／FR-014。
   > 120 = 實測最壞連結 111（base URL 47 + `/quiz/` 6 + 最長 conceptId 42 + `.html` 5 + 裝飾 11）
   > 取整。reserve **MUST NOT 低於實際最壞值**——低估會使 Gate 寬鬆於 runtime，出現「CI 過、
   > 正式推播才爆」，違反憲章 IX（research R3 的 2026-08-07 修訂）
-- [ ] T006 [depends on T003] 實作並匯出 `renderQuizItemBody` 純函式於 `src/renderer/discord.ts`：
+- [X] T006 [depends on T003] 實作並匯出 `renderQuizItemBody` 純函式於 `src/renderer/discord.ts`：
   `{stem}\nA. {options[0]}\nB. {options[1]}\nC. {options[2]}\nD. {options[3]}\n||正解：{answerLabel}
   — {conclusion}{quizUrl ? " · [完整詳解](url)" : ""}||`（quiz-selection.md §4）；此函式 MUST 同時
   被本 Phase 的 `checkQuizBank`（無實際 url，估算用）與 Phase 3B 的 `buildReviewBlocks`（有實際
   url）共用（憲章 IX），MUST NOT 各自實作一份
-- [ ] T007 [depends on T004] 實作 `selectQuizItem(input): QuizItem | undefined` 純函式於
+- [X] T007 [depends on T004] 實作 `selectQuizItem(input): QuizItem | undefined` 純函式於
   `src/compiler/quiz.ts`：`index = (node.localOrder + trackOffset) mod items.length`，
   `trackOffset = TRACK_ORDER.indexOf(track)`；`bank` 缺該 Concept 或陣列為空 ⇒ `undefined`
   （FR-003、FR-003a：MUST NOT 固化進 `schedules/**` 或 `data/quiz-bank.json`，contracts/quiz-selection.md §1–2）。
   **`localOrder` 為 `ConceptNode` 既有欄位、值來自 Skeleton 檔名 `NNN-` 前綴（1-based，目錄範圍）**
   ——直接使用該欄位，**MUST NOT 自行推算「Topic 內序位」**（FR-003 已更正定義）
-- [ ] T007a [depends on T003, T004] 實作並匯出 `toReviewQuizItem(conceptId, item, quizUrl?): ReviewQuizItem`
+- [X] T007a [depends on T003, T004] 實作並匯出 `toReviewQuizItem(conceptId, item, quizUrl?): ReviewQuizItem`
   純函式於 `src/compiler/quiz.ts`（data-model.md §3.1）：`answerLabel = "ABCD"[item.answerIndex]`、
   `conclusion = item.explanation[0]`、`quizUrl` 未給即不設該欄位。**此為 `QuizItem → ReviewQuizItem`
   的唯一轉換點**，MUST 同時被 T016 的 `compileReview`（有 url）與 T008 的 `checkQuizBank`（無 url，
   估算用）呼叫；MUST NOT 在兩處各組一份（憲章 IX：Gate 與 runtime 共用同一份邏輯）
-- [ ] T008 [depends on T004, T005, T006, T007a] 實作 `checkQuizBank(input): QuizViolation[]` 於
+- [X] T008 [depends on T004, T005, T006, T007a] 實作 `checkQuizBank(input): QuizViolation[]` 於
   `src/compiler/quiz.ts`，對 `byConcept` **每一個陣列元素逐一檢查**（不依賴課表是否選中，
   research R3）：`quiz-unknown-concept` / `quiz-option-prefix`（`/^[A-D][.、)]\s*/`）/
   `quiz-conclusion-length`（`explanation[0]` >80）/ `quiz-item-budget`（呼叫 T006 的
@@ -112,14 +112,14 @@ FR-010／FR-010a／FR-014。
   > **CHK021 對應（checklists/prompt-design.md）**：`quiz-count-range` 在題數 **>10** 時 MUST
   > 回報違規並擋下整個 Concept，**MUST NOT 自動截斷或挑選保留哪些題**——FR-005「上限為保險絲」
   > 的語意是「讓失控可見」而非「自動修剪」，測試 T011 MUST 明確斷言陣列未被截斷。
-- [ ] T009 [depends on T004] 於 `src/compiler/lesson.ts`（或 `quiz.ts` 匯出、供 `loadCompilerDeps`
+- [X] T009 [depends on T004] 於 `src/compiler/lesson.ts`（或 `quiz.ts` 匯出、供 `loadCompilerDeps`
   呼叫）比照既有 `loadOptionalMaterial(path, label, schema)` 語意載入 `data/quiz-bank.json`：
   檔案不存在 ⇒ `undefined`；非合法 JSON 或不符 schema ⇒ throw 具名錯誤（quiz-bank-schema.md §2）
-- [ ] T010 [P] 新增 `tests/unit/quiz-select.test.ts`：不變式 **I1／I2**（同一 `(track, conceptId)`
+- [X] T010 [P] 新增 `tests/unit/quiz-select.test.ts`：不變式 **I1／I2**（同一 `(track, conceptId)`
   恆選同一題、三軌 `trackOffset` 互異取到相異題目）；`bank` 缺 Concept 或陣列為空 ⇒ `undefined`
   （FR-003、quiz-selection.md §2）。**I3（同一 `(track, sessionIndex)` byte-identical）不在本檔**
   ——`selectQuizItem` 的簽章不含 `sessionIndex`，該不變式屬 compile 層，落點見 T018a
-- [ ] T011 [P] 新增 `tests/unit/quiz-gate.test.ts`：`checkQuizBank()` 輸出的 **8 條**
+- [X] T011 [P] 新增 `tests/unit/quiz-gate.test.ts`：`checkQuizBank()` 輸出的 **8 條**
   `QuizViolationRule` 逐一被攔截且訊息指名根因（Concept、第幾則、實際值／上限）；第 9 條
   `quiz-schema` 由載入層 throw、覆蓋在 T012（計數口徑見 quiz-bank-schema.md §3）；**額外斷言題數 >10
   時回報 `quiz-count-range` 而非靜默截斷陣列**（CHK021）；`quiz-duplicate` 只攔逐字相同、同面向多題
@@ -129,7 +129,7 @@ FR-010／FR-010a／FR-014。
   **另 MUST 斷言 `QUIZ_URL_RESERVE_CHARS` ≥ 實際最壞連結長度**（以最長 conceptId + 一個代表性
   base URL 實算 `` ` · [完整詳解](${url})` `` 的 code point 長度比對），釘死「Gate 恆嚴格於 runtime」
   這條憲章 IX 的方向性——初訂的 90 正是因無此斷言而低估（research R3 修訂）
-- [ ] T012 [P] 新增 `tests/unit/quiz-load.test.ts`：檔案缺席 ⇒ `undefined`（不失敗）；某 Concept
+- [X] T012 [P] 新增 `tests/unit/quiz-load.test.ts`：檔案缺席 ⇒ `undefined`（不失敗）；某 Concept
   缺 key 或陣列為空 ⇒ 該 Concept 略過（由 Gate 擋下，不在 runtime 失敗）；壞檔／不符 schema ⇒
   throw 具名錯誤（quiz-bank-schema.md §2）
 

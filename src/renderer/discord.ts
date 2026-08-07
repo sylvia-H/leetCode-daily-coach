@@ -10,6 +10,7 @@ import type {
   RenderedMessage,
   RestLesson,
   ReviewLesson,
+  ReviewQuizItem,
 } from "../types/lesson.js";
 
 // 題目 Embed 中每一則的 bullet 前綴（budget.ts 不再反解析——budgetSlots.problems 已逐題提供同一份
@@ -57,6 +58,19 @@ export function renderProblemEntry(problem: Problem): string {
     ? `\n  ${problem.difficulty} · ${problem.whyThisPattern}${hintPart}`
     : `\n  ${problem.difficulty}`;
   return `${PROBLEM_BULLET}[${problem.id}. ${problem.title}](${problem.url})${detail}`;
+}
+
+const QUIZ_OPTION_LABELS = ["A", "B", "C", "D"] as const;
+
+/**
+ * F11 小測單題呈現（純函式，quiz-bank-schema.md §3 / quiz-selection.md §4）：與
+ * `checkQuizBank` 的 `quiz-item-budget` 估算共用同一份呈現邏輯（憲章 IX），MUST NOT 各自實作一份。
+ * spoiler `||…||` 只包住「正解＋結論句＋連結」這一行，題幹與選項明碼呈現（FR-002／FR-009）。
+ */
+export function renderQuizItemBody(item: ReviewQuizItem): string {
+  const optionLines = item.options.map((opt, i) => `${QUIZ_OPTION_LABELS[i]}. ${opt}`).join("\n");
+  const linkPart = item.quizUrl ? ` · [完整詳解](${item.quizUrl})` : "";
+  return `${item.stem}\n${optionLines}\n||正解：${item.answerLabel} — ${item.conclusion}${linkPart}||`;
 }
 
 function renderPathFooter(path: PathLabels): string {
