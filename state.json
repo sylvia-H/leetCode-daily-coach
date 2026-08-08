@@ -1,14 +1,15 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 7,
-      "lastPushAt": "2026-08-07T22:49:24.970Z",
+      "currentSessionIndex": 8,
+      "lastPushAt": "2026-08-08T22:39:51.312Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
         "tracing-execution-flow",
-        "conditional-branching-logic"
+        "conditional-branching-logic",
+        "loop-invariant-thinking"
       ],
       "history": [
         {
@@ -39,18 +40,24 @@
           "sessionIndex": 6,
           "pushedAt": "2026-08-07T22:49:24.970Z",
           "conceptId": "conditional-branching-logic"
+        },
+        {
+          "sessionIndex": 7,
+          "pushedAt": "2026-08-08T22:39:51.312Z",
+          "conceptId": "loop-invariant-thinking"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 7,
-      "lastPushAt": "2026-08-07T22:49:25.290Z",
+      "currentSessionIndex": 8,
+      "lastPushAt": "2026-08-08T22:39:51.542Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
         "tracing-execution-flow",
-        "conditional-branching-logic"
+        "conditional-branching-logic",
+        "loop-invariant-thinking"
       ],
       "history": [
         {
@@ -81,18 +88,24 @@
           "sessionIndex": 6,
           "pushedAt": "2026-08-07T22:49:25.290Z",
           "conceptId": "conditional-branching-logic"
+        },
+        {
+          "sessionIndex": 7,
+          "pushedAt": "2026-08-08T22:39:51.542Z",
+          "conceptId": "loop-invariant-thinking"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 7,
-      "lastPushAt": "2026-08-07T22:49:25.648Z",
+      "currentSessionIndex": 8,
+      "lastPushAt": "2026-08-08T22:39:51.727Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
         "tracing-execution-flow",
-        "conditional-branching-logic"
+        "conditional-branching-logic",
+        "loop-invariant-thinking"
       ],
       "history": [
         {
@@ -123,6 +136,11 @@
           "sessionIndex": 6,
           "pushedAt": "2026-08-07T22:49:25.648Z",
           "conceptId": "conditional-branching-logic"
+        },
+        {
+          "sessionIndex": 7,
+          "pushedAt": "2026-08-08T22:39:51.727Z",
+          "conceptId": "loop-invariant-thinking"
         }
       ]
     }
