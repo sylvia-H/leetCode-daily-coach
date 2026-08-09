@@ -258,9 +258,12 @@ for each concept in ordinalOf 全序:
 
     if survivors.length < 3 → lastFailure = "存活題數不足 3"; continue        // 訊息較貼近產線語境
 
-    // §5.2a：正解位置的確定性重排。MUST 在交叉驗證之後（題數已定）、集合層 Gate 之前（Gate 檢查的
-    // MUST 是最終要寫入的內容）。
-    balanced = rebalanceAnswerPositions(concept.id, survivors)
+    // §5.2b：quiz-longest-option-bias 的逐題修復。只重出違規題，未超標時零呼叫。
+    repaired = repairLongestOptionBias(concept.id, survivors)
+
+    // §5.2a：正解位置的確定性重排。MUST 在交叉驗證與逐題修復之後（題數與內容已定）、
+    // 集合層 Gate 之前（Gate 檢查的 MUST 是最終要寫入的內容）。
+    balanced = rebalanceAnswerPositions(concept.id, repaired)
 
     // 集合層判準 MUST 以**最終集合**為對象重跑完整 checkQuizBank（FR-013a）：涵蓋題數上限（>10）
     // 與 rule 11。rule 10／12 此時已由重排保證通過，重跑是防禦性複驗（憲章 IX：判準只有一顆實作，
@@ -327,6 +330,41 @@ MUST 遵守的四項不變量：
 **Stage B prompt 的對應修改（MUST 同步）**：既有「正解 MUST 用滿四個位置、刻意選沒用過的位置」
 這條規則 MUST 改為「位置由系統重排、不必也 MUST NOT 花心思分散」——留著會與重排機制矛盾，
 並白白佔用模型對**選項品質**（rule 11 才是真正需要它注意的地方）的注意力。
+
+### 5.2b `quiz-longest-option-bias` 的逐題修復
+
+rule 11 是**內容**問題（把正解寫得比干擾項完整），§5.2a 的重排改不了它。但**整個 Concept 重生的
+顆粒度太粗**：一輪要 Stage A + Stage B + 全部題的交叉驗證（n≈7 時約 10 次呼叫），而且會把**已通過
+交叉驗證的好題一起丟掉**。實測（2026-08-07 全量跑至第 37 個 Concept）：**19/37（51%）需要 2 輪以上**，
+成本主要花在這裡。
+
+故 MUST 改為**逐題修復**：只對「正解為唯一最長」的題重出，複用交叉驗證失敗時既有的 per-aspect
+重出機制（`regenerateOneItem`）。一輪約 4 次呼叫。
+
+```ts
+// 未超標 ⇒ 直接回傳，MUST 為零 LLM 呼叫。
+async function repairLongestOptionBias(llm, conceptId, conceptTitle, survivors): Promise<DraftQuizItem[]>;
+```
+
+MUST 遵守的四項規則：
+
+1. **修復目標為隨機基準 25%，MUST NOT 只修到剛好過 50%**。修到擦邊會讓題庫大量卡在上限
+   （實測前 37 個 Concept 有 **5 個恰為 50%**）。且「正解恆為最長」與「正解**從不**最長」是
+   **同樣可利用**的線索，只是方向相反——真正要的是長度不帶訊號，故也 MUST NOT 一律修到 0%。
+   修復題數 = `offenders − round(n × 0.25)`。
+2. **挑選順序 MUST 為確定性**：依「正解比次長選項多出的字元數」由大到小、同分以宣告序，
+   先修最容易被長度看穿的題。MUST NOT 依賴 `Math.random()` 或物件列舉順序。
+3. **best-effort、絕不倒退**：替換題 MUST 同時（a）本身不是唯一最長、（b）通過交叉驗證，
+   兩者任一不滿足即**保留原題**。(a) 先判可省下一次交叉驗證呼叫。
+4. **Gate 仍是權威**：修完仍超標 ⇒ 由集合層 `checkQuizBank` 判本輪不通過，回到既有的 Concept 級
+   重生路徑。修復 **MUST NOT** 取代 Gate，也 MUST NOT 遞迴重試。
+
+**判準 MUST 與 Gate 共用同一份實作**（憲章 IX）：`isAnswerUniqueLongestOption()` 由
+`src/compiler/quiz.ts` 匯出，`checkQuizBank` 的集合層計數與本階段的挑題共用。兩邊各寫一份會出現
+「修復端認為修好了、Gate 仍判違規」的無限重生。
+
+**`crossCheckAndRegenerate` MUST 回傳 `DraftQuizItem[]` 而非 `QuizItem[]`**：`aspect` 要保留到本階段
+（重出特定題需要它），寫入題庫前才由 `toQuizItem` 剝除。
 
 ### 5.3 交叉驗證回應 schema
 

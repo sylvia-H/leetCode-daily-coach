@@ -126,6 +126,21 @@ function codePointLength(text: string): number {
 }
 
 /**
+ * 「正解恰為該題**唯一**最長選項」的單題判準（`quiz-longest-option-bias` 的計數基礎）。
+ *
+ * **MUST 只有這一份實作**（憲章 IX）：`checkQuizBank`（集合層計數）與
+ * `scripts/generate-quiz-bank.ts` 的逐題修復（挑出要重出的題）共用。兩邊若各寫一份，
+ * 會出現「修復端認為修好了、Gate 仍判違規」的無限重生。
+ *
+ * 「唯一最長」而非「最長」是刻意的：若有其他選項與正解等長，長度就不構成可利用的線索。
+ */
+export function isAnswerUniqueLongestOption(item: { options: readonly string[]; answerIndex: number }): boolean {
+  const lengths = item.options.map(codePointLength);
+  const maxLength = Math.max(...lengths);
+  return lengths[item.answerIndex] === maxLength && lengths.filter((l) => l === maxLength).length === 1;
+}
+
+/**
  * 「猜答偏誤」判準的門檻與適用下界（quiz-bank-schema.md §3 rule 10／11）。
  *
  * **為何需要這兩條**：實測（2026-08-07，`array-two-pointers-variable`）產出的 10 題全部通過當時
@@ -230,12 +245,7 @@ export function checkQuizBank(input: { quizBank?: QuizBank; graph: CurriculumGra
       let uniqueLongestAsAnswer = 0;
       for (const item of items) {
         positionCounts[item.answerIndex]!++;
-        const lengths = item.options.map(codePointLength);
-        const maxLength = Math.max(...lengths);
-        // 「唯一最長」才算偏誤：若有其他選項與正解等長，長度就不構成可利用的線索。
-        if (lengths[item.answerIndex] === maxLength && lengths.filter((l) => l === maxLength).length === 1) {
-          uniqueLongestAsAnswer++;
-        }
+        if (isAnswerUniqueLongestOption(item)) uniqueLongestAsAnswer++;
       }
 
       const maxPositionCount = Math.max(...positionCounts);

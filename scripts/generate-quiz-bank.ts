@@ -19,7 +19,10 @@ import { runContentGate } from "../src/compiler/gate.js";
 import { loadCompilerDeps, loadOptionalMaterial } from "../src/compiler/lesson.js";
 import {
   checkQuizBank,
+  isAnswerUniqueLongestOption,
   quizBankSchema,
+  QUIZ_BIAS_MAX_SHARE,
+  QUIZ_BIAS_MIN_ITEMS,
   type QuizBank,
   type QuizItem,
   type QuizViolationRule,
@@ -252,39 +255,115 @@ async function crossCheckOne(llmClient: LlmClient, item: DraftQuizItem): Promise
   }
 }
 
+/** 針對單一面向重出一題（換考核角度）。`feedback` 會成為 Stage B 的 retryFeedback，讓模型知道
+ * 上一版哪裡不行。呼叫或解析失敗 ⇒ undefined（由呼叫端決定捨棄或保留原題）。 */
+async function regenerateOneItem(
+  llmClient: LlmClient,
+  conceptId: string,
+  conceptTitle: string,
+  aspect: string,
+  feedback?: string,
+): Promise<DraftQuizItem | undefined> {
+  try {
+    const raw = await withInfraRetry(() =>
+      llmClient.generate(
+        buildQuizItemsPrompt({ conceptId, conceptTitle, aspects: [aspect], ...(feedback ? { retryFeedback: feedback } : {}) }),
+        buildQuizItemsResponseSchema(),
+      ),
+    );
+    return parseDraftQuizItems(raw)[0];
+  } catch {
+    return undefined;
+  }
+}
+
 /** 逐題交叉驗證；不通過者針對其 aspect 重出一題（換角度），重生的題 MUST 再次通過交叉驗證才計入
- * survivors（不通過則捨棄，不再遞迴重試——下一輪 Concept 級重生仍有機會）。 */
+ * survivors（不通過則捨棄，不再遞迴重試——下一輪 Concept 級重生仍有機會）。
+ * 回傳 `DraftQuizItem[]` 而非 `QuizItem[]`：`aspect` MUST 保留到集合層修復階段
+ * （`repairLongestOptionBias` 需要它才能對特定題重出），寫入題庫前才由 `toQuizItem` 剝除。 */
 async function crossCheckAndRegenerate(
   llmClient: LlmClient,
   conceptId: string,
   conceptTitle: string,
   draftItems: DraftQuizItem[],
-): Promise<QuizItem[]> {
-  const survivors: QuizItem[] = [];
+): Promise<DraftQuizItem[]> {
+  const survivors: DraftQuizItem[] = [];
   for (const item of draftItems) {
     if (await crossCheckOne(llmClient, item)) {
-      survivors.push(toQuizItem(item));
+      survivors.push(item);
       continue;
     }
 
-    let regenItem: DraftQuizItem | undefined;
-    try {
-      const raw = await withInfraRetry(() =>
-        llmClient.generate(
-          buildQuizItemsPrompt({ conceptId, conceptTitle, aspects: [item.aspect] }),
-          buildQuizItemsResponseSchema(),
-        ),
-      );
-      regenItem = parseDraftQuizItems(raw)[0];
-    } catch {
-      continue; // 換角度重出仍失敗 ⇒ 此題捨棄，不計入 survivors
-    }
-    if (!regenItem) continue;
+    const regenItem = await regenerateOneItem(llmClient, conceptId, conceptTitle, item.aspect);
+    if (!regenItem) continue; // 換角度重出仍失敗 ⇒ 此題捨棄，不計入 survivors
     if (await crossCheckOne(llmClient, regenItem)) {
-      survivors.push(toQuizItem(regenItem));
+      survivors.push(regenItem);
     }
   }
   return survivors;
+}
+
+/**
+ * `quiz-longest-option-bias` 的**逐題**修復（quiz-bank-schema.md §5.2b）。
+ *
+ * **為何不直接讓整個 Concept 重生**：整輪重生要 Stage A + Stage B + 全部題的交叉驗證（n≈7 時約
+ * 10 次呼叫），而且會把**已通過交叉驗證的好題一起丟掉**；實測 2026-08-07 全量跑到第 37 個 Concept
+ * 時，19/37（51%）需要 2 輪以上，成本主要就花在這裡。改為只重出違規的那幾題，一輪約 4 次呼叫。
+ *
+ * **修復目標為隨機基準（25%）而非 Gate 上限（50%）**：修到剛好 50% 會讓題庫大量卡在擦邊值
+ * （實測前 37 個 Concept 有 5 個恰為 50%），而「正解恆為最長」與「正解從不最長」是**同樣可利用**
+ * 的線索，只是方向相反——真正要的是長度不帶訊號。故 MUST NOT 只修到剛好過關。
+ *
+ * **挑選順序 MUST 為確定性**：依「正解比次長選項多出的字元數」由大到小（同分以宣告序），
+ * 先修最容易被長度看穿的題。MUST NOT 依賴 `Math.random()` 或物件列舉順序。
+ *
+ * **best-effort**：替換題 MUST 同時通過交叉驗證且本身不是唯一最長，否則保留原題（絕不倒退）。
+ * 修完仍超標 ⇒ 由呼叫端的集合層 Gate 判本輪不通過，回到既有的 Concept 級重生路徑。
+ */
+async function repairLongestOptionBias(
+  llmClient: LlmClient,
+  conceptId: string,
+  conceptTitle: string,
+  survivors: DraftQuizItem[],
+): Promise<DraftQuizItem[]> {
+  if (survivors.length < QUIZ_BIAS_MIN_ITEMS) return survivors;
+
+  const offenders = survivors.filter(isAnswerUniqueLongestOption);
+  if (offenders.length / survivors.length <= QUIZ_BIAS_MAX_SHARE) return survivors; // 未超標 ⇒ 零呼叫
+
+  // 修到隨機基準（四選一 ⇒ 25%）而非 Gate 上限。
+  const target = Math.round(survivors.length * 0.25);
+  const repairCount = offenders.length - target;
+
+  /** 正解比「次長選項」多出的字元數；越大代表越容易用長度猜中。 */
+  const margin = (item: DraftQuizItem): number => {
+    const lengths = item.options.map((o) => [...o].length).sort((a, b) => b - a);
+    return lengths[0]! - lengths[1]!;
+  };
+
+  const picked = survivors
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => isAnswerUniqueLongestOption(item))
+    .sort((a, b) => margin(b.item) - margin(a.item) || a.index - b.index)
+    .slice(0, repairCount);
+
+  const repaired = [...survivors];
+  for (const { item, index } of picked) {
+    const replacement = await regenerateOneItem(
+      llmClient,
+      conceptId,
+      conceptTitle,
+      item.aspect,
+      "上一版這一題的正解是四個選項中唯一最長的，學習者只要挑最長的就能猜對。" +
+        "MUST 重出這一題，讓至少一個干擾項的篇幅不少於正解——補的 MUST 是實質的觀念內容，" +
+        "MUST NOT 靠加上修飾語或贅詞灌長度。",
+    );
+    if (!replacement) continue; // 重出失敗 ⇒ 保留原題
+    if (isAnswerUniqueLongestOption(replacement)) continue; // 沒改善 ⇒ 保留原題
+    if (!(await crossCheckOne(llmClient, replacement))) continue; // 內容不可信 ⇒ 保留原題
+    repaired[index] = replacement;
+  }
+  return repaired;
 }
 
 // ── per-Concept 生成（quiz-bank-schema.md §5.2 的完整流程） ──────────────────────
@@ -350,11 +429,15 @@ export async function generateQuizForConcept(
       continue;
     }
 
-    // 正解位置的確定性重排（quiz-bank-schema.md §5.2a）：MUST 在交叉驗證之後、集合層 Gate 之前。
-    // 之前 MUST NOT——交叉驗證會丟棄題目而改變題數，先排會排錯份數；之後 MUST NOT——那等於讓
-    // Gate 檢查一份不是最終要寫入的內容。位置不帶語意，故 MUST NOT 交給 LLM 決定再事後拒絕
-    // （靠重生達成均勻分布的誤殺率見 quiz-balance.ts 檔頭）。
-    const balanced = rebalanceAnswerPositions(node.id, survivors);
+    // quiz-longest-option-bias 的逐題修復（quiz-bank-schema.md §5.2b）：只重出違規的那幾題，
+    // 保住已通過交叉驗證的好題。未超標時零呼叫。修完仍超標由下方集合層 Gate 判本輪不通過。
+    const repaired = await repairLongestOptionBias(llmClient, node.id, node.title, survivors);
+
+    // 正解位置的確定性重排（quiz-bank-schema.md §5.2a）：MUST 在交叉驗證與逐題修復之後、集合層
+    // Gate 之前。之前 MUST NOT——那兩步會丟棄／替換題目而改變題數與內容，先排會排錯份數；
+    // 之後 MUST NOT——那等於讓 Gate 檢查一份不是最終要寫入的內容。位置不帶語意，故 MUST NOT
+    // 交給 LLM 決定再事後拒絕（靠重生達成均勻分布的誤殺率見 quiz-balance.ts 檔頭）。
+    const balanced = rebalanceAnswerPositions(node.id, repaired.map(toQuizItem));
 
     // 對重排後的集合重跑**完整**判準：涵蓋題數上限（>10）與 quiz-longest-option-bias。少了這一步，
     // 違規內容會先被寫入題庫、直到批次末 runContentGate 才爆出來——屆時已無法在該 Concept 的重生
