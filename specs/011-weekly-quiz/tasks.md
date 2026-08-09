@@ -337,9 +337,15 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
 - [X] T037 [US1] 執行 `npm run generate:quiz-bank`（quickstart.md §1）：產出並凍結
   `data/quiz-bank.json`（165 個 Concept、每個 3–10 題），review diff 後 commit（type `feat`，
   scope `011-weekly-quiz`）
-- [ ] T038 [US1] 驗證冪等與續跑（quickstart.md §1.1）：二次執行 `npm run generate:quiz-bank`
+- [X] T038 [US1] 驗證冪等與續跑（quickstart.md §1.1）：二次執行 `npm run generate:quiz-bank`
   全部印出「跳過」且零 LLM 呼叫；`npm run generate:quiz-bank -- --force --only
-  <conceptId>` 只重生指定 Concept（SC-009）**——需要真實 `GEMINI_API_KEY`，待人工執行**
+  <conceptId>` 只重生指定 Concept（SC-009）。**結果**（2026-08-09 人工執行）：冪等重跑確認
+  `data/quiz-bank.json` 不變；`--force --only array-two-pointers-opposite` 只重生該
+  Concept（第 2 次嘗試通過、10 題），其餘 164 個 Concept 逐位元不變（`.cache/quiz-manifest.json`
+  mtime 有更新、`git diff` 僅 1 個 Concept 區塊變動），已 commit `937fc5c`。
+  **過程中發現 quickstart.md §1.1 原範例 conceptId `two-pointer-technique` 在本課綱不存在**
+  （首次以此 id 執行時 `--only` 篩不到任何 Concept，靜默視為成功、零寫入），已更正為真實存在的
+  `array-two-pointers-opposite`
 - [X] T039 [US1] 驗證 SC-010（quickstart.md §1.2）：確認凍結後題數恰為 3 的 Concept 佔比 <40%、
   全庫平均 ≥5；未達標則回到 T028／T029 調整 prompt 設計後重跑，**MUST NOT** 以補生成硬湊
   （SC-010）。**結果**：恰為 3 題比例 0.0%、全庫平均 7.36 題，達標。
@@ -377,9 +383,11 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
   `quiz-duplicate`／`quiz-leetcode-id`），`quiz-count-range` 訊息含需要區間與實際題數、
   `quiz-traditional-chinese` 兩個簡體字皆被個別列出而非只攔第一個；每次驗證後
   `git checkout -- data/quiz-bank.json` 還原，最終 `git status` 確認逐位元無殘留變更
-- [ ] T044 [US1] 勾選 quickstart.md §6 完成判準 SC-001–SC-010，確認 `docs/spec.md` 與
+- [X] T044 [US1] 勾選 quickstart.md §6 完成判準 SC-001–SC-010，確認 `docs/spec.md` 與
   `.specify/memory/constitution.md` 對本 Feature 的跨 Feature 決策已全部落地無矛盾（呼應
-  Phase 1 T002 的回寫，含 §15 段落順序的更正）
+  Phase 1 T002 的回寫，含 §15 段落順序的更正）。**結果**：SC-001–SC-011 已全數勾選（quickstart.md
+  §6）；`docs/spec.md` §14.5／§15／F11 段的跨 Feature 決策已於 T002 核對一致，本輪 Phase 3E
+  端到端驗收（T037–T038）未發現新的跨 Feature 決策需回寫
 
 **Checkpoint**: US1 對真實課表與真實題庫端到端可驗收，M5（Pages／週測 milestone）就緒
 

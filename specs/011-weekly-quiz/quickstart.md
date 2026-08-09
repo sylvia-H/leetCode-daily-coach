@@ -44,7 +44,7 @@ npm run generate:quiz-bank            # 第二次執行
 **預期**：全部 Concept 印出「跳過」，**零 LLM 呼叫**，`data/quiz-bank.json` 內容不變（`git status` 乾淨）。
 
 ```powershell
-npm run generate:quiz-bank -- --force --only two-pointer-technique
+npm run generate:quiz-bank -- --force --only array-two-pointers-opposite
 ```
 
 **預期**：只重生該 Concept。
@@ -202,6 +202,6 @@ npm run build:pages
 - [X] SC-006 無 LLM API key 環境下推播不變（2026-08-09 移除 `GEMINI_API_KEY` 後 build/typecheck/test/validate:content 全數成功）
 - [X] SC-007 Pages 停用或 quiz 頁缺席時小測仍推出全部題目、僅省略連結（2026-08-09 實測 `pagesBaseUrl` 缺席時連結全省略、題目本身不受影響）
 - [X] SC-008 凍結入庫題目 100% 通過交叉驗證；`data/quiz-bank.json` 無題數 <3 的 Concept（2026-08-09 實測全庫 165 個 Concept 皆 ≥3 題）
-- [ ] SC-009 Skeleton 未變更時重跑 byte-identical；單一 Concept 變更時僅該 Concept 重生 —— **待 T038 以真實 `GEMINI_API_KEY` 執行續跑驗證**
+- [X] SC-009 Skeleton 未變更時重跑 byte-identical；單一 Concept 變更時僅該 Concept 重生（2026-08-09 實測：冪等重跑 `data/quiz-bank.json` 不變；`--force --only array-two-pointers-opposite` 僅該 Concept 變動，其餘 164 個逐位元不變）
 - [X] SC-010 題數恰為 3 的 Concept 佔比 <40%，全庫平均 ≥5（2026-08-09 實測：0.0%、7.36 題）
 - [X] SC-011 課綱順序清單中，100% 已解鎖且題庫有題的 Concept 顯示「✍️ 小測」連結；未解鎖或無題者 0% 顯示；`buildSite()` 重複呼叫 byte-identical（2026-08-09 實測 3 個 unlocked+有題 Concept 皆顯示 quiz-chip，其餘不顯示）
