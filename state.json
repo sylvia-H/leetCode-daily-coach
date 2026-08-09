@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 8,
-      "lastPushAt": "2026-08-08T22:39:51.312Z",
+      "currentSessionIndex": 9,
+      "lastPushAt": "2026-08-09T22:42:31.289Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -45,19 +45,24 @@
           "sessionIndex": 7,
           "pushedAt": "2026-08-08T22:39:51.312Z",
           "conceptId": "loop-invariant-thinking"
+        },
+        {
+          "sessionIndex": 8,
+          "pushedAt": "2026-08-09T22:42:31.289Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 8,
-      "lastPushAt": "2026-08-08T22:39:51.542Z",
+      "currentSessionIndex": 9,
+      "lastPushAt": "2026-08-09T22:42:31.578Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
         "tracing-execution-flow",
         "conditional-branching-logic",
-        "loop-invariant-thinking"
+        "loop-invariant-thinking",
+        "problem-simplification-strategy"
       ],
       "history": [
         {
@@ -93,19 +98,25 @@
           "sessionIndex": 7,
           "pushedAt": "2026-08-08T22:39:51.542Z",
           "conceptId": "loop-invariant-thinking"
+        },
+        {
+          "sessionIndex": 8,
+          "pushedAt": "2026-08-09T22:42:31.578Z",
+          "conceptId": "problem-simplification-strategy"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 8,
-      "lastPushAt": "2026-08-08T22:39:51.727Z",
+      "currentSessionIndex": 9,
+      "lastPushAt": "2026-08-09T22:42:31.780Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
         "tracing-execution-flow",
         "conditional-branching-logic",
-        "loop-invariant-thinking"
+        "loop-invariant-thinking",
+        "problem-simplification-strategy"
       ],
       "history": [
         {
@@ -141,6 +152,11 @@
           "sessionIndex": 7,
           "pushedAt": "2026-08-08T22:39:51.727Z",
           "conceptId": "loop-invariant-thinking"
+        },
+        {
+          "sessionIndex": 8,
+          "pushedAt": "2026-08-09T22:42:31.780Z",
+          "conceptId": "problem-simplification-strategy"
         }
       ]
     }
