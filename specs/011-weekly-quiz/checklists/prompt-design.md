@@ -26,8 +26,9 @@
   → 未定義：8 條 Gate 規則中無一檢查「考核角度是否真的換了」，只有 `quiz-duplicate` 攔逐字重複；Q14 已證明「敘述性要求無法穩定落實」，此條卻仍完全仰賴敘述性 prompt 指示，屬已知高風險模式的重演。
 - [x] CHK007 「鄰居只能作為區辨點，MUST NOT 將其正題整體搬入」是否有可供結構性 Gate 判斷的界線，或僅能靠 prompt 措辭防範且事後不可驗證？[Measurability, FR-016]
   → 未定義：Q14 僅靠移除 prompt 中的數字上限來間接抑制此現象（實測 0/7），無任何結構性 Gate 規則（quiz-bank-schema.md §3 的 8 條皆未涉及）能在題目生成後偵測「是否搬入鄰居正題」，完全不可驗證。
-- [ ] CHK008 交叉驗證「MUST NOT 與生成該題的呼叫共用同一次對話上下文」的「獨立」二字，是否已具體到可被程式碼審查客觀核驗（例如：兩次呼叫必須是各自全新的 request，不帶前一輪訊息歷史）？[Clarity, FR-013]
+- [x] CHK008 交叉驗證「MUST NOT 與生成該題的呼叫共用同一次對話上下文」的「獨立」二字，是否已具體到可被程式碼審查客觀核驗（例如：兩次呼叫必須是各自全新的 request，不帶前一輪訊息歷史）？[Clarity, FR-013]
   → 部分定義：research.md R8 定案為獨立新模組 `quiz-cross-check.ts`、單次盲答呼叫、不沿用 self-check 的複審形狀，方向正確；但未明文「呼叫必須是全新 request、不帶歷史訊息陣列」這類可供程式碼審查逐條核對的具體判準，「獨立」仍停留在敘述層級。
+  → 實作面殘餘風險已於 2026-08-09 合併前驗收關閉（見 [acceptance.md](acceptance.md) AC007）：`crossCheckOne` 走 `llmClient.generate(prompt, schema)` 的單次無狀態 request、不帶訊息歷史，prompt 亦未附 `answerIndex`／`explanation`。規格條文本身仍建議日後補上明文判準。
 
 ## Requirement Consistency
 
