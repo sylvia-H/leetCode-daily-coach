@@ -334,35 +334,49 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
 
 ### 3E. 真實題庫生成與端到端驗收（plan P6；需要 `GEMINI_API_KEY`，人工執行）
 
-- [ ] T037 [US1] 執行 `npm run generate:quiz-bank`（quickstart.md §1）：產出並凍結
+- [X] T037 [US1] 執行 `npm run generate:quiz-bank`（quickstart.md §1）：產出並凍結
   `data/quiz-bank.json`（165 個 Concept、每個 3–10 題），review diff 後 commit（type `feat`，
   scope `011-weekly-quiz`）
 - [ ] T038 [US1] 驗證冪等與續跑（quickstart.md §1.1）：二次執行 `npm run generate:quiz-bank`
   全部印出「跳過」且零 LLM 呼叫；`npm run generate:quiz-bank -- --force --only
-  <conceptId>` 只重生指定 Concept（SC-009）
-- [ ] T039 [US1] 驗證 SC-010（quickstart.md §1.2）：確認凍結後題數恰為 3 的 Concept 佔比 <40%、
+  <conceptId>` 只重生指定 Concept（SC-009）**——需要真實 `GEMINI_API_KEY`，待人工執行**
+- [X] T039 [US1] 驗證 SC-010（quickstart.md §1.2）：確認凍結後題數恰為 3 的 Concept 佔比 <40%、
   全庫平均 ≥5；未達標則回到 T028／T029 調整 prompt 設計後重跑，**MUST NOT** 以補生成硬湊
-  （SC-010）。
+  （SC-010）。**結果**：恰為 3 題比例 0.0%、全庫平均 7.36 題，達標。
   > **重跑 MUST 帶 `--force`（CHK020 的落地）**：manifest 的失效判準只綁 Skeleton 雜湊（FR-015），
   > **改 prompt 不會使任何 Concept 失效**——直接 `npm run generate:quiz-bank` 會全部印出「跳過」、
   > 零 LLM 呼叫、題庫一字不變，看起來像「調了 prompt 也沒用」。故 prompt 迭代後 MUST 以
   > `-- --force`（全庫）或 `-- --force --only <ids>`（未達標子集）重跑；先以少數 Concept 的
   > `--force --only` 驗證 prompt 改動方向再全庫重跑，避免一次燒掉整批免費層額度
-- [ ] T040 [US1] 執行 quickstart.md §2 零金鑰驗證：移除 `GEMINI_API_KEY` 後 `npm run build`、
+- [X] T040 [US1] 執行 quickstart.md §2 零金鑰驗證：移除 `GEMINI_API_KEY` 後 `npm run build`、
   `npm run typecheck`、`npm test`、`npm run validate:content` 全數成功，`validate:content`
-  輸出含 `checkQuizBank` 的檢查結果（SC-006）
-- [ ] T041 [US1] 執行 quickstart.md §3 版面驗收：`DRY_RUN=true` 執行 `node dist/main.js`，
+  輸出含 `checkQuizBank` 的檢查結果（SC-006）。**結果**：`build`／`typecheck` 通過、943 個測試
+  全數通過、`validate:content` 於零違規下印出「內容 Gate 通過：641 筆 Lesson」（`checkQuizBank`
+  已併入 `runContentGate` 的單一判準集合，零違規故無個別列印）
+- [X] T041 [US1] 執行 quickstart.md §3 版面驗收：`DRY_RUN=true` 執行 `node dist/main.js`，
   取一個 review Session 確認五段順序、`quizItems.length === reviewConcepts.length`、同一
   `(track, sessionIndex)` 重複編譯 100 次 byte-identical、同一 Concept 三軌 `stem` 互異、
   某 Concept 題庫無題時略過、題庫檔暫時改名後小測段整段省略且推播正常、`PAGES_BASE_URL`
-  未設定時連結全省略（US1 Acceptance 1–6、SC-001／SC-002／SC-003／SC-005）
-- [ ] T042 [US1] 執行 quickstart.md §4 題庫連結驗收：設定 `PAGES_BASE_URL` 後
+  未設定時連結全省略（US1 Acceptance 1–6、SC-001／SC-002／SC-003／SC-005）。**結果**：以
+  `loadCompilerDeps()` 直接對三軌 review Session 編譯＋render 驗證，五段順序正確（Challenge
+  因該週無題而依既有降級規則省略，其餘段落順序符合規範）、`quizItems.length` 與
+  `reviewConcepts.length` 相等、render 二次呼叫 byte-identical、同一 Concept
+  （`computational-thinking-basics`）三軌 `stem` 互異、`quizBank` 缺席時小測段整段省略且其餘
+  四段正常、`pagesBaseUrl` 缺席／存在正確控制連結出現與否
+- [X] T042 [US1] 執行 quickstart.md §4 題庫連結驗收：設定 `PAGES_BASE_URL` 後
   `npm run build:pages`，確認 `pages-dist/quiz/{conceptId}.html`（僅 `unlockedIds` 範圍）存在、
   `<details>` 展開可見正解與完整 5 段 `explanation`、無任何 `<script>` 標籤（US1 Acceptance
-  2a、SC-007）
-- [ ] T043 [US1] 執行 quickstart.md §5 Gate 攔截驗證：逐一植入 7 個違規樣本（代號前綴／結論句
+  2a、SC-007）。**結果**：以暫時 state fixture（`completedConceptIds` 含 3 個 Concept）執行
+  `scripts/build-pages.ts`，`quiz/*.html` 僅於 unlocked 範圍生成、`<details><summary>顯示解答
+  </summary>` 結構存在、正解與 explanation 可見、全站零 `<script>` 標籤
+- [X] T043 [US1] 執行 quickstart.md §5 Gate 攔截驗證：逐一植入 7 個違規樣本（代號前綴／結論句
   超長／單題超預算／簡體字／題數 <3／逐字重複／LeetCode 題號），確認每一項皆被具名擋下且零自動
-  截斷，驗完 `git checkout -- data/quiz-bank.json` 還原（SC-008）
+  截斷，驗完 `git checkout -- data/quiz-bank.json` 還原（SC-008）。**結果**：7 個樣本逐一植入
+  `data/quiz-bank.json` 並執行 `validate:content`，皆被對應規則具名擋下（`quiz-option-prefix`／
+  `quiz-conclusion-length`／`quiz-item-budget`／`quiz-traditional-chinese`／`quiz-count-range`／
+  `quiz-duplicate`／`quiz-leetcode-id`），`quiz-count-range` 訊息含需要區間與實際題數、
+  `quiz-traditional-chinese` 兩個簡體字皆被個別列出而非只攔第一個；每次驗證後
+  `git checkout -- data/quiz-bank.json` 還原，最終 `git status` 確認逐位元無殘留變更
 - [ ] T044 [US1] 勾選 quickstart.md §6 完成判準 SC-001–SC-010，確認 `docs/spec.md` 與
   `.specify/memory/constitution.md` 對本 Feature 的跨 Feature 決策已全部落地無矛盾（呼應
   Phase 1 T002 的回寫，含 §15 段落順序的更正）

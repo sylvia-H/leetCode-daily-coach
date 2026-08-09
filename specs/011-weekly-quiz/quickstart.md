@@ -194,14 +194,14 @@ npm run build:pages
 
 ## 6. 完成判準（對照 Success Criteria）
 
-- [ ] SC-001 100% 的小測 embeds render 結果正解／結論句／連結封藏於 `||…||`，題幹選項不封藏，完整詳解不出現於訊息內
-- [ ] SC-002 同一 `(track, sessionIndex)` 編譯 & render byte-identical
-- [ ] SC-003 同一 Concept 三軌取到相異題目
-- [ ] SC-004 review 全 embeds 字元總和（含小測段）≤5,500，`quizItem`≤570、`quiz`≤3,000 逐格通過
-- [ ] SC-005 題庫或素材缺席時推播照常、零提示零告警
-- [ ] SC-006 無 LLM API key 環境下推播不變
-- [ ] SC-007 Pages 停用或 quiz 頁缺席時小測仍推出全部題目、僅省略連結
-- [ ] SC-008 凍結入庫題目 100% 通過交叉驗證；`data/quiz-bank.json` 無題數 <3 的 Concept
-- [ ] SC-009 Skeleton 未變更時重跑 byte-identical；單一 Concept 變更時僅該 Concept 重生
-- [ ] SC-010 題數恰為 3 的 Concept 佔比 <40%，全庫平均 ≥5
-- [ ] SC-011 課綱順序清單中，100% 已解鎖且題庫有題的 Concept 顯示「✍️ 小測」連結；未解鎖或無題者 0% 顯示；`buildSite()` 重複呼叫 byte-identical
+- [X] SC-001 100% 的小測 embeds render 結果正解／結論句／連結封藏於 `||…||`，題幹選項不封藏，完整詳解不出現於訊息內（2026-08-09 三軌 review Session 實測驗證）
+- [X] SC-002 同一 `(track, sessionIndex)` 編譯 & render byte-identical（2026-08-09 實測；含 `compile-determinism.test.ts` 之 100 次重複斷言）
+- [X] SC-003 同一 Concept 三軌取到相異題目（2026-08-09 以 `computational-thinking-basics` 實測三軌 `stem` 互異）
+- [X] SC-004 review 全 embeds 字元總和（含小測段）≤5,500，`quizItem`≤570、`quiz`≤3,000 逐格通過（`validate:content` 零違規 + 三軌實測總長 822–1098 字元，遠低於上限）
+- [X] SC-005 題庫或素材缺席時推播照常、零提示零告警（2026-08-09 實測 `quizBank` 缺席時小測段整段省略、其餘四段正常）
+- [X] SC-006 無 LLM API key 環境下推播不變（2026-08-09 移除 `GEMINI_API_KEY` 後 build/typecheck/test/validate:content 全數成功）
+- [X] SC-007 Pages 停用或 quiz 頁缺席時小測仍推出全部題目、僅省略連結（2026-08-09 實測 `pagesBaseUrl` 缺席時連結全省略、題目本身不受影響）
+- [X] SC-008 凍結入庫題目 100% 通過交叉驗證；`data/quiz-bank.json` 無題數 <3 的 Concept（2026-08-09 實測全庫 165 個 Concept 皆 ≥3 題）
+- [ ] SC-009 Skeleton 未變更時重跑 byte-identical；單一 Concept 變更時僅該 Concept 重生 —— **待 T038 以真實 `GEMINI_API_KEY` 執行續跑驗證**
+- [X] SC-010 題數恰為 3 的 Concept 佔比 <40%，全庫平均 ≥5（2026-08-09 實測：0.0%、7.36 題）
+- [X] SC-011 課綱順序清單中，100% 已解鎖且題庫有題的 Concept 顯示「✍️ 小測」連結；未解鎖或無題者 0% 顯示；`buildSite()` 重複呼叫 byte-identical（2026-08-09 實測 3 個 unlocked+有題 Concept 皆顯示 quiz-chip，其餘不顯示）
