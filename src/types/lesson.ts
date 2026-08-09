@@ -66,6 +66,21 @@ export interface ReviewLesson extends LessonBase {
   reflectionQuestion?: string;
   /** F8 素材：掛載於 review（rest 槽移除後 encouragement 的消費者）；缺席即省略。 */
   encouragement?: string;
+  /** F11 小測；缺席或空陣列即省略整段（FR-007／FR-008）。 */
+  quizItems?: ReviewQuizItem[];
+}
+
+/** F11 小測題（Compiler → Renderer 的介面，data-model.md §4）。 */
+export interface ReviewQuizItem {
+  conceptId: string;
+  stem: string;
+  /** 純文字，Renderer 呈現時才加上 A/B/C/D 前綴（憲章 XI：呈現歸 Renderer）。 */
+  options: [string, string, string, string];
+  answerLabel: "A" | "B" | "C" | "D";
+  /** = 該題 `explanation[0]`（Discord 只用結論句，FR-002）。 */
+  conclusion: string;
+  /** 缺席 ⇒ Renderer 省略連結（FR-012）。 */
+  quizUrl?: string;
 }
 
 export interface RestLesson extends LessonBase {
@@ -109,6 +124,7 @@ export interface BudgetSlots {
   reflectionQuestion?: string;
   encouragement?: string;
   problems?: string[];
+  quizItems?: string[];
 }
 
 export interface RenderedMessage {

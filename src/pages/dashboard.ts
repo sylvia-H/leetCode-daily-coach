@@ -64,10 +64,15 @@ function renderTrackPositionMarker(tracks: Track[]): string {
   return ` <span class="badge track-marker">${escapeHtml(labels)} 目前位置</span>`;
 }
 
+function renderQuizLink(quizUrl: string | undefined): string {
+  if (quizUrl === undefined) return "";
+  return `<span class="divider">|</span><a class="quiz-chip" href="${escapeHtml(quizUrl)}">✍️ 小測</a>`;
+}
+
 function renderCurriculumEntry(entry: CurriculumEntryView): string {
   const inner =
     entry.unlocked && entry.articleUrl !== undefined
-      ? `<a href="${escapeHtml(entry.articleUrl)}">${escapeHtml(entry.title)}</a>`
+      ? `<a href="${escapeHtml(entry.articleUrl)}">${escapeHtml(entry.title)}</a>${renderQuizLink(entry.quizUrl)}`
       : `${escapeHtml(entry.title)} <span class="badge">未解鎖</span>`;
   return `<li class="curriculum-entry${entry.unlocked ? "" : " locked"}">${inner}${renderTrackPositionMarker(entry.atTrackPositions)}</li>`;
 }

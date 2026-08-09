@@ -79,3 +79,53 @@ describe("buildSite determinism（SC-007）", () => {
     expect(output.has("feed-interview-ready.xml")).toBe(true);
   });
 });
+
+describe("buildSite — F11 quiz 頁（pages-quiz.md §2／§4）", () => {
+  const quizItem = {
+    stem: "題幹",
+    options: ["a", "b", "c", "d"] as [string, string, string, string],
+    answerIndex: 0 as const,
+    explanation: ["結論", "1", "2", "3", "4"] as [string, string, string, string, string],
+  };
+
+  function makeInputWithQuizBank() {
+    const base = makeInput();
+    // 額外加入一個未解鎖的 Concept（concept-c），驗證範圍限 unlockedIds（research R7）。
+    base.deps.graph.concepts.set("concept-c", {
+      ...base.deps.graph.concepts.get("concept-a")!,
+      id: "concept-c",
+      title: "Concept C",
+      localOrder: 3,
+    });
+    base.deps.graph.ordinalOf.set("concept-c", { moduleIndex: 0, topicIndex: 0, localOrder: 3, id: "concept-c" });
+    base.deps.quizBank = {
+      version: 1,
+      byConcept: {
+        "concept-a": [quizItem, quizItem, quizItem],
+        "concept-b": [], // 已解鎖但題庫為空 ⇒ 不產出 quiz 頁
+        "concept-c": [quizItem, quizItem, quizItem], // 未解鎖 ⇒ 不產出 quiz 頁
+      },
+    };
+    return base;
+  }
+
+  it("quiz/*.html 只對 unlockedIds 且題庫非空的 Concept 產出", () => {
+    const output = buildSite(makeInputWithQuizBank());
+    expect(output.has("quiz/concept-a.html")).toBe(true);
+    expect(output.has("quiz/concept-b.html")).toBe(false);
+    expect(output.has("quiz/concept-c.html")).toBe(false);
+  });
+
+  it("quizBank 缺席時完全不產出任何 quiz/*.html", () => {
+    const output = buildSite(makeInput());
+    expect([...output.keys()].some((k) => k.startsWith("quiz/"))).toBe(false);
+  });
+
+  it("同一 SiteBuildInput 連續呼叫 100 次，quiz/*.html byte-identical", () => {
+    const input = makeInputWithQuizBank();
+    const baseline = serializeOutput(buildSite(input));
+    for (let i = 0; i < 100; i++) {
+      expect(serializeOutput(buildSite(input))).toBe(baseline);
+    }
+  });
+});

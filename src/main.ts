@@ -181,6 +181,9 @@ export async function run(env: EnvLike, options: RunOptions = {}): Promise<numbe
   let deps: CompilerDeps;
   try {
     deps = loadCompilerDeps();
+    // F11 research R1：pagesBaseUrl 只在 composition root 讀環境變數併入，loadCompilerDeps()
+    // 維持「只讀檔案系統、不讀環境變數」的既有邊界不變。
+    if (config.pagesBaseUrl !== undefined) deps.pagesBaseUrl = config.pagesBaseUrl;
   } catch (err) {
     const reason = `課程素材載入失敗：${redactWebhookUrls((err as Error).message)}`;
     console.error(reason);

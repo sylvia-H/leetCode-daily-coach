@@ -123,6 +123,25 @@ export const MATERIAL_BUDGET_LIMITS = {
   encouragement: 200,
 } as const;
 
+/**
+ * F11 小測（`quizItem` 單題／`quiz` 整段合計，data-model.md §3、FR-014）。
+ * `quizItem` = 內容 450（實測最長 362 + 約 24% 餘裕）+ 連結保留 120 = 570。
+ * **單一來源**：`checkBudget`（render 後）與 `checkQuizBank`（素材層，`src/compiler/quiz.ts`）
+ * MUST 全部 import 此常數，MUST NOT 出現第二處字面值。
+ */
+export const QUIZ_BUDGET_LIMITS = {
+  quizItem: 570,
+  quiz: 3000,
+} as const;
+
+/**
+ * `checkQuizBank` 對「附連結」情境的保守估計（research R3）：估算單題長度時一律假設連結存在且
+ * 佔滿此保留額度，使結構性 Gate 恆比 runtime 實際檢查更嚴格。
+ * 最壞實測 111 = base URL 47 + `/quiz/` 6 + 最長 conceptId 42 + `.html` 5 + ` · [完整詳解]()` 11，
+ * 取整為 120。**MUST NOT 低於實際最壞值**——低估會使 Gate 寬鬆於 runtime，違反憲章 IX。
+ */
+export const QUIZ_URL_RESERVE_CHARS = 120;
+
 // 獨立純函式（憲章 IX）：對單一 RenderedMessage 同時檢查逐區塊預算、結構性上限與總量，
 // 供 runtime 與 scripts/validate.ts 共用同一顆實作。budgetSlots 由 render() 提供，
 // 值 MUST 是放進 embeds 的同一份字串實例，故此處不再反解析 embeds（research R10）。
@@ -166,6 +185,18 @@ export function checkBudget(message: RenderedMessage): BudgetReport {
       const text = line.startsWith(EXIT_CRITERIA_PREFIX) ? line.slice(EXIT_CRITERIA_PREFIX.length) : line;
       items.push(makeItem(`exitCriteria[${i}]`, codePointLength(text), EXIT_CRITERIA_ITEM_MAX));
     });
+  }
+  if (budgetSlots.quizItems !== undefined) {
+    budgetSlots.quizItems.forEach((entry, i) => {
+      items.push(makeItem(`quizItem[${i}]`, codePointLength(entry), QUIZ_BUDGET_LIMITS.quizItem));
+    });
+    items.push(
+      makeItem(
+        "quiz",
+        budgetSlots.quizItems.reduce((sum, e) => sum + codePointLength(e), 0),
+        QUIZ_BUDGET_LIMITS.quiz,
+      ),
+    );
   }
   if (budgetSlots.problems !== undefined) {
     budgetSlots.problems.forEach((entry, i) => {

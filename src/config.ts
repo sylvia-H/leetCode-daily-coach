@@ -14,6 +14,8 @@ export interface Config {
   stateFile: string;
   dryRun: boolean;
   force: boolean;
+  /** F11 research R1：選填，缺席不影響既有 fail-fast 條件。缺席 ⇒ 小測連結全部省略（FR-012）。 */
+  pagesBaseUrl?: string;
 }
 
 export function parseBool(v: string | undefined): boolean {
@@ -48,11 +50,14 @@ export function loadConfig(env: EnvLike): Config {
     throw new Error("設定錯誤：未設定 STATE_FILE");
   }
 
+  const pagesBaseUrl = env.PAGES_BASE_URL?.trim() || undefined;
+
   return {
     webhooks,
     enabledTracks,
     stateFile,
     dryRun: parseBool(env.DRY_RUN),
     force: parseBool(env.FORCE),
+    pagesBaseUrl,
   };
 }

@@ -143,3 +143,101 @@ describe("compile — review 分支的 F8 素材填入（US1 Acceptance 1、US2 
     expect(new Set(quotes).size).toBe(10);
   });
 });
+
+describe("compile — review 分支的 F11 小測組裝（FR-002／FR-004／FR-007／FR-008／FR-012）", () => {
+  const concepts = [
+    { id: "alpha", title: "Alpha", localOrder: 1, topic: "test-topic" },
+    { id: "beta", title: "Beta", localOrder: 2, topic: "test-topic" },
+  ];
+  const articles = {
+    "articles/test-topic/001-alpha.md": makeArticleMarkdown({ id: "alpha" }),
+    "articles/test-topic/002-beta.md": makeArticleMarkdown({ id: "beta" }),
+  };
+  const schedules = {
+    foundation: [
+      { sessionIndex: 1, type: "concept" as const, conceptId: "alpha" },
+      { sessionIndex: 2, type: "concept" as const, conceptId: "beta" },
+      { sessionIndex: 3, type: "review" as const, reviewRange: [1, 2] as [number, number] },
+    ],
+  };
+  function makeItem(stem: string) {
+    return {
+      stem,
+      options: ["opt1", "opt2", "opt3", "opt4"] as [string, string, string, string],
+      answerIndex: 0 as const,
+      explanation: ["結論", "正解說明", "選2說明", "選3說明", "選4說明"] as [
+        string,
+        string,
+        string,
+        string,
+        string,
+      ],
+    };
+  }
+
+  it("quizBank 缺席 ⇒ quizItems 整體不設定（FR-008）", () => {
+    const deps = makeCompilerDeps({ concepts, schedules, articles });
+    const lesson = asReview(compile("foundation", 3, deps));
+    expect(lesson.quizItems).toBeUndefined();
+  });
+
+  it("quizBank 存在且每個 Concept 皆有題 ⇒ quizItems.length === reviewConcepts.length", () => {
+    const quizBank = {
+      version: 1 as const,
+      byConcept: {
+        alpha: [makeItem("qa0"), makeItem("qa1"), makeItem("qa2")],
+        beta: [makeItem("qb0"), makeItem("qb1"), makeItem("qb2")],
+      },
+    };
+    const deps = makeCompilerDeps({ concepts, schedules, articles, quizBank });
+    const lesson = asReview(compile("foundation", 3, deps));
+    expect(lesson.quizItems?.length).toBe(lesson.reviewConcepts.length);
+  });
+
+  it("某 Concept 題庫無題（陣列為空）⇒ 該 Concept 略過，其餘正常出題（FR-007）", () => {
+    const quizBank = {
+      version: 1 as const,
+      byConcept: {
+        alpha: [] as ReturnType<typeof makeItem>[],
+        beta: [makeItem("qb0"), makeItem("qb1"), makeItem("qb2")],
+      },
+    };
+    const deps = makeCompilerDeps({ concepts, schedules, articles, quizBank });
+    const lesson = asReview(compile("foundation", 3, deps));
+    expect(lesson.quizItems?.map((q) => q.conceptId)).toEqual(["beta"]);
+  });
+
+  it("pagesBaseUrl 缺席 ⇒ 每題 quizUrl 皆為 undefined（FR-012）", () => {
+    const quizBank = {
+      version: 1 as const,
+      byConcept: { alpha: [makeItem("qa0"), makeItem("qa1"), makeItem("qa2")] },
+    };
+    const deps = makeCompilerDeps({ concepts, schedules, articles, quizBank });
+    const lesson = asReview(compile("foundation", 3, deps));
+    for (const q of lesson.quizItems ?? []) expect(q.quizUrl).toBeUndefined();
+  });
+
+  it("pagesBaseUrl 存在 ⇒ quizUrl = `${pagesBaseUrl}/quiz/${conceptId}.html`（FR-012）", () => {
+    const quizBank = {
+      version: 1 as const,
+      byConcept: { alpha: [makeItem("qa0"), makeItem("qa1"), makeItem("qa2")] },
+    };
+    const deps = makeCompilerDeps({
+      concepts,
+      schedules,
+      articles,
+      quizBank,
+      pagesBaseUrl: "https://example.github.io/leetcode-daily-coach",
+    });
+    const lesson = asReview(compile("foundation", 3, deps));
+    const alphaItem = lesson.quizItems?.find((q) => q.conceptId === "alpha");
+    expect(alphaItem?.quizUrl).toBe("https://example.github.io/leetcode-daily-coach/quiz/alpha.html");
+  });
+
+  it("全部 Concept 皆無題 ⇒ quizItems 整體不設定（MUST NOT 以空陣列填充）", () => {
+    const quizBank = { version: 1 as const, byConcept: {} };
+    const deps = makeCompilerDeps({ concepts, schedules, articles, quizBank });
+    const lesson = asReview(compile("foundation", 3, deps));
+    expect(lesson.quizItems).toBeUndefined();
+  });
+});

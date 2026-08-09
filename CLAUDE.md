@@ -177,7 +177,8 @@ Overlay 疊加不取代、Renderer 純函式性與 Discord 限制（含 6,000 �
   | F7 | `007-content-generation` | 兩階段產線（課綱起草＋大綱定稿 → 全量展開）＋品質 Gate＋節流／續跑 | F2、F3、F4 | M3 |
   | F8 | `008-review-extras` | Reflection 題庫、語錄池（掛 review）、review 版面、移除 rest 槽＋跳過無題槽並重跑課表 | F6、F7 | M4 |
   | F9 | `009-pages-publish` | GitHub Pages 儀表板 + 全文閱讀 + RSS（post-MVP） | F6 | M5 |
-  | F10 | `010-interactive` | Slash Commands、每週測驗、自適應（Roadmap） | F6、F8 | M5 |
+  | F10 | `010-interactive` | **已評估，不做**：Slash Command 互動層需新服務商、與「零常駐」對衝；每週測驗改由 F11 承接，自適應違反生成物凍結 | — | — |
+  | F11 | `011-weekly-quiz` | 每週自評測驗：Discord 每 Concept 1 題（spoiler 自評）＋ Pages 題庫頁；題庫產線與二次作答交叉驗證 Gate | F6、F8、F9 | M5 |
   **M0 → M3 走完即 MVP**（三頻道每日自動推課）。F7 可與 F5 / F6 並行（機器批次 2～4 天）。
 - **`/speckit-constitution` 已於第一個 Feature 之前執行**（2026-07-19），spec §4 的 17 條原則
   已寫進 `.specify/memory/constitution.md`（現行 v1.0.2；v1.0.1 為 Gemini 型號釘死為

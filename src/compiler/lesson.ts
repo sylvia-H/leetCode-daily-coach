@@ -15,6 +15,7 @@ import {
 } from "./material.js";
 import { getOverlayNotes, loadAllOverlays } from "./overlay.js";
 import { getProblemsForConcept, loadProblemBank, makeProblemExists } from "./problem.js";
+import { quizBankSchema, selectQuizItem, toReviewQuizItem, type QuizBank } from "./quiz.js";
 import { getSessionPlan, loadAllSchedules } from "./schedule.js";
 import type { ConceptNode, CurriculumGraph, Ordinal } from "../types/curriculum.js";
 import type {
@@ -26,6 +27,7 @@ import type {
   RestLesson,
   ReviewConcept,
   ReviewLesson,
+  ReviewQuizItem,
   Track,
 } from "../types/lesson.js";
 import type { ProblemBank } from "../types/problem.js";
@@ -44,6 +46,11 @@ export interface CompilerDeps {
   problemOrigins: Record<Track, ProblemOrigin>;
   reflectionBank?: ReflectionBank;
   encouragement?: EncouragementPool;
+  quizBank?: QuizBank;
+  /** research R1：選填。缺席 ⇒ 全部小測題目省略連結（FR-012）。由 src/main.ts 的 run() 從
+   * config.pagesBaseUrl 併入，MUST NOT 由 loadCompilerDeps() 自行讀取環境變數（維持
+   * loadCompilerDeps() 只讀檔案系統、不讀環境變數的既有邊界）。 */
+  pagesBaseUrl?: string;
 }
 
 export interface CompilerPaths {
@@ -54,6 +61,7 @@ export interface CompilerPaths {
   overlaysDir: string;
   reflectionBankPath: string;
   encouragementPath: string;
+  quizBankPath: string;
 }
 
 const DEFAULT_PATHS: CompilerPaths = {
@@ -64,6 +72,7 @@ const DEFAULT_PATHS: CompilerPaths = {
   overlaysDir: "overlays",
   reflectionBankPath: "data/reflection-bank.json",
   encouragementPath: "data/encouragement.json",
+  quizBankPath: "data/quiz-bank.json",
 };
 
 // 沿用 F2 `Ordinal` 的確定性全序比較；F2 未輸出此比較器（同 F4 schedule-generator.ts 的做法），
@@ -188,6 +197,8 @@ export function loadCompilerDeps(paths: Partial<CompilerPaths> = {}): CompilerDe
   if (reflectionBank !== undefined) deps.reflectionBank = reflectionBank;
   const encouragement = loadOptionalMaterial(p.encouragementPath, "encouragement", encouragementPoolSchema);
   if (encouragement !== undefined) deps.encouragement = encouragement;
+  const quizBank = loadOptionalMaterial(p.quizBankPath, "quiz bank", quizBankSchema);
+  if (quizBank !== undefined) deps.quizBank = quizBank;
 
   return deps;
 }
@@ -402,6 +413,19 @@ function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, sche
   if (deps.encouragement) {
     const e = selectEncouragement({ pool: deps.encouragement, schedule, track, sessionIndex: plan.sessionIndex });
     if (e !== undefined && e.trim() !== "") lesson.encouragement = e;
+  }
+
+  // F11 小測（contracts/quiz-selection.md §3）：依 reviewConcepts 既有順序逐一選題，缺題 Concept
+  // 略過（FR-007）；全部略過 ⇒ 不設定 lesson.quizItems（MUST NOT 以空陣列填充）。
+  if (deps.quizBank) {
+    const quizItems: ReviewQuizItem[] = [];
+    for (const c of reviewConcepts) {
+      const item = selectQuizItem({ bank: deps.quizBank, graph: deps.graph, track, conceptId: c.id });
+      if (!item) continue;
+      const quizUrl = deps.pagesBaseUrl ? `${deps.pagesBaseUrl}/quiz/${c.id}.html` : undefined;
+      quizItems.push(toReviewQuizItem(c.id, item, quizUrl));
+    }
+    if (quizItems.length > 0) lesson.quizItems = quizItems;
   }
 
   return lesson;

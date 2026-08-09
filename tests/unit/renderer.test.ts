@@ -170,6 +170,106 @@ describe("render — 五種 Session 類型（US2）", () => {
     expect(fieldNames).not.toContain("💬 一句話");
   });
 
+  describe("review：F11 本週小測段（research R5、FR-002／FR-009、quiz-selection.md §4）", () => {
+    const quizItems = [
+      {
+        conceptId: "array-traversal",
+        stem: "題幹一",
+        options: ["選項A", "選項B", "選項C", "選項D"] as [string, string, string, string],
+        answerLabel: "A" as const,
+        conclusion: "結論一",
+      },
+      {
+        conceptId: "in-place-operations",
+        stem: "題幹二",
+        options: ["選項1", "選項2", "選項3", "選項4"] as [string, string, string, string],
+        answerLabel: "B" as const,
+        conclusion: "結論二",
+        quizUrl: "https://example.github.io/leetcode-daily-coach/quiz/in-place-operations.html",
+      },
+    ];
+
+    it("五段全部存在時，順序恆為 本週涵蓋→Reflection→Challenge→小測→一句話", () => {
+      const lesson = makeLesson({
+        type: "review",
+        problems: PROBLEMS,
+        reviewConcepts: [
+          { id: "array-traversal", title: "Array Traversal" },
+          { id: "in-place-operations", title: "In-place Operations" },
+        ],
+        reflectionQuestion: "這週你最常在哪一步卡住？",
+        encouragement: "做得很好，繼續保持！",
+        quizItems,
+      });
+      const [message] = render(lesson);
+      const fieldNames = message!.embeds[0]?.fields?.map((f) => f.name) ?? [];
+      expect(fieldNames).toEqual([
+        "📚 本週涵蓋",
+        "🤔 Reflection",
+        "🎯 Challenge",
+        "✍️ 本週小測 (1/2) · Array Traversal",
+        "✍️ 本週小測 (2/2) · In-place Operations",
+        "💬 一句話",
+      ]);
+    });
+
+    it("每題一個 field，field value 只將「正解＋結論句[＋連結]」封於 ||…||，題幹與選項明碼", () => {
+      const lesson = makeLesson({
+        type: "review",
+        problems: [],
+        reviewConcepts: [{ id: "array-traversal", title: "Array Traversal" }],
+        quizItems: [quizItems[0]!],
+      });
+      const [message] = render(lesson);
+      const field = message!.embeds[0]?.fields?.find((f) => f.name.startsWith("✍️ 本週小測"));
+      expect(field).toBeDefined();
+      const value = field!.value;
+      expect(value).toContain("題幹一");
+      expect(value).toContain("A. 選項A");
+      expect(value).toContain("D. 選項D");
+      expect(value).toContain("||正解：A — 結論一||");
+      // spoiler 只包住「正解…」那一行，題幹與選項本身不在 || 內
+      expect(value.split("\n")[0]).not.toContain("||");
+    });
+
+    it("quizUrl 存在時，連結片段包含於 spoiler 內", () => {
+      const lesson = makeLesson({
+        type: "review",
+        problems: [],
+        reviewConcepts: [{ id: "in-place-operations", title: "In-place Operations" }],
+        quizItems: [quizItems[1]!],
+      });
+      const [message] = render(lesson);
+      const field = message!.embeds[0]?.fields?.find((f) => f.name.startsWith("✍️ 本週小測"));
+      expect(field!.value).toContain(
+        "||正解：B — 結論二 · [完整詳解](https://example.github.io/leetcode-daily-coach/quiz/in-place-operations.html)||",
+      );
+    });
+
+    it("quizItems 缺席時整段省略，不留空欄位", () => {
+      const lesson = makeLesson({
+        type: "review",
+        problems: PROBLEMS,
+        reviewConcepts: [{ id: "array-traversal", title: "Array Traversal" }],
+      });
+      const [message] = render(lesson);
+      const fieldNames = message!.embeds[0]?.fields?.map((f) => f.name) ?? [];
+      expect(fieldNames.some((n) => n.startsWith("✍️ 本週小測"))).toBe(false);
+    });
+
+    it("quizItems 為空陣列時整段省略", () => {
+      const lesson = makeLesson({
+        type: "review",
+        problems: PROBLEMS,
+        reviewConcepts: [{ id: "array-traversal", title: "Array Traversal" }],
+        quizItems: [],
+      });
+      const [message] = render(lesson);
+      const fieldNames = message!.embeds[0]?.fields?.map((f) => f.name) ?? [];
+      expect(fieldNames.some((n) => n.startsWith("✍️ 本週小測"))).toBe(false);
+    });
+  });
+
   // F8（rest 槽移除，FR-014c）：三份正式課表已無 rest Session，validate.ts 的全課表編譯不再涵蓋
   // buildRestBlocks 這條路徑；以下兩個測試為其唯一覆蓋來源，MUST NOT 移除。
   it("rest：固定文案 + 無 encouragement 時省略該 field", () => {
