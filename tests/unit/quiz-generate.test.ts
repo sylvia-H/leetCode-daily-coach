@@ -3,7 +3,12 @@
 // 基礎設施失敗的重試語意（MUST NOT 計入內容重生上限）、續跑跳過／--force／Skeleton 雜湊變更、
 // manifest 反推重建，以及 canonical 序列化。
 import { describe, expect, it } from "vitest";
-import { MAX_REGEN, generateQuizForConcept, serializeQuizBank } from "../../scripts/generate-quiz-bank.js";
+import {
+  MAX_REGEN,
+  generateQuizForConcept,
+  longestBiasRepairTarget,
+  serializeQuizBank,
+} from "../../scripts/generate-quiz-bank.js";
 import { rebuildQuizManifest, shouldSkipQuizConcept } from "../../scripts/lib/quiz-checkpoint.js";
 import type { QuizAspectsInput } from "../../scripts/lib/prompts/quiz-aspects.js";
 import { createLlmClient, type GenAiLike } from "../../scripts/lib/llm-client.js";
@@ -147,6 +152,37 @@ describe("generateQuizForConcept — 3 輪皆不過（含驗證後仍 <3 題）�
   });
 });
 
+describe("longestBiasRepairTarget — 修復目標 = Gate 上限再少一題（quiz-bank-schema.md §5.2b）", () => {
+  // Gate 上限 = floor(n/2)（佔比 > 50% 才擋）。目標 MUST 恰少一題：多修浪費呼叫，等於上限則
+  // 任一題修復失敗即整輪重來。
+  it.each([
+    [4, 1],
+    [5, 1],
+    [6, 2],
+    [7, 2],
+    [8, 3],
+    [9, 3],
+    [10, 4],
+  ])("n=%i ⇒ 允許殘留 %i 題", (n, expected) => {
+    expect(longestBiasRepairTarget(n)).toBe(expected);
+  });
+
+  it("MUST 恆比 Gate 上限少 1（緩衝一題的 best-effort 修復失敗）", () => {
+    for (let n = 4; n <= 10; n++) {
+      const gateMax = Math.floor(n / 2); // 佔比 ≤ 50% 的最大題數
+      expect(longestBiasRepairTarget(n)).toBe(gateMax - 1);
+    }
+  });
+
+  it("殘留佔比 MUST 落在 0% 與 Gate 上限之間（既不製造反向線索、也不擦邊）", () => {
+    for (let n = 4; n <= 10; n++) {
+      const share = longestBiasRepairTarget(n) / n;
+      expect(share).toBeGreaterThan(0);
+      expect(share).toBeLessThan(0.5);
+    }
+  });
+});
+
 describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存活集合」為對象（FR-013a）", () => {
   /** 產一輪：Stage A 面向 + Stage B 出題 + 逐題交叉驗證全數一致（+ 選填的逐題修復回應）。 */
   function oneAttempt(items: ReturnType<typeof draftItem>[], repairResponses: { text: string }[] = []) {
@@ -187,10 +223,10 @@ describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存�
 
   it("正解過度集中於最長選項 ⇒ 逐題修復違規題、保住好題，第 1 輪即通過（§5.2b）", async () => {
     const { graph, node } = makeNode();
-    // 8 題全部正解為唯一最長（100%）。修復目標為隨機基準 25% ⇒ round(8×0.25)=2，故修 6 題。
+    // 8 題全部正解為唯一最長（100%）。修復目標 = Gate 上限 4 再少一題 = 3，故修 5 題。
     const items = Array.from({ length: 8 }, (_, i) => longestAnswerDraftItem(`面向${i}`));
     // 每次修復 = 1 次重出 + 1 次交叉驗證；替換題四選項等長 ⇒ 不再是唯一最長。
-    const repairs = Array.from({ length: 6 }, (_, i) => [
+    const repairs = Array.from({ length: 5 }, (_, i) => [
       { text: JSON.stringify({ items: [draftItem(`修復${i}`, 0)] }) },
       { text: JSON.stringify({ answerIndex: 0 }) },
     ]).flat();
@@ -200,14 +236,14 @@ describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存�
     expect(result.items).toHaveLength(8);
     expect(result.attempts).toBe(1); // MUST NOT 觸發 Concept 級重生
     // 未被修復的 2 題 MUST 原樣保留（保住已通過交叉驗證的好題）。
-    expect(result.items!.filter((it) => it.stem.startsWith("題幹（面向"))).toHaveLength(2);
+    expect(result.items!.filter((it) => it.stem.startsWith("題幹（面向"))).toHaveLength(3);
   });
 
   it("修復未改善（重出的題仍是唯一最長）⇒ MUST 保留原題不倒退，最終仍由集合層 Gate 擋下", async () => {
     const { graph, node } = makeNode();
     const items = Array.from({ length: 8 }, (_, i) => longestAnswerDraftItem(`面向${i}`));
-    // 6 次重出都回傳「仍是唯一最長」的題 ⇒ 一律拒收、保留原題，且 MUST NOT 再花交叉驗證呼叫。
-    const repairs = Array.from({ length: 6 }, (_, i) => ({
+    // 5 次重出都回傳「仍是唯一最長」的題 ⇒ 一律拒收、保留原題，且 MUST NOT 再花交叉驗證呼叫。
+    const repairs = Array.from({ length: 5 }, (_, i) => ({
       text: JSON.stringify({ items: [longestAnswerDraftItem(`重出${i}`)] }),
     }));
     const client = sequentialClient([
@@ -232,11 +268,77 @@ describe("generateQuizForConcept — 集合層判準以「交叉驗證後的存�
     expect(result.items).toHaveLength(8);
   });
 
+  describe("failureRules：白跑輪次的具名判準（供批次末統計額度花在哪）", () => {
+    it("一次就通過 ⇒ failureRules 為空", async () => {
+      const { graph, node } = makeNode();
+      const items = Array.from({ length: 8 }, (_, i) => draftItem(`面向${i}`, 0));
+      const result = await generateQuizForConcept(
+        sequentialClient(oneAttempt(items)),
+        node,
+        graph,
+        fakeAspectsInput(),
+      );
+      expect(result.items).toHaveLength(8);
+      expect(result.failureRules).toEqual([]);
+    });
+
+    it("最終成功但白跑 2 輪 ⇒ MUST 記錄那 2 輪的判準（額度大宗正是這種 Concept）", async () => {
+      const { graph, node } = makeNode();
+      const tooMany = Array.from({ length: 11 }, (_, i) => draftItem(`面向${i}`, (i % 4) as 0 | 1 | 2 | 3));
+      const ok = Array.from({ length: 3 }, (_, i) => draftItem(`好面向${i}`, 0));
+      const client = sequentialClient([...oneAttempt(tooMany), ...oneAttempt(tooMany), ...oneAttempt(ok)]);
+
+      const result = await generateQuizForConcept(client, node, graph, fakeAspectsInput());
+      expect(result.items).toHaveLength(3);
+      expect(result.attempts).toBe(3);
+      expect(result.failureRules).toEqual(["quiz-count-range", "quiz-count-range"]);
+    });
+
+    it("3 輪皆失敗 ⇒ 記錄 3 筆，判準名為 QuizViolationRule 原名（MUST NOT 是自由文字訊息）", async () => {
+      const { graph, node } = makeNode();
+      const items = Array.from({ length: 8 }, (_, i) => longestAnswerDraftItem(`面向${i}`));
+      // n=8 ⇒ 目標留 3 題 ⇒ 修 5 題；重出的題仍是唯一最長 ⇒ 一律拒收，每題只花 1 次呼叫。
+      const repairs = Array.from({ length: 5 }, (_, i) => ({
+        text: JSON.stringify({ items: [longestAnswerDraftItem(`重出${i}`)] }),
+      }));
+      const client = sequentialClient([
+        ...oneAttempt(items, repairs),
+        ...oneAttempt(items, repairs),
+        ...oneAttempt(items, repairs),
+      ]);
+
+      const result = await generateQuizForConcept(client, node, graph, fakeAspectsInput());
+      expect(result.failureRules).toEqual([
+        "quiz-longest-option-bias",
+        "quiz-longest-option-bias",
+        "quiz-longest-option-bias",
+      ]);
+    });
+
+    it("交叉驗證流失導致題數不足 ⇒ 記為 cross-check-attrition（與判準類失敗區分開）", async () => {
+      const { graph, node } = makeNode();
+      const oneRound = [
+        { text: JSON.stringify({ aspects: ["面向甲", "面向乙"] }) },
+        { text: JSON.stringify({ items: [draftItem("面向甲", 0), draftItem("面向乙", 0)] }) },
+        { text: JSON.stringify({ answerIndex: 0 }) },
+        { text: JSON.stringify({ answerIndex: 0 }) },
+      ];
+      const client = sequentialClient([...oneRound, ...oneRound, ...oneRound]);
+
+      const result = await generateQuizForConcept(client, node, graph, fakeAspectsInput());
+      expect(result.failureRules).toEqual([
+        "cross-check-attrition",
+        "cross-check-attrition",
+        "cross-check-attrition",
+      ]);
+    });
+  });
+
   it("失敗原因 MUST 回饋進下一輪的 Stage B prompt（讓模型知道要修正什麼）", async () => {
     const { graph, node } = makeNode();
     // 用 longest-option-bias 當觸發源：位置類判準已由重排消化，只剩內容類判準會真正驅動重生。
     const items = Array.from({ length: 8 }, (_, i) => longestAnswerDraftItem(`面向${i}`));
-    const repairs = Array.from({ length: 6 }, (_, i) => ({
+    const repairs = Array.from({ length: 5 }, (_, i) => ({
       text: JSON.stringify({ items: [longestAnswerDraftItem(`重出${i}`)] }),
     }));
     const prompts: string[] = [];

@@ -430,6 +430,14 @@ export interface QuizConceptCheckpoint {
   regenCount: number;
   /** 最終存活題數（供人工快速掃視題數分布是否偏低，非 SC-010 的正式量測來源）。 */
   itemCount: number;
+  /**
+   * **每一個失敗輪次**的判準名，依輪次順序（一輪同時命中多條以 `+` 串接）。
+   * 成功的 Concept 也 MUST 記錄——免費層額度的大宗是「最後有成功、但中間白跑一兩輪」者
+   * （實測 2026-08-07：37 個已凍結 Concept 中 19 個 regenCount ≥ 2），只記最終失敗會看不到這塊。
+   * 純觀測用（批次末彙總「額度花在哪條判準上」），**MUST NOT 參與 `shouldSkipQuizConcept` 判斷**
+   * ——那會讓觀測欄位變成行為欄位。舊 manifest 無此欄 ⇒ `undefined`，MUST 容忍。
+   */
+  failureRules?: string[];
 }
 
 export interface QuizManifest {

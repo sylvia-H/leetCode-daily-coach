@@ -79,6 +79,23 @@ const SET_LEVEL_RULES: ReadonlySet<QuizViolationRule> = new Set([
 
 interface GenerateFailure {
   reason: string;
+  /**
+   * 本輪失敗的具名判準（供 manifest 的 `failureRules` 統計「額度花在哪條判準上」）。
+   * 集合層／逐題判準用 `QuizViolationRule` 原名；產線特有的失敗用下列具名字串，
+   * MUST NOT 塞入自由文字（那會讓統計退化成無法彙總的訊息字串）。
+   */
+  rules: string[];
+}
+
+/** 產線特有的失敗類別（非 `QuizViolationRule`）。 */
+const FAILURE_ASPECTS_PARSE = "quiz-aspects-parse-error";
+const FAILURE_ITEMS_PARSE = "quiz-items-parse-error";
+/** 交叉驗證丟棄過多題目，導致存活數不足 3。 */
+const FAILURE_CROSS_CHECK_ATTRITION = "cross-check-attrition";
+
+/** 去重後串接，作為 `failureRules` 的一個輪次條目。 */
+function joinRules(rules: string[]): string {
+  return [...new Set(rules)].sort().join("+");
 }
 
 // ── ordinalOf 全序（cmpOrdinal 的私有複本，同 src/pages/**／src/compiler/material.ts 既有慣例） ──
@@ -310,9 +327,7 @@ async function crossCheckAndRegenerate(
  * 10 次呼叫），而且會把**已通過交叉驗證的好題一起丟掉**；實測 2026-08-07 全量跑到第 37 個 Concept
  * 時，19/37（51%）需要 2 輪以上，成本主要就花在這裡。改為只重出違規的那幾題，一輪約 4 次呼叫。
  *
- * **修復目標為隨機基準（25%）而非 Gate 上限（50%）**：修到剛好 50% 會讓題庫大量卡在擦邊值
- * （實測前 37 個 Concept 有 5 個恰為 50%），而「正解恆為最長」與「正解從不最長」是**同樣可利用**
- * 的線索，只是方向相反——真正要的是長度不帶訊號。故 MUST NOT 只修到剛好過關。
+ * **修復目標 = Gate 上限再少一題**（`longestBiasRepairTarget`）。理由見該函式的說明。
  *
  * **挑選順序 MUST 為確定性**：依「正解比次長選項多出的字元數」由大到小（同分以宣告序），
  * 先修最容易被長度看穿的題。MUST NOT 依賴 `Math.random()` 或物件列舉順序。
@@ -320,6 +335,27 @@ async function crossCheckAndRegenerate(
  * **best-effort**：替換題 MUST 同時通過交叉驗證且本身不是唯一最長，否則保留原題（絕不倒退）。
  * 修完仍超標 ⇒ 由呼叫端的集合層 Gate 判本輪不通過，回到既有的 Concept 級重生路徑。
  */
+/**
+ * 修復後**允許殘留**幾題「正解為唯一最長」：**Gate 上限（`floor(n/2)`）再少一題**。
+ *
+ * | n | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+ * | Gate 上限 | 2 | 2 | 3 | 3 | 4 | 4 | 5 |
+ * | 本函式 | 1 | 1 | 2 | 2 | 3 | 3 | 4 |
+ *
+ * **為何不修到隨機基準 25%**：修復只在**已超標**時啟動，而整體長度偏誤率僅 33.6%（實測 2026-08-07
+ * 前 37 個 Concept），故觸發時多為擦邊（4/7、5/8）。修到 25% 會多修一兩題，那些呼叫在擦邊情況下
+ * 大多是白花的——n=8／offenders=5／單題修復成功率 0.7 時，期望成本約 6.3 次 vs. 本設定的 4.9 次。
+ *
+ * **為何 MUST 保留一題緩衝、MUST NOT 直接等於 Gate 上限**：修復是 best-effort，重出的題仍是唯一
+ * 最長時會保留原題。若目標等於上限，**任一題修復失敗即立刻超標、整輪重來**（約 10 次呼叫），
+ * 遠貴於多修一題（2 次呼叫）。`round(n × 0.4)` 在 n=5/7/9 恰好等於 Gate 上限，故 MUST NOT 直接用。
+ *
+ * 附帶效果：殘留比例落在 20%～40%，離「正解從不最長」的反向線索（0%）與 Gate 上限（50%）都有距離。
+ */
+export function longestBiasRepairTarget(itemCount: number): number {
+  return Math.floor(itemCount / 2) - 1;
+}
+
 async function repairLongestOptionBias(
   llmClient: LlmClient,
   conceptId: string,
@@ -331,9 +367,7 @@ async function repairLongestOptionBias(
   const offenders = survivors.filter(isAnswerUniqueLongestOption);
   if (offenders.length / survivors.length <= QUIZ_BIAS_MAX_SHARE) return survivors; // 未超標 ⇒ 零呼叫
 
-  // 修到隨機基準（四選一 ⇒ 25%）而非 Gate 上限。
-  const target = Math.round(survivors.length * 0.25);
-  const repairCount = offenders.length - target;
+  const repairCount = offenders.length - longestBiasRepairTarget(survivors.length);
 
   /** 正解比「次長選項」多出的字元數；越大代表越容易用長度猜中。 */
   const margin = (item: DraftQuizItem): number => {
@@ -376,8 +410,15 @@ export async function generateQuizForConcept(
    * 供單元測試以合成輸入直接驗證生成／重生／交叉驗證邏輯（同 generate-content.ts 的
    * generateOneConcept 對 authorHints 的既有處置）。 */
   aspectsInput: QuizAspectsInput,
-): Promise<{ items?: QuizItem[]; failure?: GenerateFailure; attempts: number }> {
+): Promise<{ items?: QuizItem[]; failure?: GenerateFailure; attempts: number; failureRules: string[] }> {
   let lastFailure: GenerateFailure | undefined;
+  /** 每一個失敗輪次一筆，依輪次順序；成功的 Concept 也 MUST 保留（白跑的輪數才是額度大宗）。 */
+  const failureRules: string[] = [];
+  /** 記錄本輪失敗並進入下一輪（MUST 只有這一個落點，避免漏記某條路徑）。 */
+  const failRound = (reason: string, rules: string[]): void => {
+    lastFailure = { reason, rules };
+    failureRules.push(joinRules(rules));
+  };
 
   for (let attempt = 1; attempt <= MAX_REGEN; attempt++) {
     let aspects: string[];
@@ -390,7 +431,7 @@ export async function generateQuizForConcept(
       );
       aspects = parseDraftQuizAspects(raw);
     } catch (err) {
-      lastFailure = { reason: (err as Error).message };
+      failRound((err as Error).message, [FAILURE_ASPECTS_PARSE]);
       continue;
     }
 
@@ -404,7 +445,7 @@ export async function generateQuizForConcept(
       );
       draftItems = parseDraftQuizItems(raw);
     } catch (err) {
-      lastFailure = { reason: (err as Error).message };
+      failRound((err as Error).message, [FAILURE_ITEMS_PARSE]);
       continue;
     }
 
@@ -416,7 +457,10 @@ export async function generateQuizForConcept(
       (v) => !SET_LEVEL_RULES.has(v.rule),
     );
     if (structuralViolations.length > 0) {
-      lastFailure = { reason: structuralViolations.map((v) => v.message).join("; ") };
+      failRound(
+        structuralViolations.map((v) => v.message).join("; "),
+        structuralViolations.map((v) => v.rule),
+      );
       continue;
     }
 
@@ -425,7 +469,7 @@ export async function generateQuizForConcept(
     // FR-013a：集合層判準 MUST 在交叉驗證之後、以存活集合為對象執行，MUST NOT 顛倒順序。
     // 題數不足 3 單獨先判，訊息比 quiz-count-range 更貼近產線語境（指名是「交叉驗證後」不足）。
     if (survivors.length < 3) {
-      lastFailure = { reason: `交叉驗證後存活題數不足 3（實際 ${survivors.length}）` };
+      failRound(`交叉驗證後存活題數不足 3（實際 ${survivors.length}）`, [FAILURE_CROSS_CHECK_ATTRITION]);
       continue;
     }
 
@@ -449,14 +493,17 @@ export async function generateQuizForConcept(
       graph,
     });
     if (setLevelViolations.length > 0) {
-      lastFailure = { reason: setLevelViolations.map((v) => v.message).join("; ") };
+      failRound(
+        setLevelViolations.map((v) => v.message).join("; "),
+        setLevelViolations.map((v) => v.rule),
+      );
       continue;
     }
 
-    return { items: balanced, attempts: attempt };
+    return { items: balanced, attempts: attempt, failureRules };
   }
 
-  return { failure: lastFailure, attempts: MAX_REGEN };
+  return { failure: lastFailure, attempts: MAX_REGEN, failureRules };
 }
 
 // ── canonical 序列化（byConcept key 依 ordinalOf 全序，同輸入 → byte-identical） ──────────────
@@ -483,6 +530,32 @@ function printSc010Stats(byConcept: Record<string, QuizItem[]>): void {
   if (at3Ratio >= 40 || avg < 5) {
     console.warn("⚠️ SC-010 未達標（佔比 <40% 且平均 ≥5 才算達標）：MUST 視為 prompt 設計失敗並重新調整 quiz-aspects.ts / quiz-items.ts，MUST NOT 以補生成硬湊");
   }
+}
+
+/**
+ * 「白跑的輪次花在哪條判準上」的彙總（觀察訊號，與 SC-010 同層級：MUST NOT 影響 exit code）。
+ *
+ * 每一筆 `failureRules` 條目 = 一個被丟棄的生成輪次 ≈ Stage A 1 + Stage B 1 + 交叉驗證 n 次呼叫。
+ * 這是決定「下一步該優化哪條判準」的唯一可靠依據——在此之前只能靠 `regenCount` 猜。
+ * 統計來源為 manifest 全庫（含本次跳過的 Concept），故單次 `--only` 執行也看得到全貌。
+ */
+function printFailureRuleStats(manifest: QuizManifest): void {
+  const counts = new Map<string, number>();
+  let wastedRounds = 0;
+  for (const entry of Object.values(manifest.concepts)) {
+    for (const round of entry.failureRules ?? []) {
+      wastedRounds++;
+      // 一輪同時命中多條時拆開各記一次，讓「哪條判準最花錢」可直接比較。
+      for (const rule of round.split("+")) counts.set(rule, (counts.get(rule) ?? 0) + 1);
+    }
+  }
+  if (wastedRounds === 0) {
+    console.log("重生統計：無白跑輪次（或 manifest 為舊格式、尚無 failureRules 記錄）");
+    return;
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  console.log(`重生統計：白跑 ${wastedRounds} 輪，各判準命中次數（一輪 ≈ 2 + 題數 次 LLM 呼叫）：`);
+  for (const [rule, n] of ranked) console.log(`  ${rule}: ${n}`);
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────
@@ -588,7 +661,12 @@ async function main(): Promise<void> {
     }
 
     const aspectsInput = buildAspectsInput(node, graph);
-    const { items, failure, attempts } = await generateQuizForConcept(llmClient, node, graph, aspectsInput);
+    const { items, failure, attempts, failureRules } = await generateQuizForConcept(
+      llmClient,
+      node,
+      graph,
+      aspectsInput,
+    );
     if (items) {
       byConcept[node.id] = items;
       manifest = upsertQuizConcept(manifest, node.id, {
@@ -598,6 +676,8 @@ async function main(): Promise<void> {
         needsHumanReview: false,
         regenCount: attempts,
         itemCount: items.length,
+        // 成功的 Concept 也 MUST 記錄白跑的輪次——那才是額度大宗（quiz-checkpoint.ts 的欄位說明）。
+        ...(failureRules.length > 0 ? { failureRules } : {}),
       });
       saveQuizManifest(manifest);
       writeFileAtomic(QUIZ_BANK_PATH, serializeQuizBank(byConcept, graph));
@@ -613,6 +693,7 @@ async function main(): Promise<void> {
         needsHumanReview: true,
         regenCount: MAX_REGEN,
         itemCount: byConcept[node.id]?.length ?? 0,
+        ...(failureRules.length > 0 ? { failureRules } : {}),
       });
       saveQuizManifest(manifest);
       console.error(`✗ ${node.id}：重生 ${MAX_REGEN} 次仍未通過（${failure?.reason ?? "未知原因"}），標記 needsHumanReview`);
@@ -625,6 +706,7 @@ async function main(): Promise<void> {
   }
 
   printSc010Stats(byConcept);
+  printFailureRuleStats(manifest);
 
   // 批次末：對全 Track × 全 Session 執行完整內容 Gate（含 checkQuizBank 的全庫結構檢查），
   // 重用每日 runtime 同一顆 Compiler / Gate（憲章 IX）。
