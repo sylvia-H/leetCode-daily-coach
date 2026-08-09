@@ -395,20 +395,33 @@ Discord；同一 Concept 三軌互異；題庫或 Pages 缺席時分別降級但
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T045 [P] 確認既有 `tests/unit/no-llm-in-src.test.ts`／`tests/unit/daily-no-llm-key.test.ts`
+- [X] T045 [P] 確認既有 `tests/unit/no-llm-in-src.test.ts`／`tests/unit/daily-no-llm-key.test.ts`
   維持通過（不需修改判準對象）：`src/` 不 import `@google/genai`，`daily.yml` 不含
-  `GEMINI_API_KEY`（憲章 VIII、data-model.md §11 邊界清單）
-- [ ] T046 收尾：建立最終階段 commit，勾選 `tasks.md` 對應項目；確認 `specs/011-weekly-quiz/
+  `GEMINI_API_KEY`（憲章 VIII、data-model.md §11 邊界清單）。**結果**：兩個測試檔皆通過；
+  全專案 `npm run build`／`npm run typecheck`／`npm test`（104 檔 943 測試）於
+  `array-two-pointers-opposite` 內容更新後複跑仍全綠
+- [X] T046 收尾：建立最終階段 commit，勾選 `tasks.md` 對應項目；確認 `specs/011-weekly-quiz/
   checklists/prompt-design.md` 中標記為「低成本修正」的四項（SC-010 執行者、prompt 靜態掃描、
   題數上限非截斷語意）已透過 T032／T036／T011 的實作與測試收斂；並確認 `/speckit-analyze`
   （2026-08-07）列出的 spec/contract 修訂（`quizItem` 570、reserve 120、FR-011 的 `unlockedIds`
   範圍、`localOrder` 檔名語意）在程式碼中**無殘留舊值**（全域搜尋 `450`／`90`／「0-based」確認）。
+  **結果**：全域搜尋僅命中歷史修訂說明文字（`docs/spec.md`／`research.md`／`plan.md`／
+  `checklists/requirements.md` 的「450 → 570」沿革紀錄）與不相關的合法用法
+  （`answerIndex`／`reviewOrdinal`／`topicOccurrence` 的 0-based 定義），實際常數
+  `QUIZ_BUDGET_LIMITS.quizItem = 570`、`QUIZ_URL_RESERVE_CHARS = 120`（`src/renderer/budget.ts`）
+  為唯一來源，無殘留舊值。
   **第二次 `/speckit-analyze`（2026-08-07）的四項亦 MUST 逐一確認已落地**：
   (a) `QuizViolationRule` 含 `quiz-leetcode-id` 且測試涵蓋（含「不得誤攔 `O(n²)`／索引數值」的反向斷言）；
   (b) `mergeSlots()` 已併入 `quizItems`（否則兩格預算形同虛設）；
   (c) `generate-quiz-bank.ts` 的逐題結構檢查是**呼叫 `checkQuizBank`**、無自寫的第二份判準
   （全域搜尋確認無 `structuralGate` 之類的平行實作）；
-  (d) prompt 模組未從 `authorHints` 收到 `TypeScript 重點`／`Python 重點` 兩段
+  (d) prompt 模組未從 `authorHints` 收到 `TypeScript 重點`／`Python 重點` 兩段。
+  **結果**：(a) `tests/unit/quiz-gate.test.ts:150-182` 涵蓋三種攔截樣式與
+  `O(n²)`／`nums[3]`／情境數值的反向不誤判斷言；(b) `src/renderer/discord.ts:240`
+  `mergeSlots()` 已併入 `slots.quizItems`；(c) `scripts/generate-quiz-bank.ts:456/491/597`
+  皆呼叫 `checkQuizBank`，檔內僅有註解提及 `structuralGate` 作為「MUST NOT 另寫」的警示、
+  無實際平行實作；(d) `quiz-aspects.ts` 與 `generate-quiz-bank.ts` 皆有明文註解確認
+  `TypeScript 重點`／`Python 重點` 不在 `AUTHOR_HINT_LABELS` 之列、天然被排除。四項全數確認落地。
 
 ---
 

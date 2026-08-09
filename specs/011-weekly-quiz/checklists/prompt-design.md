@@ -65,13 +65,22 @@
 
 - [x] CHK019 「165 個 Concept 皆完整具備六段 Author Hints 結構」是否已明確標註為**現況實測**而非恆定不變式；未來新增 Concept 若缺段時應如何處理是否已定義？[Assumption, Spec Q12]
   → 部分定義：Q12 的措辭本身（「抽樣全部 330 條實測」「165 個 Concept 皆完整具備」）已隱含這是現況觀察而非規則保證，但 spec 沒有明文寫「此為現況、非不變式」這句免責聲明，也沒有為「未來新增 Concept 缺段」定義任何處理路徑（結構性 Gate 或降級規則皆缺）。
-- [ ] CHK020 SC-010 門檻不達標時的處置流程（重新調整 prompt 設計後全庫重跑，或針對未達標子集局部處理）是否已定義？[Dependency, SC-010]
-  → 部分定義：SC-010 明訂方向「MUST 視為 prompt 設計失敗並重新調整，MUST NOT 以補生成硬湊」，但未指定調整後是全庫重跑還是僅重跑未達標子集（雖然 CLI 的 `--only` 參數技術上可支援後者，spec/contract 並未把它與 SC-010 的處置流程掛勾）。
+- [x] CHK020 SC-010 門檻不達標時的處置流程（重新調整 prompt 設計後全庫重跑，或針對未達標子集局部處理）是否已定義？[Dependency, SC-010]
+  → 已定義（T032／quickstart.md §1.2，2026-08-09 落地確認）：批次末自動印出 SC-010 統計並於未達標時
+  印出具名警示（不中止 CI）；quickstart.md §1.2 明文定義處置流程——manifest 只綁 Skeleton 雜湊、
+  改 prompt 不會使任何 Concept 失效，故未達標時 MUST 帶 `--force`（全庫）或 `--force --only <ids>`
+  （子集），並建議「先以少數 Concept 的 `--force --only` 驗證改動方向再全庫重跑」以避免一次燒掉
+  免費層額度。此為本 Feature 產線文件層級的定義（非 spec FR/SC），符合 quickstart.md 作為操作
+  runbook 的定位。
 
 ## Ambiguities & Conflicts
 
-- [ ] CHK021 FR-016「面向數 MUST NOT 成為題數上限」與 FR-005／contracts rule 7「題數上限 10」（code-side 保險絲）之間，若某 Concept 依「覆蓋下界」自然生出 >10 題時的取捨規則（截斷依據為何、保留哪些題）是否已定義？[Conflict, FR-016 vs FR-005]
-  → 未定義：Q14 只論證「10 留有 43% 餘裕、正常不會超過」，但真的超過時 `quiz-count-range`（quiz-bank-schema.md §3 rule 7）只會將整個 Concept 判為 Gate 違規（具名失敗），並無「保留哪 10 題、捨棄哪些」的截斷規則——「保險絲」實際語意是「讓產線可見的失敗」，不是「自動截斷」，但 spec 用語（FR-005「上限為保險絲」）容易被誤讀為會自動截斷，值得在 spec 明確排除截斷語意。
+- [x] CHK021 FR-016「面向數 MUST NOT 成為題數上限」與 FR-005／contracts rule 7「題數上限 10」（code-side 保險絲）之間，若某 Concept 依「覆蓋下界」自然生出 >10 題時的取捨規則（截斷依據為何、保留哪些題）是否已定義？[Conflict, FR-016 vs FR-005]
+  → 已定義（2026-08-09 落地確認）：`specs/011-weekly-quiz/spec.md` FR-005 段已明文
+  「MUST NOT 自動截斷或靜默略過題目」，明確排除截斷語意，「保險絲」語意收斂為「讓失控可見的
+  具名失敗」而非「自動裁切保留哪些題」。`checkQuizBank` 的 `quiz-count-range` 對 >10 題一律
+  回報違規並擋下整個 Concept，`tests/unit/quiz-gate.test.ts:118-128` 明確斷言陣列本身未被
+  截斷（CHK021 對應測試）。
 
 ## Notes
 
