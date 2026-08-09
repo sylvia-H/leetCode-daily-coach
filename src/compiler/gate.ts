@@ -5,6 +5,7 @@
 import { TRACK_ORDER } from "../config.js";
 import { compile, readArticleCached, type CompilerDeps } from "./lesson.js";
 import { checkMaterials } from "./material.js";
+import { checkQuizBank } from "./quiz.js";
 import { checkBudget } from "../renderer/budget.js";
 import { render } from "../renderer/discord.js";
 import { checkTraditionalChinese } from "./traditional-chinese.js";
@@ -18,7 +19,8 @@ export type GateRule =
   | "schedule-empty"
   | "traditional-chinese"
   | "concept-body-too-long"
-  | "material-invalid";
+  | "material-invalid"
+  | "quiz-invalid";
 
 /** §10.3 觀念本體字數上限（F7 FR-008/FR-010.2）。 */
 export const CONCEPT_BODY_MAX_CHARS = 2000;
@@ -85,6 +87,19 @@ export function runContentGate(input: GateInput): GateResult {
   for (const v of materialViolations) {
     violations.push({
       rule: "material-invalid",
+      severity: "error",
+      subject: `${v.rule}@${v.subject}`,
+      message: v.message,
+    });
+  }
+
+  // F11（data-model.md §8）：quiz-bank 全庫結構性 Gate，理由見 research R3——單一 Concept 一生只會
+  // 被三個 Track 各選中一次，題數 >3 時題庫內未被選中的題目不會經過 runtime checkBudget，故需另外
+  // 對 byConcept 的每一個陣列元素逐一檢查。GateRule 只新增 quiz-invalid 這一個，細分留在 QuizViolationRule。
+  const quizViolations = checkQuizBank({ quizBank: deps.quizBank, graph: deps.graph });
+  for (const v of quizViolations) {
+    violations.push({
+      rule: "quiz-invalid",
       severity: "error",
       subject: `${v.rule}@${v.subject}`,
       message: v.message,

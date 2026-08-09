@@ -8,6 +8,7 @@ import { buildArticlePageView, renderArticlePage } from "./article-page.js";
 import { buildCurriculumEntries, buildTrackProgress, computeUnlockedConceptIds, type TrackProgressView } from "./curriculum-view.js";
 import { renderDashboard, TRACK_LABELS } from "./dashboard.js";
 import { buildSiteFeed, buildTrackFeed, serializeFeed, type FeedView } from "./feed.js";
+import { buildQuizPageView, renderQuizPage } from "./quiz-page.js";
 
 export interface SiteBuildInput {
   /**
@@ -46,7 +47,7 @@ export function buildSite(input: SiteBuildInput): SiteOutput {
     return buildTrackProgress(track, trackState, deps.graph, deps.schedules[track], baseUrl);
   });
 
-  const curriculum = buildCurriculumEntries(deps.graph, unlockedIds, trackProgress, baseUrl);
+  const curriculum = buildCurriculumEntries(deps.graph, unlockedIds, trackProgress, baseUrl, deps.quizBank);
 
   const output: SiteOutput = new Map();
   output.set("index.html", renderDashboard({ trackProgress, curriculum }));
@@ -58,6 +59,13 @@ export function buildSite(input: SiteBuildInput): SiteOutput {
     const article = readArticleCached(node.articlePath, node.id, deps);
     const view = buildArticlePageView(article, deps.bank);
     output.set(`articles/${conceptId}.html`, renderArticlePage(view));
+
+    // F11（research R7、pages-quiz.md §2）：quiz 頁範圍與 article 頁同構，僅 unlockedIds 且題庫有題。
+    const quizItems = deps.quizBank?.byConcept[conceptId];
+    if (quizItems && quizItems.length > 0) {
+      const quizView = buildQuizPageView(node, quizItems);
+      output.set(`quiz/${conceptId}.html`, renderQuizPage(quizView));
+    }
   }
 
   // FR-008／FR-015／FR-016：per-track feed（僅 state.tracks 中已知的 Track，非 enabledTracks）+

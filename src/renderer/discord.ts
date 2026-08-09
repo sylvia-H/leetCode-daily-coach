@@ -10,6 +10,7 @@ import type {
   RenderedMessage,
   RestLesson,
   ReviewLesson,
+  ReviewQuizItem,
 } from "../types/lesson.js";
 
 // 題目 Embed 中每一則的 bullet 前綴（budget.ts 不再反解析——budgetSlots.problems 已逐題提供同一份
@@ -57,6 +58,19 @@ export function renderProblemEntry(problem: Problem): string {
     ? `\n  ${problem.difficulty} · ${problem.whyThisPattern}${hintPart}`
     : `\n  ${problem.difficulty}`;
   return `${PROBLEM_BULLET}[${problem.id}. ${problem.title}](${problem.url})${detail}`;
+}
+
+const QUIZ_OPTION_LABELS = ["A", "B", "C", "D"] as const;
+
+/**
+ * F11 小測單題呈現（純函式，quiz-bank-schema.md §3 / quiz-selection.md §4）：與
+ * `checkQuizBank` 的 `quiz-item-budget` 估算共用同一份呈現邏輯（憲章 IX），MUST NOT 各自實作一份。
+ * spoiler `||…||` 只包住「正解＋結論句＋連結」這一行，題幹與選項明碼呈現（FR-002／FR-009）。
+ */
+export function renderQuizItemBody(item: ReviewQuizItem): string {
+  const optionLines = item.options.map((opt, i) => `${QUIZ_OPTION_LABELS[i]}. ${opt}`).join("\n");
+  const linkPart = item.quizUrl ? ` · [完整詳解](${item.quizUrl})` : "";
+  return `${item.stem}\n${optionLines}\n||正解：${item.answerLabel} — ${item.conclusion}${linkPart}||`;
 }
 
 function renderPathFooter(path: PathLabels): string {
@@ -156,6 +170,16 @@ function buildReviewBlocks(lesson: ReviewLesson): Block[] {
     slots.problems = entries;
     fields.push({ name: "🎯 Challenge", value: entries.join("\n") });
   }
+  if (lesson.quizItems !== undefined && lesson.quizItems.length > 0) {
+    // F11（research R5）：插入於 Challenge 之後、鼓勵語之前，使鼓勵語順延但仍維持最後一段。
+    const bodies = lesson.quizItems.map(renderQuizItemBody);
+    slots.quizItems = bodies;
+    const n = lesson.quizItems.length;
+    lesson.quizItems.forEach((item, i) => {
+      const conceptTitle = lesson.reviewConcepts.find((c) => c.id === item.conceptId)?.title ?? item.conceptId;
+      fields.push({ name: `✍️ 本週小測 (${i + 1}/${n}) · ${conceptTitle}`, value: bodies[i]! });
+    });
+  }
   if (lesson.encouragement !== undefined) {
     // MUST 為最後一段（FR-022）：MUST NOT 插入於 Reflection 與 Challenge 之間，避免通用文字
     // 稀釋針對本週教材的具體提問。
@@ -213,6 +237,7 @@ function mergeSlots(blocks: Block[]): BudgetSlots {
     if (slots.reflectionQuestion !== undefined) merged.reflectionQuestion = slots.reflectionQuestion;
     if (slots.encouragement !== undefined) merged.encouragement = slots.encouragement;
     if (slots.problems !== undefined) merged.problems = slots.problems;
+    if (slots.quizItems !== undefined) merged.quizItems = slots.quizItems;
   }
   return merged;
 }

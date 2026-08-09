@@ -231,3 +231,105 @@ describe("renderDashboard", () => {
     expect(first).toBe(second);
   });
 });
+
+describe("renderDashboard — F11 課綱清單 quiz 連結（FR-017、SC-011、pages-quiz.md §6）", () => {
+  it("quizUrl 存在時，輸出 .divider 與 .quiz-chip 連結", () => {
+    const curriculum: CurriculumEntryView[] = [
+      {
+        conceptId: "unlocked-concept",
+        title: "已解鎖的 Concept",
+        moduleId: "m",
+        moduleTitle: "M",
+        topicId: "t",
+        topicTitle: "T",
+        unlocked: true,
+        articleUrl: "https://example.github.io/repo/articles/unlocked-concept.html",
+        quizUrl: "https://example.github.io/repo/quiz/unlocked-concept.html",
+        atTrackPositions: [],
+      },
+    ];
+    const html = renderDashboard({ trackProgress: [], curriculum });
+    expect(html).toContain('<span class="divider">|</span>');
+    expect(html).toContain('<a class="quiz-chip" href="https://example.github.io/repo/quiz/unlocked-concept.html">✍️ 小測</a>');
+  });
+
+  it("quizUrl 缺席時不輸出 .divider / .quiz-chip", () => {
+    const curriculum: CurriculumEntryView[] = [
+      {
+        conceptId: "unlocked-concept",
+        title: "已解鎖的 Concept",
+        moduleId: "m",
+        moduleTitle: "M",
+        topicId: "t",
+        topicTitle: "T",
+        unlocked: true,
+        articleUrl: "https://example.github.io/repo/articles/unlocked-concept.html",
+        atTrackPositions: [],
+      },
+    ];
+    const html = renderDashboard({ trackProgress: [], curriculum });
+    const curriculumSection = html.slice(html.indexOf('<section id="curriculum">'));
+    expect(curriculumSection).not.toContain("divider");
+    expect(curriculumSection).not.toContain("quiz-chip");
+  });
+
+  it("未解鎖項目（無 articleUrl）即使帶 quizUrl 也不輸出連結（結構上 quizUrl 不會出現，但驗證呈現不誤觸）", () => {
+    const curriculum: CurriculumEntryView[] = [
+      {
+        conceptId: "locked-concept",
+        title: "未解鎖的 Concept",
+        moduleId: "m",
+        moduleTitle: "M",
+        topicId: "t",
+        topicTitle: "T",
+        unlocked: false,
+        atTrackPositions: [],
+      },
+    ];
+    const html = renderDashboard({ trackProgress: [], curriculum });
+    const curriculumSection = html.slice(html.indexOf('<section id="curriculum">'));
+    expect(curriculumSection).not.toContain("quiz-chip");
+  });
+
+  it("quizUrl 動態文字經 escapeHtml", () => {
+    const curriculum: CurriculumEntryView[] = [
+      {
+        conceptId: "xss",
+        title: "T",
+        moduleId: "m",
+        moduleTitle: "M",
+        topicId: "t",
+        topicTitle: "T",
+        unlocked: true,
+        articleUrl: "https://example.github.io/repo/articles/xss.html",
+        quizUrl: 'https://example.github.io/repo/quiz/xss.html?x="><script>alert(1)</script>',
+        atTrackPositions: [],
+      },
+    ];
+    const html = renderDashboard({ trackProgress: [], curriculum });
+    expect(html).not.toContain("<script>alert(1)</script>");
+  });
+
+  it("今日課程欄位（renderTodaySession／LastSessionView）不受本節變更影響", () => {
+    const trackProgress: TrackProgressView[] = [
+      {
+        track: "foundation",
+        status: "in-progress",
+        completedConceptCount: 3,
+        totalConceptCount: 10,
+        lastSession: {
+          sessionIndex: 3,
+          type: "concept",
+          pushedAt: "2026-08-01T00:00:00.000Z",
+          conceptId: "concept-a",
+          conceptTitle: "Concept A 標題",
+          articleUrl: "https://example.github.io/repo/articles/concept-a.html",
+        },
+      },
+    ];
+    const html = renderDashboard({ trackProgress, curriculum: [] });
+    expect(html).toContain("今日課程");
+    expect(html).toContain("Concept A 標題");
+    expect(html).not.toContain('<a class="quiz-chip"');
+  });
+});

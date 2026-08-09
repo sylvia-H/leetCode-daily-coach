@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EXIT_CRITERIA_ITEM_MAX, MATERIAL_BUDGET_LIMITS, checkBudget } from "../../src/renderer/budget.js";
+import { EXIT_CRITERIA_ITEM_MAX, MATERIAL_BUDGET_LIMITS, QUIZ_BUDGET_LIMITS, checkBudget } from "../../src/renderer/budget.js";
 import type { BudgetSlots, DiscordEmbed, RenderedMessage } from "../../src/types/lesson.js";
 
 function makeMessage(overrides: Partial<BudgetSlots> = {}): RenderedMessage {
@@ -230,5 +230,54 @@ describe("checkBudget — reflectionQuestion / encouragement 上限取自 MATERI
     });
     expect(overLimit.items.find((i) => i.name === "encouragement")?.over).toBe(true);
     expect(overLimit.items.find((i) => i.name === "encouragement")?.limit).toBe(MATERIAL_BUDGET_LIMITS.encouragement);
+  });
+});
+
+describe("checkBudget — F11 小測（budgetSlots.quizItems，FR-014、SC-004、data-model.md §4）", () => {
+  it("逐題 quizItem[i] ≤570（隨 QUIZ_BUDGET_LIMITS 常數而動，非隨字面值）", () => {
+    const atLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { quizItems: ["字".repeat(QUIZ_BUDGET_LIMITS.quizItem)] },
+    });
+    const item = atLimit.items.find((i) => i.name === "quizItem[0]");
+    expect(item?.over).toBe(false);
+    expect(item?.limit).toBe(QUIZ_BUDGET_LIMITS.quizItem);
+
+    const overLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { quizItems: ["字".repeat(QUIZ_BUDGET_LIMITS.quizItem + 1)] },
+    });
+    expect(overLimit.items.find((i) => i.name === "quizItem[0]")?.over).toBe(true);
+  });
+
+  it("彙總項 quiz（各題長度加總）≤3000", () => {
+    const atLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { quizItems: ["字".repeat(QUIZ_BUDGET_LIMITS.quiz / 2), "字".repeat(QUIZ_BUDGET_LIMITS.quiz / 2)] },
+    });
+    const item = atLimit.items.find((i) => i.name === "quiz");
+    expect(item?.length).toBe(QUIZ_BUDGET_LIMITS.quiz);
+    expect(item?.over).toBe(false);
+    expect(item?.limit).toBe(QUIZ_BUDGET_LIMITS.quiz);
+
+    const overLimit = checkBudget({
+      embeds: [{}],
+      budgetSlots: { quizItems: ["字".repeat(QUIZ_BUDGET_LIMITS.quiz / 2 + 1), "字".repeat(QUIZ_BUDGET_LIMITS.quiz / 2)] },
+    });
+    expect(overLimit.items.find((i) => i.name === "quiz")?.over).toBe(true);
+  });
+
+  it("budgetSlots.quizItems 未提供時不出現 quizItem[i] / quiz 項目", () => {
+    const report = checkBudget(makeMessage());
+    expect(report.items.find((i) => i.name === "quizItem[0]")).toBeUndefined();
+    expect(report.items.find((i) => i.name === "quiz")).toBeUndefined();
+  });
+
+  it("quizItem[i] 與 quiz 皆只計 field value，不含 field name", () => {
+    const report = checkBudget({
+      embeds: [{ fields: [{ name: "✍️ 本週小測 (1/1) · Array Traversal", value: "內容" }] }],
+      budgetSlots: { quizItems: ["內容"] },
+    });
+    expect(report.items.find((i) => i.name === "quizItem[0]")?.length).toBe(2); // 「內容」= 2 code points
   });
 });

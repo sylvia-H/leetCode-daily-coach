@@ -66,6 +66,34 @@ describe("runContentGate 擴充（F7 US2：繁中判準 + 觀念本體字數，F
   });
 });
 
+describe("runContentGate 擴充（F11：quiz-invalid，data-model.md §8）", () => {
+  it("違規 quizBank ⇒ 回報 rule === 'quiz-invalid' 且 subject 具 '{原rule}@' 前綴", () => {
+    const deps = makeCompilerDeps({
+      concepts: [{ id: "c1" }],
+      schedules: { foundation: [{ sessionIndex: 1, type: "concept", conceptId: "c1", problemIds: [] }] },
+      articles: { "articles/test-topic/001-c1.md": makeArticleMarkdown({ id: "c1" }) },
+      quizBank: { version: 1, byConcept: { "unknown-concept": [] } },
+    });
+
+    const result = runContentGate({ deps });
+    const quizViolations = result.violations.filter((v) => v.rule === "quiz-invalid");
+    expect(quizViolations.length).toBeGreaterThan(0);
+    expect(quizViolations.every((v) => (v.subject ?? "").includes("@quiz-bank:unknown-concept"))).toBe(true);
+    expect(quizViolations.some((v) => (v.subject ?? "").startsWith("quiz-unknown-concept@"))).toBe(true);
+  });
+
+  it("合法 quizBank（或缺席）⇒ 無 quiz-invalid 違規", () => {
+    const deps = makeCompilerDeps({
+      concepts: [{ id: "c1" }],
+      schedules: { foundation: [{ sessionIndex: 1, type: "concept", conceptId: "c1", problemIds: [] }] },
+      articles: { "articles/test-topic/001-c1.md": makeArticleMarkdown({ id: "c1" }) },
+    });
+
+    const result = runContentGate({ deps });
+    expect(result.violations.filter((v) => v.rule === "quiz-invalid")).toEqual([]);
+  });
+});
+
 describe("countConceptBodyChars（近似字數計算）", () => {
   it("排除 fenced/行內 code 與 markdown 標記符號", () => {
     const body = "# 標題\n\n**重點**：使用 `O(n)` 走訪。\n\n```typescript\nconst a = 1;\n```";

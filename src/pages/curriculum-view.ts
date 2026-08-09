@@ -1,6 +1,7 @@
 // TrackProgressView／CurriculumEntryView 導出（research R8／R9／R10、data-model.md §1／§2）。
 // 純函式，不讀 Date.now()／環境變數，唯讀消費 AppState／CurriculumGraph／TrackSchedule。
 import { TRACK_ORDER } from "../config.js";
+import type { QuizBank } from "../compiler/quiz.js";
 import type { AppState, TrackState } from "../state/state-store.js";
 import type { CurriculumGraph, Ordinal } from "../types/curriculum.js";
 import type { SessionType, Track } from "../types/lesson.js";
@@ -35,6 +36,8 @@ export interface CurriculumEntryView {
   topicTitle: string;
   unlocked: boolean;
   articleUrl?: string;
+  /** F11（FR-017、pages-quiz.md §6）：僅 unlocked 且題庫有題時賦值，同 quiz/{conceptId}.html 產出範圍判準。 */
+  quizUrl?: string;
   atTrackPositions: Track[];
 }
 
@@ -148,6 +151,7 @@ export function buildCurriculumEntries(
   unlockedIds: Set<string>,
   trackProgress: TrackProgressView[],
   baseUrl: string,
+  quizBank: QuizBank | undefined,
 ): CurriculumEntryView[] {
   const positionsByConcept = new Map<string, Track[]>();
   for (const progress of trackProgress) {
@@ -174,6 +178,9 @@ export function buildCurriculumEntries(
       atTrackPositions: positionsByConcept.get(node.id) ?? [],
     };
     if (unlocked) entry.articleUrl = articleUrlFor(baseUrl, node.id);
+    if (unlocked && quizBank?.byConcept[node.id]?.length) {
+      entry.quizUrl = `${baseUrl}/quiz/${node.id}.html`;
+    }
     entries.push(entry);
   }
 
