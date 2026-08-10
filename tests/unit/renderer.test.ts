@@ -213,6 +213,40 @@ describe("render — 五種 Session 類型（US2）", () => {
       ]);
     });
 
+    it("moreQuizzesUrl 存在時，附加於小測 field 之後、一句話之前，內容含固定文案與連結", () => {
+      const lesson = makeLesson({
+        type: "review",
+        problems: [],
+        reviewConcepts: [{ id: "array-traversal", title: "Array Traversal" }],
+        encouragement: "做得很好，繼續保持！",
+        quizItems: [quizItems[0]!],
+        moreQuizzesUrl: "https://example.github.io/leetcode-daily-coach/",
+      });
+      const [message] = render(lesson);
+      const fieldNames = message!.embeds[0]?.fields?.map((f) => f.name) ?? [];
+      expect(fieldNames).toEqual([
+        "📚 本週涵蓋",
+        "✍️ 本週小測 (1/1) · Array Traversal",
+        "🔗 小測題庫",
+        "💬 一句話",
+      ]);
+      const field = message!.embeds[0]?.fields?.find((f) => f.name === "🔗 小測題庫");
+      expect(field!.value).toBe("請看 👉 https://example.github.io/leetcode-daily-coach/");
+    });
+
+    it("moreQuizzesUrl 缺席時省略該 field，其餘小測 field 不受影響", () => {
+      const lesson = makeLesson({
+        type: "review",
+        problems: [],
+        reviewConcepts: [{ id: "array-traversal", title: "Array Traversal" }],
+        quizItems: [quizItems[0]!],
+      });
+      const [message] = render(lesson);
+      const fieldNames = message!.embeds[0]?.fields?.map((f) => f.name) ?? [];
+      expect(fieldNames).not.toContain("🔗 小測題庫");
+      expect(fieldNames).toContain("✍️ 本週小測 (1/1) · Array Traversal");
+    });
+
     it("每題一個 field，field value 只將「正解＋結論句[＋連結]」封於 ||…||，題幹與選項明碼", () => {
       const lesson = makeLesson({
         type: "review",

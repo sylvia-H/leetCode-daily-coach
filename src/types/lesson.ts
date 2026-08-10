@@ -68,6 +68,8 @@ export interface ReviewLesson extends LessonBase {
   encouragement?: string;
   /** F11 小測；缺席或空陣列即省略整段（FR-007／FR-008）。 */
   quizItems?: ReviewQuizItem[];
+  /** F11 小測段附加的題庫入口連結；缺席即省略（沿用 quizUrl 的 pagesBaseUrl 選填規則）。 */
+  moreQuizzesUrl?: string;
 }
 
 /** F11 小測題（Compiler → Renderer 的介面，data-model.md §4）。 */
