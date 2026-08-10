@@ -179,6 +179,9 @@ function buildReviewBlocks(lesson: ReviewLesson): Block[] {
       const conceptTitle = lesson.reviewConcepts.find((c) => c.id === item.conceptId)?.title ?? item.conceptId;
       fields.push({ name: `✍️ 本週小測 (${i + 1}/${n}) · ${conceptTitle}`, value: bodies[i]! });
     });
+    if (lesson.moreQuizzesUrl !== undefined) {
+      fields.push({ name: "🔗 小測題庫", value: `請看 👉 ${lesson.moreQuizzesUrl}` });
+    }
   }
   if (lesson.encouragement !== undefined) {
     // MUST 為最後一段（FR-022）：MUST NOT 插入於 Reflection 與 Challenge 之間，避免通用文字

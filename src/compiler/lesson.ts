@@ -425,7 +425,10 @@ function compileReview(track: Track, plan: SessionPlan, deps: CompilerDeps, sche
       const quizUrl = deps.pagesBaseUrl ? `${deps.pagesBaseUrl}/quiz/${c.id}.html` : undefined;
       quizItems.push(toReviewQuizItem(c.id, item, quizUrl));
     }
-    if (quizItems.length > 0) lesson.quizItems = quizItems;
+    if (quizItems.length > 0) {
+      lesson.quizItems = quizItems;
+      if (deps.pagesBaseUrl) lesson.moreQuizzesUrl = `${deps.pagesBaseUrl}/`;
+    }
   }
 
   return lesson;

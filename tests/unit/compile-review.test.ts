@@ -240,4 +240,43 @@ describe("compile — review 分支的 F11 小測組裝（FR-002／FR-004／FR-0
     const lesson = asReview(compile("foundation", 3, deps));
     expect(lesson.quizItems).toBeUndefined();
   });
+
+  it("pagesBaseUrl 缺席 ⇒ moreQuizzesUrl 不設定", () => {
+    const quizBank = {
+      version: 1 as const,
+      byConcept: { alpha: [makeItem("qa0"), makeItem("qa1"), makeItem("qa2")] },
+    };
+    const deps = makeCompilerDeps({ concepts, schedules, articles, quizBank });
+    const lesson = asReview(compile("foundation", 3, deps));
+    expect(lesson.moreQuizzesUrl).toBeUndefined();
+  });
+
+  it("pagesBaseUrl 存在且有出題 ⇒ moreQuizzesUrl = `${pagesBaseUrl}/`", () => {
+    const quizBank = {
+      version: 1 as const,
+      byConcept: { alpha: [makeItem("qa0"), makeItem("qa1"), makeItem("qa2")] },
+    };
+    const deps = makeCompilerDeps({
+      concepts,
+      schedules,
+      articles,
+      quizBank,
+      pagesBaseUrl: "https://example.github.io/leetcode-daily-coach",
+    });
+    const lesson = asReview(compile("foundation", 3, deps));
+    expect(lesson.moreQuizzesUrl).toBe("https://example.github.io/leetcode-daily-coach/");
+  });
+
+  it("pagesBaseUrl 存在但全部 Concept 皆無題 ⇒ moreQuizzesUrl 不設定（隨 quizItems 一併省略）", () => {
+    const quizBank = { version: 1 as const, byConcept: {} };
+    const deps = makeCompilerDeps({
+      concepts,
+      schedules,
+      articles,
+      quizBank,
+      pagesBaseUrl: "https://example.github.io/leetcode-daily-coach",
+    });
+    const lesson = asReview(compile("foundation", 3, deps));
+    expect(lesson.moreQuizzesUrl).toBeUndefined();
+  });
 });
