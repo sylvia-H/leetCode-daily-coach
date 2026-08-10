@@ -1,15 +1,16 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 9,
-      "lastPushAt": "2026-08-09T22:42:31.289Z",
+      "currentSessionIndex": 10,
+      "lastPushAt": "2026-08-10T22:50:45.646Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
         "mental-model-variables",
         "tracing-execution-flow",
         "conditional-branching-logic",
-        "loop-invariant-thinking"
+        "loop-invariant-thinking",
+        "problem-simplification-strategy"
       ],
       "history": [
         {
@@ -49,12 +50,17 @@
         {
           "sessionIndex": 8,
           "pushedAt": "2026-08-09T22:42:31.289Z"
+        },
+        {
+          "sessionIndex": 9,
+          "pushedAt": "2026-08-10T22:50:45.646Z",
+          "conceptId": "problem-simplification-strategy"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 9,
-      "lastPushAt": "2026-08-09T22:42:31.578Z",
+      "currentSessionIndex": 10,
+      "lastPushAt": "2026-08-10T22:50:45.823Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -62,7 +68,8 @@
         "tracing-execution-flow",
         "conditional-branching-logic",
         "loop-invariant-thinking",
-        "problem-simplification-strategy"
+        "problem-simplification-strategy",
+        "edge-case-enumeration"
       ],
       "history": [
         {
@@ -103,12 +110,17 @@
           "sessionIndex": 8,
           "pushedAt": "2026-08-09T22:42:31.578Z",
           "conceptId": "problem-simplification-strategy"
+        },
+        {
+          "sessionIndex": 9,
+          "pushedAt": "2026-08-10T22:50:45.823Z",
+          "conceptId": "edge-case-enumeration"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 9,
-      "lastPushAt": "2026-08-09T22:42:31.780Z",
+      "currentSessionIndex": 10,
+      "lastPushAt": "2026-08-10T22:50:45.986Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -116,7 +128,8 @@
         "tracing-execution-flow",
         "conditional-branching-logic",
         "loop-invariant-thinking",
-        "problem-simplification-strategy"
+        "problem-simplification-strategy",
+        "edge-case-enumeration"
       ],
       "history": [
         {
@@ -157,6 +170,11 @@
           "sessionIndex": 8,
           "pushedAt": "2026-08-09T22:42:31.780Z",
           "conceptId": "problem-simplification-strategy"
+        },
+        {
+          "sessionIndex": 9,
+          "pushedAt": "2026-08-10T22:50:45.986Z",
+          "conceptId": "edge-case-enumeration"
         }
       ]
     }
