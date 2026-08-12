@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 11,
-      "lastPushAt": "2026-08-11T22:55:44.656Z",
+      "currentSessionIndex": 12,
+      "lastPushAt": "2026-08-12T22:53:26.183Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -11,7 +11,8 @@
         "conditional-branching-logic",
         "loop-invariant-thinking",
         "problem-simplification-strategy",
-        "edge-case-enumeration"
+        "edge-case-enumeration",
+        "spacetime-tradeoff-awareness"
       ],
       "history": [
         {
@@ -61,12 +62,17 @@
           "sessionIndex": 10,
           "pushedAt": "2026-08-11T22:55:44.656Z",
           "conceptId": "edge-case-enumeration"
+        },
+        {
+          "sessionIndex": 11,
+          "pushedAt": "2026-08-12T22:53:26.183Z",
+          "conceptId": "spacetime-tradeoff-awareness"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 11,
-      "lastPushAt": "2026-08-11T22:55:44.966Z",
+      "currentSessionIndex": 12,
+      "lastPushAt": "2026-08-12T22:53:26.726Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -75,7 +81,8 @@
         "conditional-branching-logic",
         "loop-invariant-thinking",
         "problem-simplification-strategy",
-        "edge-case-enumeration"
+        "edge-case-enumeration",
+        "spacetime-tradeoff-awareness"
       ],
       "history": [
         {
@@ -125,12 +132,17 @@
         {
           "sessionIndex": 10,
           "pushedAt": "2026-08-11T22:55:44.966Z"
+        },
+        {
+          "sessionIndex": 11,
+          "pushedAt": "2026-08-12T22:53:26.726Z",
+          "conceptId": "spacetime-tradeoff-awareness"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 11,
-      "lastPushAt": "2026-08-11T22:55:45.079Z",
+      "currentSessionIndex": 12,
+      "lastPushAt": "2026-08-12T22:53:27.004Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -139,7 +151,8 @@
         "conditional-branching-logic",
         "loop-invariant-thinking",
         "problem-simplification-strategy",
-        "edge-case-enumeration"
+        "edge-case-enumeration",
+        "spacetime-tradeoff-awareness"
       ],
       "history": [
         {
@@ -189,6 +202,11 @@
         {
           "sessionIndex": 10,
           "pushedAt": "2026-08-11T22:55:45.079Z"
+        },
+        {
+          "sessionIndex": 11,
+          "pushedAt": "2026-08-12T22:53:27.004Z",
+          "conceptId": "spacetime-tradeoff-awareness"
         }
       ]
     }
