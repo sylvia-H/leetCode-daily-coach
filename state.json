@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 12,
-      "lastPushAt": "2026-08-12T22:53:26.183Z",
+      "currentSessionIndex": 13,
+      "lastPushAt": "2026-08-13T22:55:33.609Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -67,12 +67,16 @@
           "sessionIndex": 11,
           "pushedAt": "2026-08-12T22:53:26.183Z",
           "conceptId": "spacetime-tradeoff-awareness"
+        },
+        {
+          "sessionIndex": 12,
+          "pushedAt": "2026-08-13T22:55:33.609Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 12,
-      "lastPushAt": "2026-08-12T22:53:26.726Z",
+      "currentSessionIndex": 13,
+      "lastPushAt": "2026-08-13T22:55:33.822Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -82,7 +86,8 @@
         "loop-invariant-thinking",
         "problem-simplification-strategy",
         "edge-case-enumeration",
-        "spacetime-tradeoff-awareness"
+        "spacetime-tradeoff-awareness",
+        "error-driven-refinement"
       ],
       "history": [
         {
@@ -137,12 +142,17 @@
           "sessionIndex": 11,
           "pushedAt": "2026-08-12T22:53:26.726Z",
           "conceptId": "spacetime-tradeoff-awareness"
+        },
+        {
+          "sessionIndex": 12,
+          "pushedAt": "2026-08-13T22:55:33.822Z",
+          "conceptId": "error-driven-refinement"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 12,
-      "lastPushAt": "2026-08-12T22:53:27.004Z",
+      "currentSessionIndex": 13,
+      "lastPushAt": "2026-08-13T22:55:34.118Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -152,7 +162,8 @@
         "loop-invariant-thinking",
         "problem-simplification-strategy",
         "edge-case-enumeration",
-        "spacetime-tradeoff-awareness"
+        "spacetime-tradeoff-awareness",
+        "error-driven-refinement"
       ],
       "history": [
         {
@@ -207,6 +218,11 @@
           "sessionIndex": 11,
           "pushedAt": "2026-08-12T22:53:27.004Z",
           "conceptId": "spacetime-tradeoff-awareness"
+        },
+        {
+          "sessionIndex": 12,
+          "pushedAt": "2026-08-13T22:55:34.118Z",
+          "conceptId": "error-driven-refinement"
         }
       ]
     }
