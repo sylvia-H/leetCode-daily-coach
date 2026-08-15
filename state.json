@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 14,
-      "lastPushAt": "2026-08-14T22:33:24.400Z",
+      "currentSessionIndex": 15,
+      "lastPushAt": "2026-08-15T22:32:38.158Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -13,7 +13,8 @@
         "problem-simplification-strategy",
         "edge-case-enumeration",
         "spacetime-tradeoff-awareness",
-        "error-driven-refinement"
+        "error-driven-refinement",
+        "array-memory-layout"
       ],
       "history": [
         {
@@ -77,12 +78,17 @@
           "sessionIndex": 13,
           "pushedAt": "2026-08-14T22:33:24.400Z",
           "conceptId": "error-driven-refinement"
+        },
+        {
+          "sessionIndex": 14,
+          "pushedAt": "2026-08-15T22:32:38.158Z",
+          "conceptId": "array-memory-layout"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 14,
-      "lastPushAt": "2026-08-14T22:33:24.642Z",
+      "currentSessionIndex": 15,
+      "lastPushAt": "2026-08-15T22:32:38.389Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -94,7 +100,8 @@
         "edge-case-enumeration",
         "spacetime-tradeoff-awareness",
         "error-driven-refinement",
-        "array-memory-layout"
+        "array-memory-layout",
+        "array-linear-scan"
       ],
       "history": [
         {
@@ -159,12 +166,17 @@
           "sessionIndex": 13,
           "pushedAt": "2026-08-14T22:33:24.642Z",
           "conceptId": "array-memory-layout"
+        },
+        {
+          "sessionIndex": 14,
+          "pushedAt": "2026-08-15T22:32:38.389Z",
+          "conceptId": "array-linear-scan"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 14,
-      "lastPushAt": "2026-08-14T22:33:24.838Z",
+      "currentSessionIndex": 15,
+      "lastPushAt": "2026-08-15T22:32:38.602Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -176,7 +188,8 @@
         "edge-case-enumeration",
         "spacetime-tradeoff-awareness",
         "error-driven-refinement",
-        "array-memory-layout"
+        "array-memory-layout",
+        "array-linear-scan"
       ],
       "history": [
         {
@@ -241,6 +254,11 @@
           "sessionIndex": 13,
           "pushedAt": "2026-08-14T22:33:24.838Z",
           "conceptId": "array-memory-layout"
+        },
+        {
+          "sessionIndex": 14,
+          "pushedAt": "2026-08-15T22:32:38.602Z",
+          "conceptId": "array-linear-scan"
         }
       ]
     }
