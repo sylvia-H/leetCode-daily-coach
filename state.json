@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 15,
-      "lastPushAt": "2026-08-15T22:32:38.158Z",
+      "currentSessionIndex": 16,
+      "lastPushAt": "2026-08-16T22:31:42.183Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -14,7 +14,8 @@
         "edge-case-enumeration",
         "spacetime-tradeoff-awareness",
         "error-driven-refinement",
-        "array-memory-layout"
+        "array-memory-layout",
+        "array-linear-scan"
       ],
       "history": [
         {
@@ -83,12 +84,17 @@
           "sessionIndex": 14,
           "pushedAt": "2026-08-15T22:32:38.158Z",
           "conceptId": "array-memory-layout"
+        },
+        {
+          "sessionIndex": 15,
+          "pushedAt": "2026-08-16T22:31:42.183Z",
+          "conceptId": "array-linear-scan"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 15,
-      "lastPushAt": "2026-08-15T22:32:38.389Z",
+      "currentSessionIndex": 16,
+      "lastPushAt": "2026-08-16T22:31:42.388Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -171,12 +177,16 @@
           "sessionIndex": 14,
           "pushedAt": "2026-08-15T22:32:38.389Z",
           "conceptId": "array-linear-scan"
+        },
+        {
+          "sessionIndex": 15,
+          "pushedAt": "2026-08-16T22:31:42.388Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 15,
-      "lastPushAt": "2026-08-15T22:32:38.602Z",
+      "currentSessionIndex": 16,
+      "lastPushAt": "2026-08-16T22:31:42.589Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -259,6 +269,10 @@
           "sessionIndex": 14,
           "pushedAt": "2026-08-15T22:32:38.602Z",
           "conceptId": "array-linear-scan"
+        },
+        {
+          "sessionIndex": 15,
+          "pushedAt": "2026-08-16T22:31:42.589Z"
         }
       ]
     }
