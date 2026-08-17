@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 16,
-      "lastPushAt": "2026-08-16T22:31:42.183Z",
+      "currentSessionIndex": 17,
+      "lastPushAt": "2026-08-17T22:34:26.339Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -89,12 +89,16 @@
           "sessionIndex": 15,
           "pushedAt": "2026-08-16T22:31:42.183Z",
           "conceptId": "array-linear-scan"
+        },
+        {
+          "sessionIndex": 16,
+          "pushedAt": "2026-08-17T22:34:26.339Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 16,
-      "lastPushAt": "2026-08-16T22:31:42.388Z",
+      "currentSessionIndex": 17,
+      "lastPushAt": "2026-08-17T22:34:26.486Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -181,12 +185,16 @@
         {
           "sessionIndex": 15,
           "pushedAt": "2026-08-16T22:31:42.388Z"
+        },
+        {
+          "sessionIndex": 16,
+          "pushedAt": "2026-08-17T22:34:26.486Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 16,
-      "lastPushAt": "2026-08-16T22:31:42.589Z",
+      "currentSessionIndex": 17,
+      "lastPushAt": "2026-08-17T22:34:26.733Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -199,7 +207,8 @@
         "spacetime-tradeoff-awareness",
         "error-driven-refinement",
         "array-memory-layout",
-        "array-linear-scan"
+        "array-linear-scan",
+        "array-prefix-sum-basic"
       ],
       "history": [
         {
@@ -273,6 +282,11 @@
         {
           "sessionIndex": 15,
           "pushedAt": "2026-08-16T22:31:42.589Z"
+        },
+        {
+          "sessionIndex": 16,
+          "pushedAt": "2026-08-17T22:34:26.733Z",
+          "conceptId": "array-prefix-sum-basic"
         }
       ]
     }
