@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 17,
-      "lastPushAt": "2026-08-17T22:34:26.339Z",
+      "currentSessionIndex": 18,
+      "lastPushAt": "2026-08-18T22:34:45.338Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -93,12 +93,16 @@
         {
           "sessionIndex": 16,
           "pushedAt": "2026-08-17T22:34:26.339Z"
+        },
+        {
+          "sessionIndex": 17,
+          "pushedAt": "2026-08-18T22:34:45.338Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 17,
-      "lastPushAt": "2026-08-17T22:34:26.486Z",
+      "currentSessionIndex": 18,
+      "lastPushAt": "2026-08-18T22:34:45.552Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -111,7 +115,8 @@
         "spacetime-tradeoff-awareness",
         "error-driven-refinement",
         "array-memory-layout",
-        "array-linear-scan"
+        "array-linear-scan",
+        "array-prefix-sum-basic"
       ],
       "history": [
         {
@@ -189,12 +194,17 @@
         {
           "sessionIndex": 16,
           "pushedAt": "2026-08-17T22:34:26.486Z"
+        },
+        {
+          "sessionIndex": 17,
+          "pushedAt": "2026-08-18T22:34:45.552Z",
+          "conceptId": "array-prefix-sum-basic"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 17,
-      "lastPushAt": "2026-08-17T22:34:26.733Z",
+      "currentSessionIndex": 18,
+      "lastPushAt": "2026-08-18T22:34:45.807Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -208,7 +218,8 @@
         "error-driven-refinement",
         "array-memory-layout",
         "array-linear-scan",
-        "array-prefix-sum-basic"
+        "array-prefix-sum-basic",
+        "array-range-sum-query"
       ],
       "history": [
         {
@@ -287,6 +298,11 @@
           "sessionIndex": 16,
           "pushedAt": "2026-08-17T22:34:26.733Z",
           "conceptId": "array-prefix-sum-basic"
+        },
+        {
+          "sessionIndex": 17,
+          "pushedAt": "2026-08-18T22:34:45.807Z",
+          "conceptId": "array-range-sum-query"
         }
       ]
     }
