@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 18,
-      "lastPushAt": "2026-08-18T22:34:45.338Z",
+      "currentSessionIndex": 19,
+      "lastPushAt": "2026-08-19T22:34:47.773Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -15,7 +15,8 @@
         "spacetime-tradeoff-awareness",
         "error-driven-refinement",
         "array-memory-layout",
-        "array-linear-scan"
+        "array-linear-scan",
+        "array-prefix-sum-basic"
       ],
       "history": [
         {
@@ -97,12 +98,17 @@
         {
           "sessionIndex": 17,
           "pushedAt": "2026-08-18T22:34:45.338Z"
+        },
+        {
+          "sessionIndex": 18,
+          "pushedAt": "2026-08-19T22:34:47.773Z",
+          "conceptId": "array-prefix-sum-basic"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 18,
-      "lastPushAt": "2026-08-18T22:34:45.552Z",
+      "currentSessionIndex": 19,
+      "lastPushAt": "2026-08-19T22:34:47.970Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -116,7 +122,8 @@
         "error-driven-refinement",
         "array-memory-layout",
         "array-linear-scan",
-        "array-prefix-sum-basic"
+        "array-prefix-sum-basic",
+        "array-range-sum-query"
       ],
       "history": [
         {
@@ -199,12 +206,17 @@
           "sessionIndex": 17,
           "pushedAt": "2026-08-18T22:34:45.552Z",
           "conceptId": "array-prefix-sum-basic"
+        },
+        {
+          "sessionIndex": 18,
+          "pushedAt": "2026-08-19T22:34:47.970Z",
+          "conceptId": "array-range-sum-query"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 18,
-      "lastPushAt": "2026-08-18T22:34:45.807Z",
+      "currentSessionIndex": 19,
+      "lastPushAt": "2026-08-19T22:34:48.135Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -219,7 +231,8 @@
         "array-memory-layout",
         "array-linear-scan",
         "array-prefix-sum-basic",
-        "array-range-sum-query"
+        "array-range-sum-query",
+        "array-two-pointers-opposite"
       ],
       "history": [
         {
@@ -303,6 +316,11 @@
           "sessionIndex": 17,
           "pushedAt": "2026-08-18T22:34:45.807Z",
           "conceptId": "array-range-sum-query"
+        },
+        {
+          "sessionIndex": 18,
+          "pushedAt": "2026-08-19T22:34:48.135Z",
+          "conceptId": "array-two-pointers-opposite"
         }
       ]
     }
