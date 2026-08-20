@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 19,
-      "lastPushAt": "2026-08-19T22:34:47.773Z",
+      "currentSessionIndex": 20,
+      "lastPushAt": "2026-08-20T22:37:50.548Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -16,7 +16,8 @@
         "error-driven-refinement",
         "array-memory-layout",
         "array-linear-scan",
-        "array-prefix-sum-basic"
+        "array-prefix-sum-basic",
+        "array-range-sum-query"
       ],
       "history": [
         {
@@ -103,12 +104,17 @@
           "sessionIndex": 18,
           "pushedAt": "2026-08-19T22:34:47.773Z",
           "conceptId": "array-prefix-sum-basic"
+        },
+        {
+          "sessionIndex": 19,
+          "pushedAt": "2026-08-20T22:37:50.548Z",
+          "conceptId": "array-range-sum-query"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 19,
-      "lastPushAt": "2026-08-19T22:34:47.970Z",
+      "currentSessionIndex": 20,
+      "lastPushAt": "2026-08-20T22:37:50.741Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -123,7 +129,8 @@
         "array-memory-layout",
         "array-linear-scan",
         "array-prefix-sum-basic",
-        "array-range-sum-query"
+        "array-range-sum-query",
+        "array-two-pointers-opposite"
       ],
       "history": [
         {
@@ -211,12 +218,17 @@
           "sessionIndex": 18,
           "pushedAt": "2026-08-19T22:34:47.970Z",
           "conceptId": "array-range-sum-query"
+        },
+        {
+          "sessionIndex": 19,
+          "pushedAt": "2026-08-20T22:37:50.741Z",
+          "conceptId": "array-two-pointers-opposite"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 19,
-      "lastPushAt": "2026-08-19T22:34:48.135Z",
+      "currentSessionIndex": 20,
+      "lastPushAt": "2026-08-20T22:37:50.967Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -232,7 +244,8 @@
         "array-linear-scan",
         "array-prefix-sum-basic",
         "array-range-sum-query",
-        "array-two-pointers-opposite"
+        "array-two-pointers-opposite",
+        "array-two-pointers-sliding"
       ],
       "history": [
         {
@@ -321,6 +334,11 @@
           "sessionIndex": 18,
           "pushedAt": "2026-08-19T22:34:48.135Z",
           "conceptId": "array-two-pointers-opposite"
+        },
+        {
+          "sessionIndex": 19,
+          "pushedAt": "2026-08-20T22:37:50.967Z",
+          "conceptId": "array-two-pointers-sliding"
         }
       ]
     }
