@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 20,
-      "lastPushAt": "2026-08-20T22:37:50.548Z",
+      "currentSessionIndex": 21,
+      "lastPushAt": "2026-08-21T22:34:58.366Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -109,12 +109,16 @@
           "sessionIndex": 19,
           "pushedAt": "2026-08-20T22:37:50.548Z",
           "conceptId": "array-range-sum-query"
+        },
+        {
+          "sessionIndex": 20,
+          "pushedAt": "2026-08-21T22:34:58.366Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 20,
-      "lastPushAt": "2026-08-20T22:37:50.741Z",
+      "currentSessionIndex": 21,
+      "lastPushAt": "2026-08-21T22:34:58.632Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -130,7 +134,8 @@
         "array-linear-scan",
         "array-prefix-sum-basic",
         "array-range-sum-query",
-        "array-two-pointers-opposite"
+        "array-two-pointers-opposite",
+        "array-two-pointers-sliding"
       ],
       "history": [
         {
@@ -223,12 +228,17 @@
           "sessionIndex": 19,
           "pushedAt": "2026-08-20T22:37:50.741Z",
           "conceptId": "array-two-pointers-opposite"
+        },
+        {
+          "sessionIndex": 20,
+          "pushedAt": "2026-08-21T22:34:58.632Z",
+          "conceptId": "array-two-pointers-sliding"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 20,
-      "lastPushAt": "2026-08-20T22:37:50.967Z",
+      "currentSessionIndex": 21,
+      "lastPushAt": "2026-08-21T22:34:58.835Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -339,6 +349,10 @@
           "sessionIndex": 19,
           "pushedAt": "2026-08-20T22:37:50.967Z",
           "conceptId": "array-two-pointers-sliding"
+        },
+        {
+          "sessionIndex": 20,
+          "pushedAt": "2026-08-21T22:34:58.835Z"
         }
       ]
     }
