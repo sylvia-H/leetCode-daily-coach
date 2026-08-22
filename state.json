@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 21,
-      "lastPushAt": "2026-08-21T22:34:58.366Z",
+      "currentSessionIndex": 22,
+      "lastPushAt": "2026-08-22T22:32:22.031Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -17,7 +17,8 @@
         "array-memory-layout",
         "array-linear-scan",
         "array-prefix-sum-basic",
-        "array-range-sum-query"
+        "array-range-sum-query",
+        "array-two-pointers-opposite"
       ],
       "history": [
         {
@@ -113,12 +114,17 @@
         {
           "sessionIndex": 20,
           "pushedAt": "2026-08-21T22:34:58.366Z"
+        },
+        {
+          "sessionIndex": 21,
+          "pushedAt": "2026-08-22T22:32:22.031Z",
+          "conceptId": "array-two-pointers-opposite"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 21,
-      "lastPushAt": "2026-08-21T22:34:58.632Z",
+      "currentSessionIndex": 22,
+      "lastPushAt": "2026-08-22T22:32:22.225Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -233,12 +239,16 @@
           "sessionIndex": 20,
           "pushedAt": "2026-08-21T22:34:58.632Z",
           "conceptId": "array-two-pointers-sliding"
+        },
+        {
+          "sessionIndex": 21,
+          "pushedAt": "2026-08-22T22:32:22.225Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 21,
-      "lastPushAt": "2026-08-21T22:34:58.835Z",
+      "currentSessionIndex": 22,
+      "lastPushAt": "2026-08-22T22:32:22.431Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -255,7 +265,8 @@
         "array-prefix-sum-basic",
         "array-range-sum-query",
         "array-two-pointers-opposite",
-        "array-two-pointers-sliding"
+        "array-two-pointers-sliding",
+        "array-two-pointers-variable"
       ],
       "history": [
         {
@@ -353,6 +364,11 @@
         {
           "sessionIndex": 20,
           "pushedAt": "2026-08-21T22:34:58.835Z"
+        },
+        {
+          "sessionIndex": 21,
+          "pushedAt": "2026-08-22T22:32:22.431Z",
+          "conceptId": "array-two-pointers-variable"
         }
       ]
     }
