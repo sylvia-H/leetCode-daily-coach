@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 22,
-      "lastPushAt": "2026-08-22T22:32:22.031Z",
+      "currentSessionIndex": 23,
+      "lastPushAt": "2026-08-23T22:32:27.183Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -119,12 +119,16 @@
           "sessionIndex": 21,
           "pushedAt": "2026-08-22T22:32:22.031Z",
           "conceptId": "array-two-pointers-opposite"
+        },
+        {
+          "sessionIndex": 22,
+          "pushedAt": "2026-08-23T22:32:27.183Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 22,
-      "lastPushAt": "2026-08-22T22:32:22.225Z",
+      "currentSessionIndex": 23,
+      "lastPushAt": "2026-08-23T22:32:27.326Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -243,12 +247,16 @@
         {
           "sessionIndex": 21,
           "pushedAt": "2026-08-22T22:32:22.225Z"
+        },
+        {
+          "sessionIndex": 22,
+          "pushedAt": "2026-08-23T22:32:27.326Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 22,
-      "lastPushAt": "2026-08-22T22:32:22.431Z",
+      "currentSessionIndex": 23,
+      "lastPushAt": "2026-08-23T22:32:27.529Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -266,7 +274,8 @@
         "array-range-sum-query",
         "array-two-pointers-opposite",
         "array-two-pointers-sliding",
-        "array-two-pointers-variable"
+        "array-two-pointers-variable",
+        "array-in-place-removal"
       ],
       "history": [
         {
@@ -369,6 +378,11 @@
           "sessionIndex": 21,
           "pushedAt": "2026-08-22T22:32:22.431Z",
           "conceptId": "array-two-pointers-variable"
+        },
+        {
+          "sessionIndex": 22,
+          "pushedAt": "2026-08-23T22:32:27.529Z",
+          "conceptId": "array-in-place-removal"
         }
       ]
     }
