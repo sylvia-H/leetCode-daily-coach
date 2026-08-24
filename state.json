@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 23,
-      "lastPushAt": "2026-08-23T22:32:27.183Z",
+      "currentSessionIndex": 24,
+      "lastPushAt": "2026-08-24T22:37:25.388Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -123,12 +123,16 @@
         {
           "sessionIndex": 22,
           "pushedAt": "2026-08-23T22:32:27.183Z"
+        },
+        {
+          "sessionIndex": 23,
+          "pushedAt": "2026-08-24T22:37:25.388Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 23,
-      "lastPushAt": "2026-08-23T22:32:27.326Z",
+      "currentSessionIndex": 24,
+      "lastPushAt": "2026-08-24T22:37:25.580Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -145,7 +149,8 @@
         "array-prefix-sum-basic",
         "array-range-sum-query",
         "array-two-pointers-opposite",
-        "array-two-pointers-sliding"
+        "array-two-pointers-sliding",
+        "array-two-pointers-variable"
       ],
       "history": [
         {
@@ -251,12 +256,17 @@
         {
           "sessionIndex": 22,
           "pushedAt": "2026-08-23T22:32:27.326Z"
+        },
+        {
+          "sessionIndex": 23,
+          "pushedAt": "2026-08-24T22:37:25.580Z",
+          "conceptId": "array-two-pointers-variable"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 23,
-      "lastPushAt": "2026-08-23T22:32:27.529Z",
+      "currentSessionIndex": 24,
+      "lastPushAt": "2026-08-24T22:37:25.687Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -275,7 +285,8 @@
         "array-two-pointers-opposite",
         "array-two-pointers-sliding",
         "array-two-pointers-variable",
-        "array-in-place-removal"
+        "array-in-place-removal",
+        "array-in-place-deduplication"
       ],
       "history": [
         {
@@ -383,6 +394,11 @@
           "sessionIndex": 22,
           "pushedAt": "2026-08-23T22:32:27.529Z",
           "conceptId": "array-in-place-removal"
+        },
+        {
+          "sessionIndex": 23,
+          "pushedAt": "2026-08-24T22:37:25.687Z",
+          "conceptId": "array-in-place-deduplication"
         }
       ]
     }
