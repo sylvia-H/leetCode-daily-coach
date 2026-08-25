@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 24,
-      "lastPushAt": "2026-08-24T22:37:25.388Z",
+      "currentSessionIndex": 25,
+      "lastPushAt": "2026-08-25T22:37:41.834Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -18,7 +18,8 @@
         "array-linear-scan",
         "array-prefix-sum-basic",
         "array-range-sum-query",
-        "array-two-pointers-opposite"
+        "array-two-pointers-opposite",
+        "array-two-pointers-sliding"
       ],
       "history": [
         {
@@ -127,12 +128,17 @@
         {
           "sessionIndex": 23,
           "pushedAt": "2026-08-24T22:37:25.388Z"
+        },
+        {
+          "sessionIndex": 24,
+          "pushedAt": "2026-08-25T22:37:41.834Z",
+          "conceptId": "array-two-pointers-sliding"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 24,
-      "lastPushAt": "2026-08-24T22:37:25.580Z",
+      "currentSessionIndex": 25,
+      "lastPushAt": "2026-08-25T22:37:42.033Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -150,7 +156,8 @@
         "array-range-sum-query",
         "array-two-pointers-opposite",
         "array-two-pointers-sliding",
-        "array-two-pointers-variable"
+        "array-two-pointers-variable",
+        "array-in-place-removal"
       ],
       "history": [
         {
@@ -261,12 +268,17 @@
           "sessionIndex": 23,
           "pushedAt": "2026-08-24T22:37:25.580Z",
           "conceptId": "array-two-pointers-variable"
+        },
+        {
+          "sessionIndex": 24,
+          "pushedAt": "2026-08-25T22:37:42.033Z",
+          "conceptId": "array-in-place-removal"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 24,
-      "lastPushAt": "2026-08-24T22:37:25.687Z",
+      "currentSessionIndex": 25,
+      "lastPushAt": "2026-08-25T22:37:42.415Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -286,7 +298,8 @@
         "array-two-pointers-sliding",
         "array-two-pointers-variable",
         "array-in-place-removal",
-        "array-in-place-deduplication"
+        "array-in-place-deduplication",
+        "array-move-zeroes"
       ],
       "history": [
         {
@@ -399,6 +412,11 @@
           "sessionIndex": 23,
           "pushedAt": "2026-08-24T22:37:25.687Z",
           "conceptId": "array-in-place-deduplication"
+        },
+        {
+          "sessionIndex": 24,
+          "pushedAt": "2026-08-25T22:37:42.415Z",
+          "conceptId": "array-move-zeroes"
         }
       ]
     }
