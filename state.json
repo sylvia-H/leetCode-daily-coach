@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 26,
-      "lastPushAt": "2026-08-27T03:04:50.967Z",
+      "currentSessionIndex": 27,
+      "lastPushAt": "2026-08-28T06:04:16.453Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -139,12 +139,16 @@
           "sessionIndex": 25,
           "pushedAt": "2026-08-27T03:04:50.967Z",
           "conceptId": "array-two-pointers-variable"
+        },
+        {
+          "sessionIndex": 26,
+          "pushedAt": "2026-08-28T06:04:16.453Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 26,
-      "lastPushAt": "2026-08-27T03:04:51.312Z",
+      "currentSessionIndex": 27,
+      "lastPushAt": "2026-08-28T06:04:16.620Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -164,7 +168,8 @@
         "array-two-pointers-sliding",
         "array-two-pointers-variable",
         "array-in-place-removal",
-        "array-in-place-deduplication"
+        "array-in-place-deduplication",
+        "array-move-zeroes"
       ],
       "history": [
         {
@@ -285,12 +290,17 @@
           "sessionIndex": 25,
           "pushedAt": "2026-08-27T03:04:51.312Z",
           "conceptId": "array-in-place-deduplication"
+        },
+        {
+          "sessionIndex": 26,
+          "pushedAt": "2026-08-28T06:04:16.620Z",
+          "conceptId": "array-move-zeroes"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 26,
-      "lastPushAt": "2026-08-27T03:04:51.590Z",
+      "currentSessionIndex": 27,
+      "lastPushAt": "2026-08-28T06:04:16.888Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -311,7 +321,8 @@
         "array-two-pointers-variable",
         "array-in-place-removal",
         "array-in-place-deduplication",
-        "array-move-zeroes"
+        "array-move-zeroes",
+        "hash-table-concept-introduction"
       ],
       "history": [
         {
@@ -433,6 +444,11 @@
         {
           "sessionIndex": 25,
           "pushedAt": "2026-08-27T03:04:51.590Z"
+        },
+        {
+          "sessionIndex": 26,
+          "pushedAt": "2026-08-28T06:04:16.888Z",
+          "conceptId": "hash-table-concept-introduction"
         }
       ]
     }
