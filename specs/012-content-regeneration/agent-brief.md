@@ -165,6 +165,15 @@ MUST NOT 出現簡體字；CJK 佔比（CJK ÷（CJK + 拉丁詞數））MUST �
     console.log(f, bad+'/'+items.length, bad===0?'OK':'FAIL');
   }"
   ```
+- **`explanation` 每一段都 MUST 是真正的解釋**（⚠️ Phase 2 實測的整卷失效樣態）：
+  - `[0]` MUST 是**結論句**，MUST NOT 是正解選項的逐字複製或改寫——
+    `hash-table-design-lru-cache` 全部 8 題都犯了這條。
+  - `[1]`–`[4]` MUST NOT 出現該 Concept 的 `learningGoal` / `exitCriteria` 原句——
+    `hash-table-longest-consecutive-sequence` 有 6 題的 `[4]` 直接把學習目標句貼上來當錯項解釋。
+  - 自驗方式：逐段問「這句話有沒有解釋到它該解釋的那個選項」。答不出來就是複製或填充。
+- **MUST NOT 使用「划」字**（例：不划算）。`quiz-traditional-chinese` 會判為簡體字而擋下整批合併。
+  這是 Gate 的已知假陽性（「划算」在台灣正體本就寫「划」），但我們刻意不放寬字元表——
+  放寬會讓「規划」「策划」這類真違規漏網。請改用「得不償失」「不值得」「代價不成比例」等說法。
 - **正解位置不用你操心**：下游 `rebalanceAnswerPositions` 會確定性重排，你照語意自然安排即可。
 - 題目 MUST 涵蓋**不同面向**（定義／正確性論證／複雜度／邊界／常見誤解／實作細節），
   MUST NOT 全部在問同一件事。
