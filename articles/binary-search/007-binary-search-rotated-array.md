@@ -70,60 +70,6 @@ min_val = find_min([3, 4, 5, 1, 2])
 assert min_val == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function search(nums: number[], target: number): number {
-  let left = 0;
-  let right = nums.length - 1;
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (nums[mid] === target) return mid;
-    if (nums[left] <= nums[mid]) {
-      if (nums[left] <= target && target < nums[mid]) {
-        right = mid - 1;
-      } else {
-        left = mid + 1;
-      }
-    } else {
-      if (nums[mid] < target && target <= nums[right]) {
-        left = mid + 1;
-      } else {
-        right = mid - 1;
-      }
-    }
-  }
-  return -1;
-}
-const result = search([4, 5, 6, 7, 0, 1, 2], 0);
-if (result !== 4) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def search(nums: list[int], target: int) -> int:
-    left, right = 0, len(nums) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if nums[mid] == target:
-            return mid
-        if nums[left] <= nums[mid]:
-            if nums[left] <= target < nums[mid]:
-                right = mid - 1
-            else:
-                left = mid + 1
-        else:
-            if nums[mid] < target <= nums[right]:
-                left = mid + 1
-            else:
-                right = mid - 1
-    return -1
-
-result = search([4, 5, 6, 7, 0, 1, 2], 0)
-assert result == 4, "assertion failed"
-```
-
 ## Takeaway
 
 掌握旋轉陣列的二分搜尋關鍵在於『先辨識有序半部，再檢查範圍』，嚴格維護邊界條件即可達成 O(log n) 高效解法。

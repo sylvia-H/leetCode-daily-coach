@@ -70,48 +70,6 @@ helper = PrefixSumHelper([1, 2, 3, 4])
 assert helper.query(1, 3) == 9, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class NumArray {
-  private prefixSum: number[];
-
-  constructor(nums: number[]) {
-    this.prefixSum = new Array(nums.length + 1).fill(0);
-    for (let i = 0; i < nums.length; i++) {
-      this.prefixSum[i + 1] = this.prefixSum[i] + nums[i];
-    }
-  }
-
-  sumRange(left: number, right: number): number {
-    return this.prefixSum[right + 1] - this.prefixSum[left];
-  }
-}
-
-const numArray = new NumArray([-2, 0, 3, -5, 2, -1]);
-if (numArray.sumRange(0, 2) !== 1) throw new Error("assertion failed");
-if (numArray.sumRange(2, 5) !== -1) throw new Error("assertion failed");
-if (numArray.sumRange(0, 5) !== -3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class NumArray:
-    def __init__(self, nums: list[int]):
-        self.prefix_sum = [0] * (len(nums) + 1)
-        for i in range(len(nums)):
-            self.prefix_sum[i + 1] = self.prefix_sum[i] + nums[i]
-
-    def sumRange(self, left: int, right: int) -> int:
-        return self.prefix_sum[right + 1] - self.prefix_sum[left]
-
-num_array = NumArray([-2, 0, 3, -5, 2, -1])
-assert num_array.sumRange(0, 2) == 1, "assertion failed"
-assert num_array.sumRange(2, 5) == -1, "assertion failed"
-assert num_array.sumRange(0, 5) == -3, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Prefix Sum 的 P[R+1] - P[L] 公式與 O(1) 查詢精髓，切記防範邊界條件與索引對齊失誤。

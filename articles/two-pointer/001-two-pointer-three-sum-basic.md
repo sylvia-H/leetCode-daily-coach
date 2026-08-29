@@ -56,68 +56,6 @@ def validate_sorted(nums: list[int]) -> None:
 validate_sorted([3, 1, 4, 1, 5])
 ```
 
-## TypeScript Corner
-
-```typescript
-function threeSumBasic(nums: number[]): number[][] {
-  const results: number[][] = [];
-  nums.sort((a, b) => a - b);
-  for (let i = 0; i < nums.length - 2; i++) {
-    if (i > 0 && nums[i] === nums[i - 1]) continue;
-    let left = i + 1;
-    let right = nums.length - 1;
-    while (left < right) {
-      const sum = nums[i] + nums[left] + nums[right];
-      if (sum === 0) {
-        results.push([nums[i], nums[left], nums[right]]);
-        while (left < right && nums[left] === nums[left + 1]) left++;
-        while (left < right && nums[right] === nums[right - 1]) right--;
-        left++;
-        right--;
-      } else if (sum < 0) {
-        left++;
-      } else {
-        right--;
-      }
-    }
-  }
-  return results;
-}
-const ans = threeSumBasic([-1, 0, 1, 2, -1, -4]);
-if (ans.length !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def three_sum_basic(nums: list[int]) -> list[list[int]]:
-    results = []
-    nums.sort()
-    n = len(nums)
-    for i in range(n - 2):
-        if i > 0 and nums[i] == nums[i - 1]:
-            continue
-        left, right = i + 1, n - 1
-        while left < right:
-            current_sum = nums[i] + nums[left] + nums[right]
-            if current_sum == 0:
-                results.append([nums[i], nums[left], nums[right]])
-                while left < right and nums[left] == nums[left + 1]:
-                    left += 1
-                while left < right and nums[right] == nums[right - 1]:
-                    right -= 1
-                left += 1
-                right -= 1
-            elif current_sum < 0:
-                left += 1
-            else:
-                right -= 1
-    return results
-
-ans = three_sum_basic([-1, 0, 1, 2, -1, -4])
-assert len(ans) == 2, "assertion failed"
-```
-
 ## Takeaway
 
 排序結合相向雙指標是解決多數組和問題的核心模式，正確處理重複值與邊界條件是確保演算法正確性的關鍵。

@@ -86,8 +86,13 @@
 H2 區塊**名稱與順序固定**，全部必填、不得為空：
 
 `Concept` → `Thinking` → `Pattern Recognition` → `Common Mistakes` → `Complexity` →
-`Digest` → `TypeScript Tip` → `Python Tip` → `TypeScript Corner` → `Python Corner` →
+`Digest` → `TypeScript Tip` → `Python Tip` →
 `Takeaway` → `Tomorrow Preview` → `Today's Challenge`
+
+> **`TypeScript Corner` / `Python Corner` 已於 F12 Phase 0 移除**：語言實戰內容一律只寫
+> `TypeScript Tip` / `Python Tip`（Discord 與 GitHub Pages 共用同一份）。若你在既有檔案裡
+> 看到這兩段，**MUST 刪除**，MUST NOT 保留或重寫。語言特有陷阱的論述改寫進
+> `Common Mistakes`（觀念本體 2000 字上限尚有餘裕），程式碼示範留在 Tip。
 
 ### 字元上限（code point 計）
 
@@ -102,8 +107,7 @@ H2 區塊**名稱與順序固定**，全部必填、不得為空：
 
 ### 程式碼區塊
 
-`TypeScript Tip` / `Python Tip` / `TypeScript Corner` / `Python Corner` **四段各 MUST 至少一個
-fenced code block**，且：
+`TypeScript Tip` / `Python Tip` **兩段各 MUST 至少一個 fenced code block**，且：
 
 - **MUST 自帶斷言**：TypeScript 認 `throw` 或 `assert(` 或 `node:assert`；Python 認 `assert`。
 - **MUST 真的能編譯並執行通過**。專案 `tsconfig.json` **有開 `noUncheckedIndexedAccess`**，

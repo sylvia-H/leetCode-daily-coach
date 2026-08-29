@@ -51,35 +51,6 @@ def safe_get_first(items: list[str] | None) -> str:
 assert safe_get_first(None) == "default", "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function processInput(nums: number[] | null): number {
-  const safeNums = nums ?? [];
-  if (safeNums.length === 0) return 0;
-  const result = safeNums[0];
-  if (result !== 10) throw new Error("assertion failed");
-  return result;
-}
-const testVal = processInput([10]);
-if (testVal !== 10) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def process_input(nums: list[int] | None) -> int:
-    safe_nums = nums if nums is not None else []
-    if not safe_nums:
-        return 0
-    result = safe_nums[0]
-    assert result == 10, "assertion failed"
-    return result
-
-test_val = process_input([10])
-assert test_val == 10, "assertion failed"
-```
-
 ## Takeaway
 
 防禦性設計始於主動列舉邊界條件，永遠不要假設輸入資料完美無缺。

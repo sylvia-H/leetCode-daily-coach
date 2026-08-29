@@ -78,54 +78,6 @@ def optimized_length(s: str) -> int:
 assert optimized_length("au") == 2
 ```
 
-## TypeScript Corner
-
-```typescript
-import assert from "node:assert";
-
-function lengthOfLongestSubstring(s: string): number {
-    const charIndexMap = new Map<string, number>();
-    let maxLength = 0;
-    let left = 0;
-
-    for (let right = 0; right < s.length; right++) {
-        const char = s[right];
-        if (charIndexMap.has(char) && charIndexMap.get(char)! >= left) {
-            left = charIndexMap.get(char)! + 1;
-        }
-        charIndexMap.set(char, right);
-        maxLength = Math.max(maxLength, right - left + 1);
-    }
-
-    return maxLength;
-}
-
-assert.strictEqual(lengthOfLongestSubstring("abcabcbb"), 3);
-assert.strictEqual(lengthOfLongestSubstring("bbbbb"), 1);
-assert.strictEqual(lengthOfLongestSubstring("pwwkew"), 3);
-```
-
-## Python Corner
-
-```python
-def length_of_longest_substring(s: str) -> int:
-    char_index_map = {}
-    max_length = 0
-    left = 0
-
-    for right, char in enumerate(s):
-        if char in char_index_map and char_index_map[char] >= left:
-            left = char_index_map[char] + 1
-        char_index_map[char] = right
-        max_length = max(max_length, right - left + 1)
-
-    return max_length
-
-assert length_of_longest_substring("abcabcbb") == 3
-assert length_of_longest_substring("bbbbb") == 1
-assert length_of_longest_substring("pwwkew") == 3
-```
-
 ## Takeaway
 
 Variable Sliding Window 透過動態調整左右指標與 Hash Map 紀錄，將無重複子字串問題優化至 O(n) 時間複雜度。

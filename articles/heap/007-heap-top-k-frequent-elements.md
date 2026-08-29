@@ -63,47 +63,6 @@ def py_tip_example():
 py_tip_example()
 ```
 
-## TypeScript Corner
-
-```typescript
-import assert from 'node:assert';
-
-function topKFrequent(nums: number[], k: number): number[] {
-    const freqMap = new Map<number, number>();
-    for (const num of nums) {
-        freqMap.set(num, (freqMap.get(num) || 0) + 1);
-    }
-    const unique = Array.from(freqMap.keys());
-    unique.sort((a, b) => freqMap.get(b)! - freqMap.get(a)!);
-    const result = unique.slice(0, k);
-    return result;
-}
-
-const output = topKFrequent([1, 1, 1, 2, 2, 3], 2);
-assert.deepStrictEqual(output.sort(), [1, 2]);
-```
-
-## Python Corner
-
-```python
-from collections import Counter
-import heapq
-
-def topKFrequent(nums: list[int], k: int) -> list[int]:
-    count = Counter(nums)
-    heap = []
-    for num, freq in count.items():
-        heapq.heappush(heap, (freq, num))
-        if len(heap) > k:
-            heapq.heappop(heap)
-    
-    result = [num for freq, num in heap]
-    return result
-
-output = topKFrequent([1, 1, 1, 2, 2, 3], 2)
-assert sorted(output) == [1, 2]
-```
-
 ## Takeaway
 
 運用 Hash Map 統計頻率，搭配大小為 K 的最小堆積，能將 Top K 問題的時間複雜度從 O(N log N) 壓低至 O(N log K)。

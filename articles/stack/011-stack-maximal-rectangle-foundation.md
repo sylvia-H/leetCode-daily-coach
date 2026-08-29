@@ -57,51 +57,6 @@ def py_tip_example() -> None:
 py_tip_example()
 ```
 
-## TypeScript Corner
-
-```typescript
-function largestRectangleArea(heights: number[]):
-  number {
-  const padded = [0, ...heights, 0];
-  const stack: number[] = [];
-  let maxArea = 0;
-  for (let i = 0; i < padded.length; i++) {
-    while (
-      stack.length > 0 &&
-      padded[stack[stack.length - 1]] > padded[i]
-    ) {
-      const h = padded[stack.pop()!];
-      const w = i - stack[stack.length - 1] - 1;
-      maxArea = Math.max(maxArea, h * w);
-    }
-    stack.push(i);
-  }
-  return maxArea;
-}
-const testResult = largestRectangleArea([2, 1, 5, 6, 2, 3]);
-if (testResult !== 10) {
-  throw new Error(`Assertion failed: expected 10, got ${testResult}`);
-}
-```
-
-## Python Corner
-
-```python
-def largest_rectangle_area(heights: list[int]) -> int:
-    padded = [0] + heights + [0]
-    stack: list[int] = []
-    max_area = 0
-    for i, h in enumerate(padded):
-        while stack and padded[stack[-1]] > h:
-            height = padded[stack.pop()]
-            width = i - stack[-1] - 1
-            max_area = max(max_area, height * width)
-        stack.append(i)
-    return max_area
-
-assert largest_rectangle_area([2, 1, 5, 6, 2, 3]) == 10, "Assertion failed"
-```
-
 ## Takeaway
 
 運用單調堆疊與哨兵技巧，在 O(n) 時間內搞定柱狀圖左右邊界與最大矩形面積！

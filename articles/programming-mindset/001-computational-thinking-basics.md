@@ -62,30 +62,6 @@ status = process_order(101)
 assert status is True, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function decomposeTask(taskDescription: string): string[] {
-  const steps = taskDescription.split(",").map((s) => s.trim());
-  if (steps.length === 0) throw new Error("Task decomposition failed");
-  return steps;
-}
-const result = decomposeTask("input, process, output");
-if (result.length !== 3) throw new Error("Assertion failed: expected 3 steps");
-```
-
-## Python Corner
-
-```python
-def decompose_task(task_description: str) -> list[str]:
-    steps = [s.strip() for s in task_description.split(",")]
-    assert len(steps) > 0, "Task decomposition failed"
-    return steps
-
-result = decompose_task("input, process, output")
-assert len(result) == 3, "Assertion failed: expected 3 steps"
-```
-
 ## Takeaway
 
 先定義終點再反推步驟，利用 Decomposition 將複雜任務化為獨立的精確指令。

@@ -65,55 +65,6 @@ def max_area_tip(height: list[int]) -> int:
 max_area_tip([1, 8, 6, 2, 5, 4, 8, 3, 7])
 ```
 
-## TypeScript Corner
-
-```typescript
-function maxArea(height: number[]): number {
-  let left = 0;
-  let right = height.length - 1;
-  let maxWater = 0;
-  while (left < right) {
-    const currentWidth = right - left;
-    const currentHeight = Math.min(height[left], height[right]);
-    const currentArea = currentWidth * currentHeight;
-    if (currentArea > maxWater) {
-      maxWater = currentArea;
-    }
-    if (height[left] < height[right]) {
-      left++;
-    } else {
-      right--;
-    }
-  }
-  if (maxWater !== 49) throw new Error("assertion failed");
-  return maxWater;
-}
-maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7]);
-```
-
-## Python Corner
-
-```python
-def max_area(height: list[int]) -> int:
-    left = 0
-    right = len(height) - 1
-    max_water = 0
-    while left < right:
-        current_width = right - left
-        current_height = min(height[left], height[right])
-        current_area = current_width * current_height
-        if current_area > max_water:
-            max_water = current_area
-        if height[left] < height[right]:
-            left += 1
-        else:
-            right -= 1
-    assert max_water == 49, "assertion failed"
-    return max_water
-
-max_area([1, 8, 6, 2, 5, 4, 8, 3, 7])
-```
-
 ## Takeaway
 
 相向雙指標搭配貪婪策略，每次移動高度較小的指標，能以 O(n) 時間高效求解容器最大面積。

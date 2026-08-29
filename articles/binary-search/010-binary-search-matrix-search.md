@@ -58,60 +58,6 @@ r, c = get_coordinate(5, 4)
 assert r == 1 and c == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function searchMatrix(matrix: number[][], target: number): boolean {
-  if (!matrix || matrix.length === 0 || matrix[0].length === 0) return false;
-  const m = matrix.length;
-  const n = matrix[0].length;
-  let left = 0;
-  let right = m * n - 1;
-  while (left <= right) {
-    const mid = Math.floor(left + (right - left) / 2);
-    const row = Math.floor(mid / n);
-    const col = mid % n;
-    const val = matrix[row][col];
-    if (val === target) return true;
-    if (val < target) {
-      left = mid + 1;
-    } else {
-      right = mid - 1;
-    }
-  }
-  return false;
-}
-const testMatrix = [[1, 3, 5, 7], [10, 11, 16, 20], [23, 30, 34, 60]];
-if (searchMatrix(testMatrix, 3) !== true) throw new Error("assertion failed");
-if (searchMatrix(testMatrix, 13) !== false) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def searchMatrix(matrix: list[list[int]], target: int) -> bool:
-    if not matrix or not matrix[0]:
-        return False
-    m, n = len(matrix), len(matrix[0])
-    left, right = 0, m * n - 1
-    while left <= right:
-        mid = left + (right - left) // 2
-        row = mid // n
-        col = mid % n
-        val = matrix[row][col]
-        if val == target:
-            return True
-        elif val < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return False
-
-test_matrix = [[1, 3, 5, 7], [10, 11, 16, 20], [23, 30, 34, 60]]
-assert searchMatrix(test_matrix, 3) == True, "assertion failed"
-assert searchMatrix(test_matrix, 13) == False, "assertion failed"
-```
-
 ## Takeaway
 
 透過算術映射將二維矩陣視為一維有序陣列，掌握 row = mid / cols 與 col = mid % cols 即可解題。

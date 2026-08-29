@@ -86,56 +86,6 @@ def verify_unique_subsets() -> None:
 verify_unique_subsets()
 ```
 
-## TypeScript Corner
-
-```typescript
-function subsetsWithDup(nums: number[]): number[][] {
-  nums.sort((a, b) => a - b);
-  const result: number[][] = [];
-  
-  function backtrack(startIndex: number, path: number[]): void {
-    result.push([...path]);
-    for (let i = startIndex; i < nums.length; i++) {
-      if (i > startIndex && nums[i] === nums[i - 1]) {
-        continue;
-      }
-      path.push(nums[i]);
-      backtrack(i + 1, path);
-      path.pop();
-    }
-  }
-  
-  backtrack(0, []);
-  return result;
-}
-
-const res = subsetsWithDup([1, 2, 2]);
-if (res.length !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def subsets_with_dup(nums: list[int]) -> list[list[int]]:
-    nums.sort()
-    result: list[list[int]] = []
-    
-    def backtrack(start_index: int, path: list[int]) -> None:
-        result.append(path[:])
-        for i in range(start_index, len(nums)):
-            if i > start_index and nums[i] == nums[i - 1]:
-                continue
-            path.append(nums[i])
-            backtrack(i + 1, path)
-            path.pop()
-            
-    backtrack(0, [])
-    return result
-
-res = subsets_with_dup([1, 2, 2])
-assert len(res) == 6, "assertion failed"
-```
-
 ## Takeaway
 
 排序陣列並在同層級迴圈中檢查 i > startIndex 且 nums[i] == nums[i-1]，是解決重複子集問題的黃金法則。

@@ -55,58 +55,6 @@ top = stack.pop()
 assert top == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function asteroidCollision(asteroids: number[]): number[] {
-  const stack: number[] = [];
-  for (const ast of asteroids) {
-    let alive = true;
-    while (alive && ast < 0 && stack.length > 0 && stack[stack.length - 1] > 0) {
-      const top = stack[stack.length - 1];
-      if (top < -ast) {
-        stack.pop();
-      } else if (top === -ast) {
-        stack.pop();
-        alive = false;
-      } else {
-        alive = false;
-      }
-    }
-    if (alive) {
-      stack.push(ast);
-    }
-  }
-  return stack;
-}
-const res = asteroidCollision([5, 10, -5]);
-if (res.length !== 2 || res[0] !== 5 || res[1] !== 10) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def asteroidCollision(asteroids: list[int]) -> list[int]:
-    stack = []
-    for ast in asteroids:
-        alive = True
-        while alive and ast < 0 and stack and stack[-1] > 0:
-            top = stack[-1]
-            if top < -ast:
-                stack.pop()
-            elif top == -ast:
-                stack.pop()
-                alive = False
-            else:
-                alive = False
-        if alive:
-            stack.append(ast)
-    return stack
-
-res = asteroidCollision([5, 10, -5])
-assert res == [5, 10], "assertion failed"
-```
-
 ## Takeaway
 
 運用 Stack 模擬碰撞時，務必使用 while 迴圈處理連鎖反應，並細心處理元素相等時的雙向銷毀。

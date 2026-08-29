@@ -72,42 +72,6 @@ assert length == 2, "Length check failed"
 assert nums[:2] == [1, 2], "Content check failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function removeElement(nums: number[], val: number): number {
-  let slow = 0;
-  for (let fast = 0; fast < nums.length; fast++) {
-    if (nums[fast] !== val) {
-      nums[slow] = nums[fast];
-      slow++;
-    }
-  }
-  return slow;
-}
-const testArr = [3, 2, 2, 3];
-const newLength = removeElement(testArr, 3);
-if (newLength !== 2) throw new Error("Assertion failed: incorrect length");
-if (testArr[0] !== 2 || testArr[1] !== 2) throw new Error("Assertion failed: incorrect elements");
-```
-
-## Python Corner
-
-```python
-def remove_element(nums: list[int], val: int) -> int:
-    slow = 0
-    for fast in range(len(nums)):
-        if nums[fast] != val:
-            nums[slow] = nums[fast]
-            slow += 1
-    return slow
-
-test_arr = [3, 2, 2, 3]
-new_length = remove_element(test_arr, 3)
-assert new_length == 2, "Assertion failed: incorrect length"
-assert test_arr[:2] == [2, 2], "Assertion failed: incorrect elements"
-```
-
 ## Takeaway
 
 快慢指標分工明確，快找有效、慢作寫入，O(1) 空間原地壓縮陣列。

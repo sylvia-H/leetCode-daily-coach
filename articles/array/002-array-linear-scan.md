@@ -58,33 +58,6 @@ def py_traversal_demo(nums: list[int]) -> list[int]:
 py_traversal_demo([1, 2, 3])
 ```
 
-## TypeScript Corner
-
-```typescript
-function linearScanSum(nums: number[]): number {
-  let total = 0;
-  for (let i = 0; i < nums.length; i++) {
-    total += nums[i];
-  }
-  if (total !== 15) throw new Error("assertion failed");
-  return total;
-}
-linearScanSum([1, 2, 3, 4, 5]);
-```
-
-## Python Corner
-
-```python
-def linear_scan_sum(nums: list[int]) -> int:
-    total = 0
-    for num in nums:
-        total += num
-    assert total == 15, "assertion failed"
-    return total
-
-linear_scan_sum([1, 2, 3, 4, 5])
-```
-
 ## Takeaway
 
 線性掃描是陣列演算法的基石，透過正確的迴圈邊界控制與狀態累積，能在 O(n) 時間內安全處理所有元素。

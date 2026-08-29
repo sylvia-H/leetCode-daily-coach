@@ -61,34 +61,6 @@ port = parse_config({"port": 8080})
 assert port == 8080, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function validatePositive(num: number): number {
-  if (num <= 0) {
-    throw new Error("Input must be positive");
-  }
-  return num;
-}
-
-const result = validatePositive(5);
-if (result !== 5) {
-  throw new Error("Assertion failed");
-}
-```
-
-## Python Corner
-
-```python
-def validate_positive(num: int) -> int:
-    if num <= 0:
-        raise ValueError("Input must be positive")
-    return num
-
-result = validate_positive(5)
-assert result == 5, "Assertion failed"
-```
-
 ## Takeaway
 
 把錯誤視為導航信標，用嚴謹的假設與驗證取代盲目猜測。

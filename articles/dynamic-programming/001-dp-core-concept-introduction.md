@@ -62,35 +62,6 @@ result = fib(5)
 assert result == 5, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function climbStairs(n: number, memo: Map<number, number> = new Map()): number {
-  if (n <= 2) return n;
-  if (memo.has(n)) return memo.get(n)!;
-  const result = climbStairs(n - 1, memo) + climbStairs(n - 2, memo);
-  memo.set(n, result);
-  return result;
-}
-const ans = climbStairs(3);
-if (ans !== 3) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-from functools import lru_cache
-
-@lru_cache(maxsize=None)
-def climb_stairs(n: int) -> int:
-    if n <= 2:
-        return n
-    return climb_stairs(n - 1) + climb_stairs(n - 2)
-
-ans = climb_stairs(3)
-assert ans == 3, "Assertion failed"
-```
-
 ## Takeaway
 
 動態規劃透過儲存重疊子問題的解來優化效能，將指數級複雜度降為線性複雜度。

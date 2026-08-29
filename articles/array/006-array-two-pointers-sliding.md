@@ -65,43 +65,6 @@ def solve(nums: list[int], k: int) -> int:
 assert solve([1, 2, 3, 4], 2) == 7
 ```
 
-## TypeScript Corner
-
-```typescript
-function findMaxAverage(nums: number[], k: number): number {
-    let currentSum = 0;
-    for (let i = 0; i < k; i++) {
-        currentSum += nums[i];
-    }
-    let maxSum = currentSum;
-    for (let i = k; i < nums.length; i++) {
-        currentSum = currentSum - nums[i - k] + nums[i];
-        if (currentSum > maxSum) {
-            maxSum = currentSum;
-        }
-    }
-    return maxSum / k;
-}
-const result = findMaxAverage([1, 12, -5, -6, 50, 3], 4);
-if (result !== 12.75) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def find_max_average(nums: list[int], k: int) -> float:
-    current_sum = sum(nums[:k])
-    max_sum = current_sum
-    for i in range(k, len(nums)):
-        current_sum = current_sum - nums[i - k] + nums[i]
-        if current_sum > max_sum:
-            max_sum = current_sum
-    return max_sum / k
-
-result = find_max_average([1, 12, -5, -6, 50, 3], 4)
-assert result == 12.75, "assertion failed"
-```
-
 ## Takeaway
 
 固定大小滑動視窗的關鍵在於建立初始視窗並以 O(1) 增量更新，嚴格控制邊界即可達成 O(n) 高效解法。

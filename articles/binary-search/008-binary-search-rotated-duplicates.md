@@ -57,65 +57,6 @@ def verify_bounds(nums: list[int], left: int, right: int) -> None:
 verify_bounds([1, 0, 1, 1, 1], 0, 4)
 ```
 
-## TypeScript Corner
-
-```typescript
-function search(nums: number[], target: number): boolean {
-  let left = 0;
-  let right = nums.length - 1;
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (nums[mid] === target) return true;
-    if (nums[left] === nums[mid] && nums[mid] === nums[right]) {
-      left++;
-      right--;
-    } else if (nums[left] <= nums[mid]) {
-      if (nums[left] <= target && target < nums[mid]) {
-        right = mid - 1;
-      } else {
-        left = mid + 1;
-      }
-    } else {
-      if (nums[mid] < target && target <= nums[right]) {
-        left = mid + 1;
-      } else {
-        right = mid - 1;
-      }
-    }
-  }
-  return false;
-}
-const result = search([2, 5, 6, 0, 0, 1, 2], 0);
-if (result !== true) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def search(nums: list[int], target: int) -> bool:
-    left, right = 0, len(nums) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if nums[mid] == target:
-            return True
-        if nums[left] == nums[mid] == nums[right]:
-            left += 1
-            right -= 1
-        elif nums[left] <= nums[mid]:
-            if nums[left] <= target < nums[mid]:
-                right = mid - 1
-            else:
-                left = mid + 1
-        else:
-            if nums[mid] < target <= nums[right]:
-                left = mid + 1
-            else:
-                right = mid - 1
-    return False
-
-assert search([2, 5, 6, 0, 0, 1, 2], 0) == True, "assertion failed"
-```
-
 ## Takeaway
 
 面對旋轉陣列中的重複值，當邊界相等無法判定時，以線性收縮取代二分猜測是確保正確性的關鍵。

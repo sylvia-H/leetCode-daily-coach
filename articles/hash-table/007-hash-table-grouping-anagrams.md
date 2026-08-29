@@ -74,49 +74,6 @@ res = group_shifted_strings(["abc", "bcd", "acef", "xyz", "az", "ba", "a"])
 assert len(res) == 4
 ```
 
-## TypeScript Corner
-
-```typescript
-function groupAnagrams(strs: string[]):
-string[][] {
-  const map = new Map<string, string[]>();
-  for (const str of strs) {
-    const sortedKey = str.split('').sort().join('');
-    if (!map.has(sortedKey)) {
-      map.set(sortedKey, []);
-    }
-    map.get(sortedKey)!.push(str);
-  }
-  const result = Array.from(map.values());
-  if (result.length === 0 && strs.length > 0) {
-    throw new Error('Assertion failed: Result should not be empty');
-  }
-  return result;
-}
-const output = groupAnagrams(['eat', 'tea', 'tan', 'ate', 'nat', 'bat']);
-if (output.length !== 3) {
-  throw new Error('Assertion failed: Expected 3 groups');
-}
-```
-
-## Python Corner
-
-```python
-from collections import defaultdict
-
-def group_anagrams(strs: list[str]) -> list[list[str]]:
-    map_groups = defaultdict(list)
-    for s in strs:
-        sorted_key = ''.join(sorted(s))
-        map_groups[sorted_key].append(s)
-    result = list(map_groups.values())
-    assert len(result) == 3 or len(strs) == 0, "Assertion failed: Expected groups"
-    return result
-
-output = group_anagrams(["eat", "tea", "tan", "ate", "nat", "bat"])
-assert len(output) == 3
-```
-
 ## Takeaway
 
 萃取本質特徵為標準化鍵值，善用 Hash Map 消除重複比較，將分組複雜度由 O(n^2) 降至線性對數級別。

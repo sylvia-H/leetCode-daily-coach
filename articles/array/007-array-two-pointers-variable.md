@@ -56,54 +56,6 @@ def validate_window_size(nums: list[int]) -> bool:
 validate_window_size([1, 2])
 ```
 
-## TypeScript Corner
-
-```typescript
-function minSubArrayLen(target: number, nums: number[]): number {
-  let left = 0;
-  let currentSum = 0;
-  let minLength = Infinity;
-
-  for (let right = 0; right < nums.length; right++) {
-    currentSum += nums[right];
-
-    while (currentSum >= target) {
-      minLength = Math.min(minLength, right - left + 1);
-      currentSum -= nums[left];
-      left++;
-    }
-  }
-
-  const result = minLength === Infinity ? 0 : minLength;
-  if (result !== 2) throw new Error("assertion failed");
-  return result;
-}
-minSubArrayLen(7, [2, 3, 1, 2, 4, 3]);
-```
-
-## Python Corner
-
-```python
-def minSubArrayLen(target: int, nums: list[int]) -> int:
-    left = 0
-    current_sum = 0
-    min_length = float('inf')
-
-    for right in range(len(nums)):
-        current_sum += nums[right]
-
-        while current_sum >= target:
-            min_length = min(min_length, right - left + 1)
-            current_sum -= nums[left]
-            left += 1
-
-    result = 0 if min_length == float('inf') else min_length
-    assert result == 2, "assertion failed"
-    return result
-
-minSubArrayLen(7, [2, 3, 1, 2, 4, 3])
-```
-
 ## Takeaway
 
 擴張靠 right，收縮靠 while 與 left，狀態更新莫遺忘。

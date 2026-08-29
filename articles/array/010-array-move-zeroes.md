@@ -69,45 +69,6 @@ move_zeroes_py(test_arr)
 assert test_arr[0] == 1, 'assertion failed'
 ```
 
-## TypeScript Corner
-
-```typescript
-function moveZeroes(nums: number[]): void {
-  let slow = 0;
-  for (let fast = 0; fast < nums.length; fast++) {
-    if (nums[fast] !== 0) {
-      nums[slow] = nums[fast];
-      slow++;
-    }
-  }
-  while (slow < nums.length) {
-    nums[slow] = 0;
-    slow++;
-  }
-}
-const arr = [0, 1, 0, 3, 12];
-moveZeroes(arr);
-if (arr.join(',') !== '1,3,12,0,0') throw new Error('assertion failed');
-```
-
-## Python Corner
-
-```python
-def move_zeroes(nums: list[int]) -> None:
-    slow = 0
-    for fast in range(len(nums)):
-        if nums[fast] != 0:
-            nums[slow] = nums[fast]
-            slow += 1
-    while slow < len(nums):
-        nums[slow] = 0
-        slow += 1
-
-arr = [0, 1, 0, 3, 12]
-move_zeroes(arr)
-assert arr == [1, 3, 12, 0, 0], 'assertion failed'
-```
-
 ## Takeaway
 
 掌握 Fast-Slow Pointers 的核心精神：快指標探索、慢指標定位，原地達成 O(n) 時間與 O(1) 空間的陣列重組。

@@ -69,42 +69,6 @@ def remove_duplicates(s: str) -> str:
 remove_duplicates("abbaca")
 ```
 
-## TypeScript Corner
-
-```typescript
-function solve(s: string): string {
-  const stack: string[] = [];
-  for (const char of s) {
-    if (stack.length > 0 && stack[stack.length - 1] === char) {
-      stack.pop();
-    } else {
-      stack.push(char);
-    }
-  }
-  const ans = stack.join("");
-  if (ans !== "ca") throw new Error("assertion failed");
-  return ans;
-}
-solve("abbaca");
-```
-
-## Python Corner
-
-```python
-def solve(s: str) -> str:
-    stack = []
-    for char in s:
-        if stack and stack[-1] == char:
-            stack.pop()
-        else:
-            stack.append(char)
-    ans = "".join(stack)
-    assert ans == "ca", "assertion failed"
-    return ans
-
-solve("abbaca")
-```
-
 ## Takeaway
 
 運用堆疊追蹤相鄰狀態，能在線性時間內完美解決相鄰重複消除問題。

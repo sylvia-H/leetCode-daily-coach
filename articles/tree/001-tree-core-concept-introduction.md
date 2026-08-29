@@ -68,38 +68,6 @@ root = GeneralTreeNode(1)
 assert count_nodes(root) == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class TreeNode<T> {
-  val: T;
-  left: TreeNode<T> | null;
-  right: TreeNode<T> | null;
-  constructor(val: T, left: TreeNode<T> | null = null, right: TreeNode<T> | null = null) {
-    this.val = val;
-    this.left = left;
-    this.right = right;
-  }
-}
-const root = new TreeNode(1, new TreeNode(2), new TreeNode(3));
-if (root.val !== 1) throw new Error("assertion failed");
-if (root.left?.val !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val: int = 0, left = None, right = None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-root = TreeNode(1, TreeNode(2), TreeNode(3))
-assert root.val == 1, "assertion failed"
-assert root.left.val == 2, "assertion failed"
-```
-
 ## Takeaway
 
 Tree 是由節點與邊構成的階層式資料結構，具備天生的遞迴特性，透過掌握 Root、Leaf、Depth 與 Height 等術語能建立扎實的基礎。

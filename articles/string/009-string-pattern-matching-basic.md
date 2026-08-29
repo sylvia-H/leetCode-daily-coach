@@ -57,47 +57,6 @@ result = py_substring_search_tip("hello", "ll")
 assert result == 2, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function strStr(haystack: string, needle: string): number {
-  const n = haystack.length;
-  const m = needle.length;
-  if (m === 0) return 0;
-  for (let i = 0; i <= n - m; i++) {
-    let j = 0;
-    while (j < m && haystack[i + j] === needle[j]) {
-      j++;
-    }
-    if (j === m) return i;
-  }
-  return -1;
-}
-const result = strStr("sadbutsad", "sad");
-if (result !== 0) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def strStr(haystack: str, needle: str) -> int:
-    n, m = len(haystack), len(needle)
-    if m == 0:
-        return 0
-    for i in range(n - m + 1):
-        match = True
-        for j in range(m):
-            if haystack[i + j] != needle[j]:
-                match = False
-                break
-        if match:
-            return i
-    return -1
-
-result = strStr("sadbutsad", "sad")
-assert result == 0, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Linear Scan 與雙迴圈邊界控制，是解決基礎字串搜尋問題的核心關鍵。

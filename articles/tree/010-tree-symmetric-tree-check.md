@@ -61,61 +61,6 @@ def check(a: int | None, b: int | None) -> bool:
 check(10, 10)
 ```
 
-## TypeScript Corner
-
-TypeScript 在處理節點型別時，需要精確定義可能為 null 的情況。以下為實作範例：
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-function isSymmetric(root: TreeNode | null): boolean {
-  if (!root) return true;
-  const isMirror = (t1: TreeNode | null, t2: TreeNode | null): boolean => {
-    if (!t1 && !t2) return true;
-    if (!t1 || !t2) return false;
-    return t1.val === t2.val && isMirror(t1.left, t2.right) && isMirror(t1.right, t2.left);
-  };
-  const result = isMirror(root.left, root.right);
-  if (result !== true) throw new Error("Assertion failed");
-  return result;
-}
-const node = new TreeNode(1, new TreeNode(2), new TreeNode(2));
-isSymmetric(node);
-```
-
-## Python Corner
-
-Python 在處理遞迴與 Optional 節點型別時，語法簡潔明瞭。以下為實作範例：
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def is_symmetric(root: TreeNode | None) -> bool:
-    if not root:
-        return True
-    def is_mirror(t1: TreeNode | None, t2: TreeNode | None) -> bool:
-        if not t1 and not t2:
-            return True
-        if not t1 or not t2:
-            return False
-        return t1.val == t2.val and is_mirror(t1.left, t2.right) and is_mirror(t1.right, t2.left)
-    result = is_mirror(root.left, root.right)
-    assert result == True, "Assertion failed"
-    return result
-root = TreeNode(1, TreeNode(2), TreeNode(2))
-is_symmetric(root)
-```
-
 ## Takeaway
 
 對稱樹檢查的關鍵在於交叉比較左右子樹，透過雙指標遞迴確保結構與數值完全鏡像。

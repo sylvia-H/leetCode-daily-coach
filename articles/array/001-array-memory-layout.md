@@ -61,35 +61,6 @@ res = process_array()
 assert res == 3, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-TypeScript 中的陣列（Array）在底層實際上是 JavaScript 的物件（Object），其元素可能不具備傳統 C/C++ 陣列的嚴格連續實體記憶體空間（例如在發生稀疏陣列或屬性刪除時）。然而，V8 引擎會針對相同型別的陣列進行隱藏類別（Hidden Classes）與具體化陣列（Packed Elements）的最佳化，以確保數值索引的存取維持高效的 O(1) 效能。以下程式碼示範了透過型別標註與標準陣列存取來驗證記憶體與索引的對應關係：
-```typescript
-function getElementAt(arr: number[], index: number): number {
-  if (index < 0 || index >= arr.length) {
-    throw new Error("Index out of bounds");
-  }
-  return arr[index];
-}
-const sampleArray: number[] = [10, 20, 30, 40, 50];
-const val = getElementAt(sampleArray, 2);
-if (val !== 30) throw new Error("Assertion failed: expected 30");
-```
-
-## Python Corner
-
-Python 中的 list 實質上是一個指標陣列（Array of Pointers），它儲存的是指向其他 Python 物件記憶體位址的參考（References），而非實際的資料本身。這種設計允許 Python 的 list 能夠容納異質資料（Heterogeneous Data），但代價是失去了 C 語言中那種緊密排列的純資料連續性。儘管如此，Python list 仍然支援完美的 O(1) 隨機存取。以下程式碼示範了 Python 陣列索引的合法性檢查與斷言：
-```python
-def get_element_at(arr: list[int], index: int) -> int:
-    if index < 0 or index >= len(arr):
-        raise IndexError("Index out of bounds")
-    return arr[index]
-
-sample_list: list[int] = [10, 20, 30, 40, 50]
-val = get_element_at(sample_list, 2)
-assert val == 30, "Assertion failed: expected 30"
-```
-
 ## Takeaway
 
 陣列靠連續記憶體達成 O(1) 隨機存取；索引即為偏移量故從 0 開始。

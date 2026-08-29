@@ -66,63 +66,6 @@ def py_helper_test() -> None:
 py_helper_test()
 ```
 
-## TypeScript Corner
-
-```typescript
-function isPalindrome(s: string): boolean {
-  let left = 0;
-  let right = s.length - 1;
-  
-  const isAlphaNumeric = (char: string): boolean => {
-    const code = char.charCodeAt(0);
-    return (
-      (code >= 48 && code <= 57) || 
-      (code >= 97 && code <= 122) || 
-      (code >= 65 && code <= 90)
-    );
-  };
-
-  while (left < right) {
-    while (left < right && !isAlphaNumeric(s[left])) {
-      left++;
-    }
-    while (left < right && !isAlphaNumeric(s[right])) {
-      right--;
-    }
-    if (s[left].toLowerCase() !== s[right].toLowerCase()) {
-      return false;
-    }
-    left++;
-    right--;
-  }
-  return true;
-}
-
-if (!isPalindrome("A man, a plan, a canal: Panama")) {
-  throw new Error("Assertion failed: expected true");
-}
-```
-
-## Python Corner
-
-```python
-def is_palindrome(s: str) -> bool:
-    left, right = 0, len(s) - 1
-    
-    while left < right:
-        while left < right and not s[left].isalnum():
-            left += 1
-        while left < right and not s[right].isalnum():
-            right -= 1
-        if s[left].lower() != s[right].lower():
-            return False
-        left += 1
-        right -= 1
-    return True
-
-assert is_palindrome("A man, a plan, a canal: Panama") == True, "Assertion failed"
-```
-
 ## Takeaway
 
 雙指標結合前置處理的關鍵在於內部迴圈的邊界條件防護，確保不配置額外空間並在 O(n) 時間內完成。

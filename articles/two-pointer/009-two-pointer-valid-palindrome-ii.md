@@ -80,61 +80,6 @@ def check_palindrome_python(s: str) -> bool:
 assert check_palindrome_python("aba") == True, "Test failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function validPalindrome(s: string): boolean {
-  function isPalindromeRange(str: string, low: number, high: number): boolean {
-    while (low < high) {
-      if (str[low] !== str[high]) return false;
-      low++;
-      high--;
-    }
-    return true;
-  }
-
-  let left = 0;
-  let right = s.length - 1;
-
-  while (left < right) {
-    if (s[left] === s[right]) {
-      left++;
-      right--;
-    } else {
-      return isPalindromeRange(s, left + 1, right) || isPalindromeRange(s, left, right - 1);
-    }
-  }
-  return true;
-}
-
-const testResult = validPalindrome("abca");
-if (testResult !== true) throw new Error("Assertion failed: expected true");
-```
-
-## Python Corner
-
-```python
-def validPalindrome(s: str) -> bool:
-    def is_palindrome_range(sub: str, low: int, high: int) -> bool:
-        while low < high:
-            if sub[low] != sub[high]:
-                return False
-            low += 1
-            high -= 1
-        return True
-
-    left, right = 0, len(s) - 1
-    while left < right:
-        if s[left] == s[right]:
-            left += 1
-            right -= 1
-        else:
-            return is_palindrome_range(s, left + 1, right) or is_palindrome_range(s, left, right - 1)
-    return True
-
-assert validPalindrome("abca") == True, "Assertion failed"
-```
-
 ## Takeaway
 
 雙指標遇不匹配時切勿慌張，透過條件分支探索刪除後的子問題，保持 O(n) 效能。

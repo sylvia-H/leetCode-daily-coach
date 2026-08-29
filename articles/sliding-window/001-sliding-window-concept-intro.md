@@ -65,41 +65,6 @@ def verify_window() -> None:
 verify_window()
 ```
 
-## TypeScript Corner
-
-```typescript
-function slidingWindowSum(nums: number[], k: number): number {
-  let maxSum = 0;
-  let windowSum = 0;
-  for (let i = 0; i < k; i++) {
-    windowSum += nums[i];
-  }
-  maxSum = windowSum;
-  for (let i = k; i < nums.length; i++) {
-    windowSum += nums[i] - nums[i - k];
-    maxSum = Math.max(maxSum, windowSum);
-  }
-  return maxSum;
-}
-const result = slidingWindowSum([1, 2, 3, 4, 5], 3);
-if (result !== 12) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def sliding_window_sum(nums: list[int], k: int) -> int:
-    window_sum = sum(nums[:k])
-    max_sum = window_sum
-    for i in range(k, len(nums)):
-        window_sum += nums[i] - nums[i - k]
-        max_sum = max(max_sum, window_sum)
-    return max_sum
-
-result = sliding_window_sum([1, 2, 3, 4, 5], 3)
-assert result == 12, "assertion failed"
-```
-
 ## Takeaway
 
 運用 Sliding Window 透過加入右端元素並移除左端元素，以 O(1) 狀態轉移將連續區間問題從 O(n^2) 優化至 O(n)。

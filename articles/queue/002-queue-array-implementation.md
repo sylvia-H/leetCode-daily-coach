@@ -74,64 +74,6 @@ assert val == 1, "assertion failed"
 assert len(queue) == 3, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class ArrayQueue<T> {
-  private items: T[] = [];
-
-  enqueue(item: T): void {
-    this.items.push(item);
-  }
-
-  dequeue(): T | undefined {
-    return this.items.shift();
-  }
-
-  peek(): T | undefined {
-    return this.items[0];
-  }
-
-  size(): number {
-    return this.items.length;
-  }
-}
-
-const queue = new ArrayQueue<number>();
-queue.enqueue(10);
-queue.enqueue(20);
-if (queue.dequeue() !== 10) throw new Error("assertion failed");
-if (queue.size() !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ArrayQueue:
-    def __init__(self):
-        self.items = []
-
-    def enqueue(self, item):
-        self.items.append(item)
-
-    def dequeue(self):
-        if not self.is_empty():
-            return self.items.pop(0)
-        return None
-
-    def is_empty(self):
-        return len(self.items) == 0
-
-    def size(self):
-        return len(self.items)
-
-queue = ArrayQueue()
-queue.enqueue(10)
-queue.enqueue(20)
-assert queue.dequeue() == 10, "assertion failed"
-assert queue.size() == 1, "assertion failed"
-```
-
 ## Takeaway
 
 理解陣列實作 Queue 的瓶頸在於記憶體位移，切勿在高效能場景中直接使用 shift() 或 pop(0)。

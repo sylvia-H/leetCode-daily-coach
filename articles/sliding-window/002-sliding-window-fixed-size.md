@@ -69,43 +69,6 @@ ans = count_subarrays([2, 2, 2, 2, 5, 5, 2, 8], 3, 4)
 assert ans == 3, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function findMaxAverage(nums: number[], k: number): number {
-    let currentSum = 0;
-    for (let i = 0; i < k; i++) {
-        currentSum += nums[i];
-    }
-    let maxSum = currentSum;
-    for (let i = k; i < nums.length; i++) {
-        currentSum += nums[i] - nums[i - k];
-        if (currentSum > maxSum) {
-            maxSum = currentSum;
-        }
-    }
-    return maxSum / k;
-}
-const result = findMaxAverage([1, 12, -5, -6, 50, 3], 4);
-if (Math.abs(result - 12.75) > 1e-5) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def find_max_average(nums: list[int], k: int) -> float:
-    current_sum = sum(nums[:k])
-    max_sum = current_sum
-    for i in range(k, len(nums)):
-        current_sum += nums[i] - nums[i - k]
-        if current_sum > max_sum:
-            max_sum = current_sum
-    return max_sum / k
-
-result = find_max_average([1, 12, -5, -6, 50, 3], 4)
-assert abs(result - 12.75) < 1e-5, "assertion failed"
-```
-
 ## Takeaway
 
 掌握固定長度滑動視窗的初始化與增量更新邏輯，以 O(n) 時間解決定長子陣列問題。

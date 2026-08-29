@@ -70,41 +70,6 @@ res = reverse_words("the sky is blue")
 assert res == 'blue is sky the', 'assertion failed'
 ```
 
-## TypeScript Corner
-
-```typescript
-function isPalindrome(s: string): boolean {
-  let left = 0;
-  let right = s.length - 1;
-  while (left < right) {
-    if (s[left] !== s[right]) {
-      return false;
-    }
-    left++;
-    right--;
-  }
-  return true;
-}
-const res = isPalindrome("radar");
-if (!res) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def is_palindrome(s: str) -> bool:
-    left, right = 0, len(s) - 1
-    while left < right:
-        if s[left] != s[right]:
-            return False
-        left += 1
-        right -= 1
-    return True
-
-res = is_palindrome("radar")
-assert res is True, "assertion failed"
-```
-
 ## Takeaway
 
 運用左右雙指標向內靠攏，以 O(n) 時間與 O(1) 空間高效解決對稱字串與區段處理問題。

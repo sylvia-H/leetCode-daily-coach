@@ -72,43 +72,6 @@ def lower_bound(nums: list[int], target: int) -> int:
 lower_bound([1, 2, 4, 5], 2)
 ```
 
-## TypeScript Corner
-
-```typescript
-function searchInsert(nums: number[], target: number): number {
-    let left = 0;
-    let right = nums.length;
-    while (left < right) {
-        const mid = Math.floor(left + (right - left) / 2);
-        if (nums[mid] >= target) {
-            right = mid;
-        } else {
-            left = mid + 1;
-        }
-    }
-    if (left !== 2) throw new Error("assertion failed");
-    return left;
-}
-const result = searchInsert([1, 3, 5, 6], 5);
-```
-
-## Python Corner
-
-```python
-def searchInsert(nums: list[int], target: int) -> int:
-    left, right = 0, len(nums)
-    while left < right:
-        mid = left + (right - left) // 2
-        if nums[mid] >= target:
-            right = mid
-        else:
-            left = mid + 1
-    assert left == 2, "assertion failed"
-    return left
-
-result = searchInsert([1, 3, 5, 6], 5)
-```
-
 ## Takeaway
 
 掌握 [left, right) 區間與 right = n 的初始化，使用 while (left < right) 尋找邊界與插入點。

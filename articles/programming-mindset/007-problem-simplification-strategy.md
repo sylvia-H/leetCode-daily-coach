@@ -56,34 +56,6 @@ val = process_minimal_case(5)
 assert val == 15, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function solveSimplified(nums: number[]):
-number {
-  if (nums.length === 0) return 0;
-  const result = nums[0] * 2;
-  if (result !== 2) throw new Error("assertion failed");
-  return result;
-}
-const testOutput = solveSimplified([1]);
-if (testOutput !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def solve_simplified(nums: list[int]) -> int:
-    if not nums:
-        return 0
-    result = nums[0] * 2
-    assert result == 2, "assertion failed"
-    return result
-
-test_output = solve_simplified([1])
-assert test_output == 2, "assertion failed"
-```
-
 ## Takeaway
 
 化繁為簡，從長度為 1 的極小案例開始動手推導，規律自然浮現。

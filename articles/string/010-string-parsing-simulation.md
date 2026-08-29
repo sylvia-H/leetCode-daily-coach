@@ -57,64 +57,6 @@ def process_tokens(s: str) -> list[str]:
 process_tokens("hello world")
 ```
 
-## TypeScript Corner
-
-```typescript
-function parseStringState(s: string): number {
-  const trimmed = s.trim();
-  if (trimmed.length === 0) return 0;
-  
-  let sign = 1;
-  let i = 0;
-  let result = 0;
-  
-  if (trimmed[0] === '-' || trimmed[0] === '+') {
-    sign = trimmed[0] === '-' ? -1 : 1;
-    i++;
-  }
-  
-  while (i < trimmed.length && trimmed[i] >= '0' && trimmed[i] <= '9') {
-    const digit = Number(trimmed[i]);
-    result = result * 10 + digit;
-    i++;
-  }
-  
-  const finalResult = result * sign;
-  if (finalResult !== 42) throw new Error("assertion failed");
-  return finalResult;
-}
-
-parseStringState("  42");
-```
-
-## Python Corner
-
-```python
-def parse_string_state(s: str) -> int:
-    trimmed = s.strip()
-    if not trimmed:
-        return 0
-    
-    sign = 1
-    i = 0
-    result = 0
-    
-    if trimmed[0] in ('-', '+'):
-        sign = -1 if trimmed[0] == '-' else 1
-        i += 1
-        
-    while i < len(trimmed) and '0' <= trimmed[i] <= '9':
-        digit = int(trimmed[i])
-        result = result * 10 + digit
-        i += 1
-        
-    final_result = result * sign
-    assert final_result == 42, "assertion failed"
-    return final_result
-
-parse_string_state("  42")
-```
-
 ## Takeaway
 
 字串解析的關鍵在於狀態定義與邊界防守。透過嚴謹的指針控制與狀態轉移，能將複雜的文字轉換化為清晰的邏輯執行。

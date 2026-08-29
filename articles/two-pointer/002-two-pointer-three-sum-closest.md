@@ -77,60 +77,6 @@ def threeSumClosest(nums: list[int], target: int) -> int:
 assert threeSumClosest([0,0,0], 1) == 0
 ```
 
-## TypeScript Corner
-
-```typescript
-function threeSumClosest(nums: number[], target: number): number {
-  nums.sort((a, b) => a - b);
-  let closest = nums[0] + nums[1] + nums[2];
-  for (let i = 0; i < nums.length - 2; i++) {
-    let left = i + 1;
-    let right = nums.length - 1;
-    while (left < right) {
-      const currentSum = nums[i] + nums[left] + nums[right];
-      if (Math.abs(currentSum - target) < Math.abs(closest - target)) {
-        closest = currentSum;
-      }
-      if (currentSum < target) {
-        left++;
-      } else if (currentSum > target) {
-        right--;
-      } else {
-        return currentSum;
-      }
-    }
-  }
-  if (closest === undefined) throw new Error("No result found");
-  return closest;
-}
-const ans = threeSumClosest([-1, 2, 1, -4], 1);
-if (ans !== 2) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def threeSumClosest(nums: list[int], target: int) -> int:
-    nums.sort()
-    closest = nums[0] + nums[1] + nums[2]
-    for i in range(len(nums) - 2):
-        left, right = i + 1, len(nums) - 1
-        while left < right:
-            current_sum = nums[i] + nums[left] + nums[right]
-            if abs(current_sum - target) < abs(closest - target):
-                closest = current_sum
-            if current_sum < target:
-                left += 1
-            elif current_sum > target:
-                right -= 1
-            else:
-                return current_sum
-    return closest
-
-ans = threeSumClosest([-1, 2, 1, -4], 1)
-assert ans == 2, "Assertion failed"
-```
-
 ## Takeaway
 
 掌握 Three Sum Closest Search 的關鍵在於排序、雙指標收斂，以及在迴圈中即時更新全域的最接近狀態與差值絕對值。

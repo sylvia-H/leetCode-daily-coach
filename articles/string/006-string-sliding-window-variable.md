@@ -76,47 +76,6 @@ def longest_ones(s: str, k: int) -> int:
 assert longest_ones("101101", 1) == 4
 ```
 
-## TypeScript Corner
-
-```typescript
-function lengthOfLongestSubstring(s: string): number {
-  const charMap = new Map<string, number>();
-  let left = 0;
-  let maxLength = 0;
-  for (let right = 0; right < s.length; right++) {
-    const char = s[right];
-    if (charMap.has(char) && charMap.get(char)! >= left) {
-      left = charMap.get(char)! + 1;
-    }
-    charMap.set(char, right);
-    maxLength = Math.max(maxLength, right - left + 1);
-  }
-  if (maxLength < 0) throw new Error("assertion failed");
-  return maxLength;
-}
-const res = lengthOfLongestSubstring("abcabcbb");
-if (res !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def length_of_longest_substring(s: str) -> int:
-    char_index = {}
-    left = 0
-    max_len = 0
-    for right, char in enumerate(s):
-        if char in char_index and char_index[char] >= left:
-            left = char_index[char] + 1
-        char_index[char] = right
-        max_len = max(max_len, right - left + 1)
-    assert max_len >= 0, "assertion failed"
-    return max_len
-
-result = length_of_longest_substring("abcabcbb")
-assert result == 3, "assertion failed"
-```
-
 ## Takeaway
 
 掌握動態滑動視窗的伸縮時機與狀態維護，是解決各類字串子字串最佳化問題的關鍵。

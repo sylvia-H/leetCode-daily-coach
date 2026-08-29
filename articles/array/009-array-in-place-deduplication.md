@@ -68,41 +68,6 @@ length_k = remove_duplicates_extended([1, 1, 1, 2, 2, 3], 2)
 assert length_k == 5, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function removeDuplicates(nums: number[]): number {
-  if (nums.length === 0) return 0;
-  let slow = 0;
-  for (let fast = 1; fast < nums.length; fast++) {
-    if (nums[fast] !== nums[slow]) {
-      slow++;
-      nums[slow] = nums[fast];
-    }
-  }
-  return slow + 1;
-}
-const len = removeDuplicates([1, 1, 2]);
-if (len !== 2) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def remove_duplicates(nums: list[int]) -> int:
-    if not nums:
-        return 0
-    slow = 0
-    for fast in range(1, len(nums)):
-        if nums[fast] != nums[slow]:
-            slow += 1
-            nums[slow] = nums[fast]
-    return slow + 1
-
-length = remove_duplicates([1, 1, 2])
-assert length == 2, "Assertion failed"
-```
-
 ## Takeaway
 
 排序特性是去重的金鑰，善用 Fast-Slow Pointers 即可在 O(n) 時間與 O(1) 空間內完成原地清洗。

@@ -81,56 +81,6 @@ t2 = TreeNode(1, None, TreeNode(2))
 assert isSameTree(t1, t2) == False
 ```
 
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function isSameTree(p: TreeNode | null, q: TreeNode | null): boolean {
-  if (p === null && q === null) return true;
-  if (p === null || q === null) return false;
-  if (p.val !== q.val) return false;
-  return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
-}
-
-import assert from "node:assert";
-const tree1 = new TreeNode(1, new TreeNode(2), new TreeNode(3));
-const tree2 = new TreeNode(1, new TreeNode(2), new TreeNode(3));
-assert.strictEqual(isSameTree(tree1, tree2), true);
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
-    if p is None and q is None:
-        return True
-    if p is None or q is None:
-        return False
-    if p.val != q.val:
-        return False
-    return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)
-
-tree1 = TreeNode(1, TreeNode(2), TreeNode(3))
-tree2 = TreeNode(1, TreeNode(2), TreeNode(3))
-assert isSameTree(tree1, tree2) == True
-```
-
 ## Takeaway
 
 平行走訪兩棵樹時，務必先確立完整的 null 邊界條件，再進行數值比對與子樹遞迴。

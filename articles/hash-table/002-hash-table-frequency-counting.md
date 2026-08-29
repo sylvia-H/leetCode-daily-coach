@@ -59,32 +59,6 @@ freq_map = get_char_frequency("leetcode")
 assert freq_map["e"] == 3, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function countFrequencies(nums: number[]): Map<number, number> {
-  const freqMap = new Map<number, number>();
-  for (const num of nums) {
-    freqMap.set(num, (freqMap.get(num) || 0) + 1);
-  }
-  return freqMap;
-}
-const result = countFrequencies([1, 2, 2, 3, 3, 3]);
-if (result.get(3) !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import Counter
-
-def count_frequencies(nums: list[int]) -> dict[int, int]:
-    return dict(Counter(nums))
-
-result = count_frequencies([1, 2, 2, 3, 3, 3])
-assert result[3] == 3, "assertion failed"
-```
-
 ## Takeaway
 
 以元素為鍵、次數為值建立雜湊表，單次遍歷即可完成 O(n) 的高效頻率統計。

@@ -71,26 +71,6 @@ idx = binary_search_overflow_prevention([1, 3, 5, 7], 5)
 assert idx == 2, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function safeMid(left: number, right: number): number {
-  return left + Math.floor((right - left) / 2);
-}
-const result = safeMid(1, 10);
-if (result !== 5) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def safe_mid(left: int, right: int) -> int:
-    return left + (right - left) // 2
-
-result = safe_mid(1, 10)
-assert result == 5, "assertion failed"
-```
-
 ## Takeaway
 
 安全計算中點公式 left + (right - left) // 2 是編寫穩健 Binary Search 的核心防線，能有效避免整數溢位。

@@ -76,59 +76,6 @@ test_res = create_list([1, 2])
 assert test_res.val == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class ListNode {
-    val: number;
-    next: ListNode | null;
-    constructor(val?: number, next?: ListNode | null) {
-        this.val = (val===undefined ? 0 : val);
-        this.next = (next===undefined ? null : next);
-    }
-}
-
-function removeElements(head: ListNode | null, val: number): ListNode | null {
-    const dummy = new ListNode(0, head);
-    let current: ListNode | null = dummy;
-    while (current !== null && current.next !== null) {
-        if (current.next.val === val) {
-            current.next = current.next.next;
-        } else {
-            current = current.next;
-        }
-    }
-    return dummy.next;
-}
-
-const list = new ListNode(1, new ListNode(2, new ListNode(6, new ListNode(3))));
-const result = removeElements(list, 6);
-if (result?.next?.next?.val !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def removeElements(head: ListNode | None, val: int) -> ListNode | None:
-    dummy = ListNode(0, head)
-    current = dummy
-    while current and current.next:
-        if current.next.val == val:
-            current.next = current.next.next
-        else:
-            current = current.next
-    return dummy.next
-
-node = ListNode(1, ListNode(2, ListNode(6, ListNode(3))))
-res = removeElements(node, 6)
-assert res.next.next.val == 3, "assertion failed"
-```
-
 ## Takeaway
 
 善用 Dummy Head 消除頭部邊界條件，牢記回傳 dummy.next。

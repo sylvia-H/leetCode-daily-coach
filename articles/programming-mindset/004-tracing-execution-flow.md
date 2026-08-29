@@ -54,33 +54,6 @@ def debug_trace(a: int, b: int) -> int:
 debug_trace(2, 3)
 ```
 
-## TypeScript Corner
-
-```typescript
-function simulateSum(nums: number[]): number {
-  let total = 0;
-  for (let i = 0; i < nums.length; i++) {
-    total += nums[i];
-  }
-  if (total !== 6) throw new Error("assertion failed");
-  return total;
-}
-simulateSum([1, 2, 3]);
-```
-
-## Python Corner
-
-```python
-def simulate_sum(nums: list[int]) -> int:
-    total = 0
-    for i in range(len(nums)):
-        total += nums[i]
-    assert total == 6, "assertion failed"
-    return total
-
-simulate_sum([1, 2, 3])
-```
-
 ## Takeaway
 
 腦內編譯器與手動 Trace 是最強大的除錯工具，切勿憑直覺猜測錯誤原因。

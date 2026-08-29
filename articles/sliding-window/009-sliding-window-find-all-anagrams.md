@@ -66,62 +66,6 @@ def test_list_compare() -> None:
 test_list_compare()
 ```
 
-## TypeScript Corner
-
-TypeScript 實作使用固定長度陣列記錄字元頻率，並在線性掃描中收集所有符合條件的起始索引。
-```typescript
-function findAnagrams(s: string, p: string): number[] {
-  const res: number[] = [];
-  if (s.length < p.length) return res;
-  const pCount = new Array(26).fill(0);
-  const sCount = new Array(26).fill(0);
-  const aCode = 'a'.charCodeAt(0);
-  for (let i = 0; i < p.length; i++) {
-    pCount[p.charCodeAt(i) - aCode]++;
-    sCount[s.charCodeAt(i) - aCode]++;
-  }
-  if (pCount.every((val, idx) => val === sCount[idx])) {
-    res.push(0);
-  }
-  for (let i = p.length; i < s.length; i++) {
-    sCount[s.charCodeAt(i) - aCode]++;
-    sCount[s.charCodeAt(i - p.length) - aCode]--;
-    if (pCount.every((val, idx) => val === sCount[idx])) {
-      res.push(i - p.length + 1);
-    }
-  }
-  if (res.length !== 2 || res[0] !== 0 || res[1] !== 6) throw new Error('assertion failed');
-  return res;
-}
-findAnagrams('cbaebabacd', 'abc');
-```
-
-## Python Corner
-
-Python 實作利用串列或 Counter 維持窗口頻率，透過高效的線性掃描找出所有符合條件的起始位置。
-```python
-def findAnagrams(s: str, p: str) -> list[int]:
-    res = []
-    if len(s) < len(p):
-        return res
-    p_count = [0] * 26
-    s_count = [0] * 26
-    a_code = ord('a')
-    for i in range(len(p)):
-        p_count[ord(p[i]) - a_code] += 1
-        s_count[ord(s[i]) - a_code] += 1
-    if p_count == s_count:
-        res.append(0)
-    for i in range(len(p), len(s)):
-        s_count[ord(s[i]) - a_code] += 1
-        s_count[ord(s[i - len(p)]) - a_code] -= 1
-        if p_count == s_count:
-            res.append(i - len(p) + 1)
-    assert res == [0, 6], 'assertion failed'
-    return res
-findAnagrams('cbaebabacd', 'abc')
-```
-
 ## Takeaway
 
 透過 Fixed Sliding Window 維護頻率簽章，能有效在 O(n) 時間內找出所有 Anagrams 的起始索引。

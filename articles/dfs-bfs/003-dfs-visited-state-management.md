@@ -58,61 +58,6 @@ def has_valid_visit(grid: list[list[int]]) -> bool:
 has_valid_visit([[0]])
 ```
 
-## TypeScript Corner
-
-```typescript
-function countComponents(n: number, edges: number[][]): number {
-    const adj: number[][] = Array.from({ length: n }, () => []);
-    for (const [u, v] of edges) {
-        adj[u].push(v);
-        adj[v].push(u);
-    }
-    const visited = new Set<number>();
-    let count = 0;
-    const dfs = (node: number) => {
-        visited.add(node);
-        for (const neighbor of adj[node]) {
-            if (!visited.has(neighbor)) {
-                dfs(neighbor);
-            }
-        }
-    };
-    for (let i = 0; i < n; i++) {
-        if (!visited.has(i)) {
-            dfs(i);
-            count++;
-        }
-    }
-    if (count !== 1) throw new Error("assertion failed");
-    return count;
-}
-countComponents(3, [[0, 1], [1, 2]]);
-```
-
-## Python Corner
-
-```python
-def count_components(n: int, edges: list[list[int]]) -> int:
-    adj = [[] for _ in range(n)]
-    for u, v in edges:
-        adj[u].append(v)
-        adj[v].append(u)
-    visited = set()
-    count = 0
-    def dfs(node: int):
-        visited.add(node)
-        for neighbor in adj[node]:
-            if neighbor not in visited:
-                dfs(neighbor)
-    for i in range(n):
-        if i not in visited:
-            dfs(i)
-            count += 1
-    assert count == 1, "assertion failed"
-    return count
-count_components(3, [[0, 1], [1, 2]])
-```
-
 ## Takeaway
 
 Visited Tracking 是圖形走訪的靈魂，即時標記、正確選擇資料結構，是確保演算法終止與效能的關鍵。

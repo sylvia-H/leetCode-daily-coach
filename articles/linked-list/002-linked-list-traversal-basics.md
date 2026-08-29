@@ -79,54 +79,6 @@ test_head = ListNode(1, ListNode(2, None))
 assert count_nodes(test_head) == 2, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-function traverseAndSum(head: ListNode | null): number {
-  let current: ListNode | null = head;
-  let sum = 0;
-  while (current !== null) {
-    sum += current.val;
-    current = current.next;
-  }
-  return sum;
-}
-const node3 = new ListNode(3, null);
-const node2 = new ListNode(2, node3);
-const node1 = new ListNode(1, node2);
-if (traverseAndSum(node1) !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def traverse_and_sum(head: ListNode | None) -> int:
-    current = head
-    total = 0
-    while current is not None:
-        total += current.val
-        current = current.next
-    return total
-
-node3 = ListNode(3, None)
-node2 = ListNode(2, node3)
-node1 = ListNode(1, node2)
-assert traverse_and_sum(node1) == 6, "assertion failed"
-```
-
 ## Takeaway
 
 以暫時指標代替 head 進行走訪，牢記 while (current !== null) 與 current = current.next，確保 O(n) 線性掃描的安全與正確性。

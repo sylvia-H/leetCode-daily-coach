@@ -90,43 +90,6 @@ mh.push(5)
 assert mh.size() == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function getLeftChild(i: number): number {
-  return 2 * i + 1;
-}
-
-function getRightChild(i: number): number {
-  return 2 * i + 2;
-}
-
-function getParent(i: number): number {
-  return Math.floor((i - 1) / 2);
-}
-
-const parentIdx = getParent(2);
-if (parentIdx !== 0) throw new Error("assertion failed");
-const leftIdx = getLeftChild(0);
-if (leftIdx !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def get_left_child(i: int) -> int:
-    return 2 * i + 1
-
-def get_right_child(i: int) -> int:
-    return 2 * i + 2
-
-def get_parent(i: int) -> int:
-    return (i - 1) // 2
-
-assert get_parent(2) == 0, "assertion failed"
-assert get_left_child(0) == 1, "assertion failed"
-```
-
 ## Takeaway
 
 透過數學公式將樹狀結構映射至一維陣列，以 O(1) 索引存取實現高效能 Heap 操作。

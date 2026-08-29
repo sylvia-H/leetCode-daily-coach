@@ -77,65 +77,6 @@ node = ListNode(1)
 assert verify_pointers(node) is True
 ```
 
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-function hasCycle(head: ListNode | null): boolean {
-  let slow: ListNode | null = head;
-  let fast: ListNode | null = head;
-  while (fast !== null && fast.next !== null) {
-    slow = slow!.next;
-    fast = fast.next.next;
-    if (slow === fast) {
-      return true;
-    }
-  }
-  return false;
-}
-import assert from "node:assert";
-const n1 = new ListNode(3);
-const n2 = new ListNode(2);
-const n3 = new ListNode(0);
-const n4 = new ListNode(-4);
-n1.next = n2;
-n2.next = n3;
-n3.next = n4;
-n4.next = n2;
-assert.strictEqual(hasCycle(n1), true);
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, x):
-		self.val = x
-		self.next = None
-
-def hasCycle(head: ListNode | None) -> bool:
-    slow = head
-    fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-        if slow == fast:
-            return True
-    return False
-
-head = ListNode(1)
-head.next = ListNode(2)
-head.next.next = head
-assert hasCycle(head) is True
-```
-
 ## Takeaway
 
 快慢指標是處理鏈結串列結構問題的利器，能在 O(1) 空間內完成循環偵測。

@@ -11,6 +11,8 @@
 | `24f2756` | `gate:articles` CLI ＋ per-article Gate 抽出至 `scripts/lib/article-gate.ts` |
 | `a732d80` | spec.md、agent-brief.md、phase-01.json |
 | `949cb4a` | `merge:quiz` 片段合併工具 |
+| `b0a91df` | 18 個 `phase-NN.json` + `phases.json`、執行守衛、單元測試、本 runbook |
+| （Phase 0 末批） | **移除 `TypeScript Corner` / `Python Corner`**：spec §10 契約、產線 prompt、Pages 版面、165 篇教材（詳見 `batches.md`）。⚠️ Phase 1 起的 Article **MUST NOT** 再含這兩段 |
 
 ## 每批步驟
 

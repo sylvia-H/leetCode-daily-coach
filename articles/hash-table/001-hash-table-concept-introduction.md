@@ -65,39 +65,6 @@ def py_tip_demo() -> None:
 py_tip_demo();
 ```
 
-## TypeScript Corner
-
-在 TypeScript 中，建議使用內建的 Map 物件來實作 Hash Table，而非使用原生 JavaScript 物件。這樣可以避免原型污染 (Prototype Pollution) 並支援任意型別的鍵。
-
-```typescript
-function testMap(): void {
-  const map = new Map<string, number>();
-  map.set("apple", 1);
-  map.set("banana", 2);
-  
-  if (!map.has("apple")) throw new Error("assertion failed: key missing");
-  if (map.get("apple") !== 1) throw new Error("assertion failed: value mismatch");
-}
-
-testMap();
-```
-
-## Python Corner
-
-在 Python 中，標準的 dict() 字典結構即是基於雜湊表實作，提供高效的平均 O(1) 查找效能。針對只需要追蹤存在性的場景，亦可使用 set()。
-
-```python
-def test_dict() -> None:
-    d: dict[str, int] = {}
-    d["apple"] = 1
-    d["banana"] = 2
-    
-    assert "apple" in d, "assertion failed: key missing"
-    assert d["apple"] == 1, "assertion failed: value mismatch"
-
-test_dict()
-```
-
 ## Takeaway
 
 Hash Table 提供平均 O(1) 的查找能力，是解決關聯性與頻率統計問題的核心工具。

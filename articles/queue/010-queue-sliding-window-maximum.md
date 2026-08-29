@@ -61,53 +61,6 @@ def test_deque():
 test_deque()
 ```
 
-## TypeScript Corner
-
-```typescript
-function maxSlidingWindow(nums: number[], k: number): number[] {
-  const q: number[] = [];
-  const res: number[] = [];
-  for (let i = 0; i < nums.length; i++) {
-    while (q.length > 0 && nums[q[q.length - 1]] <= nums[i]) {
-      q.pop();
-    }
-    q.push(i);
-    if (q[0] <= i - k) {
-      q.shift();
-    }
-    if (i >= k - 1) {
-      res.push(nums[q[0]]);
-    }
-  }
-  if (res.length !== nums.length - k + 1) throw new Error("assertion failed");
-  return res;
-}
-const result = maxSlidingWindow([1,3,-1,-3,5,3,6,7], 3);
-if (result[0] !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import deque
-
-def max_sliding_window(nums: list[int], k: int) -> list[int]:
-    q = deque()
-    res = []
-    for i, n in enumerate(nums):
-        while q and nums[q[-1]] <= n:
-            q.pop()
-        q.append(i)
-        if q[0] <= i - k:
-            q.popleft()
-        if i >= k - 1:
-            res.append(nums[q[0]])
-    assert len(res) == len(nums) - k + 1, "assertion failed"
-    return res
-
-assert max_sliding_window([1, 3, -1, -3, 5, 3, 6, 7], 3) == [3, 3, 5, 5, 6, 7]
-```
-
 ## Takeaway
 
 Monotonic Queue 核心在於存索引、維持嚴格遞減、過期即彈出，將複雜度壓至 O(n)。

@@ -65,55 +65,6 @@ def check_duplicate(nums: list[int]) -> bool:
 check_duplicate([1, 2, 3, 1])
 ```
 
-## TypeScript Corner
-
-```typescript
-function longestConsecutive(nums: number[]):
- number {
- if (nums.length === 0) return 0;
- const numSet = new Set<number>(nums);
- let longestStreak = 0;
- for (const num of Array.from(numSet)) {
- if (!numSet.has(num - 1)) {
- let currentNum = num;
- let currentStreak = 1;
- while (numSet.has(currentNum + 1)) {
- currentNum += 1;
- currentStreak += 1;
- }
- longestStreak = Math.max(longestStreak, currentStreak);
- }
- }
- if (longestStreak !== 4) throw new Error("assertion failed");
- return longestStreak;
-}
-const result = longestConsecutive([100, 4, 200, 1, 3, 2]);
-console.log(result);
-```
-
-## Python Corner
-
-```python
-def longest_consecutive(nums: list[int]) -> int:
-    if not nums:
-        return 0
-    num_set = set(nums)
-    longest_streak = 0
-    for num in num_set:
-        if (num - 1) not in num_set:
-            current_num = num
-            current_streak = 1
-            while (current_num + 1) in num_set:
-                current_num += 1
-                current_streak += 1
-            longest_streak = max(longest_streak, current_streak)
-    assert longest_streak == 4, "assertion failed"
-    return longest_streak
-
-result = longest_consecutive([100, 4, 200, 1, 3, 2])
-print(result)
-```
-
 ## Takeaway
 
 利用 Hash Set 進行邊界檢查，只從序列起點開始計數，是達成 O(n) 連續序列搜尋的關鍵。

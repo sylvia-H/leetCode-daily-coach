@@ -77,63 +77,6 @@ def permute_tip(nums: list[int]) -> list[list[int]]:
 assert len(permute_tip([1, 2])) == 2, "Tip test failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function permute(nums: number[]): number[][] {
-  const result: number[][] = [];
-  const visited: boolean[] = new Array(nums.length).fill(false);
-  
-  function backtrack(path: number[]) {
-    if (path.length === nums.length) {
-      result.push([...path]);
-      return;
-    }
-    for (let i = 0; i < nums.length; i++) {
-      if (visited[i]) continue;
-      visited[i] = true;
-      path.push(nums[i]);
-      backtrack(path);
-      path.pop();
-      visited[i] = false;
-    }
-  }
-  
-  backtrack([]);
-  return result;
-}
-
-const output = permute([1, 2]);
-if (output.length !== 2) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def permute(nums: list[int]) -> list[list[int]]:
-    result = []
-    visited = [False] * len(nums)
-    
-    def backtrack(path: list[int]):
-        if len(path) == len(nums):
-            result.append(path[:])
-            return
-        for i in range(len(nums)):
-            if visited[i]:
-                continue
-            visited[i] = True
-            path.append(nums[i])
-            backtrack(path)
-            path.pop()
-            visited[i] = False
-            
-    backtrack([])
-    return result
-
-output = permute([1, 2])
-assert len(output) == 2, "Assertion failed"
-```
-
 ## Takeaway
 
 排列問題重順序，visited 狀態追蹤不可少；遞迴選取要重置，階乘複雜度記心頭。

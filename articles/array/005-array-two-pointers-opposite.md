@@ -84,40 +84,6 @@ res = sorted_squares([-4, -1, 0, 3, 10])
 assert res[-1] == 100, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function reverseString(s: string[]): void {
-  let left = 0;
-  let right = s.length - 1;
-  while (left < right) {
-    const temp = s[left];
-    s[left] = s[right];
-    s[right] = temp;
-    left++;
-    right--;
-  }
-}
-const arr = ["h", "e", "l", "l", "o"];
-reverseString(arr);
-if (arr.join("") !== "olleh") throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def reverse_string(s: list[str]) -> None:
-    left, right = 0, len(s) - 1
-    while left < right:
-        s[left], s[right] = s[right], s[left]
-        left += 1
-        right -= 1
-
-arr = ["h", "e", "l", "l", "o"]
-reverse_string(arr)
-assert "".join(arr) == "olleh", "Assertion failed"
-```
-
 ## Takeaway
 
 左右雙指標以 O(n) 時間與 O(1) 空間化解對稱與排序搜尋難題，掌握相遇條件與指標移動是關鍵。

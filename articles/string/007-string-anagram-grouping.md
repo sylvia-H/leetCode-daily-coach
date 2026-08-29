@@ -76,42 +76,6 @@ res = group_anagrams_optimized(["eat", "tea"])
 assert len(res) == 1, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function groupAnagrams(strs: string[]): string[][] {
-    const map = new Map<string, string[]>();
-    for (const s of strs) {
-        const key = s.split('').sort().join('');
-        if (!map.has(key)) {
-            map.set(key, []);
-        }
-        map.get(key)!.push(s);
-    }
-    return Array.from(map.values());
-}
-const result = groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]);
-if (result.length !== 3) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import defaultdict
-
-
-def group_anagrams(strs: list[str]) -> list[list[str]]:
-    anagram_map = defaultdict(list)
-    for s in strs:
-        key = tuple(sorted(s))
-        anagram_map[key].append(s)
-    return list(anagram_map.values())
-
-
-result = group_anagrams(["eat", "tea", "tan", "ate", "nat", "bat"])
-assert len(result) == 3, "Assertion failed"
-```
-
 ## Takeaway
 
 利用正規化鍵值（排序或頻率計數）配合 Hash Map，可將字串變位詞分組問題從 O(n^2) 優化至 O(n * k log k) 或 O(n * k)。

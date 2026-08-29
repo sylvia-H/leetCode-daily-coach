@@ -71,66 +71,6 @@ def demo_heap(nums: list[int]) -> int:
 demo_heap([1, 3, 5])
 ```
 
-## TypeScript Corner
-
-在 TypeScript 中，由於標準函式庫未內建 Heap 資料結構，我們通常需要自行實作 Priority Queue 或使用陣列模擬。以下為利用計數與迴圈模擬 Task Scheduler 的完整程式碼，內含斷言以確保正確性。
-
-```typescript
-function leastInterval(tasks: string[], n: number): number {
-  const freq = new Map<string, number>();
-  for (const task of tasks) {
-    freq.set(task, (freq.get(task) || 0) + 1);
-  }
-
-  const counts = Array.from(freq.values()).sort((a, b) => b - a);
-  const maxFreq = counts[0];
-  let idleTime = (maxFreq - 1) * n;
-
-  for (let i = 1; i < counts.length; i++) {
-    idleTime -= Math.min(maxFreq - 1, counts[i]);
-  }
-
-  const result = tasks.length + Math.max(0, idleTime);
-  if (result !== 8) throw new Error("assertion failed");
-  return result;
-}
-
-leastInterval(["A", "A", "A", "B", "B", "B"], 2);
-```
-
-## Python Corner
-
-在 Python 中，可以完美結合 heapq 模組與 collections.deque 來實作具備冷卻機制的任務排程器。以下程式碼展示了如何利用 max-heap 與 timestamp queue 模擬任務執行，並包含斷言檢查。
-
-```python
-from collections import Counter, deque
-import heapq
-
-
-def leastInterval(tasks: list[str], n: int) -> int:
-    count = Counter(tasks)
-    maxHeap = [-cnt for cnt in count.values()]
-    heapq.heapify(maxHeap)
-
-    time = 0
-    q = deque()
-
-    while maxHeap or q:
-        time += 1
-        if maxHeap:
-            cnt = heapq.heappop(maxHeap) + 1
-            if cnt != 0:
-                q.append((cnt, time + n))
-        if q and q[0][1] == time:
-            heapq.heappush(maxHeap, q.popleft()[0])
-
-    assert time == 8, "assertion failed"
-    return time
-
-
-leastInterval(["A", "A", "A", "B", "B", "B"], 2)
-```
-
 ## Takeaway
 
 貪婪策略結合堆積與佇列，是解開冷卻排程問題的唯一金鑰。

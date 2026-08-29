@@ -78,55 +78,6 @@ res = invertTree(root)
 assert res.right.val == 2, "Tip assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function invertTree(root: TreeNode | null): TreeNode | null {
-  if (!root) return null;
-  const temp = root.left;
-  root.left = invertTree(root.right);
-  root.right = invertTree(temp);
-  return root;
-}
-
-const root = new TreeNode(4, new TreeNode(2), new TreeNode(7));
-const inverted = invertTree(root);
-if (inverted?.left?.val !== 7) throw new Error("Assertion failed: left child should be 7");
-if (inverted?.right?.val !== 2) throw new Error("Assertion failed: right child should be 2");
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def invertTree(root: TreeNode | None) -> TreeNode | None:
-    if not root:
-        return None
-    root.left, root.right = invertTree(root.right), invertTree(root.left)
-    return root
-
-root = TreeNode(4, TreeNode(2), TreeNode(7))
-inverted = invertTree(root)
-assert inverted.left.val == 7, "Assertion failed: left child should be 7"
-assert inverted.right.val == 2, "Assertion failed: right child should be 2"
-```
-
 ## Takeaway
 
 掌握遞迴對調左右子樹的核心邏輯，理解 Tree Transformation 的結構修改模式，並熟練運用原地指標更新。

@@ -58,64 +58,6 @@ if freq[1] == 0:
 assert len(freq) == 0, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function totalFruit(fruits: number[]): number {
-  const freqMap = new Map<number, number>();
-  let left = 0;
-  let maxLen = 0;
-
-  for (let right = 0; right < fruits.length; right++) {
-    const fruit = fruits[right];
-    freqMap.set(fruit, (freqMap.get(fruit) || 0) + 1);
-
-    while (freqMap.size > 2) {
-      const leftFruit = fruits[left];
-      const count = freqMap.get(leftFruit)!;
-      if (count === 1) {
-        freqMap.delete(leftFruit);
-      } else {
-        freqMap.set(leftFruit, count - 1);
-      }
-      left++;
-    }
-
-    maxLen = Math.max(maxLen, right - left + 1);
-  }
-
-  return maxLen;
-}
-
-const result = totalFruit([1, 2, 1, 2, 3]);
-if (result !== 4) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def totalFruit(fruits: list[int]) -> int:
-    freq_map = {}
-    left = 0
-    max_len = 0
-
-    for right, fruit in enumerate(fruits):
-        freq_map[fruit] = freq_map.get(fruit, 0) + 1
-
-        while len(freq_map) > 2:
-            left_fruit = fruits[left]
-            freq_map[left_fruit] -= 1
-            if freq_map[left_fruit] == 0:
-                del freq_map[left_fruit]
-            left += 1
-
-        max_len = max(max_len, right - left + 1)
-
-    return max_len
-
-assert totalFruit([1, 2, 1, 2, 3]) == 4, "Assertion failed"
-```
-
 ## Takeaway
 
 運用 Variable Sliding Window 與 Frequency Map 處理至多 k 種相異元素的區間問題時，確實刪除歸零的鍵是維持正確性的核心。

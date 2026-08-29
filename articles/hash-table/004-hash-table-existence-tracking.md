@@ -61,38 +61,6 @@ def check_set_operations() -> None:
 check_set_operations()
 ```
 
-## TypeScript Corner
-
-```typescript
-function hasDuplicate(nums: number[]): boolean {
-  const seen = new Set<number>();
-  for (const num of nums) {
-    if (seen.has(num)) {
-      return true;
-    }
-    seen.add(num);
-  }
-  return false;
-}
-const result = hasDuplicate([1, 2, 3, 1]);
-if (result !== true) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def has_duplicate(nums: list[int]) -> bool:
-    seen = set()
-    for num in nums:
-        if num in seen:
-            return True
-        seen.add(num)
-    return False
-
-result = has_duplicate([1, 2, 3, 1])
-assert result is True, "assertion failed"
-```
-
 ## Takeaway
 
 當需要快速驗證歷史狀態或偵測重複時，優先使用 HashSet Membership 以確保 O(n) 的高效時間複雜度。

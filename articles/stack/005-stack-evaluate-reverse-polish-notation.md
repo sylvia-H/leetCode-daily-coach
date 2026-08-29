@@ -54,58 +54,6 @@ result = int(a / b) # -2
 assert result == -2, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function evalRPN(tokens: string[]): number {
-  const stack: number[] = [];
-  for (const token of tokens) {
-    if (token === "+" || token === "-" || token === "*" || token === "/") {
-      const b = stack.pop()!;
-      const a = stack.pop()!;
-      let res = 0;
-      if (token === "+") res = a + b;
-      else if (token === "-") res = a - b;
-      else if (token === "*") res = a * b;
-      else if (token === "/") res = Math.trunc(a / b);
-      stack.push(res);
-    } else {
-      stack.push(Number(token));
-    }
-  }
-  const result = stack.pop()!;
-  if (result !== 9) throw new Error("Assertion failed");
-  return result;
-}
-evalRPN(["2", "1", "+", "3", "*"]);
-```
-
-## Python Corner
-
-```python
-def evalRPN(tokens: list[str]) -> int:
-    stack: list[int] = []
-    for token in tokens:
-        if token in ("+", "-", "*", "/"):
-            b = stack.pop()
-            a = stack.pop()
-            if token == "+":
-                stack.append(a + b)
-            elif token == "-":
-                stack.append(a - b)
-            elif token == "*":
-                stack.append(a * b)
-            elif token == "/":
-                stack.append(int(a / b))
-        else:
-            stack.append(int(token))
-    result = stack.pop()
-    assert result == 9, "Assertion failed"
-    return result
-
-evalRPN(["2", "1", "+", "3", "*"])
-```
-
 ## Takeaway
 
 運用 Stack 暫存運算元，遇到運算子即時彈出計算，注意非交換律運算的左右運算元順序及截斷方向。

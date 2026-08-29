@@ -78,43 +78,6 @@ def subsets_tip(nums: list[int]) -> list[list[int]]:
 subsets_tip([1])
 ```
 
-## TypeScript Corner
-
-```typescript
-function subsets(nums: number[]): number[][] {
-  const result: number[][] = [];
-  function backtrack(start: number, path: number[]): void {
-    result.push([...path]);
-    for (let i = start; i < nums.length; i++) {
-      path.push(nums[i]);
-      backtrack(i + 1, path);
-      path.pop();
-    }
-  }
-  backtrack(0, []);
-  if (result.length !== 4) throw new Error("assertion failed");
-  return result;
-}
-subsets([1, 2]);
-```
-
-## Python Corner
-
-```python
-def subsets(nums: list[int]) -> list[list[int]]:
-    result = []
-    def backtrack(start: int, path: list[int]):
-        result.append(list(path))
-        for i in range(start, len(nums)):
-            path.append(nums[i])
-            backtrack(i + 1, path)
-            path.pop()
-    backtrack(0, [])
-    assert len(result) == 4, "assertion failed"
-    return result
-subsets([1, 2])
-```
-
 ## Takeaway
 
 透過二元選擇與狀態復原，掌握子集生成的遞迴框架，並切記蒐集結果時務必建立陣列複本。

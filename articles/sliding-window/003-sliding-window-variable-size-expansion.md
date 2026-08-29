@@ -82,46 +82,6 @@ def track_max_window(s: str) -> int:
 track_max_window("abcabcbb")
 ```
 
-## TypeScript Corner
-
-```typescript
-function expandWindow(nums: number[], target: number): number {
-  let left = 0;
-  let currentSum = 0;
-  let maxLength = 0;
-  for (let right = 0; right < nums.length; right++) {
-    currentSum += nums[right];
-    while (currentSum > target) {
-      currentSum -= nums[left];
-      left++;
-    }
-    maxLength = Math.max(maxLength, right - left + 1);
-  }
-  if (maxLength !== 3) throw new Error("assertion failed");
-  return maxLength;
-}
-expandWindow([1, 2, 3, 4, 5], 6);
-```
-
-## Python Corner
-
-```python
-def expand_window(nums: list[int], target: int) -> int:
-    left = 0
-    current_sum = 0
-    max_length = 0
-    for right in range(len(nums)):
-        current_sum += nums[right]
-        while current_sum > target:
-            current_sum -= nums[left]
-            left += 1
-        max_length = max(max_length, right - left + 1)
-    assert max_length == 3, "assertion failed"
-    return max_length
-
-expand_window([1, 2, 3, 4, 5], 6)
-```
-
 ## Takeaway
 
 擴展右指標並同步更新視窗狀態，是動態區間問題的關鍵第一步。

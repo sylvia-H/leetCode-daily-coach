@@ -58,32 +58,6 @@ result = get_letter_offset('b')
 assert result == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function convertCharAndCode(char: string): number {
-  const code = char.charCodeAt(0);
-  const originalChar = String.fromCharCode(code);
-  if (originalChar !== char) throw new Error("conversion failed");
-  return code;
-}
-const asciiValueOfA = convertCharAndCode('a');
-if (asciiValueOfA !== 97) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def convert_char_and_code(char: str) -> int:
-    code = ord(char)
-    original_char = chr(code)
-    assert original_char == char, "conversion failed"
-    return code
-
-ascii_value_of_a = convert_char_and_code('a')
-assert ascii_value_of_a == 97, "assertion failed"
-```
-
 ## Takeaway
 
 字元即數字。善用 ASCII 偏移量與語言內建轉換函式，能將字串處理轉化為高效的陣列索引操作。

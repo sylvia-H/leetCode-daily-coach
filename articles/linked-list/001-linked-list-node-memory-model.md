@@ -68,35 +68,6 @@ node = Node(42)
 assert node.val == 42 and node.next is None, "Python slot node assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class ListNode<T> {
-  constructor(public val: T, public next: ListNode<T> | null = null) {}
-}
-
-const head = new ListNode<number>(1);
-head.next = new ListNode<number>(2);
-
-if (head.val !== 1 || head.next?.val !== 2) {
-  throw new Error("TypeScript Linked List initialization failed");
-}
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode | None' = None):
-        self.val = val
-        self.next = next
-
-head = ListNode(1)
-head.next = ListNode(2)
-
-assert head.val == 1 and head.next.val == 2, "Python Linked List initialization failed"
-```
-
 ## Takeaway
 
 理解 Linked List 非連續記憶體配置與 Node 參考指標的運作機制，是解決指標類題目的核心能力。

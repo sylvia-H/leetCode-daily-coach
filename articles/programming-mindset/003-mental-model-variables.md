@@ -58,36 +58,6 @@ def compute_area(width: int, height: int) -> int:
 compute_area(5, 10)
 ```
 
-## TypeScript Corner
-
-在 TypeScript 中，變數宣告與型別推導緊密相連。善用 const 可以明確表達不變性（Immutability），減少非必要的可變狀態（Mutable State），有助於編譯器進行最佳化。
-
-```typescript
-function updateCounter(initial: number): number {
-  const base = initial;
-  const increment = 1;
-  const result = base + increment;
-  if (result !== 11) throw new Error("assertion failed");
-  return result;
-}
-updateCounter(10);
-```
-
-## Python Corner
-
-在 Python 中，變數不是盛裝資料的箱子，而是貼在物件上的標籤（Name and Object Reference Model）。賦值動作只是讓名稱指向某個記憶體中的物件，理解這一點對於避免淺拷貝與深拷貝的陷阱至關重要。
-
-```python
-def update_counter(initial: int) -> int:
-    base = initial
-    increment = 1
-    result = base + increment
-    assert result == 11, "assertion failed"
-    return result
-
-update_counter(10)
-```
-
 ## Takeaway
 
 變數是記憶體的具名參照而非數學未知數，精準追蹤狀態是編寫正確演算法的基石。

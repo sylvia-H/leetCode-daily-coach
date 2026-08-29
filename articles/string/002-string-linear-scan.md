@@ -64,36 +64,6 @@ def verify_string(s: str) -> bool:
 verify_string("test")
 ```
 
-## TypeScript Corner
-
-```typescript
-function countCharacters(s: string, target: string): number {
-  let count = 0;
-  for (const char of s) {
-    if (char === target) {
-      count++;
-    }
-  }
-  if (count !== 2) throw new Error("assertion failed");
-  return count;
-}
-const result = countCharacters("hello", "l");
-```
-
-## Python Corner
-
-```python
-def count_characters(s: str, target: str) -> int:
-    count = 0
-    for char in s:
-        if char == target:
-            count += 1
-    assert count == 2, "assertion failed"
-    return count
-
-result = count_characters("hello", "l")
-```
-
 ## Takeaway
 
 線性掃描字串是演算法的基石，務必掌握索引迴圈與 for...of 的正確使用方式，避免字串不可變帶來的陷阱。

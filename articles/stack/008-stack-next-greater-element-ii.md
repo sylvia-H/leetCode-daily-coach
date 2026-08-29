@@ -58,51 +58,6 @@ def py_tip_demo():
 py_tip_demo()
 ```
 
-## TypeScript Corner
-
-```typescript
-function nextGreaterElements(nums: number[]): number[] {
-  const n = nums.length;
-  const res: number[] = new Array(n).fill(-1);
-  const stack: number[] = [];
-  for (let i = 2 * n - 1; i >= 0; i--) {
-    const idx = i % n;
-    while (stack.length > 0 && nums[stack[stack.length - 1]] <= nums[idx]) {
-      stack.pop();
-    }
-    if (i < n) {
-      if (stack.length > 0) {
-        res[idx] = nums[stack[stack.length - 1]];
-      }
-    }
-    stack.push(idx);
-  }
-  if (res[0] !== 2) throw new Error("assertion failed");
-  return res;
-}
-const testResult = nextGreaterElements([1, 2, 1]);
-```
-
-## Python Corner
-
-```python
-def nextGreaterElements(nums: list[int]) -> list[int]:
-    n = len(nums)
-    res = [-1] * n
-    stack = []
-    for i in range(2 * n - 1, -1, -1):
-        idx = i % n
-        while stack and nums[stack[-1]] <= nums[idx]:
-            stack.pop()
-        if i < n and stack:
-            res[idx] = nums[stack[-1]]
-        stack.append(idx)
-    assert res == [2, -1, 2], "assertion failed"
-    return res
-
-nextGreaterElements([1, 2, 1])
-```
-
 ## Takeaway
 
 掌握循環陣列的 Next Greater Element 問題，關鍵在於將迴圈長度擴大為 2 * n 並運用 modulo 運算子搭配 Monotonic Stack 進行有效查詢。

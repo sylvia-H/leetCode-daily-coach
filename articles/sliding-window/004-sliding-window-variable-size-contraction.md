@@ -78,51 +78,6 @@ def verify_window() -> None:
 verify_window()
 ```
 
-## TypeScript Corner
-
-```typescript
-function minSubArrayLen(target: number, nums: number[]): number {
-  let left = 0;
-  let currentSum = 0;
-  let minLength = Infinity;
-
-  for (let right = 0; right < nums.length; right++) {
-    currentSum += nums[right];
-    while (currentSum >= target) {
-      minLength = Math.min(minLength, right - left + 1);
-      currentSum -= nums[left];
-      left++;
-    }
-  }
-
-  return minLength === Infinity ? 0 : minLength;
-}
-
-const result = minSubArrayLen(7, [2, 3, 1, 2, 4, 3]);
-if (result !== 2) throw new Error("Assertion failed: expected length 2");
-```
-
-## Python Corner
-
-```python
-def minSubArrayLen(target: int, nums: list[int]) -> int:
-    left = 0
-    current_sum = 0
-    min_length = float('inf')
-
-    for right in range(len(nums)):
-        current_sum += nums[right]
-        while current_sum >= target:
-            min_length = min(min_length, right - left + 1)
-            current_sum -= nums[left]
-            left += 1
-
-    return 0 if min_length == float('inf') else min_length
-
-result = minSubArrayLen(7, [2, 3, 1, 2, 4, 3])
-assert result == 2, "Assertion failed: expected length 2"
-```
-
 ## Takeaway
 
 掌握 Contraction Phase 的關鍵在於：當視窗滿足條件時，使用內部迴圈推進左指標來收縮範圍，並在每次收縮時安全地更新全域最優解。

@@ -65,51 +65,6 @@ res = optimize_parity([3, 1, 2, 4])
 assert res[0] % 2 == 0, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function sortArrayByParity(nums: number[]): number[] {
-    let left = 0;
-    let right = nums.length - 1;
-    while (left < right) {
-        if (nums[left] % 2 !== 0 && nums[right] % 2 === 0) {
-            [nums[left], nums[right]] = [nums[right], nums[left]];
-            left++;
-            right--;
-        } else {
-            if (nums[left] % 2 === 0) left++;
-            if (nums[right] % 2 !== 0) right--;
-        }
-    }
-    return nums;
-}
-const result = sortArrayByParity([3, 1, 2, 4]);
-if (result[0] % 2 !== 0 && result[result.length - 1] % 2 !== 0) {
-    throw new Error("assertion failed");
-}
-```
-
-## Python Corner
-
-```python
-def sortArrayByParity(nums: list[int]) -> list[int]:
-    left, right = 0, len(nums) - 1
-    while left < right:
-        if nums[left] % 2 != 0 and nums[right] % 2 == 0:
-            nums[left], nums[right] = nums[right], nums[left]
-            left += 1
-            right -= 1
-        else:
-            if nums[left] % 2 == 0:
-                left += 1
-            if nums[right] % 2 != 0:
-                right -= 1
-    return nums
-
-result = sortArrayByParity([3, 1, 2, 4])
-assert result[0] % 2 == 0, "assertion failed"
-```
-
 ## Takeaway
 
 掌握相向雙指標分割技巧，透過左右指標交會與元素交換，在原地達成 O(n) 時間與 O(1) 空間效率。

@@ -70,37 +70,6 @@ ans = sliding_window_tip("abc", 3)
 assert ans == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function checkFixedWindow(s: string, k: number): boolean {
-  if (s.length < k) return false;
-  const count = new Array(26).fill(0);
-  const charCodeA = 'a'.charCodeAt(0);
-  for (let i = 0; i < k; i++) {
-    count[s.charCodeAt(i) - charCodeA]++;
-  }
-  return count.some(c => c > 0);
-}
-const result = checkFixedWindow("abc", 2);
-if (!result) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def check_fixed_window(s: str, k: int) -> bool:
-    if len(s) < k:
-        return False
-    count = [0] * 26
-    for i in range(k):
-        count[ord(s[i]) - ord('a')] += 1
-    return any(c > 0 for c in count)
-
-result = check_fixed_window("abc", 2)
-assert result == True, "assertion failed"
-```
-
 ## Takeaway
 
 固定大小滑動視窗透過維持 O(1) 的狀態轉移，將字串區間搜尋優化至線性時間，是處理排列與子字串問題的利器。

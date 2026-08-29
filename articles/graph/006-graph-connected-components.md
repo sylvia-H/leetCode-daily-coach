@@ -55,61 +55,6 @@ def helper(n: int) -> None:
 helper(3)
 ```
 
-## TypeScript Corner
-
-```typescript
-function countComponents(n: number, edges: number[][]): number {
-  const adj: number[][] = Array.from({ length: n }, () => []);
-  for (const [u, v] of edges) {
-    adj[u].push(v);
-    adj[v].push(u);
-  }
-  const visited = new Set<number>();
-  let count = 0;
-  function dfs(node: number): void {
-    visited.add(node);
-    for (const neighbor of adj[node]) {
-      if (!visited.has(neighbor)) {
-        dfs(neighbor);
-      }
-    }
-  }
-  for (let i = 0; i < n; i++) {
-    if (!visited.has(i)) {
-      count++;
-      dfs(i);
-    }
-  }
-  if (count !== 2) throw new Error("assertion failed");
-  return count;
-}
-countComponents(5, [[0, 1], [1, 2], [3, 4]]);
-```
-
-## Python Corner
-
-```python
-def countComponents(n: int, edges: list[list[int]]) -> int:
-    adj = [[] for _ in range(n)]
-    for u, v in edges:
-        adj[u].append(v)
-        adj[v].append(u)
-    visited = set()
-    count = 0
-    def dfs(node: int):
-        visited.add(node)
-        for neighbor in adj[node]:
-            if neighbor not in visited:
-                dfs(neighbor)
-    for i in range(n):
-        if i not in visited:
-            count += 1
-            dfs(i)
-    assert count == 2, "assertion failed"
-    return count
-countComponents(5, [[0, 1], [1, 2], [3, 4]])
-```
-
 ## Takeaway
 
 掌握以全域迴圈配合 visited 狀態啟動 DFS/BFS 的標準樣板，即可輕鬆解決所有無向圖連通分量計算問題。

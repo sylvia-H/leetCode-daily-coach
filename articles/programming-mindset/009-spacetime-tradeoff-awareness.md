@@ -62,36 +62,6 @@ my_set = fast_lookup(["a", "b"])
 assert "target" in my_set, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function spaceTimeTradeoffDemo(nums: number[]): Map<number, number> {
-  const frequencyMap = new Map<number, number>();
-  for (const num of nums) {
-    frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
-  }
-  if (frequencyMap.size === 0) throw new Error("Empty map");
-  return frequencyMap;
-}
-
-const result = spaceTimeTradeoffDemo([1, 2, 2, 3]);
-if (result.get(2) !== 2) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def space_time_tradeoff_demo(nums: list[int]) -> dict[int, int]:
-    frequency_map: dict[int, int] = {}
-    for num in nums:
-        frequency_map[num] = frequency_map.get(num, 0) + 1
-    assert len(frequency_map) > 0, "Empty map"
-    return frequency_map
-
-result = space_time_tradeoff_demo([1, 2, 2, 3])
-assert result.get(2) == 2, "Assertion failed"
-```
-
 ## Takeaway
 
 時間與空間是兩項互相博弈的資源。善用額外記憶體換取運算速度是常見的優化策略，但切記基於實際瓶頸進行評估，避免過度設計。

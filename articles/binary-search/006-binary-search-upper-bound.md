@@ -63,43 +63,6 @@ res = verify_upper_bound([1, 2, 2, 4], 2)
 assert res == 3, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function upperBound(nums: number[], target: number): number {
-  let left = 0;
-  let right = nums.length;
-  while (left < right) {
-    const mid = Math.floor((left + right) / 2);
-    if (nums[mid] <= target) {
-      left = mid + 1;
-    } else {
-      right = mid;
-    }
-  }
-  return left;
-}
-const result = upperBound([1, 2, 2, 4, 5], 2);
-if (result !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def upper_bound(nums: list[int], target: int) -> int:
-    left, right = 0, len(nums)
-    while left < right:
-        mid = (left + right) // 2
-        if nums[mid] <= target:
-            left = mid + 1
-        else:
-            right = mid
-    return left
-
-result = upper_bound([1, 2, 2, 4, 5], 2)
-assert result == 3, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Upper Bound 的關鍵在於：小於等於時向右逼近，大於時保留並向左收縮，迴圈結束時 left 即為解答。

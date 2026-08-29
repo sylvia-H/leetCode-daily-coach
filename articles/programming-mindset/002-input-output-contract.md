@@ -59,61 +59,6 @@ def connect(retry: int) -> bool:
 assert connect(2) is True
 ```
 
-## TypeScript Corner
-
-```typescript
-interface InputContract {
-  id: number;
-  payload: string;
-}
-
-interface OutputContract {
-  success: boolean;
-  processedData: string;
-}
-
-function processContract(input: InputContract): OutputContract {
-  if (!input || typeof input.id !== 'number') {
-    throw new Error('Invalid input contract');
-  }
-  return {
-    success: true,
-    processedData: input.payload.trim()
-  };
-}
-
-const result = processContract({ id: 1, payload: '  test  ' });
-if (result.success !== true || result.processedData !== 'test') {
-  throw new Error('Assertion failed');
-}
-```
-
-## Python Corner
-
-```python
-from typing import TypedDict
-
-class InputContract(TypedDict):
-    id: int
-    payload: str
-
-class OutputContract(TypedDict):
-    success: bool
-    processedData: str
-
-def process_contract(input_data: InputContract) -> OutputContract:
-    if not isinstance(input_data, dict) or 'id' not in input_data:
-        raise ValueError('Invalid input contract')
-    return {
-        'success': True,
-        'processedData': input_data['payload'].strip()
-    }
-
-result = process_contract({'id': 1, 'payload': '  test  '})
-assert result['success'] is True
-assert result['processedData'] == 'test'
-```
-
 ## Takeaway
 
 先定合約再寫實作，邊界條件嚴格把關，型別系統助你安心。

@@ -67,47 +67,6 @@ res = rob_optimized([2, 7, 9, 3, 1])
 assert res == 12, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function rob(nums: number[]): number {
-  if (nums.length === 0) return 0;
-  if (nums.length === 1) return nums[0];
-  let prev2 = 0;
-  let prev1 = nums[0];
-  for (let i = 1; i < nums.length; i++) {
-    const current = Math.max(prev1, prev2 + nums[i]);
-    prev2 = prev1;
-    prev1 = current;
-  }
-  if (prev1 < 0) throw new Error("assertion failed");
-  return prev1;
-}
-const result = rob([1, 2, 3, 1]);
-if (result !== 4) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def rob(nums: list[int]) -> int:
-    if not nums:
-        return 0
-    if len(nums) == 1:
-        return nums[0]
-    prev2 = 0
-    prev1 = nums[0]
-    for i in range(1, len(nums)):
-        current = max(prev1, prev2 + nums[i])
-        prev2 = prev1
-        prev1 = current
-    assert prev1 >= 0, "assertion failed"
-    return prev1
-
-result = rob([1, 2, 3, 1])
-assert result == 4, "assertion failed"
-```
-
 ## Takeaway
 
 掌握動態規劃的狀態轉移方程式與空間優化技巧，透過記錄前兩步的數值即可在 O(n) 時間與 O(1) 空間內解決相鄰約束的最佳化問題。

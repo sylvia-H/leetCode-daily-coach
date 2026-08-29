@@ -58,42 +58,6 @@ status_check = process_user("ACTIVE", 20)
 assert status_check is True, "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function evaluateScore(score: number): string {
-  if (score < 0 || score > 100) {
-    throw new Error("Invalid score range");
-  }
-  if (score >= 90) {
-    return "A";
-  } else if (score >= 80) {
-    return "B";
-  } else {
-    return "C";
-  }
-}
-const result = evaluateScore(85);
-if (result !== "B") throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def evaluate_score(score: int) -> str:
-    if score < 0 or score > 100:
-        raise ValueError("Invalid score range")
-    if score >= 90:
-        return "A"
-    elif score >= 80:
-        return "B"
-    else:
-        return "C"
-
-result = evaluate_score(85)
-assert result == "B", "Assertion failed"
-```
-
 ## Takeaway
 
 條件分支必須互相排斥並涵蓋所有可能，優先處理邊界與特例以維持邏輯清晰。

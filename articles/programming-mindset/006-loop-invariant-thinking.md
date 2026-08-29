@@ -71,39 +71,6 @@ def find_max(nums: list[int]) -> int:
 find_max([1, 5, 3])
 ```
 
-## TypeScript Corner
-
-```typescript
-function sumRange(nums: number[]): number {
-  let sum = 0;
-  let i = 0;
-  // Loop Invariant: 於每次迭代開始時，sum 等於 nums[0...i-1] 的總和
-  while (i < nums.length) {
-    sum += nums[i];
-    i++;
-  }
-  if (sum !== 6) throw new Error("assertion failed");
-  return sum;
-}
-const result = sumRange([1, 2, 3]);
-```
-
-## Python Corner
-
-```python
-def sum_range(nums: list[int]) -> int:
-    total = 0
-    i = 0
-    # Loop Invariant: 於每次迭代開始時，total 等於 nums[0...i-1] 的總和
-    while i < len(nums):
-        total += nums[i]
-        i += 1
-    assert total == 6, "assertion failed"
-    return total
-
-result = sum_range([1, 2, 3])
-```
-
 ## Takeaway
 
 迴圈不變量是程式碼正確性的保證。先定義狀態，再設計迴圈，讓每一次迭代都忠實維持不變性質。

@@ -65,46 +65,6 @@ def check_complement(nums: list[int], target: int) -> bool:
 assert check_complement([1, 2, 3, 4], 7) is True, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function twoSum(nums: number[], target: number): number[] {
-  const map = new Map<number, number>();
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i];
-    if (map.has(complement)) {
-      const foundIndex = map.get(complement);
-      if (foundIndex !== undefined) {
-        if (foundIndex === i) throw new Error("self matching detected");
-        return [foundIndex, i];
-      }
-    }
-    map.set(nums[i], i);
-  }
-  throw new Error("no solution found");
-}
-const result = twoSum([2, 7, 11, 15], 9);
-if (result[0] !== 0 || result[1] !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def two_sum(nums: list[int], target: int) -> list[int]:
-    seen: dict[int, int] = {}
-    for i, num in enumerate(nums):
-        complement = target - num
-        if complement in seen:
-            if seen[complement] == i:
-                raise AssertionError("self matching detected")
-            return [seen[complement], i]
-        seen[num] = i
-    raise AssertionError("no solution found")
-
-result = two_sum([2, 7, 11, 15], 9)
-assert result == [0, 1], "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Complement Hash 的『邊遍歷邊查詢』原則，用 O(n) 時間與空間換取高效能，杜絕自我配對。

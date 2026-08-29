@@ -69,64 +69,6 @@ new_head = insert_head(None, 42)
 assert new_head.val == 42, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class ListNode {
-    val: number;
-    next: ListNode | null;
-    constructor(val: number, next: ListNode | null = null) {
-        this.val = val;
-        this.next = next;
-    }
-}
-
-class MyLinkedList {
-    private head: ListNode | null = null;
-    private tail: ListNode | null = null;
-    private size: number = 0;
-
-    addAtHead(val: number): void {
-        const newNode = new ListNode(val, this.head);
-        this.head = newNode;
-        if (!this.tail) {
-            this.tail = newNode;
-        }
-        this.size++;
-    }
-}
-
-const list = new MyLinkedList();
-list.addAtHead(1);
-if (list['head']?.val !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode' = None):
-        self.val = val
-        self.next = next
-
-class MyLinkedList:
-    def __init__(self):
-        self.head = None
-        self.tail = None
-        self.size = 0
-
-    def add_at_head(self, val: int) -> None:
-        new_node = ListNode(val, self.head)
-        self.head = new_node
-        if not self.tail:
-            self.tail = new_node
-        self.size += 1
-
-my_list = MyLinkedList()
-my_list.add_at_head(1)
-assert my_list.head.val == 1, "assertion failed"
-```
-
 ## Takeaway
 
 Linked List 插入的核心在於先串接新節點的 next，再更新指標，並永遠要處理空串列的邊界條件。

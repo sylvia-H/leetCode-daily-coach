@@ -91,59 +91,6 @@ node.right = TreeNode(3)
 assert get_inorder(node) == [1, 2, 3], "Assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-function inorderTraversal(root: TreeNode | null): number[] {
-  const result: number[] = [];
-  function traverse(node: TreeNode | null): void {
-    if (!node) return;
-    traverse(node.left);
-    result.push(node.val);
-    traverse(node.right);
-  }
-  traverse(root);
-  return result;
-}
-const root = new TreeNode(1, null, new TreeNode(2, new TreeNode(3), null));
-const output = inorderTraversal(root);
-if (output.toString() !== "1,3,2") throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def inorderTraversal(root: TreeNode | None) -> list[int]:
-    result: list[int] = []
-    def traverse(node: TreeNode | None) -> None:
-        if not node:
-            return
-        traverse(node.left)
-        result.append(node.val)
-        traverse(node.right)
-    traverse(root)
-    return result
-
-root = TreeNode(1, None, TreeNode(2, TreeNode(3), None))
-assert inorderTraversal(root) == [1, 3, 2], "Assertion failed"
-```
-
 ## Takeaway
 
 牢記 Inorder Traversal 的左-根-右順序，對二元搜尋樹而言就是取得排序序列的捷徑。

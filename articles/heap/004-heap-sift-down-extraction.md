@@ -67,54 +67,6 @@ def test_heap() -> None:
 test_heap()
 ```
 
-## TypeScript Corner
-
-```typescript
-function siftDown(heap: number[], index: number, length: number): void {
-    let current = index;
-    while (2 * current + 1 < length) {
-        let leftChild = 2 * current + 1;
-        let rightChild = 2 * current + 2;
-        let extreme = current;
-        if (heap[leftChild] < heap[extreme]) {
-            extreme = leftChild;
-        }
-        if (rightChild < length && heap[rightChild] < heap[extreme]) {
-            extreme = rightChild;
-        }
-        if (extreme === current) break;
-        [heap[current], heap[extreme]] = [heap[extreme], heap[current]];
-        current = extreme;
-    }
-}
-const sampleHeap = [2, 3, 5];
-siftDown(sampleHeap, 0, sampleHeap.length);
-if (sampleHeap[0] !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def sift_down(heap: list[int], index: int, length: int) -> None:
-    current = index
-    while 2 * current + 1 < length:
-        left_child = 2 * current + 1
-        right_child = 2 * current + 2
-        extreme = current
-        if heap[left_child] < heap[extreme]:
-            extreme = left_child
-        if right_child < length and heap[right_child] < heap[extreme]:
-            extreme = right_child
-        if extreme == current:
-            break
-        heap[current], heap[extreme] = heap[extreme], heap[current]
-        current = extreme
-
-sample_heap = [2, 3, 5]
-sift_down(sample_heap, 0, len(sample_heap))
-assert sample_heap[0] == 2, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Sift-Down 操作與邊界檢查，是解決堆積萃取題目的關鍵。

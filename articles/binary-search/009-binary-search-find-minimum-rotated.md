@@ -69,43 +69,6 @@ val = find_min_safe([4, 5, 6, 7, 0, 1, 2])
 assert val == 0, "Python tip assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function findMin(nums: number[]): number {
-  let left = 0;
-  let right = nums.length - 1;
-  while (left < right) {
-    const mid = Math.floor(left + (right - left) / 2);
-    if (nums[mid] > nums[right]) {
-      left = mid + 1;
-    } else {
-      right = mid;
-    }
-  }
-  return nums[left];
-}
-const result = findMin([3, 4, 5, 1, 2]);
-if (result !== 1) throw new Error("Assertion failed: expected minimum to be 1");
-```
-
-## Python Corner
-
-```python
-def find_min(nums: list[int]) -> int:
-    left, right = 0, len(nums) - 1
-    while left < right:
-        mid = left + (right - left) // 2
-        if nums[mid] > nums[right]:
-            left = mid + 1
-        else:
-            right = mid
-    return nums[left]
-
-result = find_min([3, 4, 5, 1, 2])
-assert result == 1, "Assertion failed: expected minimum to be 1"
-```
-
 ## Takeaway
 
 掌握 Binary Search 應用於旋轉陣列的關鍵在於『比較 mid 與 right』而非 Target，並且在 nums[mid] <= nums[right] 時必須保留 mid（即 right = mid），才能正確定位最小值。

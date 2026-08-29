@@ -63,45 +63,6 @@ def validate_graph_representation() -> None:
 validate_graph_representation()
 ```
 
-## TypeScript Corner
-
-```typescript
-interface GraphNode {
-  id: string;
-  neighbors: GraphNode[];
-}
-
-function createGraph(): GraphNode[] {
-  const nodeA: GraphNode = { id: 'A', neighbors: [] };
-  const nodeB: GraphNode = { id: 'B', neighbors: [] };
-  nodeA.neighbors.push(nodeB);
-  nodeB.neighbors.push(nodeA);
-  return [nodeA, nodeB];
-}
-
-const graph = createGraph();
-if (graph.length !== 2) throw new Error('assertion failed');
-```
-
-## Python Corner
-
-```python
-class GraphNode:
-    def __init__(self, val: str):
-        self.val = val
-        self.neighbors: list['GraphNode'] = []
-
-def create_graph() -> list[GraphNode]:
-    node_a = GraphNode('A')
-    node_b = GraphNode('B')
-    node_a.neighbors.append(node_b)
-    node_b.neighbors.append(node_a)
-    return [node_a, node_b]
-
-graph = create_graph()
-assert len(graph) == 2, 'assertion failed'
-```
-
 ## Takeaway
 
 Graph 用於模型化多對多關係，核心在於正確識別 Vertices 與 Edges，並區分有向與無向圖。

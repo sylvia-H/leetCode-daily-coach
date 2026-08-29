@@ -53,47 +53,6 @@ mid = safe_midpoint(0, 10)
 assert mid == 5, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function binarySearch(nums: number[], target: number): number {
-  let left = 0;
-  let right = nums.length - 1;
-  while (left <= right) {
-    const mid = Math.floor(left + (right - left) / 2);
-    if (nums[mid] === target) {
-      return mid;
-    } else if (nums[mid] < target) {
-      left = mid + 1;
-    } else {
-      right = mid - 1;
-    }
-  }
-  return -1;
-}
-const result = binarySearch([1, 3, 5, 7, 9], 5);
-if (result !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def binary_search(nums: list[int], target: int) -> int:
-    left, right = 0, len(nums) - 1
-    while left <= right:
-        mid = left + (right - left) // 2
-        if nums[mid] == target:
-            return mid
-        elif nums[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return -1
-
-result = binary_search([1, 3, 5, 7, 9], 5)
-assert result == 2, "assertion failed"
-```
-
 ## Takeaway
 
 Binary Search 的核心在於利用排序特性每次排除一半無條件解，確保時間複雜度達到 O(log n)。

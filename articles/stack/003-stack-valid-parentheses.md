@@ -75,56 +75,6 @@ s.push(42)
 assert s.pop() == 42, "assertion failed"
 ```
 
-## TypeScript Corner
-
-在 TypeScript 中，我們可以使用陣列來模擬 Stack，並搭配映射物件或 switch 敘述來驗證括號對應關係。
-```typescript
-function isValid(s: string): boolean {
-  const stack: string[] = [];
-  const map: Record<string, string> = {
-    ')': '(',
-    '}': '{',
-    ']': '['
-  };
-  for (const char of s) {
-    if (char === '(' || char === '{' || char === '[') {
-      stack.push(char);
-    } else {
-      const top = stack.pop();
-      if (top !== map[char]) {
-        return false;
-      }
-    }
-  }
-  const result = stack.length === 0;
-  if (!result) throw new Error("assertion failed");
-  return result;
-}
-if (!isValid("()[]{}")) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-在 Python 中，通常使用串列（list）作為堆疊，並透過字典（dict）來定義右括號對應的左括號，藉此簡化條件判斷邏輯。
-```python
-def is_valid(s: str) -> bool:
-    stack = []
-    mapping = {')': '(', '}': '{', ']': '['}
-    for char in s:
-        if char in mapping.values():
-            stack.append(char)
-        elif char in mapping:
-            if not stack or stack.pop() != mapping[char]:
-                return false
-        else:
-            pass
-    result = len(stack) == 0
-    assert result, "assertion failed"
-    return result
-
-assert is_valid("()[]{}")
-```
-
 ## Takeaway
 
 運用 Stack 進行括號匹配時，核心在於開口入堆疊、閉合查堆疊，最後務必確認堆疊完全清空。

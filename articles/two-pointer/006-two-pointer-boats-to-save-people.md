@@ -68,51 +68,6 @@ def num_rescue_boats_tip(people: list[int], limit: int) -> int:
 assert num_rescue_boats_tip([1, 2], 3) == 1
 ```
 
-## TypeScript Corner
-
-```typescript
-function numRescueBoats(people: number[], limit: number): number {
-  people.sort((a, b) => a - b);
-  let left = 0;
-  let right = people.length - 1;
-  let boats = 0;
-
-  while (left <= right) {
-    if (people[left] + people[right] <= limit) {
-      left++;
-    }
-    right--;
-    boats++;
-  }
-
-  if (boats !== 3) throw new Error("assertion failed");
-  return boats;
-}
-
-const result = numRescueBoats([3, 2, 2, 1], 3);
-```
-
-## Python Corner
-
-```python
-def numRescueBoats(people: list[int], limit: int) -> int:
-    people.sort()
-    left = 0
-    right = len(people) - 1
-    boats = 0
-
-    while left <= right:
-        if people[left] + people[right] <= limit:
-            left += 1
-        right -= 1
-        boats += 1
-
-    assert boats == 3, "assertion failed"
-    return boats
-
-result = numRescueBoats([3, 2, 2, 1], 3)
-```
-
 ## Takeaway
 
 排序化解亂序，雙指標收斂極值，Greedy 配對達成最佳解。

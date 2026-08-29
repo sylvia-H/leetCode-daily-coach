@@ -78,52 +78,6 @@ def count_subarrays(nums: list[int], k: int) -> int:
 assert count_subarrays([1, -1, 0], 0) == 3, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function subarraySum(nums: number[], k: number): number {
-  const map = new Map<number, number>();
-  map.set(0, 1);
-  let currentSum = 0;
-  let count = 0;
-  for (const num of nums) {
-    currentSum += num;
-    const diff = currentSum - k;
-    if (map.has(diff)) {
-      count += map.get(diff)!;
-    }
-    map.set(currentSum, (map.get(currentSum) || 0) + 1);
-  }
-  return count;
-}
-const result = subarraySum([1, 1, 1], 2);
-if (result !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import defaultdict
-
-
-def subarray_sum(nums: list[int], k: int) -> int:
-    prefix_counts = defaultdict(int)
-    prefix_counts[0] = 1
-    current_sum = 0
-    count = 0
-    for num in nums:
-        current_sum += num
-        diff = current_sum - k
-        if diff in prefix_counts:
-            count += prefix_counts[diff]
-        prefix_counts[current_sum] += 1
-    return count
-
-
-result = subarray_sum([1, 1, 1], 2)
-assert result == 2, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Prefix Sum 結合 Hash Map 的數學轉換公式 prefixSum[i] = prefixSum[j] - target，並牢記初始化 {0: 1}。

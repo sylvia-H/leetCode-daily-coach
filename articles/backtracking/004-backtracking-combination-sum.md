@@ -85,63 +85,6 @@ def optimized_sum(candidates: list[int], target: int) -> list[list[int]]:
 assert len(optimized_sum([2], 1)) == 0, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function combinationSum(candidates: number[], target: number): number[][] {
-  const result: number[][] = [];
-  
-  function backtrack(start: number, currentTarget: number, path: number[]) {
-    if (currentTarget === 0) {
-      result.push([...path]);
-      return;
-    }
-    if (currentTarget < 0) {
-      return;
-    }
-    
-    for (let i = start; i < candidates.length; i++) {
-      path.push(candidates[i]);
-      backtrack(i, currentTarget - candidates[i], path);
-      path.pop();
-    }
-  }
-  
-  candidates.sort((a, b) => a - b);
-  backtrack(0, target, []);
-  return result;
-}
-
-const res = combinationSum([2, 3, 6, 7], 7);
-if (res.length !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def combinationSum(candidates: list[int], target: int) -> list[list[int]]:
-    result = []
-    
-    def backtrack(start: int, current_target: int, path: list[int]):
-        if current_target == 0:
-            result.append(list(path))
-            return
-        if current_target < 0:
-            return
-            
-        for i in range(start, len(candidates)):
-            path.append(candidates[i])
-            backtrack(i, current_target - candidates[i], path)
-            path.pop()
-            
-    candidates.sort()
-    backtrack(0, target, [])
-    return result
-
-res = combinationSum([2, 3, 6, 7], 7)
-assert len(res) == 2, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Backtracking 時的索引傳遞（i 而非 i + 1）與 target 扣減剪枝，是解決元素無限重複選取組合題目的核心關鍵。

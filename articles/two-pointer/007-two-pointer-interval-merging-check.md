@@ -54,50 +54,6 @@ intervals.sort(key=lambda x: (x[0], x[1]))
 assert intervals[0] == [1, 4], "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function merge(intervals: number[][]): number[][] {
-  if (intervals.length === 0) return [];
-  intervals.sort((a, b) => a[0] - b[0]);
-  const merged: number[][] = [intervals[0]];
-  for (let i = 1; i < intervals.length; i++) {
-    const currentInterval = intervals[i];
-    const lastMerged = merged[merged.length - 1];
-    if (currentInterval[0] <= lastMerged[1]) {
-      lastMerged[1] = Math.max(lastMerged[1], currentInterval[1]);
-    } else {
-      merged.push(currentInterval);
-    }
-  }
-  return merged;
-}
-const output = merge([[1, 3], [2, 6], [8, 10], [15, 18]]);
-if (output.length !== 3) throw new Error("assertion failed");
-if (output[0][0] !== 1 || output[0][1] !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def merge(intervals: list[list[int]]) -> list[list[int]]:
-    if not intervals:
-        return []
-    intervals.sort(key=lambda x: x[0])
-    merged = [intervals[0]]
-    for current in intervals[1:]:
-        last_merged = merged[-1]
-        if current[0] <= last_merged[1]:
-            last_merged[1] = max(last_merged[1], current[1])
-        else:
-            merged.append(current)
-    return merged
-
-output = merge([[1, 3], [2, 6], [8, 10], [15, 18]])
-assert len(output) == 3, "assertion failed"
-assert output[0] == [1, 6], "assertion failed"
-```
-
 ## Takeaway
 
 區間重疊問題的關鍵在於排序起點與維護末端指標，善用此 Pattern 可將複雜度降至 O(n log n)。

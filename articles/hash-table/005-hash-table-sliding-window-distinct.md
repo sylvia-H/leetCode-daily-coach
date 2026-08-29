@@ -68,46 +68,6 @@ def contains_nearby_duplicate(nums: list[int], k: int) -> bool:
 assert contains_nearby_duplicate([1, 2, 3, 1], 3) == True, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function lengthOfLongestSubstring(s: string): number {
-  const charSet = new Set<string>();
-  let left = 0;
-  let maxLength = 0;
-  for (let right = 0; right < s.length; right++) {
-    while (charSet.has(s[right])) {
-      charSet.delete(s[left]);
-      left++;
-    }
-    charSet.add(s[right]);
-    maxLength = Math.max(maxLength, right - left + 1);
-  }
-  if (maxLength !== 3) throw new Error("assertion failed");
-  return maxLength;
-}
-lengthOfLongestSubstring("abcabcbb");
-```
-
-## Python Corner
-
-```python
-def length_of_longest_substring(s: str) -> int:
-    char_set = set()
-    left = 0
-    max_length = 0
-    for right in range(len(s)):
-        while s[right] in char_set:
-            char_set.remove(s[left])
-            left += 1
-        char_set.add(s[right])
-        max_length = max(max_length, right - left + 1)
-    assert max_length == 3, "assertion failed"
-    return max_length
-
-length_of_longest_substring("abcabcbb")
-```
-
 ## Takeaway
 
 運用 Sliding Window 搭配 Hash Set 時，務必確保擴展時加入、收縮時移除，才能維持正確的視窗狀態。

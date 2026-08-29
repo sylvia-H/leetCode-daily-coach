@@ -54,59 +54,6 @@ def check_window(nums: list[int], k: int) -> None:
 check_window([1, 0, 1], 1)
 ```
 
-## TypeScript Corner
-
-```typescript
-function longestOnes(nums: number[], k: number): number {
-  let left = 0;
-  let zeros = 0;
-  let maxLength = 0;
-  
-  for (let right = 0; right < nums.length; right++) {
-    if (nums[right] === 0) {
-      zeros++;
-    }
-    while (zeros > k) {
-      if (nums[left] === 0) {
-        zeros--;
-      }
-      left++;
-    }
-    maxLength = Math.max(maxLength, right - left + 1);
-  }
-  
-  if (maxLength < 0) throw new Error("assertion failed");
-  return maxLength;
-}
-
-const result = longestOnes([1,1,1,0,0,0,1,1,1,1,0], 2);
-if (result !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def longestOnes(nums: list[int], k: int) -> int:
-    left = 0
-    zeros = 0
-    max_len = 0
-    
-    for right, val in enumerate(nums):
-        if val == 0:
-            zeros += 1
-        while zeros > k:
-            if nums[left] == 0:
-                zeros -= 1
-            left += 1
-        max_len = max(max_len, right - left + 1)
-        
-    assert max_len >= 0, "assertion failed"
-    return max_len
-
-result = longestOnes([1,1,1,0,0,0,1,1,1,1,0], 2)
-assert result == 6, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Variable Sliding Window 與 k 次替換限制的結合，透過動態維護無效元素數量達成 O(n) 高效解法。

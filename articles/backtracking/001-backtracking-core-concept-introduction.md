@@ -59,37 +59,6 @@ def solve(nums: list[int]) -> list[int]:
 assert solve([1, 2]) == [1], "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function backtrack(start: number, path: number[], nums: number[], result: number[][]): void {
-  result.push([...path]);
-  for (let i = start; i < nums.length; i++) {
-    path.push(nums[i]);
-    backtrack(i + 1, path, nums, result);
-    path.pop();
-  }
-}
-const res: number[][] = [];
-backtrack(0, [], [1, 2], res);
-if (res.length !== 4) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def backtrack(start: int, path: list[int], nums: list[int], result: list[list[int]]) -> None:
-    result.append(list(path))
-    for i in range(start, len(nums)):
-        path.append(nums[i])
-        backtrack(i + 1, path, nums, result)
-        path.pop()
-
-res = []
-backtrack(0, [], [1, 2], res)
-assert len(res) == 4, "assertion failed"
-```
-
 ## Takeaway
 
 Backtracking 本質是帶有狀態還原機制的 DFS，牢記 choice-explore-unchoose 即可破解多數組合搜尋問題。

@@ -82,58 +82,6 @@ assert opt.next(100) == 1, "assertion failed"
 assert opt.next(80) == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-class StockSpanner {
-  private stack: [number, number][];
-
-  constructor() {
-    this.stack = [];
-  }
-
-  next(price: number): number {
-    let span = 1;
-    while (this.stack.length > 0 && this.stack[this.stack.length - 1][0] <= price) {
-      span += this.stack.pop()![1];
-    }
-    this.stack.push([price, span]);
-    return span;
-  }
-}
-
-const spanner = new StockSpanner();
-if (spanner.next(100) !== 1) throw new Error("assertion failed");
-if (spanner.next(80) !== 1) throw new Error("assertion failed");
-if (spanner.next(60) !== 1) throw new Error("assertion failed");
-if (spanner.next(70) !== 2) throw new Error("assertion failed");
-if (spanner.next(60) !== 1) throw new Error("assertion failed");
-if (spanner.next(75) !== 4) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class StockSpanner:
-    def __init__(self):
-        self.stack: list[tuple[int, int]] = []
-
-    def next(self, price: int) -> int:
-        span = 1
-        while self.stack and self.stack[-1][0] <= price:
-            span += self.stack.pop()[1]
-        self.stack.append((price, span))
-        return span
-
-spanner = StockSpanner()
-assert spanner.next(100) == 1, "assertion failed"
-assert spanner.next(80) == 1, "assertion failed"
-assert spanner.next(60) == 1, "assertion failed"
-assert spanner.next(70) == 2, "assertion failed"
-assert spanner.next(60) == 1, "assertion failed"
-assert spanner.next(75) == 4, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Monotonic Stack 結合 Span 累積的技巧，將歷史碎片的計數進行動態吞併，是解開線上資料流區間統計題目的關鍵。

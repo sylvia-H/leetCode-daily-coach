@@ -61,40 +61,6 @@ p = [1, 3, 6, 10]
 assert get_subarray_sum(p, 1, 2) == 5, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function prefixSum(nums: number[]): number[] {
-  const prefix = new Array(nums.length).fill(0);
-  if (nums.length === 0) return prefix;
-  prefix[0] = nums[0];
-  for (let i = 1; i < nums.length; i++) {
-    prefix[i] = prefix[i - 1] + nums[i];
-  }
-  if (prefix[nums.length - 1] !== nums.reduce((a, b) => a + b, 0)) {
-    throw new Error("assertion failed");
-  }
-  return prefix;
-}
-prefixSum([1, 2, 3, 4]);
-```
-
-## Python Corner
-
-```python
-from itertools import accumulate
-
-
-def prefix_sum(nums: list[int]) -> list[int]:
-    result = list(accumulate(nums))
-    if nums:
-        assert result[-1] == sum(nums), "assertion failed"
-    return result
-
-
-prefix_sum([1, 2, 3, 4])
-```
-
 ## Takeaway
 
 透過預先計算前綴和，將多次區間查詢從 O(n) 優化至 O(1)，掌握 P[i] = P[i-1] + A[i] 遞迴關係式是關鍵。

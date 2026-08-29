@@ -72,68 +72,6 @@ limit = check_recursion_limit()
 print(f"Current limit: {limit}")
 ```
 
-## TypeScript Corner
-
-TypeScript 在實作 Preorder Traversal 時，必須妥善處理節點可能為 null 的情況。藉由 TypeScript 的型別系統與選擇性鏈結（Optional Chaining），可以確保程式碼在型別安全的前提下安全執行。
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function preorderTraversal(root: TreeNode | null): number[] {
-  const result: number[] = [];
-  function dfs(node: TreeNode | null): void {
-    if (node === null) return;
-    result.push(node.val);
-    dfs(node.left);
-    dfs(node.right);
-  }
-  dfs(root);
-  return result;
-}
-
-const root = new TreeNode(1, null, new TreeNode(2, new TreeNode(3), null));
-const res = preorderTraversal(root);
-if (res[0] !== 1 || res[1] !== 2 || res[2] !== 3) {
-  throw new Error("Assertion failed: incorrect preorder sequence");
-}
-```
-
-## Python Corner
-
-Python 實作時通常會使用巢狀的輔助函式，並利用外層函式的變數來收集結果，或者透過預設引數傳遞累積值。注意在 Python 中若需修改整數等不可變物件，應使用容器或非區域變數。
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def preorderTraversal(root: TreeNode | None) -> list[int]:
-    result = []
-    def dfs(node: TreeNode | None) -> None:
-        if not node:
-            return
-        result.append(node.val)
-        dfs(node.left)
-        dfs(node.right)
-    dfs(root)
-    return result
-
-root = TreeNode(1, None, TreeNode(2, TreeNode(3), None))
-res = preorderTraversal(root)
-assert res == [1, 2, 3], "Assertion failed: incorrect preorder sequence"
-```
-
 ## Takeaway
 
 掌握 Preorder Traversal 的 Root-Left-Right 順序，並時刻注意 Base Case 的撰寫以避免堆疊溢位。

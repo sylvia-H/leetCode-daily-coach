@@ -65,44 +65,6 @@ assert node.val == 5, "assertion failed"
 assert node.left is None, "assertion failed"
 ```
 
-## TypeScript Corner
-
-TypeScript 的類別定義能夠透過型別系統確保指標的正確性。以下為 TypeScript 中實作 Binary Tree Node 的範例程式碼，內含斷言以驗證節點屬性：
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-const root = new TreeNode(1);
-root.left = new TreeNode(2);
-if (root.left.val !== 2) throw new Error("assertion failed");
-if (root.right !== null) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-Python 利用類別與預設引數可以簡潔地實作二元樹節點。以下為 Python 中實作 Binary Tree Node 的範例程式碼，內含斷言以驗證節點屬性：
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-root = TreeNode(1)
-root.left = TreeNode(2)
-assert root.left.val == 2, "assertion failed"
-assert root.right is None, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Binary Tree Node 的數值與左右指標結構，是通往所有樹狀演算法的必經之路。

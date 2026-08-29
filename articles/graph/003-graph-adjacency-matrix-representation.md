@@ -56,37 +56,6 @@ matrix = [[0, 1], [1, 0]]
 assert has_edge(matrix, 0, 1) is True, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function createAdjacencyMatrix(vertices: number, edges: [number, number][]): number[][] {
-  const matrix: number[][] = Array.from({ length: vertices }, () => Array(vertices).fill(0));
-  for (const [u, v] of edges) {
-    matrix[u][v] = 1;
-    matrix[v][u] = 1;
-  }
-  if (matrix[0][1] !== 1) throw new Error("assertion failed");
-  return matrix;
-}
-const mat = createAdjacencyMatrix(3, [[0, 1], [1, 2]]);
-if (mat.length !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def create_adjacency_matrix(vertices: int, edges: list[tuple[int, int]]) -> list[list[int]]:
-    matrix = [[0] * vertices for _ in range(vertices)]
-    for u, v in edges:
-        matrix[u][v] = 1
-        matrix[v][u] = 1
-    assert matrix[0][1] == 1, "assertion failed"
-    return matrix
-
-mat = create_adjacency_matrix(3, [(0, 1), (1, 2)])
-assert len(mat) == 3, "assertion failed"
-```
-
 ## Takeaway
 
 Adjacency Matrix 以 O(V^2) 空間換取 O(1) 邊查詢，專為密集圖設計。

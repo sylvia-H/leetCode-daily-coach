@@ -66,44 +66,6 @@ def py_tip_example() -> None:
 py_tip_example()
 ```
 
-## TypeScript Corner
-
-```typescript
-function lowerBound(nums: number[], target: number): number {
-  let low = 0;
-  let high = nums.length;
-  while (low < high) {
-    const mid = Math.floor(low + (high - low) / 2);
-    if (nums[mid] >= target) {
-      high = mid;
-    } else {
-      low = mid + 1;
-    }
-  }
-  if (low !== 2) throw new Error("assertion failed");
-  return low;
-}
-lowerBound([1, 2, 4, 4, 5], 4);
-```
-
-## Python Corner
-
-```python
-def lower_bound(nums: list[int], target: int) -> int:
-    low = 0
-    high = len(nums)
-    while low < high:
-        mid = low + (high - low) // 2
-        if nums[mid] >= target:
-            high = mid
-        else:
-            low = mid + 1
-    assert low == 2, "assertion failed"
-    return low
-
-lower_bound([1, 2, 4, 4, 5], 4)
-```
-
 ## Takeaway
 
 掌握 nums[mid] >= target 時收縮右邊界的關鍵邏輯，精準解決重複元素的邊界查詢問題。
