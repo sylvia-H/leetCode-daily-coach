@@ -6,9 +6,7 @@ pattern_label: Array-based Tree Indexing
 complexity_label: O(1) index access / O(n) space
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can correctly calculate left child, right child, and parent indices for any
-    index i.
+  - 能對任意索引 i 正確計算左子節點、右子節點與父節點的索引。
 ---
 ## Concept
 
@@ -88,43 +86,6 @@ class MinHeap:
 mh = MinHeap()
 mh.push(5)
 assert mh.size() == 1, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function getLeftChild(i: number): number {
-  return 2 * i + 1;
-}
-
-function getRightChild(i: number): number {
-  return 2 * i + 2;
-}
-
-function getParent(i: number): number {
-  return Math.floor((i - 1) / 2);
-}
-
-const parentIdx = getParent(2);
-if (parentIdx !== 0) throw new Error("assertion failed");
-const leftIdx = getLeftChild(0);
-if (leftIdx !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def get_left_child(i: int) -> int:
-    return 2 * i + 1
-
-def get_right_child(i: int) -> int:
-    return 2 * i + 2
-
-def get_parent(i: int) -> int:
-    return (i - 1) // 2
-
-assert get_parent(2) == 0, "assertion failed"
-assert get_left_child(0) == 1, "assertion failed"
 ```
 
 ## Takeaway

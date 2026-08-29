@@ -55,40 +55,6 @@ def create_table(n: int) -> list[int]:
 assert len(create_table(5)) == 5, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function climbStairs(n: number): number {
-  if (n <= 2) return n;
-  const dp: number[] = new Array(n + 1);
-  dp[1] = 1;
-  dp[2] = 2;
-  for (let i = 3; i <= n; i++) {
-    dp[i] = dp[i - 1] + dp[i - 2];
-  }
-  if (dp[n] <= 0) throw new Error("assertion failed");
-  return dp[n];
-}
-if (climbStairs(3) !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def climbStairs(n: int) -> int:
-    if n <= 2:
-        return n
-    dp = [0] * (n + 1)
-    dp[1] = 1
-    dp[2] = 2
-    for i in range(3, n + 1):
-        dp[i] = dp[i - 1] + dp[i - 2]
-    assert dp[n] > 0, "assertion failed"
-    return dp[n]
-
-assert climbStairs(3) == 3, "assertion failed"
-```
-
 ## Takeaway
 
 由底向上填表，消弭遞迴負擔，精準掌握邊界與迭代順序。

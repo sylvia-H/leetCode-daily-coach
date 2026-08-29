@@ -77,37 +77,6 @@ def uniquePathsWithObstacles(obstacleGrid: list[list[int]]) -> int:
 assert uniquePathsWithObstacles([[0, 0, 0], [0, 1, 0], [0, 0, 0]]) == 2
 ```
 
-## TypeScript Corner
-
-```typescript
-function uniquePaths(m: number, n: number): number {
-  const dp: number[] = new Array(n).fill(1);
-  for (let i = 1; i < m; i++) {
-    for (let j = 1; j < n; j++) {
-      dp[j] += dp[j - 1];
-    }
-  }
-  return dp[n - 1];
-}
-const result = uniquePaths(3, 7);
-if (result !== 28) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def uniquePaths(m: int, n: int) -> int:
-    dp = [1] * n
-    for _ in range(1, m):
-        for j in range(1, n):
-            dp[j] += dp[j - 1]
-    return dp[-1]
-
-
-result = uniquePaths(3, 7)
-assert result == 28, "assertion failed"
-```
-
 ## Takeaway
 
 網格路徑計數的關鍵在於狀態轉移方程式 dp[j] += dp[j-1]，並透過一維陣列優化空間，同時務必妥善初始化邊界與障礙物。

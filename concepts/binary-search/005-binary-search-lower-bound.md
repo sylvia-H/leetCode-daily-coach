@@ -12,9 +12,9 @@ prerequisite:
 next:
   - binary-search-upper-bound
 learning_goal:
-  - Find the first occurrence or first element greater than or equal to target.
+  - '找出目標值第一次出現的位置，或第一個大於等於 target 的元素。'
 exit_criteria:
-  - 'Correctly identify lower bound conditions when nums[mid] >= target.'
+  - '能在 nums[mid] >= target 時正確判斷 lower bound 的條件。'
 leetcode:
   - 34
 tags:

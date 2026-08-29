@@ -6,10 +6,8 @@ pattern_label: Linear Scan
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can write a while loop that advances current = current.next without losing
-    references
-  - Can correctly handle empty list conditions
+  - 能寫出以 current = current.next 前進且不遺失參照的 while 迴圈
+  - 能正確處理空串列的情況
 ---
 ## Concept
 
@@ -77,54 +75,6 @@ def count_nodes(head: ListNode | None) -> int:
 
 test_head = ListNode(1, ListNode(2, None))
 assert count_nodes(test_head) == 2, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-function traverseAndSum(head: ListNode | null): number {
-  let current: ListNode | null = head;
-  let sum = 0;
-  while (current !== null) {
-    sum += current.val;
-    current = current.next;
-  }
-  return sum;
-}
-const node3 = new ListNode(3, null);
-const node2 = new ListNode(2, node3);
-const node1 = new ListNode(1, node2);
-if (traverseAndSum(node1) !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def traverse_and_sum(head: ListNode | None) -> int:
-    current = head
-    total = 0
-    while current is not None:
-        total += current.val
-        current = current.next
-    return total
-
-node3 = ListNode(3, None)
-node2 = ListNode(2, node3)
-node1 = ListNode(1, node2)
-assert traverse_and_sum(node1) == 6, "assertion failed"
 ```
 
 ## Takeaway

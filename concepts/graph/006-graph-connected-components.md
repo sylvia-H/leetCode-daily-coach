@@ -13,11 +13,9 @@ prerequisite:
 next:
   - graph-detect-cycle-undirected
 learning_goal:
-  - Count and identify all connected components in an undirected graph.
+  - 計數並找出無向圖中所有的 connected components。
 exit_criteria:
-  - >-
-    Iterate through all nodes, launching DFS/BFS on unvisited nodes to count
-    components.
+  - 能走訪所有節點，對未造訪的節點啟動 DFS/BFS 以計數 components。
 leetcode:
   - 323
 tags:

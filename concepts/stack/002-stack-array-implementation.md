@@ -17,12 +17,10 @@ next:
   - stack-remove-adjacent-duplicates
   - stack-daily-temperatures
 learning_goal:
-  - >-
-    Implement a basic stack using dynamic arrays and analyze its time
-    complexity.
+  - 使用動態陣列實作基本的 stack，並分析其時間複雜度。
 exit_criteria:
-  - 'Can implement push, pop, top, and isEmpty operations using an array.'
-  - Understand why push/pop at the end of an array is O(1) amortized.
+  - 能用陣列實作 push、pop、top 與 isEmpty 操作。
+  - 理解為何在陣列尾端進行 push/pop 是攤銷 O(1)。
 leetcode:
   - 155
 tags:

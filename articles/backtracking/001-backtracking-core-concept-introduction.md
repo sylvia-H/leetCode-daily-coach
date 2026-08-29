@@ -6,8 +6,8 @@ pattern_label: Decision Tree Exploration
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can explain the choice-explore-unchoose pattern.
-  - Can trace how states are modified and restored.
+  - 能說明「選擇—探索—撤銷選擇」（choose–explore–unchoose）的模式。
+  - 能追蹤狀態如何被修改與還原。
 ---
 ## Concept
 
@@ -57,37 +57,6 @@ def solve(nums: list[int]) -> list[int]:
     return [val]
 
 assert solve([1, 2]) == [1], "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function backtrack(start: number, path: number[], nums: number[], result: number[][]): void {
-  result.push([...path]);
-  for (let i = start; i < nums.length; i++) {
-    path.push(nums[i]);
-    backtrack(i + 1, path, nums, result);
-    path.pop();
-  }
-}
-const res: number[][] = [];
-backtrack(0, [], [1, 2], res);
-if (res.length !== 4) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def backtrack(start: int, path: list[int], nums: list[int], result: list[list[int]]) -> None:
-    result.append(list(path))
-    for i in range(start, len(nums)):
-        path.append(nums[i])
-        backtrack(i + 1, path, nums, result)
-        path.pop()
-
-res = []
-backtrack(0, [], [1, 2], res)
-assert len(res) == 4, "assertion failed"
 ```
 
 ## Takeaway

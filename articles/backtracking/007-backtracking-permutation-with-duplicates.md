@@ -6,10 +6,8 @@ pattern_label: Visited-Aware Duplicate Skipping
 complexity_label: O(n!) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can apply both visited tracking and conditional duplicate skipping for
-    permutations.
-  - Can prevent duplicate permutation branches.
+  - 能對排列同時套用 visited 追蹤與條件式的重複跳過。
+  - 能防止產生重複的排列分支。
 ---
 ## Concept
 
@@ -56,67 +54,6 @@ def solve_python(nums: list[int]) -> int:
     return len(nums)
 
 assert solve_python([1, 1, 2]) == 3, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function permuteUnique(nums: number[]): number[][] {
-  const result: number[][] = [];
-  nums.sort((a, b) => a - b);
-  const visited = new Array(nums.length).fill(false);
-  
-  function backtrack(path: number[]) {
-    if (path.length === nums.length) {
-      result.push([...path]);
-      return;
-    }
-    for (let i = 0; i < nums.length; i++) {
-      if (visited[i]) continue;
-      if (i > 0 && nums[i] === nums[i - 1] && !visited[i - 1]) continue;
-      visited[i] = true;
-      path.push(nums[i]);
-      backtrack(path);
-      path.pop();
-      visited[i] = false;
-    }
-  }
-  backtrack([]);
-  return result;
-}
-
-const output = permuteUnique([1, 1, 2]);
-if (output.length !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def permute_unique(nums: list[int]) -> list[list[int]]:
-    result = []
-    nums.sort()
-    visited = [False] * len(nums)
-    
-    def backtrack(path: list[int]):
-        if len(path) == len(nums):
-            result.append(path[:])
-            return
-        for i in range(len(nums)):
-            if visited[i]:
-                continue
-            if i > 0 and nums[i] == nums[i - 1] and not visited[i - 1]:
-                continue
-            visited[i] = True
-            path.append(nums[i])
-            backtrack(path)
-            path.pop()
-            visited[i] = False
-            
-    backtrack([])
-    return result
-
-output = permute_unique([1, 1, 2])
-assert len(output) == 3, "assertion failed"
 ```
 
 ## Takeaway

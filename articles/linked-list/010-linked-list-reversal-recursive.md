@@ -6,10 +6,8 @@ pattern_label: Recursion
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can write a recursive function that reverses the rest of the list and fixes
-    pointer directions on unwinding
-  - Can identify base cases for recursion
+  - 能寫出遞迴函式，先反轉串列的其餘部分，並在回溯（unwinding）時修正指標方向
+  - 能辨識遞迴的 base case
 ---
 ## Concept
 
@@ -79,62 +77,6 @@ def reverseList(head: ListNode | None) -> ListNode | None:
 test_node = ListNode(1, ListNode(2, None))
 res = reverseList(test_node)
 assert res.val == 2, "Python tip assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-
-function reverseList(head: ListNode | null): ListNode | null {
-  if (!head || !head.next) {
-    return head;
-  }
-  const newHead = reverseList(head.next);
-  head.next.next = head;
-  head.next = null;
-  return newHead;
-}
-
-const node3 = new ListNode(3, null);
-const node2 = new ListNode(2, node3);
-const node1 = new ListNode(1, node2);
-const reversed = reverseList(node1);
-if (reversed?.val !== 3) throw new Error("assertion failed");
-if (reversed?.next?.val !== 2) throw new Error("assertion failed");
-if (reversed?.next?.next?.val !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def reverseList(head: ListNode | None) -> ListNode | None:
-    if not head or not head.next:
-        return head
-    new_head = reverseList(head.next)
-    head.next.next = head
-    head.next = None
-    return new_head
-
-node3 = ListNode(3, None)
-node2 = ListNode(2, node3)
-node1 = ListNode(1, node2)
-reversed_head = reverseList(node1)
-assert reversed_head.val == 3, "assertion failed"
-assert reversed_head.next.val == 2, "assertion failed"
-assert reversed_head.next.next.val == 1, "assertion failed"
 ```
 
 ## Takeaway

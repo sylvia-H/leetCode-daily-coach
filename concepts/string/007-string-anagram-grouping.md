@@ -14,13 +14,9 @@ prerequisite:
 next:
   - string-palindrome-expansion
 learning_goal:
-  - >-
-    Group strings that share identical character compositions using canonical
-    keys.
+  - '使用 canonical key 將字元組成相同的字串分組。'
 exit_criteria:
-  - >-
-    Can use sorted string or character counts as hash map keys to group
-    anagrams.
+  - '能使用排序後的字串或字元計數作為 hash map 的 key 來分組 anagram。'
 leetcode:
   - 49
 tags:

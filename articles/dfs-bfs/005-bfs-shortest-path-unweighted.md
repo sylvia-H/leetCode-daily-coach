@@ -80,54 +80,6 @@ d = bfs_distance(graph, 0)
 assert d[2] == 2, "assertion failed"
 ```
 
-## TypeScript Corner
-
-在 TypeScript 中實作時，可以使用 Map 或陣列來記錄節點的造訪狀態與距離，並使用陣列模擬 Queue 的操作。
-```typescript
-function shortestPathLength(adjList: number[][], start: number, target: number): number {
-  const queue: [number, number][] = [[start, 0]];
-  const visited = new Set<number>([start]);
-  while (queue.length > 0) {
-    const [curr, dist] = queue.shift()!;
-    if (curr === target) return dist;
-    for (const neighbor of adjList[curr]) {
-      if (!visited.has(neighbor)) {
-        visited.add(neighbor);
-        queue.push([neighbor, dist + 1]);
-      }
-    }
-  }
-  return -1;
-}
-const testAdj = [[1, 2], [3], [3], []];
-const result = shortestPathLength(testAdj, 0, 3);
-if (result !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-在 Python 中實作時，可以使用 collections.deque 作為高效能的佇列，並使用字典或串列記錄距離。
-```python
-from collections import deque
-
-def shortest_path_length(adj_list: list[list[int]], start: int, target: int) -> int:
-    queue = deque([(start, 0)])
-    visited = {start}
-    while queue:
-        curr, dist = queue.popleft()
-        if curr == target:
-            return dist
-        for neighbor in adj_list[curr]:
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append((neighbor, dist + 1))
-    return -1
-
-test_adj = [[1, 2], [3], [3], []]
-result = shortest_path_length(test_adj, 0, 3)
-assert result == 2, "assertion failed"
-```
-
 ## Takeaway
 
 掌握 Shortest Path BFS 核心概念：在邊權均等圖中利用層次擴散保證首次抵達即最短路徑。

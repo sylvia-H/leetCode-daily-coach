@@ -6,9 +6,7 @@ pattern_label: Two Heaps Balance
 complexity_label: O(log n) insert / O(1) median / O(n) space
 estimated_minutes: 30
 exit_criteria:
-  - >-
-    Can maintain balance between two heaps such that roots give the median
-    directly.
+  - 能維持兩個 heap 之間的平衡，使兩者的根能直接給出中位數。
 ---
 ## Concept
 
@@ -53,73 +51,6 @@ h = []
 heapq.heappush(h, -5)
 max_val = -heapq.heappop(h)
 assert max_val == 5, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class MedianFinder {
-  private maxHeap: number[] = [];
-  private minHeap: number[] = [];
-
-  addNum(num: number): void {
-    this.maxHeap.push(num);
-    this.maxHeap.sort((a, b) => b - a);
-    const val = this.maxHeap.shift()!;
-    this.minHeap.push(val);
-    this.minHeap.sort((a, b) => a - b);
-    if (this.minHeap.length > this.maxHeap.length) {
-      const v = this.minHeap.shift()!;
-      this.maxHeap.push(v);
-      this.maxHeap.sort((a, b) => b - a);
-    }
-  }
-
-  findMedian(): number {
-    if (this.maxHeap.length > this.minHeap.length) {
-      return this.maxHeap[0];
-    }
-    return (this.maxHeap[0] + this.minHeap[0]) / 2;
-  }
-}
-
-const mf = new MedianFinder();
-mf.addNum(1);
-mf.addNum(2);
-if (mf.findMedian() !== 1.5) throw new Error("assertion failed");
-mf.addNum(3);
-if (mf.findMedian() !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-import heapq
-
-class MedianFinder:
-    def __init__(self):
-        self.max_heap = []
-        self.min_heap = []
-
-    def addNum(self, num: int) -> None:
-        heapq.heappush(self.max_heap, -num)
-        val = -heapq.heappop(self.max_heap)
-        heapq.heappush(self.min_heap, val)
-        if len(self.min_heap) > len(self.max_heap):
-            v = heapq.heappop(self.min_heap)
-            heapq.heappush(self.max_heap, -v)
-
-    def findMedian(self) -> float:
-        if len(self.max_heap) > len(self.min_heap):
-            return -self.max_heap[0]
-        return (-self.max_heap[0] + self.min_heap[0]) / 2.0
-
-mf = MedianFinder()
-mf.addNum(1)
-mf.addNum(2)
-assert mf.findMedian() == 1.5, "assertion failed"
-mf.addNum(3)
-assert mf.findMedian() == 2.0, "assertion failed"
 ```
 
 ## Takeaway

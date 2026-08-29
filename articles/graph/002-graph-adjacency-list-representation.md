@@ -6,7 +6,7 @@ pattern_label: Data Representation
 complexity_label: O(V + E) / O(V + E)
 estimated_minutes: 12
 exit_criteria:
-  - Successfully build an adjacency list from a list of edges.
+  - 能從邊的列表成功建立 adjacency list。
 ---
 ## Concept
 
@@ -57,43 +57,6 @@ def get_neighbors(adj: dict[int, list[int]], node: int) -> list[int]:
 adj = defaultdict(list, {1: [2, 3]})
 assert get_neighbors(adj, 1) == [2, 3]
 assert get_neighbors(adj, 99) == []
-```
-
-## TypeScript Corner
-
-```typescript
-function buildAdjacencyList(n: number, edges: number[][]): Map<number, number[]> {
-  const adj = new Map<number, number[]>();
-  for (let i = 0; i < n; i++) {
-    adj.set(i, []);
-  }
-  for (const [u, v] of edges) {
-    adj.get(u)!.push(v);
-    adj.get(v)!.push(u);
-  }
-  return adj;
-}
-
-const graph = buildAdjacencyList(3, [[0, 1], [1, 2]]);
-if (graph.get(0)?.length !== 1) throw new Error("assertion failed");
-if (graph.get(1)?.length !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import defaultdict
-
-def build_adjacency_list(n: int, edges: list[list[int]]) -> dict[int, list[int]]:
-    adj = defaultdict(list)
-    for u, v in edges:
-        adj[u].append(v)
-        adj[v].append(u)
-    return adj
-
-graph = build_adjacency_list(3, [[0, 1], [1, 2]])
-assert len(graph[0]) == 1, "assertion failed"
-assert len(graph[1]) == 2, "assertion failed"
 ```
 
 ## Takeaway

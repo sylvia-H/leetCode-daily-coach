@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(1) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Use modulo arithmetic to wrap around array indices.
-  - Distinguish between full and empty states in a circular buffer.
+  - 能用模數運算讓陣列索引繞回開頭。
+  - 能區分 circular buffer 的滿與空兩種狀態。
 ---
 ## Concept
 
@@ -50,88 +50,6 @@ def test_py_tip():
     arr = [0] * 3
     assert len(arr) == 3, "assertion failed"
 test_py_tip()
-```
-
-## TypeScript Corner
-
-```typescript
-class MyCircularQueue {
-  private queue: number[];
-  private head: number = 0;
-  private tail: number = -1;
-  private size: number = 0;
-  private capacity: number;
-
-  constructor(k: number) {
-    this.capacity = k;
-    this.queue = new Array(k);
-  }
-
-  enQueue(value: number): boolean {
-    if (this.isFull()) return false;
-    this.tail = (this.tail + 1) % this.capacity;
-    this.queue[this.tail] = value;
-    this.size++;
-    return true;
-  }
-
-  deQueue(): boolean {
-    if (this.isEmpty()) return false;
-    this.head = (this.head + 1) % this.capacity;
-    this.size--;
-    return true;
-  }
-
-  isEmpty(): boolean {
-    return this.size === 0;
-  }
-
-  isFull(): boolean {
-    return this.size === this.capacity;
-  }
-}
-const q = new MyCircularQueue(2);
-if (!q.enQueue(1)) throw new Error("assertion failed");
-if (!q.enQueue(2)) throw new Error("assertion failed");
-if (q.enQueue(3)) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class MyCircularQueue:
-    def __init__(self, k: int):
-        self.capacity = k
-        self.queue = [0] * k
-        self.head = 0
-        self.tail = -1
-        self.size = 0
-
-    def enQueue(self, value: int) -> bool:
-        if self.isFull():
-            return False
-        self.tail = (self.tail + 1) % self.capacity
-        self.queue[self.tail] = value
-        self.size += 1
-        return True
-
-    def deQueue(self) -> bool:
-        if self.isEmpty():
-            return False
-        self.head = (self.head + 1) % self.capacity
-        self.size -= 1
-        return True
-
-    def isEmpty(self) -> bool:
-        return self.size == 0
-
-    def isFull(self) -> bool:
-        return self.size == self.capacity
-
-q = MyCircularQueue(2)
-assert q.enQueue(1) == True, "assertion failed"
-assert q.enQueue(2) == True, "assertion failed"
-assert q.enQueue(3) == False, "assertion failed"
 ```
 
 ## Takeaway

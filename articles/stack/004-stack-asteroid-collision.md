@@ -6,10 +6,8 @@ pattern_label: Collision Resolution
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can simulate continuous interactions where current elements affect
-    previously stored elements.
-  - Can manage loop conditions with stack modifications.
+  - 能模擬目前元素會影響先前已儲存元素的連續交互過程。
+  - 能在修改 stack 的同時管理迴圈條件。
 ---
 ## Concept
 
@@ -53,58 +51,6 @@ stack = []
 stack.append(1)
 top = stack.pop()
 assert top == 1, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function asteroidCollision(asteroids: number[]): number[] {
-  const stack: number[] = [];
-  for (const ast of asteroids) {
-    let alive = true;
-    while (alive && ast < 0 && stack.length > 0 && stack[stack.length - 1] > 0) {
-      const top = stack[stack.length - 1];
-      if (top < -ast) {
-        stack.pop();
-      } else if (top === -ast) {
-        stack.pop();
-        alive = false;
-      } else {
-        alive = false;
-      }
-    }
-    if (alive) {
-      stack.push(ast);
-    }
-  }
-  return stack;
-}
-const res = asteroidCollision([5, 10, -5]);
-if (res.length !== 2 || res[0] !== 5 || res[1] !== 10) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def asteroidCollision(asteroids: list[int]) -> list[int]:
-    stack = []
-    for ast in asteroids:
-        alive = True
-        while alive and ast < 0 and stack and stack[-1] > 0:
-            top = stack[-1]
-            if top < -ast:
-                stack.pop()
-            elif top == -ast:
-                stack.pop()
-                alive = False
-            else:
-                alive = False
-        if alive:
-            stack.append(ast)
-    return stack
-
-res = asteroidCollision([5, 10, -5])
-assert res == [5, 10], "assertion failed"
 ```
 
 ## Takeaway

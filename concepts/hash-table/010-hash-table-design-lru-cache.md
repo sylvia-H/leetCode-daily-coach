@@ -12,14 +12,10 @@ prerequisite:
   - hash-table-longest-consecutive-sequence
 next: []
 learning_goal:
-  - >-
-    Design a data structure with O(1) get and put operations by combining a hash
-    map and a doubly linked list.
+  - '結合 hash map 與 doubly linked list，設計 get 與 put 皆為 O(1) 的資料結構。'
 exit_criteria:
-  - >-
-    Can explain why a hash map alone is insufficient for LRU cache (needs
-    ordering)
-  - Can implement node relocation and eviction using a linked list
+  - '能說明為何單靠 hash map 不足以實作 LRU cache（需要順序性）'
+  - '能使用 linked list 實作節點的搬移與淘汰'
 leetcode:
   - 146
   - 460

@@ -6,10 +6,8 @@ pattern_label: State Tracking Permutation
 complexity_label: O(n!) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can use a visited array or set to track which elements are currently
-    included in the path.
-  - Can generate all n! permutations.
+  - 能使用 visited 陣列或 set 追蹤哪些元素目前已包含在路徑中。
+  - 能生成全部 n! 種排列。
 ---
 ## Concept
 
@@ -75,63 +73,6 @@ def permute_tip(nums: list[int]) -> list[list[int]]:
     return res
 
 assert len(permute_tip([1, 2])) == 2, "Tip test failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function permute(nums: number[]): number[][] {
-  const result: number[][] = [];
-  const visited: boolean[] = new Array(nums.length).fill(false);
-  
-  function backtrack(path: number[]) {
-    if (path.length === nums.length) {
-      result.push([...path]);
-      return;
-    }
-    for (let i = 0; i < nums.length; i++) {
-      if (visited[i]) continue;
-      visited[i] = true;
-      path.push(nums[i]);
-      backtrack(path);
-      path.pop();
-      visited[i] = false;
-    }
-  }
-  
-  backtrack([]);
-  return result;
-}
-
-const output = permute([1, 2]);
-if (output.length !== 2) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def permute(nums: list[int]) -> list[list[int]]:
-    result = []
-    visited = [False] * len(nums)
-    
-    def backtrack(path: list[int]):
-        if len(path) == len(nums):
-            result.append(path[:])
-            return
-        for i in range(len(nums)):
-            if visited[i]:
-                continue
-            visited[i] = True
-            path.append(nums[i])
-            backtrack(path)
-            path.pop()
-            visited[i] = False
-            
-    backtrack([])
-    return result
-
-output = permute([1, 2])
-assert len(output) == 2, "Assertion failed"
 ```
 
 ## Takeaway

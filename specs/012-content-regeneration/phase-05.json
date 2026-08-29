@@ -1,0 +1,68 @@
+{
+  "phase": 5,
+  "window": "sessionIndex 56-69",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "binary-search-core-concept",
+      "skeleton": "concepts/binary-search/001-binary-search-core-concept.md",
+      "article": "articles/binary-search/001-binary-search-core-concept.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "two-pointer-backspace-string-compare",
+      "skeleton": "concepts/two-pointer/008-two-pointer-backspace-string-compare.md",
+      "article": "articles/two-pointer/008-two-pointer-backspace-string-compare.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "two-pointer-boats-to-save-people",
+      "skeleton": "concepts/two-pointer/006-two-pointer-boats-to-save-people.md",
+      "article": "articles/two-pointer/006-two-pointer-boats-to-save-people.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "two-pointer-container-water",
+      "skeleton": "concepts/two-pointer/004-two-pointer-container-water.md",
+      "article": "articles/two-pointer/004-two-pointer-container-water.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "two-pointer-four-sum-extension",
+      "skeleton": "concepts/two-pointer/003-two-pointer-four-sum-extension.md",
+      "article": "articles/two-pointer/003-two-pointer-four-sum-extension.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "two-pointer-interval-merging-check",
+      "skeleton": "concepts/two-pointer/007-two-pointer-interval-merging-check.md",
+      "article": "articles/two-pointer/007-two-pointer-interval-merging-check.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "two-pointer-sort-array-by-parity",
+      "skeleton": "concepts/two-pointer/010-two-pointer-sort-array-by-parity.md",
+      "article": "articles/two-pointer/010-two-pointer-sort-array-by-parity.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "two-pointer-three-sum-closest",
+      "skeleton": "concepts/two-pointer/002-two-pointer-three-sum-closest.md",
+      "article": "articles/two-pointer/002-two-pointer-three-sum-closest.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "two-pointer-trapping-rain-water",
+      "skeleton": "concepts/two-pointer/005-two-pointer-trapping-rain-water.md",
+      "article": "articles/two-pointer/005-two-pointer-trapping-rain-water.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "two-pointer-valid-palindrome-ii",
+      "skeleton": "concepts/two-pointer/009-two-pointer-valid-palindrome-ii.md",
+      "article": "articles/two-pointer/009-two-pointer-valid-palindrome-ii.md",
+      "quizCount": 8
+    }
+  ]
+}

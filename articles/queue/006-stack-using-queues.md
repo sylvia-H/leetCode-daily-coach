@@ -6,8 +6,8 @@ pattern_label: Queue-to-Stack Transformation
 complexity_label: O(n) push / O(1) pop
 estimated_minutes: 15
 exit_criteria:
-  - Reorder queue elements so the newest element stays at the front.
-  - Analyze the time trade-off between costly push vs costly pop.
+  - 能重排佇列元素，讓最新的元素保持在最前端。
+  - 能分析「push 昂貴」與「pop 昂貴」兩種做法之間的時間取捨。
 ---
 ## Concept
 
@@ -59,74 +59,6 @@ def verify_deque_rotation():
     d.append(d.popleft())
     assert list(d) == [2, 3, 1], "assertion failed"
 verify_deque_rotation();
-```
-
-## TypeScript Corner
-
-在 TypeScript 中，由於標準函式庫未直接提供命名為 Queue 的型別，我們通常以陣列（Array）配合 push 與 shift 方法來模擬。然而，陣列的 shift 操作在 JavaScript 引擎中是 O(n) 的，因此實作時需特別注意效能與介面封裝。
-
-```typescript
-class MyStack {
-  private queue: number[] = [];
-
-  push(x: number): void {
-    const n = this.queue.length;
-    this.queue.push(x);
-    for (let i = 0; i < n; i++) {
-      this.queue.push(this.queue.shift()!);
-    }
-  }
-
-  pop(): number {
-    return this.queue.shift()!;
-  }
-
-  top(): number {
-    return this.queue[0];
-  }
-
-  empty(): boolean {
-    return this.queue.length === 0;
-  }
-}
-
-const stack = new MyStack();
-stack.push(1);
-stack.push(2);
-if (stack.top() !== 2) throw new Error("assertion failed");
-if (stack.pop() !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-在 Python 中，使用 collections.deque 可以提供效率極佳的兩端操作。雖然 deque 支援 O(1) 的 append 與 popleft，但我們仍需遵守 Queue 的抽象介面進行旋轉邏輯。
-
-```python
-from collections import deque
-
-class MyStack:
-    def __init__(self):
-        self.q = deque()
-
-    def push(self, x: int) -> None:
-        self.q.append(x)
-        for _ in range(len(self.q) - 1):
-            self.q.append(self.q.popleft())
-
-    def pop(self) -> int:
-        return self.q.popleft()
-
-    def top(self) -> int:
-        return self.q[0]
-
-    def empty(self) -> bool:
-        return len(self.q) == 0
-
-stack = MyStack()
-stack.push(1)
-stack.push(2)
-assert stack.top() == 2, "assertion failed"
-assert stack.pop() == 2, "assertion failed"
 ```
 
 ## Takeaway

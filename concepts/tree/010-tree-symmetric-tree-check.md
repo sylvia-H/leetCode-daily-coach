@@ -12,9 +12,9 @@ prerequisite:
 next:
   - tree-invert-binary-tree
 learning_goal:
-  - Validate tree symmetry by comparing mirrored branches recursively.
+  - '透過遞迴比較鏡像分支來驗證樹的對稱性。'
 exit_criteria:
-  - 'Compare left subtree''s left with right subtree''s right, and left with right.'
+  - '能比較左子樹的 left 與右子樹的 right，並比較 left 與 right。'
 leetcode:
   - 101
 tags:

@@ -14,10 +14,10 @@ prerequisite:
 next:
   - queue-bfs-level-order-traversal
 learning_goal:
-  - Simulate LIFO behavior using queues by rotating elements during push or pop.
+  - '用佇列模擬 LIFO 行為，在 push 或 pop 時旋轉元素。'
 exit_criteria:
-  - Reorder queue elements so the newest element stays at the front.
-  - Analyze the time trade-off between costly push vs costly pop.
+  - '能重排佇列元素，讓最新的元素保持在最前端。'
+  - '能分析「push 昂貴」與「pop 昂貴」兩種做法之間的時間取捨。'
 leetcode:
   - 225
 tags:

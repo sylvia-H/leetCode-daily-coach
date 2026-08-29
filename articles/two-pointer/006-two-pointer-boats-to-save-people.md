@@ -11,117 +11,80 @@ exit_criteria:
 ---
 ## Concept
 
-在處理資源配置與極值優化問題時，Boats to Save People Matching 是一個經典的 Two Pointers 應用場景。此模式的核心在於將一維陣列排序後，運用相向雙指標配合貪婪策略（Greedy Strategy），在符合條件的限制下尋求最佳的配對方案。當面對「每艘船最多載兩人和重量限制」這類約束條件時，排序能讓資料呈現單調性，而雙指標則能有效率地在線性時間內完成搜尋，避免不必要的暴力枚舉。
+今天的問題長這樣：一群人各有體重，每艘船有載重上限 limit，且**最多坐兩人**，求最少需要幾艘船。這是排序＋相向雙指標的新用法——前兩課的兩端夾擠靠高度資訊淘汰「不可能更好」的組合，今天則用同一副骨架執行**貪婪配對**：排序後，每一輪只問一個問題——「目前最重的人，能不能跟目前最輕的人同船？」能，兩人一起走；不能，最重的人自己走。之所以敢這樣貪，是因為「最多兩人」把每艘船的組合壓到只有一人或兩人，而排序讓「最輕」成為最重者唯一需要測試的搭檔——連他都湊不進去，換誰都湊不進去。
 
 ## Thinking
 
-思考這類題目時，首先必須理解問題的約束：每艘船至多只能載兩位乘客，且總重量不能超過指定的 limit。若直接使用暴力解法檢查所有可能的組合，時間複雜度將會高達 O(n^2)。為了優化此過程，我們可以先將所有乘客的體重由小到大進行排序。接著設立兩個指標：left 指向體重最輕的乘客，right 指向體重最重的乘客。此時採取貪婪策略：若最重的人與最輕的人的體重總和小於或等於 limit，代表兩人可以共乘一艘船，此時我們將 left 向右移動、right 向左移動；若總和超過 limit，代表最重的人無法與任何人共乘，他必須獨自佔用一艘船，因此我們僅將 right 向左移動。透過這種方式，每一步都能夠確保持續處理最重的乘客，最終得到最少的船隻需求量。
+先把體重由小到大排序，設 left = 0、right = n - 1，在 `while (left <= right)` 中每輪送出一艘船：若 `weight[left] + weight[right] <= limit`，最輕與最重共乘，left++ 且 right--；否則最重者獨自上船，只有 right--。兩個分支都做 boats++，因為**每輪恰好送走一艘船**——共乘送走兩人、獨行送走一人，這個不變式讓計數不會漏。貪婪的安全性靠兩個論證撐住。其一，**獨行不是選擇，是被迫**：排序保證 weight[left] 是還沒上船的人裡最輕的，連最輕的都湊不進去，右端這個人跟任何人都湊不進去。其二，**共乘用交換論證**：假設某個最優解沒讓最重的 r 配最輕的 l——r 與 a 同船（或獨行）、l 與 b 同船（或獨行）。把兩船改組成 (r, l) 與 (a, b)：r + l 不超限是本分支的前提；a + b 也不超限，因為 b 不重於最重的 r，故 a + b <= a + r <= limit。船數不變、限制不破，任何最優解都能改寫成「r 配 l」的版本，貪這一步永遠不虧。最後注意 left == right 的收尾：剩下的最後一人也要一艘船，這正是迴圈條件取 <= 的理由。
 
 ## Pattern Recognition
 
-當題目具備以下特徵時，即可辨識出應使用此 Pattern：1. 問題要求將元素進行分組或配對，且通常有容量或重量的上限限制。2. 容器（如船隻、袋子等）的容量固定，且最多或剛好容納固定數量的元素。3. 經過排序後的陣列，能夠透過頭尾相向的指標來測試極端值的結合可能性。若滿足這些條件，通常可以優先考慮使用排序結合 Two Pointers 的 Greedy 策略。
+辨識訊號有三個：元素要**兩兩配對**（容器至多裝兩個）、有明確的**容量上限**、目標是**最少容器數**。三個訊號齊備，就想「排序＋兩端夾擠＋貪婪配對」。也要認得界線：整套交換論證建立在「最多兩人」上——若一艘船能坐三人以上，「最重配最輕」不再保證最優，問題趨近裝箱問題（bin packing），得換策略。另一個對照是上一課：同樣的 left / right 骨架，接雨水移動指標是為了追蹤邊界極值，今天移動指標則是在執行配對決策——骨架同、語意異，辨識時看的是問題結構，不是程式碼形狀。
 
 ## Common Mistakes
 
-開發者在實現此邏輯時常見的錯誤包括：1. 誤以為每艘船可以載超過兩個人，導致嘗試用複雜的滑動視窗或多指標來解題。2. 忽略了前置排序的重要性，未排序就直接使用雙指標，導致極端值搭配的假設失效。3. 在體重總和超過 limit 時，錯誤地同時移動 left 與 right 指標，這會遺漏對其他乘客的正確判定。4. 沒有正確處理當 left 等於 right 時（即只剩最後一個人）的邊界條件。
+第一，超重時同時移動兩端。正確動作只有 right--：最重者被迫獨行，但最輕者還沒上船，把 left 也推進等於憑空丟掉一個人。第二，忘記排序就夾擠。所有推論都建立在「left 端最輕、right 端最重」上，未排序時這個前提不存在，貪婪論證整個垮掉。第三，迴圈條件寫成 left < right。當 left == right 時還剩最後一人沒上船，他也需要一艘船，用 < 會少算一艘。第四，過度設計搭檔選擇——想替最重者找「能塞進限重的最重搭檔」以免浪費容量。交換論證已經證明配最輕就能達到最少船數，額外搜尋不會讓答案更好，只會把 O(n) 掃描變複雜。
 
 ## Complexity
 
-時間複雜度為 O(n log n)，主要來自於初期對體重陣列進行排序的開銷；隨後的雙指標掃描僅需 O(n) 時間。空間複雜度為 O(1) 或 O(n)，取決於所使用的程式語言在排序時所需的額外輔助空間。
+時間複雜度 O(n log n)，由排序主導；後續的雙指標掃描每輪至少讓 right 左移一格（共乘時 left 同時右移），整體 O(n)，漸進上被排序吸收。空間複雜度 O(1)：掃描只用 left、right、boats 三個變數；排序若為原地排序僅需約 O(log n) 的遞迴堆疊，慣例上不另計。
 
 ## Digest
 
-Boats to Save People Matching 結合了排序與相向雙指標，是解決資源配對與極值優化問題的典範。核心思想是優先讓最重的人與最輕的人配對，若超重則最重的人單獨搭乘。透過 O(n log n) 的排序與 O(n) 的線性掃描，我們能以極高效的方式得出最少載具數量。
+Boats to Save People 的公式：排序 → left 指最輕、right 指最重 → 每輪一艘船：`weight[left] + weight[right] <= limit` 就共乘（left++ 且 right--），否則最重者獨行（只 right--），兩分支都 boats++。以 people = [3, 2, 2, 1]、limit = 3 為例：排序成 [1, 2, 2, 3]；1 + 3 超重，3 獨行（第 1 艘）；1 + 2 = 3 剛好共乘（第 2 艘）；剩下的 2 獨佔第 3 艘——答案 3。正確性兩根柱子：獨行是被迫的（連最輕都配不上就誰都配不上）、共乘是安全的（交換論證：任何最優解都能改寫成「最重配最輕」而不多用船）。迴圈條件用 left <= right，最後一人也要一艘船。
 
 ## TypeScript Tip
+
+排序記得傳數值比較函式 `(a, b) => a - b`（Three Sum 課的老陷阱）；`w[l]! + w[r]!` 的 `!` 是因為 tsconfig 開了 noUncheckedIndexedAccess。三個斷言依序鎖住：基本共乘、混合情境、全員獨行且 left == right 的最後一人。
 
 ```typescript
 import assert from "node:assert";
 
-function numRescueBoatsTip(people: number[], limit: number): number {
-  people.sort((a, b) => a - b);
-  let l = 0, r = people.length - 1, ans = 0;
+function numRescueBoats(people: number[], limit: number): number {
+  const w = [...people].sort((a, b) => a - b);
+  let l = 0, r = w.length - 1, boats = 0;
   while (l <= r) {
-    if (people[l] + people[r] <= limit) l++;
+    if (w[l]! + w[r]! <= limit) l++;
     r--;
-    ans++;
+    boats++;
   }
-  return ans;
+  return boats;
 }
 
-assert.strictEqual(numRescueBoatsTip([1, 2], 3), 1);
+assert.strictEqual(numRescueBoats([1, 2], 3), 1);
+assert.strictEqual(numRescueBoats([3, 2, 2, 1], 3), 3);
+assert.strictEqual(numRescueBoats([3, 5, 3, 4], 5), 4);
 ```
 
 ## Python Tip
 
+Python 用 `sorted()` 取得排序後的新串列、不改動輸入；迴圈骨架與 TypeScript 相同，斷言涵蓋同樣三種情境。
+
 ```python
-def num_rescue_boats_tip(people: list[int], limit: int) -> int:
-    people.sort()
-    l, r, ans = 0, len(people) - 1, 0
+def num_rescue_boats(people: list[int], limit: int) -> int:
+    w = sorted(people)
+    l, r, boats = 0, len(w) - 1, 0
     while l <= r:
-        if people[l] + people[r] <= limit:
+        if w[l] + w[r] <= limit:
             l += 1
         r -= 1
-        ans += 1
-    return ans
-
-assert num_rescue_boats_tip([1, 2], 3) == 1
-```
-
-## TypeScript Corner
-
-```typescript
-function numRescueBoats(people: number[], limit: number): number {
-  people.sort((a, b) => a - b);
-  let left = 0;
-  let right = people.length - 1;
-  let boats = 0;
-
-  while (left <= right) {
-    if (people[left] + people[right] <= limit) {
-      left++;
-    }
-    right--;
-    boats++;
-  }
-
-  if (boats !== 3) throw new Error("assertion failed");
-  return boats;
-}
-
-const result = numRescueBoats([3, 2, 2, 1], 3);
-```
-
-## Python Corner
-
-```python
-def numRescueBoats(people: list[int], limit: int) -> int:
-    people.sort()
-    left = 0
-    right = len(people) - 1
-    boats = 0
-
-    while left <= right:
-        if people[left] + people[right] <= limit:
-            left += 1
-        right -= 1
         boats += 1
-
-    assert boats == 3, "assertion failed"
     return boats
 
-result = numRescueBoats([3, 2, 2, 1], 3)
+assert num_rescue_boats([1, 2], 3) == 1
+assert num_rescue_boats([3, 2, 2, 1], 3) == 3
+assert num_rescue_boats([3, 5, 3, 4], 5) == 4
 ```
 
 ## Takeaway
 
-排序化解亂序，雙指標收斂極值，Greedy 配對達成最佳解。
+排序後每輪一船：最重配得上最輕就共乘，配不上就獨行——交換論證保證船數最少。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 在字串處理中的另一種進階應用：Container With Most Water Matching，學習如何利用相向雙指標動態調整高度以求取最大面積。
+明天把「先排序、再單趟掃描」帶進區間問題：Merge Intervals——依起點排序後，只要盯著目前合併段的終點，就能一趟決定每個區間該併入還是另起新段。
 
 ## Today's Challenge
 
-- **881** · 此題為標準的資源分配與雙人限制載具題目，必須利用排序與相向雙指標的 Greedy 策略來求解。
-  - Hint: 先將陣列排序，每次讓最重的人試著與最輕的人共乘，若超過限制則最重的人獨自上船。
+- **881** · 「最多兩人＋載重上限＋求最少船數」三個訊號齊備，是排序後兩端貪婪配對的標準題。
+  - Hint: 排序後最重者先試著跟最輕者同船，塞不下就獨行；每輪迴圈恰好送出一艘船。

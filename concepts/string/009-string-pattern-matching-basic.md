@@ -13,11 +13,9 @@ prerequisite:
 next:
   - string-parsing-simulation
 learning_goal:
-  - >-
-    Understand how substring search works by scanning potential match starting
-    points.
+  - '理解子字串搜尋如何透過掃描可能的匹配起點來運作。'
 exit_criteria:
-  - Can implement indexOf or find a needle in a haystack using nested loops.
+  - '能使用巢狀迴圈實作 indexOf 或在 haystack 中找出 needle。'
 leetcode:
   - 28
   - 686

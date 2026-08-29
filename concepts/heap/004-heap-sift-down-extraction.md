@@ -12,11 +12,9 @@ prerequisite:
 next:
   - heapify-linear-time-construction
 learning_goal:
-  - >-
-    Remove the root element from a heap and restore the heap property using
-    sift-down.
+  - 從 heap 移除根元素，並使用 sift-down 恢復 heap property。
 exit_criteria:
-  - 'Can swap the root with the last element, pop, and sift down the new root.'
+  - 能將根與最後一個元素交換、pop 出來，並對新的根執行 sift down。
 leetcode:
   - 215
 tags:

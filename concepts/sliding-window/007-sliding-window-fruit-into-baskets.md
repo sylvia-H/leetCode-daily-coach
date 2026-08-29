@@ -13,16 +13,10 @@ prerequisite:
 next:
   - sliding-window-permutation-in-string
 learning_goal:
-  - >-
-    Manage a sliding window constraint involving a maximum number of distinct
-    categories.
+  - 管理涉及相異類別數量上限的 Sliding Window 限制。
 exit_criteria:
-  - >-
-    Can maintain a hash map of element frequencies to track the number of
-    distinct items in the window.
-  - >-
-    Can shrink the window from the left until the distinct count drops back to
-    the allowed limit.
+  - 能維護元素頻率的 hash map，以追蹤視窗內相異元素的數量。
+  - 能從左側收縮視窗，直到相異數量降回允許的上限。
 leetcode:
   - 904
 tags:

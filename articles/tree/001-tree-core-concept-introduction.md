@@ -6,7 +6,7 @@ pattern_label: Hierarchical Data Structure
 complexity_label: O(n) / O(h)
 estimated_minutes: 15
 exit_criteria:
-  - 'Define root, parent, child, leaf, depth, and height correctly.'
+  - 能正確定義 root、parent、child、leaf、depth 與 height。
 ---
 ## Concept
 
@@ -66,38 +66,6 @@ def count_nodes(root: GeneralTreeNode | None) -> int:
 
 root = GeneralTreeNode(1)
 assert count_nodes(root) == 1, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class TreeNode<T> {
-  val: T;
-  left: TreeNode<T> | null;
-  right: TreeNode<T> | null;
-  constructor(val: T, left: TreeNode<T> | null = null, right: TreeNode<T> | null = null) {
-    this.val = val;
-    this.left = left;
-    this.right = right;
-  }
-}
-const root = new TreeNode(1, new TreeNode(2), new TreeNode(3));
-if (root.val !== 1) throw new Error("assertion failed");
-if (root.left?.val !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val: int = 0, left = None, right = None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-root = TreeNode(1, TreeNode(2), TreeNode(3))
-assert root.val == 1, "assertion failed"
-assert root.left.val == 2, "assertion failed"
 ```
 
 ## Takeaway

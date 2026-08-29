@@ -12,11 +12,9 @@ prerequisite:
 next:
   - heap-kth-largest-element
 learning_goal:
-  - >-
-    Build a heap from an arbitrary array in O(n) time by starting from the last
-    non-leaf node.
+  - 從最後一個非葉節點開始，以 O(n) 時間從任意陣列建出 heap。
 exit_criteria:
-  - Can explain why bottom-up heap construction is O(n) instead of O(n log n).
+  - 能說明為何 bottom-up 建構 heap 是 O(n) 而非 O(n log n)。
 leetcode: []
 tags:
   - heap

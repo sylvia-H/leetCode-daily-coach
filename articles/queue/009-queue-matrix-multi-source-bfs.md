@@ -6,8 +6,8 @@ pattern_label: Multi-Source BFS
 complexity_label: O(m * n) / O(m * n)
 estimated_minutes: 20
 exit_criteria:
-  - Enqueue all starting sources initially before starting the BFS loop.
-  - Update grid values in-place or use a distance matrix.
+  - 能在 BFS 迴圈開始前，先把所有起始來源加入佇列。
+  - 能就地（in-place）更新網格值，或改用距離矩陣。
 ---
 ## Concept
 
@@ -61,80 +61,6 @@ def py_tip_example() -> None:
     assert curr == (0, 0), "assertion failed"
 
 py_tip_example()
-```
-
-## TypeScript Corner
-
-```typescript
-function updateMatrix(mat: number[][]): number[][] {
-    const m = mat.length;
-    const n = mat[0].length;
-    const dist: number[][] = Array.from({ length: m }, () => Array(n).fill(-1));
-    const queue: [number, number][] = [];
-
-    for (let r = 0; r < m; r++) {
-        for (let c = 0; c < n; c++) {
-            if (mat[r][c] === 0) {
-                dist[r][c] = 0;
-                queue.push([r, c]);
-            }
-        }
-    }
-
-    const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-    let head = 0;
-
-    while (head < queue.length) {
-        const [r, c] = queue[head++];
-        for (const [dr, dc] of directions) {
-            const nr = r + dr;
-            const nc = c + dc;
-            if (nr >= 0 && nr < m && nc >= 0 && nc < n && dist[nr][nc] === -1) {
-                dist[nr][nc] = dist[r][c] + 1;
-                queue.push([nr, nc]);
-            }
-        }
-    }
-
-    if (dist[0][0] !== 0 && dist[0][0] !== 1) {
-        throw new Error("assertion failed");
-    }
-    return dist;
-}
-
-updateMatrix([[0, 0, 0], [0, 1, 0], [1, 1, 1]]);
-```
-
-## Python Corner
-
-```python
-from collections import deque
-
-def updateMatrix(mat: list[list[int]]) -> list[list[int]]:
-    m, n = len(mat), len(mat[0])
-    dist = [[-1] * n for _ in range(m)]
-    queue = deque()
-
-    for r in range(m):
-        for c in range(n):
-            if mat[r][c] == 0:
-                dist[r][c] = 0
-                queue.append((r, c))
-
-    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-
-    while queue:
-        r, c = queue.popleft()
-        for dr, dc in directions:
-            nr, nc = r + dr, c + dc
-            if 0 <= nr < m and 0 <= nc < n and dist[nr][nc] == -1:
-                dist[nr][nc] = dist[r][c] + 1
-                queue.append((nr, nc))
-
-    assert dist[0][0] == 0, "assertion failed"
-    return dist
-
-updateMatrix([[0, 0, 0], [0, 1, 0], [1, 1, 1]])
 ```
 
 ## Takeaway

@@ -13,11 +13,9 @@ prerequisite:
 next:
   - tree-symmetric-tree-check
 learning_goal:
-  - Compare two binary trees structurally and by value simultaneously.
+  - '同時就結構與節點值比較兩棵二元樹。'
 exit_criteria:
-  - >-
-    Return true if two trees are identical in structure and node values, false
-    otherwise.
+  - '能在兩棵樹的結構與節點值完全相同時回傳 true，否則回傳 false。'
 leetcode:
   - 100
 tags:

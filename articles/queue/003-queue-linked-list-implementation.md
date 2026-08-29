@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(1) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Maintain head and tail pointers correctly during push and pop.
-  - Handle edge cases like an empty queue or single-element queue.
+  - 能在 push 與 pop 時正確維護 head 與 tail 指標。
+  - 能處理空佇列或只有單一元素的佇列等邊界情況。
 ---
 ## Concept
 
@@ -67,97 +67,6 @@ def verify_queue_integrity(head, tail):
 
 node = SafeNode(100)
 assert verify_queue_integrity(node, node) == True, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode<T> {
-  constructor(public val: T, public next: ListNode<T> | null = null) {}
-}
-
-class LinkedListQueue<T> {
-  private head: ListNode<T> | null = null;
-  private tail: ListNode<T> | null = null;
-  private size: number = 0;
-
-  enqueue(val: T): void {
-    const newNode = new ListNode(val);
-    if (!this.tail) {
-      this.head = this.tail = newNode;
-    } else {
-      this.tail.next = newNode;
-      this.tail = newNode;
-    }
-    this.size++;
-  }
-
-  dequeue(): T | null {
-    if (!this.head) return null;
-    const val = this.head.val;
-    this.head = this.head.next;
-    if (!this.head) {
-      this.tail = null;
-    }
-    this.size--;
-    return val;
-  }
-
-  isEmpty(): boolean {
-    return this.head === null;
-  }
-}
-
-const q = new LinkedListQueue<number>();
-q.enqueue(10);
-q.enqueue(20);
-if (q.dequeue() !== 10) throw new Error("assertion failed");
-if (q.dequeue() !== 20) throw new Error("assertion failed");
-if (!q.isEmpty()) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class Node:
-    def __init__(self, val):
-        self.val = val
-        self.next = None
-
-class LinkedListQueue:
-    def __init__(self):
-        self.head = None
-        self.tail = None
-        self._size = 0
-
-    def enqueue(self, val):
-        new_node = Node(val)
-        if not self.tail:
-            self.head = self.tail = new_node
-        else:
-            self.tail.next = new_node
-            self.tail = new_node
-        self._size += 1
-
-    def dequeue(self):
-        if not self.head:
-            return None
-        val = self.head.val
-        self.head = self.head.next
-        if not self.head:
-            self.tail = None
-        self._size -= 1
-        return val
-
-    def is_empty(self):
-        return self.head is None
-
-q = LinkedListQueue()
-q.enqueue(10)
-q.enqueue(20)
-assert q.dequeue() == 10, "assertion failed"
-assert q.dequeue() == 20, "assertion failed"
-assert q.is_empty(), "assertion failed"
 ```
 
 ## Takeaway

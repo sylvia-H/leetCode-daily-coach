@@ -22,7 +22,7 @@ Stage 2 生成期 Gate 與 CI `content-gate.yml` 共用的把關契約。**單�
 
 ## 2. 程式碼實測（`scripts/run-code-blocks.ts`，Q2 / R6）
 
-- 從 Article 抽出 `TypeScript Corner/Tip`、`Python Corner/Tip` 的 fenced code blocks。
+- 從 Article 抽出 `TypeScript Tip`、`Python Tip` 的 fenced code blocks（F12 Phase 0 移除 Corner 兩段前為四段）。
 - **缺斷言即失敗**：區塊未含任何 `assert` / `throw`（TS：`throw`/`node:assert`；Python：`assert`）⇒ 不通過。
 - TS：寫暫存 `.ts` → `tsc --noEmit --strict` 型別檢查 + `tsx` 執行（斷言失敗即非零）。
 - Python：寫暫存 `.py` → `python` 執行（`assert` 失敗即非零）。

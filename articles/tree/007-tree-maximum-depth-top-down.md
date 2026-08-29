@@ -6,7 +6,7 @@ pattern_label: Top-Down DFS (Accumulator)
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - Maintain and update a global or passed-down depth counter during traversal.
+  - 能在走訪過程中維護並更新全域或向下傳遞的深度計數器。
 ---
 ## Concept
 
@@ -55,71 +55,6 @@ def solve_python_tip() -> None:
     add()
     assert total == 5, "Nonlocal variable modification failed"
 solve_python_tip()
-```
-
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function maxDepth(root: TreeNode | null): number {
-  let maxD = 0;
-  function dfs(node: TreeNode | null, depth: number): void {
-    if (!node) return;
-    if (!node.left && !node.right) {
-      maxD = Math.max(maxD, depth);
-    }
-    dfs(node.left, depth + 1);
-    dfs(node.right, depth + 1);
-  }
-  dfs(root, 1);
-  return root ? maxD : 0;
-}
-
-const root = new TreeNode(3);
-root.left = new TreeNode(9);
-root.right = new TreeNode(20);
-const result = maxDepth(root);
-if (result !== 2) throw new Error("Assertion failed: expected depth 2");
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def maxDepth(root: TreeNode | None) -> int:
-    max_d = 0
-    def dfs(node: TreeNode | None, depth: int) -> None:
-        nonlocal max_d
-        if not node:
-            return
-        if not node.left and not node.right:
-            max_d = max(max_d, depth)
-        dfs(node.left, depth + 1)
-        dfs(node.right, depth + 1)
-    
-    dfs(root, 1)
-    return max_d if root else 0
-
-root = TreeNode(3)
-root.left = TreeNode(9)
-root.right = TreeNode(20)
-result = maxDepth(root)
-assert result == 2, "Assertion failed: expected depth 2"
 ```
 
 ## Takeaway

@@ -12,11 +12,9 @@ prerequisite:
 next:
   - heap-array-representation
 learning_goal:
-  - >-
-    Understand the heap property and how priority queues differ from standard
-    queues.
+  - 理解 heap property，以及 priority queue 與一般 queue 的差異。
 exit_criteria:
-  - Can explain the difference between min-heap and max-heap properties.
+  - 能說明 min-heap 與 max-heap 性質的差異。
 leetcode: []
 tags:
   - heap

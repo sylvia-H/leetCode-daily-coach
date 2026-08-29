@@ -6,9 +6,7 @@ pattern_label: Connected Components
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 12
 exit_criteria:
-  - >-
-    Iterate through all nodes, launching DFS/BFS on unvisited nodes to count
-    components.
+  - 能走訪所有節點，對未造訪的節點啟動 DFS/BFS 以計數 components。
 ---
 ## Concept
 
@@ -53,61 +51,6 @@ def helper(n: int) -> None:
     adj = [[] for _ in range(n)]
     assert len(adj) == n, "assertion failed"
 helper(3)
-```
-
-## TypeScript Corner
-
-```typescript
-function countComponents(n: number, edges: number[][]): number {
-  const adj: number[][] = Array.from({ length: n }, () => []);
-  for (const [u, v] of edges) {
-    adj[u].push(v);
-    adj[v].push(u);
-  }
-  const visited = new Set<number>();
-  let count = 0;
-  function dfs(node: number): void {
-    visited.add(node);
-    for (const neighbor of adj[node]) {
-      if (!visited.has(neighbor)) {
-        dfs(neighbor);
-      }
-    }
-  }
-  for (let i = 0; i < n; i++) {
-    if (!visited.has(i)) {
-      count++;
-      dfs(i);
-    }
-  }
-  if (count !== 2) throw new Error("assertion failed");
-  return count;
-}
-countComponents(5, [[0, 1], [1, 2], [3, 4]]);
-```
-
-## Python Corner
-
-```python
-def countComponents(n: int, edges: list[list[int]]) -> int:
-    adj = [[] for _ in range(n)]
-    for u, v in edges:
-        adj[u].append(v)
-        adj[v].append(u)
-    visited = set()
-    count = 0
-    def dfs(node: int):
-        visited.add(node)
-        for neighbor in adj[node]:
-            if neighbor not in visited:
-                dfs(neighbor)
-    for i in range(n):
-        if i not in visited:
-            count += 1
-            dfs(i)
-    assert count == 2, "assertion failed"
-    return count
-countComponents(5, [[0, 1], [1, 2], [3, 4]])
 ```
 
 ## Takeaway

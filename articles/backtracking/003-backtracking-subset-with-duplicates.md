@@ -6,10 +6,8 @@ pattern_label: Duplicate Skip Pattern
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can correctly identify when an element is a duplicate within the same tree
-    level.
-  - Can implement sorting and skipping logic cleanly.
+  - 能正確判斷元素在同一樹層中何時屬於重複。
+  - 能乾淨俐落地實作排序與跳過的邏輯。
 ---
 ## Concept
 
@@ -84,56 +82,6 @@ def verify_unique_subsets() -> None:
     assert len(results) == 6
 
 verify_unique_subsets()
-```
-
-## TypeScript Corner
-
-```typescript
-function subsetsWithDup(nums: number[]): number[][] {
-  nums.sort((a, b) => a - b);
-  const result: number[][] = [];
-  
-  function backtrack(startIndex: number, path: number[]): void {
-    result.push([...path]);
-    for (let i = startIndex; i < nums.length; i++) {
-      if (i > startIndex && nums[i] === nums[i - 1]) {
-        continue;
-      }
-      path.push(nums[i]);
-      backtrack(i + 1, path);
-      path.pop();
-    }
-  }
-  
-  backtrack(0, []);
-  return result;
-}
-
-const res = subsetsWithDup([1, 2, 2]);
-if (res.length !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def subsets_with_dup(nums: list[int]) -> list[list[int]]:
-    nums.sort()
-    result: list[list[int]] = []
-    
-    def backtrack(start_index: int, path: list[int]) -> None:
-        result.append(path[:])
-        for i in range(start_index, len(nums)):
-            if i > start_index and nums[i] == nums[i - 1]:
-                continue
-            path.append(nums[i])
-            backtrack(i + 1, path)
-            path.pop()
-            
-    backtrack(0, [])
-    return result
-
-res = subsets_with_dup([1, 2, 2])
-assert len(res) == 6, "assertion failed"
 ```
 
 ## Takeaway

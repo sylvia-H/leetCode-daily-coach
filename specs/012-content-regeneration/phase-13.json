@@ -1,0 +1,62 @@
+{
+  "phase": 13,
+  "window": "sessionIndex 168-181",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "graph-adjacency-matrix-representation",
+      "skeleton": "concepts/graph/003-graph-adjacency-matrix-representation.md",
+      "article": "articles/graph/003-graph-adjacency-matrix-representation.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "graph-bfs-traversal",
+      "skeleton": "concepts/graph/005-graph-bfs-traversal.md",
+      "article": "articles/graph/005-graph-bfs-traversal.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "graph-connected-components",
+      "skeleton": "concepts/graph/006-graph-connected-components.md",
+      "article": "articles/graph/006-graph-connected-components.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "graph-detect-cycle-directed",
+      "skeleton": "concepts/graph/008-graph-detect-cycle-directed.md",
+      "article": "articles/graph/008-graph-detect-cycle-directed.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "graph-detect-cycle-undirected",
+      "skeleton": "concepts/graph/007-graph-detect-cycle-undirected.md",
+      "article": "articles/graph/007-graph-detect-cycle-undirected.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "graph-dfs-traversal",
+      "skeleton": "concepts/graph/004-graph-dfs-traversal.md",
+      "article": "articles/graph/004-graph-dfs-traversal.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "graph-topological-sort-bfs-kahns",
+      "skeleton": "concepts/graph/010-graph-topological-sort-bfs-kahns.md",
+      "article": "articles/graph/010-graph-topological-sort-bfs-kahns.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "graph-topological-sort-dfs",
+      "skeleton": "concepts/graph/009-graph-topological-sort-dfs.md",
+      "article": "articles/graph/009-graph-topological-sort-dfs.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "heap-core-concept-introduction",
+      "skeleton": "concepts/heap/001-heap-core-concept-introduction.md",
+      "article": "articles/heap/001-heap-core-concept-introduction.md",
+      "quizCount": 6
+    }
+  ]
+}

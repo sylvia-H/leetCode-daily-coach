@@ -64,39 +64,6 @@ def rob(nums: list[int]) -> int:
 max_profit = rob([1, 2, 3, 1])
 ```
 
-## TypeScript Corner
-
-```typescript
-function climbStairs(n: number): number {
-  if (n <= 2) return n;
-  let prev2 = 1;
-  let prev1 = 2;
-  for (let i = 3; i <= n; i++) {
-    const current = prev1 + prev2;
-    prev2 = prev1;
-    prev1 = current;
-  }
-  if (prev1 !== 3) throw new Error("assertion failed");
-  return prev1;
-}
-const result = climbStairs(3);
-```
-
-## Python Corner
-
-```python
-def climb_stairs(n: int) -> int:
-    if n <= 2:
-        return n
-    prev2, prev1 = 1, 2
-    for _ in range(3, n + 1):
-        prev2, prev1 = prev1, prev2 + prev1
-    assert prev1 == 3, "assertion failed"
-    return prev1
-
-result = climb_stairs(3)
-```
-
 ## Takeaway
 
 掌握狀態相依性，善用常數變數取代完整陣列，並注意賦值順序，即可輕鬆達成 O(1) 空間優化。

@@ -41,6 +41,20 @@ Sync Impact Report
 - Added/Removed sections: 無。
 - Templates status: 無需更新（無樣板相依此條款的結構）。
 - Follow-up TODOs: 無。
+[1.1.0] One Human Checkpoint 增訂一次性內容重生例外
+- Version change: 1.0.2 -> 1.1.0
+- Rationale: MINOR——實質擴充既有原則 XVII 的適用範圍，非移除或重新定義。起因為 F12
+  決定改以 Claude Fable 逐批重寫既有 `articles/**` 與 `data/quiz-bank.json`（既有內容由
+  `gemini-3.5-flash-lite` 生成，實測發現 quiz 有正解標反、Tomorrow Preview 與 Skeleton
+  `next` 不符等自動 Gate 抓不到的缺陷）。此類 agent 主導的逐批改寫字面上牴觸「大綱凍結後
+  全文 MUST 全自動生成」，故增訂具四項強制條件的一次性例外，使後續 Feature 的
+  Constitution Check 有明文依據，而非以個案豁免帶過。
+- Modified sections: Core Principles XVII（新增例外條款）。
+- Added/Removed sections: 無。
+- Templates status: 無需更新（無樣板相依此條款的結構）。
+- Follow-up TODOs: F12 結束後於 specs/012-content-regeneration/ 留存批次紀錄；
+  產線恢復全自動，本例外 MUST NOT 常態化。
+
 -->
 
 # LeetCode Daily Coach (Ascent) Constitution
@@ -154,6 +168,30 @@ spec §20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全�
 僅由自動 Gate 把關；MUST NOT 引入其他常態性人工審核關卡
 （Gate 擋下時的例外介入除外）。
 
+**例外——一次性內容重生（one-off regeneration campaign）**：為更換生成模型或
+系統性提升既有教材品質而發起的、有明確起訖且非週期性的重生活動，MAY 由 agent 在
+互動 session 中逐批改寫 `articles/**` 與 `data/quiz-bank.json`，但 MUST 全數滿足：
+
+1. 通過與產線**同一顆**自動 Gate（per-article Gate／`runContentGate`／`gate:code`），
+   MUST NOT 另立平行判準；
+2. MUST NOT 改動 Skeleton 的結構欄位（`id`／`module`／`topic`／`prerequisite`／
+   `next`／`leetcode`／`localOrder`），以保證 `schedules/**` 維持 byte-identical、
+   `state.json` 不受影響；
+2-2. **例外之例外——語言合規翻譯（2026-08-29）**：`learning_goal` 與 `exit_criteria`
+   是**推播內容而非結構欄位**（Exit Criteria 於 spec §14.5 有獨立字元預算並原樣推播）。
+   經查證，`concepts/**` 中 114 / 165 個 Concept 的此二欄位為英文，成因是 Stage 1 的
+   prompt 未指定輸出語言（產線缺陷），**非設計決策**。為使其符合 spec §11 的語言規範，
+   MAY 於本活動期間將此二欄位翻譯為繁體中文，但 MUST 全數滿足：
+   (i) 逐條**語意等價**，MUST NOT 增刪條數、改變順序或藉機修改語意；
+   (ii) MUST 同步更新 `articles/**` frontmatter 中的 `exit_criteria` 複本，並 MUST 有
+        **自動 Gate** 保證兩者逐字一致；
+   (iii) MUST 通過 spec §10.2 的條數與單條長度上限；
+   (iv) **MUST 同時修正 Stage 1 的 prompt 使其釘死輸出語言**，否則產線重跑會重現同一缺陷。
+   本授權**僅限語言合規**，MUST NOT 擴及任何其他 Skeleton 欄位或內容變更，亦 MUST NOT
+   被援引為「Skeleton 可手改」的通則——**活動結束後即失效**；
+3. MUST 在對應 Feature 的 `specs/NNN-*/` 留下批次範圍、使用模型與逐批 commit 紀錄；
+4. 活動結束後產線 MUST 恢復全自動，此例外 MUST NOT 演變為常態流程。
+
 ## 技術與資源約束（Additional Constraints）
 
 以下技術選型已於 spec §22.3 釘死，各 Feature 的 `/speckit-plan` MUST 遵循，
@@ -222,4 +260,4 @@ spec §20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全�
   本憲章原則並記錄違反與正當化理由（無法正當化者退回設計）；`/speckit-analyze` MUST
   將憲章衝突列為 CRITICAL。程式碼審查與驗收 MUST 確認未違反任一 MUST / MUST NOT。
 
-**Version**: 1.0.2 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-07-30
+**Version**: 1.2.0 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-08-29

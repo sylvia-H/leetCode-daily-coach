@@ -6,8 +6,8 @@ pattern_label: Breadth-First Search
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 20
 exit_criteria:
-  - Track visited nodes to prevent cycles and redundant work.
-  - Increment distance step-by-step as queue expands.
+  - 能追蹤已走訪節點，避免環與重複計算。
+  - 能隨著佇列擴展逐步遞增距離。
 ---
 ## Concept
 
@@ -70,71 +70,6 @@ def py_deque_example():
     assert 2 in visited, "Assertion failed"
 
 py_deque_example()
-```
-
-## TypeScript Corner
-
-```typescript
-function shortestPathBinaryMatrix(grid: number[][]): number {
-    const n = grid.length;
-    if (grid[0][0] === 1 || grid[n - 1][n - 1] === 1) return -1;
-    const queue: [number, number, number][] = [[0, 0, 1]];
-    const visited = new Set<string>();
-    visited.add("0,0");
-    const directions = [
-        [-1, -1], [-1, 0], [-1, 1],
-        [0, -1],           [0, 1],
-        [1, -1],  [1, 0],  [1, 1]
-    ];
-    while (queue.length > 0) {
-        const [r, c, dist] = queue.shift()!;
-        if (r === n - 1 && c === n - 1) return dist;
-        for (const [dr, dc] of directions) {
-            const nr = r + dr;
-            const nc = c + dc;
-            const key = `${nr},${nc}`;
-            if (nr >= 0 && nr < n && nc >= 0 && nc < n && grid[nr][nc] === 0 && !visited.has(key)) {
-                visited.add(key);
-                queue.push([nr, nc, dist + 1]);
-            }
-        }
-    }
-    return -1;
-}
-const testGrid = [[0, 1], [1, 0]];
-const result = shortestPathBinaryMatrix(testGrid);
-if (result !== 2) throw new Error("Assertion failed: expected shortest path length to be 2");
-```
-
-## Python Corner
-
-```python
-from collections import deque
-
-def shortestPathBinaryMatrix(grid: list[list[int]]) -> int:
-    n = len(grid)
-    if grid[0][0] == 1 or grid[n - 1][n - 1] == 1:
-        return -1
-    queue = deque([(0, 0, 1)])
-    visited = {(0, 0)}
-    directions = [
-        (-1, -1), (-1, 0), (-1, 1),
-        (0, -1),           (0, 1),
-        (1, -1),  (1, 0),  (1, 1)
-    ]
-    while queue:
-        r, c, dist = queue.popleft()
-        if r == n - 1 and c == n - 1:
-            return dist
-        for dr, dc in directions:
-            nr, nc = r + dr, c + dc
-            if 0 <= nr < n and 0 <= nc < n and grid[nr][nc] == 0 and (nr, nc) not in visited:
-                visited.add((nr, nc))
-                queue.append((nr, nc, dist + 1))
-    return -1
-
-test_grid = [[0, 1], [1, 0]]
-assert shortestPathBinaryMatrix(test_grid) == 2, "Assertion failed: expected shortest path length to be 2"
 ```
 
 ## Takeaway

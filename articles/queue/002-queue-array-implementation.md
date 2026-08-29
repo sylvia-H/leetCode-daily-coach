@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can write a basic queue class using an array.
-  - Explain why shift() or pop(0) takes O(n) time complexity in standard arrays.
+  - 能用陣列寫出基本的佇列 class。
+  - 能說明為何在一般陣列上 shift() 或 pop(0) 的時間複雜度是 O(n)。
 ---
 ## Concept
 
@@ -72,64 +72,6 @@ queue.append(4)
 val = queue.popleft()
 assert val == 1, "assertion failed"
 assert len(queue) == 3, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ArrayQueue<T> {
-  private items: T[] = [];
-
-  enqueue(item: T): void {
-    this.items.push(item);
-  }
-
-  dequeue(): T | undefined {
-    return this.items.shift();
-  }
-
-  peek(): T | undefined {
-    return this.items[0];
-  }
-
-  size(): number {
-    return this.items.length;
-  }
-}
-
-const queue = new ArrayQueue<number>();
-queue.enqueue(10);
-queue.enqueue(20);
-if (queue.dequeue() !== 10) throw new Error("assertion failed");
-if (queue.size() !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ArrayQueue:
-    def __init__(self):
-        self.items = []
-
-    def enqueue(self, item):
-        self.items.append(item)
-
-    def dequeue(self):
-        if not self.is_empty():
-            return self.items.pop(0)
-        return None
-
-    def is_empty(self):
-        return len(self.items) == 0
-
-    def size(self):
-        return len(self.items)
-
-queue = ArrayQueue()
-queue.enqueue(10)
-queue.enqueue(20)
-assert queue.dequeue() == 10, "assertion failed"
-assert queue.size() == 1, "assertion failed"
 ```
 
 ## Takeaway

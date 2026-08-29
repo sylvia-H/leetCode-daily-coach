@@ -6,8 +6,8 @@ pattern_label: Reusable Elements Sum Pattern
 complexity_label: O(2^(t/min)) / O(t/min)
 estimated_minutes: 20
 exit_criteria:
-  - Can manage target deduction during recursion.
-  - Can pass the current index back into the recursive call to allow reuse.
+  - 能在遞迴過程中管理目標值的扣減。
+  - 能把當前索引原樣傳回遞迴呼叫，以允許元素重複使用。
 ---
 ## Concept
 
@@ -83,63 +83,6 @@ def optimized_sum(candidates: list[int], target: int) -> list[list[int]]:
     return res
 
 assert len(optimized_sum([2], 1)) == 0, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function combinationSum(candidates: number[], target: number): number[][] {
-  const result: number[][] = [];
-  
-  function backtrack(start: number, currentTarget: number, path: number[]) {
-    if (currentTarget === 0) {
-      result.push([...path]);
-      return;
-    }
-    if (currentTarget < 0) {
-      return;
-    }
-    
-    for (let i = start; i < candidates.length; i++) {
-      path.push(candidates[i]);
-      backtrack(i, currentTarget - candidates[i], path);
-      path.pop();
-    }
-  }
-  
-  candidates.sort((a, b) => a - b);
-  backtrack(0, target, []);
-  return result;
-}
-
-const res = combinationSum([2, 3, 6, 7], 7);
-if (res.length !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def combinationSum(candidates: list[int], target: int) -> list[list[int]]:
-    result = []
-    
-    def backtrack(start: int, current_target: int, path: list[int]):
-        if current_target == 0:
-            result.append(list(path))
-            return
-        if current_target < 0:
-            return
-            
-        for i in range(start, len(candidates)):
-            path.append(candidates[i])
-            backtrack(i, current_target - candidates[i], path)
-            path.pop()
-            
-    candidates.sort()
-    backtrack(0, target, [])
-    return result
-
-res = combinationSum([2, 3, 6, 7], 7)
-assert len(res) == 2, "assertion failed"
 ```
 
 ## Takeaway

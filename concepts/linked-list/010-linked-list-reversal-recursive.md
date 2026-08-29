@@ -12,14 +12,10 @@ prerequisite:
 next:
   - linked-list-merge-two-sorted
 learning_goal:
-  - >-
-    Understand how recursive call stacks can reverse linked list pointers from
-    tail to head.
+  - 理解遞迴呼叫堆疊如何從尾到頭反轉 linked list 的指標。
 exit_criteria:
-  - >-
-    Can write a recursive function that reverses the rest of the list and fixes
-    pointer directions on unwinding
-  - Can identify base cases for recursion
+  - 能寫出遞迴函式，先反轉串列的其餘部分，並在回溯（unwinding）時修正指標方向
+  - 能辨識遞迴的 base case
 leetcode:
   - 206
   - 25

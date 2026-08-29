@@ -14,12 +14,10 @@ next:
   - hash-table-grouping-anagrams
   - string-sliding-window-fixed
 learning_goal:
-  - >-
-    Track character frequencies inside a sliding window to satisfy complex
-    substring constraints.
+  - '追蹤 Sliding Window 內的字元頻率，以滿足複雜的子字串限制條件。'
 exit_criteria:
-  - Can update frequency map when sliding window boundaries move
-  - Can evaluate window validity based on frequency conditions
+  - '能在視窗邊界移動時更新 frequency map'
+  - '能依據頻率條件判斷視窗是否合法'
 leetcode:
   - 438
   - 76

@@ -6,128 +6,97 @@ pattern_label: Simulation
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can parse structured string formats like run-length encodings or basic
-    calculators.
+  - 能解析結構化的字串格式，例如 run-length encoding 或基本計算機。
 ---
 ## Concept
 
-String Parsing and State Simulation 指的是依序走訪字串中的每個字元或 Token，並透過狀態旗標、指針或是 Stack 來追蹤目前的解析狀態，進而完成字串的轉換、計算或格式化。這類問題的核心在於將非結構化或半結構化的字串轉換為具備邏輯意義的結構，例如數值運算、標記語言或是語法樹的解析。
+String Parsing and State Simulation（字串解析與狀態模擬）處理的是「字串本身是一段待解讀的輸入」的題型：把它轉成數值、清洗成規格化的格式，或依語法規則求值。做法仍是線性掃描的骨架——單一迴圈逐字元前進——但每一步做的不再只是計數，而是**狀態轉移**：用狀態變數（現在在讀空白、符號還是數字？）、累積器（目前讀到的數值或片段）與必要時的 Stack（保管巢狀結構的外層 context）共同記住解析進度。正確性依然由迴圈不變式保證：**走到位置 i 時，狀態完整代表已讀過的前 i 個字元的解析結果**；迴圈結束，狀態就是整個字串的答案。
 
 ## Thinking
 
-在處理字串解析與狀態模擬時，首要任務是定義明確的狀態機（State Machine）或轉換規則。面對複雜的字串輸入，不宜直接撰寫巢狀的條件判斷，而應先梳理可能出現的邊界條件，例如前導空白、正負號、溢位（Overflow）以及非預期的特殊字元。接著，決定是否需要輔助資料結構（如 Stack 來處理括號或巢狀結構），或者僅需常數級別的指針與變數來記錄當前狀態。在走訪過程中，嚴格檢查每一個字元對狀態轉移的影響，並在迴圈結束後處理最後一個狀態的收尾工作。
+動手前先把「合法輸入長什麼樣」畫成階段。以字串轉整數為例，階段順序固定：跳過前導空白 → 讀至多一個正負號 → 連續數字 → 遇到第一個非數字字元即停止。狀態機就是把每個階段寫成明確的區段，而不是把所有判斷塞進同一座 if 森林——階段化之後，每個邊界（全空白、只有符號、"+-12" 讀完 + 就該停）都有明確的歸屬。數字累積的通式是 `result = result * 10 + digit`；溢位防守必須發生在乘十**之前**——先檢查 result 是否已超過上限除以十（相等時再看新數位），等溢位發生再補救就太遲了，多數語言不會替你擲錯，只會默默給出錯誤的值。第二類問題（單字反轉、共同前綴）先用 tokenization 降維：把字串切成單字或逐位對齊的欄位，再對 token 序列操作。最後留意**收尾**：最後一段數值或 token 沒有「下一個字元」替它觸發送出，迴圈自然結束後必須補處理一次，這是狀態模擬最常漏的一步。
 
 ## Pattern Recognition
 
-當題目要求將字串轉換為特定格式、解析算術運算式、尋找特定前綴、反轉單字順序，或是驗證字串是否符合某種語法規則時，通常適用 Simulation Pattern。辨識線索包括：輸入為 String、需要逐字元處理（Character-by-character processing）、維護多個狀態變數（如 sign, base, index），或是牽涉到括號匹配與巢狀層級的處理。
+輸入是字串、輸出是數值、清洗後字串或合法性判定，而且規則帶有**順序性**——先讀到什麼會改變後面字元的意義（符號只在數字前有效、引號內的空白不是分隔符）——就是 Simulation Pattern。訊號還包括：題目用一長串規則定義合法格式、要求處理前導與多餘空白、或牽涉括號與巢狀層級（此時 Stack 負責保存外層做到一半的半成品）。它與單純線性掃描的分界在於狀態的性質：掃描的狀態通常是一兩個計數器，解析的狀態則是「你現在位於語法的哪個位置」。
 
 ## Common Mistakes
 
-常見錯誤包括未妥善處理空字串或僅包含空白的字串、忽略數值運算時的整數溢位邊界、在迴圈終止條件或指針遞增時發生 Index Out of Bounds 異常，以及未考慮連續符號（如 "+-12"）帶來的狀態混亂。此外，過度依賴昂貴的正則表達式而非手動狀態模擬，有時會導致效能低落或在極端測資下逾時。
+第一是漏掉退化輸入：空字串、全空白、只有符號沒有數字——狀態機的每個階段都要能接受「這個階段一個字元都沒有」。第二是溢位檢查時機錯誤：乘十之後才檢查，等於沒檢查。第三是收尾遺漏：迴圈結束時累積器裡的最後一段數值或單字沒被送出，測資稍長就現形。第四是過度依賴 Regular Expression：一條龐大的 pattern 也許能過範例，但邊界行為藏在引擎細節裡難以論證；面試時手寫狀態機，反而能逐條指出每個邊界的處理，展示的正是這一課要練的掌控力。
 
 ## Complexity
 
-Time Complexity: O(n)，其中 n 為字串長度，因為通常需要線性掃描字串一次或常數次。
-Space Complexity: O(n) 或 O(1)，取決於是否需要使用 Stack 或額外的集合來儲存中間結果或 Token。
+時間複雜度 O(n)：每個字元被讀取常數次；即使先 trim、再 split、最後 join 走了三趟，成本相加仍是線性。空間複雜度 O(n) 或 O(1)：tokenization 的單字列表與 Stack 都可能保存與輸入同量級的內容；純狀態機解析（如字串轉整數）只需常數個狀態變數，可做到 O(1)。
 
 ## Digest
 
-String Parsing and State Simulation 核心在於有條理地追蹤字串處理過程中的各種狀態。我們學習了如何透過指針、狀態變數與 Stack 來安全地轉換、計算及解析字串，並特別注意邊界條件如溢位、空白與符號。掌握此 Pattern 能有效應對各類字串處理與格式化考題。
+字串解析把線性掃描升級成狀態機：逐字元前進，用狀態變數、累積器與 Stack 記住「前綴讀到這裡的解析結果」。以字串轉整數為例：跳空白 → 讀至多一個符號 → 累積數字（result * 10 + digit，乘十前先防溢位）→ 遇非數字即停，所以 "+-12" 讀完 + 遇到 - 就結束、得 0。三個高頻失誤：退化輸入（空字串、全空白、只有符號）沒接住；溢位檢查放在乘十之後；迴圈結束後累積器裡的最後一段沒收尾。tokenization（split 清洗空白）能把單字反轉、共同前綴這類題降維成序列操作。時間 O(n)；空間看是否保存 token 或 Stack，純狀態機可 O(1)。
 
 ## TypeScript Tip
 
+三個階段各自成段：跳前導空白、至多讀一個符號、累積數字直到第一個非數字字元。"+-12" 讀完 + 之後遇到 -，不是數字、立即停止，回傳 0。
+
 ```typescript
-function processTokens(s: string): string[] {
-  const tokens = s.trim().split(/\s+/);
-  if (tokens.length !== 2) throw new Error("assertion failed");
-  return tokens;
+import assert from "node:assert";
+
+function parseIntSim(s: string): number {
+  let i = 0;
+  while (s[i] === " ") i++;
+  let sign = 1;
+  if (s[i] === "+" || s[i] === "-") {
+    if (s[i] === "-") sign = -1;
+    i++;
+  }
+  let result = 0;
+  while (i < s.length) {
+    const c = s[i]!;
+    if (c < "0" || c > "9") break;
+    result = result * 10 + (c.charCodeAt(0) - 48);
+    i++;
+  }
+  return sign * result;
 }
-processTokens("hello world");
+
+assert.strictEqual(parseIntSim("   -42abc"), -42);
+assert.strictEqual(parseIntSim("+-12"), 0);
+assert.strictEqual(parseIntSim("  "), 0);
 ```
 
 ## Python Tip
 
-```python
-def process_tokens(s: str) -> list[str]:
-    tokens = s.strip().split()
-    assert len(tokens) == 2, "assertion failed"
-    return tokens
-
-process_tokens("hello world")
-```
-
-## TypeScript Corner
-
-```typescript
-function parseStringState(s: string): number {
-  const trimmed = s.trim();
-  if (trimmed.length === 0) return 0;
-  
-  let sign = 1;
-  let i = 0;
-  let result = 0;
-  
-  if (trimmed[0] === '-' || trimmed[0] === '+') {
-    sign = trimmed[0] === '-' ? -1 : 1;
-    i++;
-  }
-  
-  while (i < trimmed.length && trimmed[i] >= '0' && trimmed[i] <= '9') {
-    const digit = Number(trimmed[i]);
-    result = result * 10 + digit;
-    i++;
-  }
-  
-  const finalResult = result * sign;
-  if (finalResult !== 42) throw new Error("assertion failed");
-  return finalResult;
-}
-
-parseStringState("  42");
-```
-
-## Python Corner
+run-length 解碼是「累積＋收尾」的縮影：數字逐位累積成 count（多位數靠 `count * 10 + int(c)`），遇到新字母才把上一組送出——所以迴圈結束後，最後一組仍掛在狀態裡，必須補送一次。
 
 ```python
-def parse_string_state(s: str) -> int:
-    trimmed = s.strip()
-    if not trimmed:
-        return 0
-    
-    sign = 1
-    i = 0
-    result = 0
-    
-    if trimmed[0] in ('-', '+'):
-        sign = -1 if trimmed[0] == '-' else 1
-        i += 1
-        
-    while i < len(trimmed) and '0' <= trimmed[i] <= '9':
-        digit = int(trimmed[i])
-        result = result * 10 + digit
-        i += 1
-        
-    final_result = result * sign
-    assert final_result == 42, "assertion failed"
-    return final_result
+def decode_rle(s: str) -> str:
+    out: list[str] = []
+    ch = ""
+    count = 0
+    for c in s:
+        if c.isdigit():
+            count = count * 10 + int(c)
+        else:
+            out.append(ch * count)
+            ch, count = c, 0
+    out.append(ch * count)  # 收尾：最後一組還在狀態裡
+    return "".join(out)
 
-parse_string_state("  42")
+assert decode_rle("a3b12") == "aaa" + "b" * 12
+assert decode_rle("") == ""
 ```
 
 ## Takeaway
 
-字串解析的關鍵在於狀態定義與邊界防守。透過嚴謹的指針控制與狀態轉移，能將複雜的文字轉換化為清晰的邏輯執行。
+逐字元轉移狀態、乘十前防溢位、迴圈結束後收尾累積器——解析的正確性來自狀態與前綴始終同步。
 
 ## Tomorrow Preview
 
-明天我們將深入探討 Sliding Window 與 Two Pointers 的進階結合，學習如何在動態區間內維護複雜的子字串條件，敬請期待！
+string 模組到此收官——從字元編碼、線性掃描、對向雙指標、滑動視窗、雜湊分組、中心擴展一路走到子字串搜尋與狀態模擬，你已經能把多數字串題拆回熟悉的骨架。明天起展開全新的模組，用同樣的節奏繼續推進。
 
 ## Today's Challenge
 
-- **8** · 需要依序處理前導空白、正負號以及數值字元的累積，並隨時檢查數值溢位，是經典的 State Simulation 題型。
-  - Hint: 使用變數記錄目前的 sign、result 與狀態階段（如尋找空白、尋找符號、讀取數字）。
-- **14** · 透過水平掃描或垂直掃描比對多個字串的前綴，模擬字串匹配的過程。
-  - Hint: 可以將第一個字串作為基準，逐個字元與其餘字串進行比對。
-- **151** · 需要清理多餘空白、分割單字並將順序反轉，考驗對字串 Tokenization 與狀態調整的掌控能力。
-  - Hint: 善用內建的 split 方法去除多餘空白後再進行陣列反轉與組合。
+- **8** · 字串轉整數是狀態機解析的原型：空白、符號、數字三個階段順序固定，溢位要在乘十之前攔截。
+  - Hint: 用索引逐階段前進；累積前先檢查是否會超出 32 位元上限，會超出就直接夾在邊界值回傳。
+- **14** · 共同前綴是逐位驗證的模擬：第 j 位要進入答案，必須每個字串的第 j 位都存在且相同。
+  - Hint: 以第一個字串為基準逐位向外比對，任何字串在第 j 位不符或已到結尾，答案就是前 j 位。
+- **151** · 單字反轉的難點全在清洗：多餘空白要在 tokenization 階段消化，而不是留到反轉階段補救。
+  - Hint: split 不帶參數（或手寫狀態機）切出單字後反轉再 join；想進一步 O(1) 空間就用字元陣列原地做。

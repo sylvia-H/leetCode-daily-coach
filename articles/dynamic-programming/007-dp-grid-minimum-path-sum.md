@@ -63,61 +63,6 @@ def solve_grid(grid: list[list[int]]) -> int:
 solve_grid([[3, 4, 5]])
 ```
 
-## TypeScript Corner
-
-```typescript
-function minPathSum(grid: number[][]): number {
-  const m = grid.length;
-  const n = grid[0].length;
-  const dp: number[] = new Array(n).fill(0);
-  
-  for (let i = 0; i < m; i++) {
-    for (let j = 0; j < n; j++) {
-      if (i === 0 && j === 0) {
-        dp[j] = grid[i][j];
-      } else if (i === 0) {
-        dp[j] = dp[j - 1] + grid[i][j];
-      } else if (j === 0) {
-        dp[j] = dp[j] + grid[i][j];
-      } else {
-        dp[j] = Math.min(dp[j], dp[j - 1]) + grid[i][j];
-      }
-    }
-  }
-  const result = dp[n - 1];
-  if (result !== 7) throw new Error("assertion failed");
-  return result;
-}
-
-minPathSum([[1, 3, 1], [1, 5, 1], [4, 2, 1]]);
-```
-
-## Python Corner
-
-```python
-def minPathSum(grid: list[list[int]]) -> int:
-    m = len(grid)
-    n = len(grid[0])
-    dp = [0] * n
-    
-    for i in range(m):
-        for j in range(n):
-            if i == 0 and j == 0:
-                dp[j] = grid[i][j]
-            elif i == 0:
-                dp[j] = dp[j - 1] + grid[i][j]
-            elif j == 0:
-                dp[j] = dp[j] + grid[i][j]
-            else:
-                dp[j] = min(dp[j], dp[j - 1]) + grid[i][j]
-                
-    result = dp[n - 1]
-    assert result == 7, "assertion failed"
-    return result
-
-minPathSum([[1, 3, 1], [1, 5, 1], [4, 2, 1]])
-```
-
 ## Takeaway
 
 掌握網格動態規劃的邊界初始化與一維滾動陣列技巧，是解決矩陣極值路徑問題的關鍵。

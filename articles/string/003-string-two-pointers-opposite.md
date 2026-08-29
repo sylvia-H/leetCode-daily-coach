@@ -6,116 +6,84 @@ pattern_label: Two Pointers
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can implement palindrome checks efficiently using two pointers.
+  - 能使用 Two Pointer 有效率地實作回文檢查。
 ---
 ## Concept
 
-String Two Pointers: Opposite Direction 是一種透過兩個指標分別從字串的兩端（起點與終點）向中間移動，藉此處理對稱性質或進行區段操作的核心演算法技巧。這種方法能夠避免建立額外的暫存字串或使用高額的額外記憶體空間，特別適用於回文檢查、字元反轉以及特定條件的字串解析問題。
+String Two Pointers: Opposite Direction（字串對向雙指標）把陣列課學過的對向雙指標搬到字串上：左指標 left 從索引 0 出發、右指標 right 從索引 n - 1 出發，每輪處理兩端字元後同步向內一步，直到相遇或交錯。它能一趟解決迴文檢查與反轉這類對稱問題，靠的是一條迴圈不變式：**區間 [left, right] 之外的字元已全部驗證（或處理）為對稱相符**。每輪只要確認 s[left] 與 s[right] 這一對，不變式就向內推進一層；當指標相遇或交錯時，不變式涵蓋整個字串，結論立即成立。全程不建立暫存字串，額外空間維持常數。
 
 ## Thinking
 
-在思考這類問題時，首要任務是建立左右兩個指標：左指標通常初始化為 0，指向字串的最左端；右指標則初始化為 n - 1，指向字串的最右端。接著使用迴圈讓兩者逐漸向中心靠攏。在每一次迭代中，我們根據題目的驗證條件來比較或處理左右指標所指向的字元，並在適當時機將指標向內遞增或遞減。
+實作骨架：`left = 0`、`right = n - 1`，主迴圈 `while (left < right)`。以迴文檢查為例，每輪比較 s[left] 與 s[right]：不相等立即回傳 false——對稱的定義就是這兩個位置必須成對；相等則 `left++`、`right--`，把「已驗證」的範圍向內擴一層。終止條件為什麼用 `<` 而不是 `<=`？因為 left == right 時兩指標指向同一個中央字元，任何字元與自己必然相符，比了也不改變結果，所以相遇即可停。反轉字串則把「比較」換成「交換」：暫存 s[left]、把 s[right] 搬到左邊、再把暫存值放到右邊，指標同樣向內推進；相遇那格自己換自己沒有意義，同一條 `left < right` 依然成立。進度論證也很直接：每輪兩指標各前進一步，區間長度每輪縮小 2，至多 n / 2 輪必然結束，不會有無窮迴圈。
 
 ## Pattern Recognition
 
-當題目涉及「回文 (Palindrome)」、「對稱性檢查 (Symmetric String)」、「字串反轉 (String Reversal)」或「從兩端向內縮減的條件判斷」時，即可高度懷疑適用 String Two Pointers: Opposite Direction Pattern。此外，當我們需要原地修改字串或在線性時間內找出特定對稱區間時，這也是標準的解題模型。
+看到這些訊號時，優先考慮字串對向雙指標：一、對稱性——迴文檢查、字串或區段反轉，左右位置天然成對；二、要求原地處理或 O(1) 空間，不允許建立反轉副本；三、答案能由兩端向內逐對決定。單字順序反轉這類題同樣適用：先把字串切成單字序列，再對序列做對向交換——「元素」從字元升級為單字，骨架完全不變。反之，若處理方向是單向前進累積狀態（上一課的 Linear Scan），或區間需要同向伸縮，就不屬於這個 Pattern 的守備範圍。
 
 ## Common Mistakes
 
-最常見的錯誤包含未能正確處理指標交錯的終止條件，導致迴圈變成無限迴圈或發生陣列索引超出邊界的錯誤 (Index Out of Bounds)。另一個常見問題是在略過空白字元或標點符號時，忘記在內層迴圈加上 left < right 的防護檢查，導致左指標與右指標交錯後仍繼續移動。
+第一個常見錯誤是終止條件寫錯：`left <= right` 通常只是多比一次無害，真正危險的是寫成 `left != right`——偶數長度字串的兩指標會直接交錯而過、永不相等，形成無窮迴圈或索引越界。第二是忘記字串不可變：TypeScript 與 Python 的字串都不能對索引位置賦值，原地反轉前必須先轉成字元陣列（或如單字反轉先 split 成序列），處理完再 join 回字串。第三是初始位置差一：右指標起點是 n - 1 而非 n，寫錯一步，第一輪就會在 TypeScript 讀到 undefined、在 Python 觸發 IndexError。
 
 ## Complexity
 
-Time Complexity: O(n)，其中 n 為字串長度，因為每個字元最多被左右指標訪問一次。Space Complexity: O(1)，只需要常數級別的指標變數來儲存狀態，不需要額外的大型資料結構。
+時間複雜度 O(n)：每輪迭代兩指標各向內一步，合計移動不超過 n 步，每步只做常數量的比較或交換。空間複雜度 O(1)：只需兩個索引與一個交換用的暫存變數。但要誠實記帳：若語言的字串不可變而必須先轉成字元陣列，那次轉換本身佔 O(n) 空間——純比較類的迴文檢查不用轉，能真正做到常數空間。
 
 ## Digest
 
-本次課程深入探討了 String Two Pointers: Opposite Direction 的核心運作機制。透過雙指標由外向內交會的特性，我們能夠以 O(n) 的時間複雜度與 O(1) 的空間複雜度解決諸如回文驗證與字串處理等經典問題。課程中透過詳細的思維步驟、常見錯誤分析以及 TypeScript 與 Python 的實作示範，協助開發者掌握對稱字串處理的精髓。
+字串對向雙指標讓 left 與 right 從兩端向中間夾擠，每輪驗證或交換一對對稱位置。正確性靠迴圈不變式「區間 [left, right] 之外的字元已全部對稱相符」，每輪向內推進一層，指標相遇即涵蓋全字串。終止條件用 `while (left < right)`：中央字元與自己必然相符，不需要比。每輪區間縮小 2，保證 O(n) 時間；純比較的迴文檢查只用兩個索引，額外空間 O(1)，但反轉類因字串不可變得先轉成字元陣列或單字序列，那筆 O(n) 空間要誠實記帳。迴文檢查、字串反轉、單字順序反轉都是它的主場。
 
 ## TypeScript Tip
 
-在 TypeScript 中實作時，務必注意字串的不可變性（Immutability），若需要修改字元通常需轉換為陣列處理。迴圈條件建議使用 while (left < right) 並妥善處理型別與邊界。
+TypeScript 字串不可變，純比較的迴文檢查直接用索引讀即可。開啟 `noUncheckedIndexedAccess` 後 `s[left]` 的型別是 `string | undefined`：兩端互比不受影響，但若要對字元呼叫方法，記得用 `!` 收斂。
+
 ```typescript
-function cleanAndCheck(s: string): boolean {
-  const filtered = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+import assert from "node:assert";
+
+function isPalindrome(s: string): boolean {
   let left = 0;
-  let right = filtered.length - 1;
+  let right = s.length - 1;
   while (left < right) {
-    if (filtered[left] !== filtered[right]) {
-      return false;
-    }
+    if (s[left] !== s[right]) return false;
     left++;
     right--;
   }
   return true;
 }
-const res = cleanAndCheck("A man, a plan, a canal: Panama");
-if (!res) throw new Error("assertion failed");
+
+assert.strictEqual(isPalindrome("racecar"), true);
+assert.strictEqual(isPalindrome("level"), true);
+assert.strictEqual(isPalindrome("ab"), false);
 ```
 
 ## Python Tip
 
-在 Python 中，處理字串時常利用字串切片或內建方法結合雙指標。當我們需要手動控制指標向內移動並略過非文數字時，需確保內層迴圈不會超越邊界。
+Python 的多重指派讓初始化一行完成；`s.split()` 不帶參數會自動吞掉連續空白與首尾空白，正好完成單字反轉需要的清洗，之後對序列做對向交換即可。
+
 ```python
 def reverse_words(s: str) -> str:
-    words = s.strip().split()
+    words = s.split()
     left, right = 0, len(words) - 1
     while left < right:
         words[left], words[right] = words[right], words[left]
         left += 1
         right -= 1
-    return ' '.join(words)
+    return " ".join(words)
 
-res = reverse_words("the sky is blue")
-assert res == 'blue is sky the', 'assertion failed'
-```
-
-## TypeScript Corner
-
-```typescript
-function isPalindrome(s: string): boolean {
-  let left = 0;
-  let right = s.length - 1;
-  while (left < right) {
-    if (s[left] !== s[right]) {
-      return false;
-    }
-    left++;
-    right--;
-  }
-  return true;
-}
-const res = isPalindrome("radar");
-if (!res) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def is_palindrome(s: str) -> bool:
-    left, right = 0, len(s) - 1
-    while left < right:
-        if s[left] != s[right]:
-            return False
-        left += 1
-        right -= 1
-    return True
-
-res = is_palindrome("radar")
-assert res is True, "assertion failed"
+assert reverse_words("  the sky  is blue ") == "blue is sky the"
+assert reverse_words("hello") == "hello"
 ```
 
 ## Takeaway
 
-運用左右雙指標向內靠攏，以 O(n) 時間與 O(1) 空間高效解決對稱字串與區段處理問題。
+左右指標從兩端向內夾擠，每輪驗證一對對稱位置；`while (left < right)` 相遇即停，O(n) 時間、O(1) 空間。
 
 ## Tomorrow Preview
 
-明天我們將探討 String Two Pointers 的另一種衍生模式：Same Direction（同向雙指標），這在處理字串壓縮、移除重複元素或滑動視窗（Sliding Window）問題時非常強大。
+明天進入這個 Pattern 的第一個變形：當字串混入空白與標點時，如何讓雙指標在移動中即時跳過無效字元、不另建過濾後的副本——同一條不變式，多一層邊界防護。
 
 ## Today's Challenge
 
-- **125** · 驗證回文需要比較字串對稱位置的字元，利用左右雙指標向內移動可完美達成。
-  - Hint: 注意先過濾或忽略非字母與數字的字元，並將英文字母轉為統一的大小寫再進行比較。
-- **151** · 處理字串中的單字反轉與空白過濾時，可利用雙指標從兩端向內或進行區段處理。
-  - Hint: 可以先將字串以空白分割成單字列表，再利用對向雙指標進行單字順序的反轉。
+- **125** · 驗證迴文是對向雙指標的原型：左右指標向內逐對比較對稱位置的字元。
+  - Hint: 先寫出乾淨字串版的 `while (left < right)` 逐對比較；本題還要忽略非英數字元並統一轉小寫再比。
+- **151** · 單字順序反轉把「對向交換」的元素從字元升級為單字，骨架不變。
+  - Hint: 先 split 出單字序列，再用左右指標對向交換整個序列，最後 join 回字串。

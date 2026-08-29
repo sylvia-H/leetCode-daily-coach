@@ -12,11 +12,9 @@ prerequisite:
 next:
   - heap-merge-k-sorted-lists
 learning_goal:
-  - >-
-    Combine hash map frequency counting with a priority queue to find top
-    frequent elements.
+  - 結合 hash map 頻率統計與 priority queue，找出出現頻率最高的元素。
 exit_criteria:
-  - Can extract the K elements with highest frequencies using a min-heap.
+  - 能使用 min-heap 取出頻率最高的 K 個元素。
 leetcode:
   - 347
 tags:

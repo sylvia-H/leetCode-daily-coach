@@ -6,7 +6,7 @@ pattern_label: Breadth-First Search
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - Find shortest paths in unweighted graphs using BFS.
+  - 能使用 BFS 在無權重圖中找出最短路徑。
 ---
 ## Concept
 
@@ -69,78 +69,6 @@ def process_queue(items: list[int]) -> list[int]:
     return res
 
 process_queue([1, 2])
-```
-
-## TypeScript Corner
-
-在 TypeScript 中實作 Queue 時，切勿直接使用陣列的 shift() 方法，因為這會導致每次移除前端元素時都需要搬移其餘元素，將效能降至 O(N)。正確的做法是實作雙指標佇列或使用自定義的鏈結串列節點來維持 O(1) 的彈出效能。
-
-```typescript
-class QueueNode<T> {
-  constructor(public val: T, public next: QueueNode<T> | null = null) {}
-}
-
-class CustomQueue<T> {
-  private head: QueueNode<T> | null = null;
-  private tail: QueueNode<T> | null = null;
-  private size = 0;
-
-  push(val: T): void {
-    const node = new QueueNode(val);
-    if (!this.tail) {
-      this.head = this.tail = node;
-    } else {
-      this.tail.next = node;
-      this.tail = node;
-    }
-    this.size++;
-  }
-
-  pop(): T | null {
-    if (!this.head) return null;
-    const val = this.head.val;
-    this.head = this.head.next;
-    if (!this.head) this.tail = null;
-    this.size--;
-    return val;
-  }
-
-  isEmpty(): boolean {
-    return this.size === 0;
-  }
-}
-
-const q = new CustomQueue<number>();
-q.push(10);
-const val = q.pop();
-if (val !== 10) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-在 Python 中，絕對不要使用標準的 list.pop(0) 來模擬 Queue，因為這會觸發整串元素的記憶體搬移，導致時間複雜度劣化為 O(N)。標準函式庫中的 collections.deque 是最佳選擇，其 append() 與 popleft() 皆能在 O(1) 時間內完成。
-
-```python
-from collections import deque
-
-def bfs_traverse(start: int) -> list[int]:
-    queue = deque([start])
-    visited = {start}
-    result = []
-    
-    while queue:
-        curr = queue.popleft()
-        result.append(curr)
-        # 假設固定鄰居
-        for neighbor in [curr + 1]:
-            if neighbor <= 2 and neighbor not in visited:
-                visited.add(neighbor)
-                queue.append(neighbor)
-                
-    return result
-
-res = bfs_traverse(1)
-assert res == [1, 2], "assertion failed"
 ```
 
 ## Takeaway

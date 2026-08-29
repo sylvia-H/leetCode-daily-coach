@@ -51,8 +51,12 @@ Compiler MUST NOT 自行拼路徑。
 
 **閱讀用（不進 Discord，但 MUST 存在且非空）**：
 
-`Concept`、`Thinking`、`Pattern Recognition`、`Common Mistakes`、`Complexity`、
-`TypeScript Corner`、`Python Corner`、`Tomorrow Preview`
+`Concept`、`Thinking`、`Pattern Recognition`、`Common Mistakes`、`Complexity`、`Tomorrow Preview`
+
+> **F12 Phase 0（2026-08-29）移除 `TypeScript Corner` / `Python Corner`**：語言實戰內容改為
+> Discord 與 Pages 共用同一份 `TypeScript Tip` / `Python Tip`（docs/spec.md §10）。既有教材已
+> 一併刪除該兩段；再出現於 Article 者依下方「未列於上表的 `##` 區塊」規則被忽略，但 F12
+> agent-brief MUST NOT 再產生它們。
 
 **推播用（進 `Lesson`）**：
 
@@ -98,4 +102,4 @@ Compiler MUST NOT 自行拼路徑。
 
 - 觀念本體（`Concept` / `Thinking` / `Pattern Recognition` / `Common Mistakes`）合計 SHOULD ≤ 2,000 中文字。
 - 教學文字以**繁體中文**撰寫；技術術語 / Pattern 名稱 / API / 程式碼 MUST 保留英文。
-- Corner 區塊的程式碼 MUST 可執行——由 **F7** 加入 `content-gate.yml` 實測（本 Feature 不檢查，spec FR-028）。
+- `TypeScript Tip` / `Python Tip` 區塊的程式碼 MUST 可執行——由 **F7** 加入 `content-gate.yml` 實測（本 Feature 不檢查，spec FR-028）。F12 Phase 0 前此規則的對象是 Corner 兩段。

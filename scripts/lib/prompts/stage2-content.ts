@@ -4,6 +4,13 @@
 // （FR-024，tests/unit/no-structure-mutation.test.ts 守）；LLM 只產生 §10 各區塊的教學文字。
 import type { ResponseSchema } from "../llm-client.js";
 
+/** 後繼 Concept 的最小資料（Tomorrow Preview 用）。MUST NOT 讓 LLM 自行決定內容。 */
+export interface Stage2NextConcept {
+  id: string;
+  title: string;
+  patternLabel: string;
+}
+
 export interface Stage2CandidateProblem {
   id: number;
   /** Stage 1 Author Hints 已有的「為何適合此 Pattern」種子句，供 LLM 展開參考（非必填）。 */
@@ -20,6 +27,16 @@ export interface Stage2PromptInput {
   /** Stage 1 產出的 Author Hints 原始 markdown 文字（核心觀念/Pattern 辨識線索/Thinking/Common Mistakes/語言重點）。 */
   authorHints: string;
   candidateProblems: Stage2CandidateProblem[];
+  /**
+   * 本 Concept 在 DAG 上的後繼（Skeleton `next` 解析後的節點）——**Tomorrow Preview 的唯一依據**。
+   *
+   * 為何需要（F12 Phase 1 實測，見 specs/012-content-regeneration/pipeline-defects.md D1）：
+   * 本欄位原先不存在，prompt 亦無任何關於 Tomorrow Preview 的指示，模型只能編一個聽起來合理的
+   * 下一課。14 篇抽樣中 **13 篇** 與 Skeleton `next` 不符；其中 `array-move-zeroes` 的 `next` 是
+   * **空清單**，教材仍自信地預告了一門不存在的課。而沒有任何 Gate 判準檢查此區塊內容——只要
+   * 非空就過關，故缺陷可以一路凍結進 repo 而不被察覺。
+   */
+  nextConcepts: Stage2NextConcept[];
   /**
    * 上一次嘗試被 Gate 擋下的原因（重生時才有值）。
    *
@@ -45,15 +62,11 @@ export interface DraftArticleResponse {
   patternRecognition: string;
   commonMistakes: string;
   complexity: string;
-  /** 內含 fenced ```typescript code block，MUST 自帶斷言（`throw` 或 `node:assert`）。 */
-  tsCorner: string;
-  /** 內含 fenced ```python code block，MUST 自帶斷言（`assert`）。 */
-  pyCorner: string;
   tomorrowPreview: string;
   digest: string;
-  /** 內含 fenced ```typescript code block，MUST 自帶斷言。 */
+  /** 內含 fenced ```typescript code block，MUST 自帶斷言（`throw` 或 `node:assert`）。 */
   tsTip: string;
-  /** 內含 fenced ```python code block，MUST 自帶斷言。 */
+  /** 內含 fenced ```python code block，MUST 自帶斷言（`assert`）。 */
   pyTip: string;
   takeaway: string;
   challenge: DraftChallengeEntry[];
@@ -72,8 +85,6 @@ export const REQUIRED_ARTICLE_TEXT_FIELDS = [
   "patternRecognition",
   "commonMistakes",
   "complexity",
-  "tsCorner",
-  "pyCorner",
   "tomorrowPreview",
   "digest",
   "tsTip",
@@ -86,7 +97,8 @@ export const REQUIRED_ARTICLE_TEXT_FIELDS = [
  * 區塊，取代原本「prompt 規則 6 列出欄位清單、請 LLM 自律」的做法。
  *
  * 實測起因：以純文字輸出跑第一篇（computational-thinking-basics）時，**連續三次重生都缺
- * `complexity` / `tsCorner` / `pyCorner` 三個欄位**——與 Stage 1「總是回 9 個 Concept」同性質的
+ * `complexity` 與當時尚存的兩個 Corner 欄位**（Corner 已於 F12 Phase 0 移除）——與 Stage 1
+ * 「總是回 9 個 Concept」同性質的
  * 系統性偏差，重打同一份 prompt 不會變好（缺欄位會讓 `assembleArticleMarkdown` 把字面字串
  * `undefined` 插進文章，故 parseDraftArticleResponse 以 fail loud 擋下，見該函式註解）。
  *
@@ -127,6 +139,11 @@ export function buildStage2Prompt(input: Stage2PromptInput): string {
           .join("\n")
       : "（此 Concept 無對應題目）";
 
+  const nextList =
+    input.nextConcepts.length > 0
+      ? input.nextConcepts.map((n) => `- ${n.title}（id: ${n.id}，Pattern: ${n.patternLabel}）`).join("\n")
+      : "（無後繼——本 Concept 為該路徑終點）";
+
   // 回饋擺在最前面：這是本次與上次唯一的差異，放在長規則清單之後容易被淹沒。
   const feedback = input.retryFeedback
     ? `⚠️ 上一次產出未通過品質 Gate，原因如下，這次 MUST 修正：\n${input.retryFeedback}\n\n` +
@@ -149,16 +166,19 @@ ${input.authorHints}
 候選題目：
 ${problemsList}
 
+後繼 Concept（**tomorrowPreview 的唯一依據**，由課綱 DAG 決定，MUST NOT 自行更動）：
+${nextList}
+
 規則（MUST 遵守）：
 1. 全文以繁體中文撰寫；技術術語、Pattern 名稱、API、程式碼 MUST 保留英文原文，不得翻譯（§11）。
    **用語 MUST 正式、專業，MUST NOT 使用網路俚語或音譯用字**——這是教材，不是論壇貼文。
    例：MUST 寫「程式碼」或保留英文 code，**MUST NOT 寫「扣」「寫扣」「敲扣」**（實測曾在一篇文章內
    誤用 6 次）；同理 MUST NOT 使用「ㄊ」「der」「4」等諧音或口語簡寫。
 2. concept + thinking + patternRecognition + commonMistakes 四段敘述性文字合計 MUST ≤2000 字（觀念本體，不含程式碼）。
-3. **tsCorner / tsTip / pyCorner / pyTip 四個欄位的值 MUST 各自包含一個 markdown fenced code block**，
+3. **tsTip / pyTip 兩個欄位的值 MUST 各自包含一個 markdown fenced code block**，
    格式**完全比照**下例（含開頭的三個反引號與語言標示、以及真正的換行字元）：
 
-   tsCorner 的值範例：
+   tsTip 的值範例：
    \`\`\`typescript
    function solve(nums: number[]): number {
      const result = nums.reduce((a, b) => a + b, 0);
@@ -168,7 +188,7 @@ ${problemsList}
    solve([1, 2, 3]);
    \`\`\`
 
-   pyCorner 的值範例：
+   pyTip 的值範例：
    \`\`\`python
    def solve(nums: list[int]) -> int:
        result = sum(nums)
@@ -200,7 +220,13 @@ ${problemsList}
 4. challenge 陣列 MUST 為每個候選題目各提供恰好一條，欄位為 { id, whyThisPattern, hint? }；id MUST 與候選題目一致，MUST NOT 新增、刪除或替換題號。
 5. digest ≤900 字、tsTip/pyTip 各 ≤800 字（**含 fenced code block 與其中的型別定義本身**）、takeaway ≤120 字
    （Discord 字元預算，§14.5）；超限請自行精簡，MUST NOT 期待後續被截斷。
-6. 回傳格式 MUST 為單一 JSON 物件，形狀為 DraftArticleResponse（concept/thinking/patternRecognition/commonMistakes/complexity/tsCorner/pyCorner/tomorrowPreview/digest/tsTip/pyTip/takeaway/challenge），不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。
+6. **tomorrowPreview MUST 只依上方「後繼 Concept」撰寫，MUST NOT 憑印象自行發明下一課主題。**
+   - 後繼清單非空 ⇒ MUST 預告其中一門（預設取第一門），敘述 MUST 與該 Concept 的 title 與 Pattern 相符。
+   - 後繼清單為「無後繼」⇒ MUST 寫成本系列的收尾語，**MUST NOT 點名任何 Concept**，
+     MUST NOT 寫「明天將學習 X」這類承諾。
+   - MUST NOT 提及不在後繼清單內的 Concept——**包含課程中更早出現過的主題**（實測最常見的錯誤
+     正是預告一門其實是前置課的主題）。
+7. 回傳格式 MUST 為單一 JSON 物件，形狀為 DraftArticleResponse（concept/thinking/patternRecognition/commonMistakes/complexity/tomorrowPreview/digest/tsTip/pyTip/takeaway/challenge），不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。
 
 請開始展開。`;
 }

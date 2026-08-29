@@ -6,10 +6,8 @@ pattern_label: Composite Pattern (Midpoint + Reverse + Compare)
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Can find the middle, reverse the second half, compare values symmetrically,
-    and optionally restore the list
-  - Can explain why O(1) space requires structural modification
+  - 能找出中點、反轉後半段、對稱地比較值，並可選擇性地還原串列
+  - 能說明為何 O(1) 空間需要修改結構
 ---
 ## Concept
 
@@ -85,91 +83,6 @@ def reverse_list(head: ListNode | None) -> ListNode | None:
 head = ListNode(1, ListNode(2))
 reversed_head = reverse_list(head)
 assert reversed_head.val == 2, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-
-function isPalindrome(head: ListNode | null): boolean {
-  if (!head || !head.next) return true;
-  let slow: ListNode | null = head;
-  let fast: ListNode | null = head;
-  while (fast && fast.next) {
-    slow = slow!.next;
-    fast = fast.next.next;
-  }
-  let prev: ListNode | null = null;
-  let curr = slow;
-  while (curr) {
-    let nextTemp = curr.next;
-    curr.next = prev;
-    prev = curr;
-    curr = nextTemp;
-  }
-  let p1: ListNode | null = head;
-  let p2: ListNode | null = prev;
-  let result = true;
-  while (p2) {
-    if (p1!.val !== p2.val) {
-      result = false;
-      break;
-    }
-    p1 = p1!.next;
-    p2 = p2!.next;
-  }
-  if (result !== true) throw new Error("assertion failed");
-  return result;
-}
-const node = new ListNode(1, new ListNode(2, new ListNode(2, new ListNode(1))));
-if (!isPalindrome(node)) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def isPalindrome(head: ListNode | None) -> bool:
-    if not head or not head.next:
-        return True
-    slow = head
-    fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-    prev = None
-    curr = slow
-    while curr:
-        next_temp = curr.next
-        curr.next = prev
-        prev = curr
-        curr = next_temp
-    p1 = head
-    p2 = prev
-    result = True
-    while p2:
-        if p1.val != p2.val:
-            result = False
-            break
-        p1 = p1.next
-        p2 = p2.next
-    assert result == True, "assertion failed"
-    return result
-
-node = ListNode(1, ListNode(2, ListNode(2, ListNode(1))))
-assert isPalindrome(node) == True, "assertion failed"
 ```
 
 ## Takeaway

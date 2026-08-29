@@ -6,8 +6,8 @@ pattern_label: Pointer Manipulation
 complexity_label: 'O(1) for head, O(n) or O(1) with tail / O(1)'
 estimated_minutes: 20
 exit_criteria:
-  - Can prepend a node in O(1) time by updating head pointers correctly
-  - Can handle edge cases like inserting into an initially empty list
+  - 能藉由正確更新 head 指標，以 O(1) 時間在開頭插入節點
+  - 能處理如插入初始為空的串列等邊界情況
 ---
 ## Concept
 
@@ -67,64 +67,6 @@ def insert_head(head: 'NodeItem', val: int) -> 'NodeItem':
 
 new_head = insert_head(None, 42)
 assert new_head.val == 42, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-    val: number;
-    next: ListNode | null;
-    constructor(val: number, next: ListNode | null = null) {
-        this.val = val;
-        this.next = next;
-    }
-}
-
-class MyLinkedList {
-    private head: ListNode | null = null;
-    private tail: ListNode | null = null;
-    private size: number = 0;
-
-    addAtHead(val: number): void {
-        const newNode = new ListNode(val, this.head);
-        this.head = newNode;
-        if (!this.tail) {
-            this.tail = newNode;
-        }
-        this.size++;
-    }
-}
-
-const list = new MyLinkedList();
-list.addAtHead(1);
-if (list['head']?.val !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode' = None):
-        self.val = val
-        self.next = next
-
-class MyLinkedList:
-    def __init__(self):
-        self.head = None
-        self.tail = None
-        self.size = 0
-
-    def add_at_head(self, val: int) -> None:
-        new_node = ListNode(val, self.head)
-        self.head = new_node
-        if not self.tail:
-            self.tail = new_node
-        self.size += 1
-
-my_list = MyLinkedList()
-my_list.add_at_head(1)
-assert my_list.head.val == 1, "assertion failed"
 ```
 
 ## Takeaway

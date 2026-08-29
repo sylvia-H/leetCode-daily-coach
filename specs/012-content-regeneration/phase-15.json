@@ -1,0 +1,62 @@
+{
+  "phase": 15,
+  "window": "sessionIndex 196-209",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "backtracking-combination-sum",
+      "skeleton": "concepts/backtracking/004-backtracking-combination-sum.md",
+      "article": "articles/backtracking/004-backtracking-combination-sum.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "backtracking-combination-sum-ii",
+      "skeleton": "concepts/backtracking/005-backtracking-combination-sum-ii.md",
+      "article": "articles/backtracking/005-backtracking-combination-sum-ii.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "backtracking-n-queens-diagonal-pruning",
+      "skeleton": "concepts/backtracking/010-backtracking-n-queens-diagonal-pruning.md",
+      "article": "articles/backtracking/010-backtracking-n-queens-diagonal-pruning.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "backtracking-palindrome-partitioning",
+      "skeleton": "concepts/backtracking/008-backtracking-palindrome-partitioning.md",
+      "article": "articles/backtracking/008-backtracking-palindrome-partitioning.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "backtracking-permutation-basics",
+      "skeleton": "concepts/backtracking/006-backtracking-permutation-basics.md",
+      "article": "articles/backtracking/006-backtracking-permutation-basics.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "backtracking-permutation-with-duplicates",
+      "skeleton": "concepts/backtracking/007-backtracking-permutation-with-duplicates.md",
+      "article": "articles/backtracking/007-backtracking-permutation-with-duplicates.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "backtracking-subset-generation",
+      "skeleton": "concepts/backtracking/002-backtracking-subset-generation.md",
+      "article": "articles/backtracking/002-backtracking-subset-generation.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "backtracking-subset-with-duplicates",
+      "skeleton": "concepts/backtracking/003-backtracking-subset-with-duplicates.md",
+      "article": "articles/backtracking/003-backtracking-subset-with-duplicates.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "backtracking-word-search",
+      "skeleton": "concepts/backtracking/009-backtracking-word-search.md",
+      "article": "articles/backtracking/009-backtracking-word-search.md",
+      "quizCount": 8
+    }
+  ]
+}

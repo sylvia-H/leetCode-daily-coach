@@ -14,12 +14,10 @@ prerequisite:
 next:
   - hash-table-existence-tracking
 learning_goal:
-  - >-
-    Find target pairs or relationships by checking for their mathematical
-    complements in a hash map.
+  - '透過在 hash map 中檢查數學補數來找出目標配對或關係。'
 exit_criteria:
-  - 'Can identify the complement condition (e.g., target - current)'
-  - Can retrieve past elements during a single linear scan
+  - '能辨識補數條件（例如 target - current）'
+  - '能在單次線性掃描中取回先前出現過的元素'
 leetcode:
   - 1
   - 1679

@@ -65,43 +65,6 @@ def solve() -> int:
 solve()
 ```
 
-## TypeScript Corner
-
-```typescript
-import assert from "node:assert";
-
-function coinChange(coins: number[], amount: number): number {
-  const dp: number[] = Array(amount + 1).fill(Infinity);
-  dp[0] = 0;
-  for (const coin of coins) {
-    for (let w = coin; w <= amount; w++) {
-      if (dp[w - coin] !== Infinity) {
-        dp[w] = Math.min(dp[w], dp[w - coin] + 1);
-      }
-    }
-  }
-  return dp[amount] === Infinity ? -1 : dp[amount];
-}
-
-const result = coinChange([1, 2, 5], 11);
-assert.strictEqual(result, 3);
-```
-
-## Python Corner
-
-```python
-def change(amount: int, coins: list[int]) -> int:
-    dp = [0] * (amount + 1)
-    dp[0] = 1
-    for coin in coins:
-        for w in range(coin, amount + 1):
-            dp[w] += dp[w - coin]
-    return dp[amount]
-
-result = change(5, [1, 2, 5])
-assert result == 4
-```
-
 ## Takeaway
 
 完全背包靠正向迴圈，物品重複選取不求難。

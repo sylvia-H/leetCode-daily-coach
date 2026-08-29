@@ -6,8 +6,8 @@ pattern_label: Circular Monotonic Stack
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Can simulate circular array traversal using modulo indexing.
-  - Can find next greater elements across array wrap-arounds.
+  - 能用 modulo 索引模擬環狀陣列的走訪。
+  - 能跨越陣列的環狀邊界找出 next greater element。
 ---
 ## Concept
 
@@ -56,51 +56,6 @@ def py_tip_demo():
     assert len(indices) == 6, "assertion failed"
 
 py_tip_demo()
-```
-
-## TypeScript Corner
-
-```typescript
-function nextGreaterElements(nums: number[]): number[] {
-  const n = nums.length;
-  const res: number[] = new Array(n).fill(-1);
-  const stack: number[] = [];
-  for (let i = 2 * n - 1; i >= 0; i--) {
-    const idx = i % n;
-    while (stack.length > 0 && nums[stack[stack.length - 1]] <= nums[idx]) {
-      stack.pop();
-    }
-    if (i < n) {
-      if (stack.length > 0) {
-        res[idx] = nums[stack[stack.length - 1]];
-      }
-    }
-    stack.push(idx);
-  }
-  if (res[0] !== 2) throw new Error("assertion failed");
-  return res;
-}
-const testResult = nextGreaterElements([1, 2, 1]);
-```
-
-## Python Corner
-
-```python
-def nextGreaterElements(nums: list[int]) -> list[int]:
-    n = len(nums)
-    res = [-1] * n
-    stack = []
-    for i in range(2 * n - 1, -1, -1):
-        idx = i % n
-        while stack and nums[stack[-1]] <= nums[idx]:
-            stack.pop()
-        if i < n and stack:
-            res[idx] = nums[stack[-1]]
-        stack.append(idx)
-    assert res == [2, -1, 2], "assertion failed"
-    return res
-
-nextGreaterElements([1, 2, 1])
 ```
 
 ## Takeaway

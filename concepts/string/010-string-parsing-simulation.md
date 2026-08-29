@@ -12,13 +12,9 @@ prerequisite:
   - string-pattern-matching-basic
 next: []
 learning_goal:
-  - >-
-    Simulate string transformations or arithmetic evaluations using stacks or
-    state flags.
+  - '使用 stack 或狀態旗標模擬字串轉換或算術運算求值。'
 exit_criteria:
-  - >-
-    Can parse structured string formats like run-length encodings or basic
-    calculators.
+  - '能解析結構化的字串格式，例如 run-length encoding 或基本計算機。'
 leetcode:
   - 8
   - 14

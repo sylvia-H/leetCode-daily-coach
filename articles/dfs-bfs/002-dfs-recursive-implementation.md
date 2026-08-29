@@ -61,39 +61,6 @@ tree = {"left": None, "right": None}
 assert max_depth(tree) == 1, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function dfs(node: number | null, graph: Map<number, number[]>, visited: Set<number>): void {
-  if (node === null || visited.has(node)) return;
-  visited.add(node);
-  const neighbors = graph.get(node) || [];
-  for (const neighbor of neighbors) {
-    dfs(neighbor, graph, visited);
-  }
-}
-const graph = new Map([[1, [2]], [2, [1]]]);
-const visited = new Set<number>();
-dfs(1, graph, visited);
-if (!visited.has(2)) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def dfs(node: int | None, graph: dict[int, list[int]], visited: set[int]) -> None:
-    if node is None or node in visited:
-        return
-    visited.add(node)
-    for neighbor in graph.get(node, []):
-        dfs(neighbor, graph, visited)
-
-graph = {1: [2], 2: [1]}
-visited: set[int] = set()
-dfs(1, graph, visited)
-assert 2 in visited, "assertion failed"
-```
-
 ## Takeaway
 
 遞迴式 DFS 的精髓在於善用呼叫堆疊與基底條件，編寫時務必確認終止條件與已造訪記錄，防範堆疊溢位。

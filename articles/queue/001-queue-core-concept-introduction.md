@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(1) / O(n)
 estimated_minutes: 10
 exit_criteria:
-  - Can trace enqueue and dequeue operations mentally.
-  - Understand why queues are used for order-preserving processing.
+  - 能在腦中追蹤 enqueue 與 dequeue 的操作過程。
+  - 能理解為何佇列被用於保持順序的處理。
 ---
 ## Concept
 
@@ -60,68 +60,6 @@ queue.append(20)
 val = queue.popleft()  # dequeue
 
 assert val == 10, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class SimpleQueue<T> {
-  private items: T[] = [];
-
-  enqueue(item: T): void {
-    this.items.push(item);
-  }
-
-  dequeue(): T | undefined {
-    return this.items.shift();
-  }
-
-  peek(): T | undefined {
-    return this.items[0];
-  }
-
-  size(): number {
-    return this.items.length;
-  }
-}
-
-const q = new SimpleQueue<number>();
-q.enqueue(1);
-q.enqueue(2);
-const first = q.dequeue();
-if (first !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import deque
-
-class SimpleQueue:
-    def __init__(self):
-        self.items = deque()
-
-    def enqueue(self, item):
-        self.items.append(item)
-
-    def dequeue(self):
-        if self.items:
-            return self.items.popleft()
-        return None
-
-    def peek(self):
-        if self.items:
-            return self.items[0]
-        return None
-
-    def size(self):
-        return len(self.items)
-
-q = SimpleQueue()
-q.enqueue(1)
-q.enqueue(2)
-first = q.dequeue()
-assert first == 1, "assertion failed"
 ```
 
 ## Takeaway

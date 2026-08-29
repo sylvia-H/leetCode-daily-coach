@@ -6,8 +6,8 @@ pattern_label: Stack-to-Queue Transformation
 complexity_label: O(1) amortized / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Manage input and output stacks correctly.
-  - Understand why amortized analysis guarantees O(1) per operation.
+  - 能正確管理 input 與 output 兩個堆疊。
+  - 能理解為何攤銷分析能保證每次操作為 O(1)。
 ---
 ## Concept
 
@@ -64,88 +64,6 @@ class PythonStackHelper:
 
 helper = PythonStackHelper()
 assert helper.get_last() == 3, "assertion failed"
-```
-
-## TypeScript Corner
-
-在 TypeScript 中，我們通常使用標準的陣列（Array）來模擬 Stack，並利用 push 與 pop 方法來維持 LIFO 特性。以下為完整的實作與驗證程式碼：
-```typescript
-class MyQueue {
-    private inStack: number[] = [];
-    private outStack: number[] = [];
-
-    push(x: number): void {
-        this.inStack.push(x);
-    }
-
-    pop(): number {
-        this.moveIfNeeded();
-        return this.outStack.pop()!;
-    }
-
-    peek(): number {
-        this.moveIfNeeded();
-        return this.outStack[this.outStack.length - 1];
-    }
-
-    empty(): boolean {
-        return this.inStack.length === 0 && this.outStack.length === 0;
-    }
-
-    private moveIfNeeded(): void {
-        if (this.outStack.length === 0) {
-            while (this.inStack.length > 0) {
-                this.outStack.push(this.inStack.pop()!);
-            }
-        }
-    }
-}
-
-const q = new MyQueue();
-q.push(1);
-q.push(2);
-if (q.peek() !== 1) throw new Error("assertion failed");
-if (q.pop() !== 1) throw new Error("assertion failed");
-if (q.empty() === true) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-在 Python 中，我們可以使用標準的串列（List）來模擬 Stack，並透過 append 與 pop 方法來進行操作。以下為完整的實作與驗證程式碼：
-```python
-class MyQueue:
-    def __init__(self):
-        self.in_stack: list[int] = []
-        self.out_stack: list[int] = []
-
-    def push(x: int) -> None:
-        pass
-
-    def push(self, x: int) -> None:
-        self.in_stack.append(x)
-
-    def pop(self) -> int:
-        self._move_if_needed()
-        return self.out_stack.pop()
-
-    def peek(self) -> int:
-        self._move_if_needed()
-        return self.out_stack[-1]
-
-    def empty(self) -> bool:
-        return not self.in_stack and not self.out_stack
-
-    def _move_if_needed(self) -> None:
-        if not self.out_stack:
-            while self.in_stack:
-                self.out_stack.append(self.in_stack.pop())
-
-q = MyQueue()
-q.push(1)
-q.push(2)
-assert q.peek() == 1, "assertion failed"
-assert q.pop() == 1, "assertion failed"
-assert q.empty() is False, "assertion failed"
 ```
 
 ## Takeaway

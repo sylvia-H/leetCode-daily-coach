@@ -6,9 +6,7 @@ pattern_label: Cycle Detection
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Distinguish between globally visited nodes and nodes currently in the
-    recursion stack.
+  - 能區分全域已造訪的節點與目前位於遞迴堆疊中的節點。
 ---
 ## Concept
 
@@ -100,85 +98,6 @@ def check_cycle(n: int, edges: list[list[int]]) -> bool:
 
 
 assert check_cycle(3, [[0, 1], [1, 2], [2, 0]]) == True
-```
-
-## TypeScript Corner
-
-```typescript
-import assert from "node:assert";
-
-function canFinish(numCourses: number, prerequisites: number[][]): boolean {
-  const adj: number[][] = Array.from({ length: numCourses }, () => []);
-  for (const [dest, src] of prerequisites) {
-    adj[src].push(dest);
-  }
-
-  const state: number = 0;
-  const visiting: number = 1;
-  const visited: number = 2;
-  const states = new Uint8Array(numCourses);
-
-  function dfs(node: number): boolean {
-    if (states[node] === visiting) return true;
-    if (states[node] === visited) return false;
-
-    states[node] = visiting;
-    for (const neighbor of adj[node]) {
-      if (dfs(neighbor)) return true;
-    }
-    states[node] = visited;
-    return false;
-  }
-
-  for (let i = 0; i < numCourses; i++) {
-    if (states[i] === state) {
-      if (dfs(i)) return false;
-    }
-  }
-  return true;
-}
-
-assert.strictEqual(canFinish(2, [[1, 0]]), true);
-assert.strictEqual(canFinish(2, [[1, 0], [0, 1]]), false);
-```
-
-## Python Corner
-
-```python
-import sys
-
-sys.setrecursionlimit(2000)
-
-
-def canFinish(numCourses: int, prerequisites: list[list[int]]) -> bool:
-    adj = [[] for _ in range(numCourses)]
-    for dest, src in prerequisites:
-        adj[src].append(dest)
-
-    states = [0] * numCourses
-
-    def dfs(node: int) -> bool:
-        if states[node] == 1:
-            return True
-        if states[node] == 2:
-            return False
-
-        states[node] = 1
-        for neighbor in adj[node]:
-            if dfs(neighbor):
-                return True
-        states[node] = 2
-        return False
-
-    for i in range(numCourses):
-        if states[i] == 0:
-            if dfs(i):
-                return False
-    return True
-
-
-assert canFinish(2, [[1, 0]]) == True
-assert canFinish(2, [[1, 0], [0, 1]]) == False
 ```
 
 ## Takeaway

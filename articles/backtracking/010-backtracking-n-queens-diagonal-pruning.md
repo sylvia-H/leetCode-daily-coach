@@ -6,8 +6,8 @@ pattern_label: Constraint Propagation Pattern
 complexity_label: O(n!) / O(n)
 estimated_minutes: 25
 exit_criteria:
-  - Can formulate column and diagonal tracking sets/arrays.
-  - Can place queens row by row with immediate pruning.
+  - 能設計出追蹤 column 與對角線的 set／陣列。
+  - 能逐列（row by row）放置皇后並立即剪枝。
 ---
 ## Concept
 
@@ -66,77 +66,6 @@ def check_diagonal_fast(row: int, col: int, diag1: set, diag2: set) -> bool:
 d1 = set()
 d2 = set()
 assert check_diagonal_fast(0, 0, d1, d2) is True, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function solveNQueens(n: number): string[][] {
-  const result: string[][] = [];
-  const cols = new Set<number>();
-  const diag1 = new Set<number>();
-  const diag2 = new Set<number>();
-  const board: number[] = new Array(n);
-
-  function backtrack(row: number) {
-    if (row === n) {
-      result.push(board.map(col => ".".repeat(col) + "Q" + ".".repeat(n - 1 - col)));
-      return;
-    }
-    for (let col = 0; col < n; col++) {
-      const d1 = row - col;
-      const d2 = row + col;
-      if (cols.has(col) || diag1.has(d1) || diag2.has(d2)) continue;
-      cols.add(col);
-      diag1.add(d1);
-      diag2.add(d2);
-      board[row] = col;
-      backtrack(row + 1);
-      cols.delete(col);
-      diag1.delete(d1);
-      diag2.delete(d2);
-    }
-  }
-
-  backtrack(0);
-  if (result.length !== 2) throw new Error("assertion failed");
-  return result;
-}
-solveNQueens(4);
-```
-
-## Python Corner
-
-```python
-def solveNQueens(n: int) -> list[list[str]]:
-    result = []
-    cols = set()
-    diag1 = set()
-    diag2 = set()
-    board = [-1] * n
-
-    def backtrack(row: int):
-        if row == n:
-            result.append(["." * c + "Q" + "." * (n - 1 - c) for c in board])
-            return
-        for col in range(n):
-            d1 = row - col
-            d2 = row + col
-            if col in cols or d1 in diag1 or d2 in diag2:
-                continue
-            cols.add(col)
-            diag1.add(d1)
-            diag2.add(d2)
-            board[row] = col
-            backtrack(row + 1)
-            cols.remove(col)
-            diag1.remove(d1)
-            diag2.remove(d2)
-
-    backtrack(0)
-    assert len(result) == 2, "assertion failed"
-    return result
-solveNQueens(4)
 ```
 
 ## Takeaway

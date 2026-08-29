@@ -6,8 +6,8 @@ pattern_label: Bracket Matching
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can write a matching algorithm using a stack for open and close symbols.
-  - Can handle edge cases like unmatched closing or leftover opening symbols.
+  - 能用 stack 針對開啟與閉合符號寫出匹配演算法。
+  - 能處理未匹配的閉合符號或殘留的開啟符號等邊界情況。
 ---
 ## Concept
 
@@ -73,56 +73,6 @@ class Stack:
 s = Stack()
 s.push(42)
 assert s.pop() == 42, "assertion failed"
-```
-
-## TypeScript Corner
-
-在 TypeScript 中，我們可以使用陣列來模擬 Stack，並搭配映射物件或 switch 敘述來驗證括號對應關係。
-```typescript
-function isValid(s: string): boolean {
-  const stack: string[] = [];
-  const map: Record<string, string> = {
-    ')': '(',
-    '}': '{',
-    ']': '['
-  };
-  for (const char of s) {
-    if (char === '(' || char === '{' || char === '[') {
-      stack.push(char);
-    } else {
-      const top = stack.pop();
-      if (top !== map[char]) {
-        return false;
-      }
-    }
-  }
-  const result = stack.length === 0;
-  if (!result) throw new Error("assertion failed");
-  return result;
-}
-if (!isValid("()[]{}")) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-在 Python 中，通常使用串列（list）作為堆疊，並透過字典（dict）來定義右括號對應的左括號，藉此簡化條件判斷邏輯。
-```python
-def is_valid(s: str) -> bool:
-    stack = []
-    mapping = {')': '(', '}': '{', ']': '['}
-    for char in s:
-        if char in mapping.values():
-            stack.append(char)
-        elif char in mapping:
-            if not stack or stack.pop() != mapping[char]:
-                return false
-        else:
-            pass
-    result = len(stack) == 0
-    assert result, "assertion failed"
-    return result
-
-assert is_valid("()[]{}")
 ```
 
 ## Takeaway

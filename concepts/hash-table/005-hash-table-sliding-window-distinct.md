@@ -13,12 +13,10 @@ prerequisite:
 next:
   - hash-table-sliding-window-frequency
 learning_goal:
-  - >-
-    Maintain a sliding window of unique elements by adding and removing items
-    from a hash set.
+  - '透過在 hash set 中新增與移除元素，維護一個由不重複元素組成的 Sliding Window。'
 exit_criteria:
-  - Can expand window and add to set
-  - Can shrink window from the left and remove from set when duplicates occur
+  - '能擴張視窗並將元素加入 set'
+  - '能在出現重複時從左側收縮視窗並自 set 移除元素'
 leetcode:
   - 3
   - 219

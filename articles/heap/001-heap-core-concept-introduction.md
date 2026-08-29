@@ -6,7 +6,7 @@ pattern_label: Heap / Priority Queue
 complexity_label: O(log n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can explain the difference between min-heap and max-heap properties.
+  - 能說明 min-heap 與 max-heap 性質的差異。
 ---
 ## Concept
 
@@ -59,81 +59,6 @@ def max_heap_trick() -> int:
     return largest
 
 max_heap_trick()
-```
-
-## TypeScript Corner
-
-TypeScript 本身沒有內建的 Heap 或 Priority Queue 類別，因此開發者通常需要自行實作陣列基礎的二元堆積，或透過第三方套件處理。
-```typescript
-class MinHeap {
-  private heap: number[] = [];
-  
-  public push(val: number): void {
-    this.heap.push(val);
-    this.bubbleUp(this.heap.length - 1);
-  }
-  
-  public pop(): number | undefined {
-    if (this.heap.length === 0) return undefined;
-    const top = this.heap[0];
-    const bottom = this.heap.pop()!;
-    if (this.heap.length > 0) {
-      this.heap[0] = bottom;
-      this.bubbleDown(0);
-    }
-    return top;
-  }
-  
-  private bubbleUp(index: number): void {
-    while (index > 0) {
-      const parent = Math.floor((index - 1) / 2);
-      if (this.heap[parent] <= this.heap[index]) break;
-      [this.heap[parent], this.heap[index]] = [this.heap[index], this.heap[parent]];
-      index = parent;
-    }
-  }
-  
-  private bubbleDown(index: number): void {
-    const length = this.heap.length;
-    while (true) {
-      let left = 2 * index + 1;
-      let right = 2 * index + 2;
-      let smallest = index;
-      
-      if (left < length && this.heap[left] < this.heap[smallest]) smallest = left;
-      if (right < length && this.heap[right] < this.heap[smallest]) smallest = right;
-      if (smallest === index) break;
-      
-      [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
-      index = smallest;
-    }
-  }
-}
-
-const minHeap = new MinHeap();
-minHeap.push(5);
-minHeap.push(3);
-const val = minHeap.pop();
-if (val !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-Python 標準庫提供了 heapq 模組，預設實作 Min-Heap，直接運作於標準串列之上。
-```python
-import heapq
-
-def solve_heap() -> int:
-    nums = [5, 3, 8, 1]
-    heapq.heapify(nums)
-    smallest = heapq.heappop(nums)
-    heapq.heappush(nums, 2)
-    current_min = nums[0]
-    assert smallest == 1, "assertion failed"
-    assert current_min == 2, "assertion failed"
-    return current_min
-
-solve_heap()
 ```
 
 ## Takeaway

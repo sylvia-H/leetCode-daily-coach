@@ -9,6 +9,15 @@ export interface SelfCheckPromptInput {
   complexityLabel: string;
   /** 已組裝完成的完整 Full Article markdown（含 frontmatter），供 LLM 通篇複審。 */
   articleMarkdown: string;
+  /**
+   * 後繼 Concept 的 title 清單（可為空）。用於檢查 Tomorrow Preview 是否名副其實。
+   *
+   * 為何走 self-check 而非機械 Gate（F12 實測）：以「Tomorrow Preview 是否含後繼 title 的顯著詞」
+   * 對 14 篇人工核對過的教材實測，13 篇有後繼者命中 12 篇——唯一未命中的
+   * `array-in-place-removal` 其實**寫對了**，只是整句用中文表達（「已排序陣列的原地去重」）。
+   * 約 8% 的假陽性會擋掉正確教材並逼出無謂重生，故 MUST NOT 上這條正則判準；語意比對交給 LLM。
+   */
+  nextTitles: string[];
 }
 
 /** LLM self-check 回應：`confident=false` 或 `issues` 非空 ⇒ 觸發重生（R8）。 */
@@ -31,9 +40,13 @@ export function stripJsonFence(raw: string): string {
 
 export function buildSelfCheckPrompt(input: SelfCheckPromptInput): string {
   return `你是 LeetCode Daily Coach 課程引擎的教材審稿者。請複審以下已展開完成的教學文章，檢查：
-1. Complexity 區塊描述的時間/空間複雜度是否與 TypeScript/Python Corner 的程式碼實際邏輯一致。
+1. Complexity 區塊描述的時間/空間複雜度是否與 TypeScript/Python Tip 的程式碼實際邏輯一致。
 2. Pattern（${input.patternLabel}）是否確實適用於本文描述的解法與候選題目。
 3. 全文前後是否一致（Digest / Concept / Takeaway 對同一個觀念的描述無矛盾）。
+4. **Tomorrow Preview 是否與下列後繼 Concept 相符**：${
+    input.nextTitles.length > 0 ? input.nextTitles.join("、") : "（無後繼——MUST 為系列收尾語且不得點名任何 Concept）"
+  }
+   預告了不在清單內的主題（尤其是課程中更早出現過的主題）、或在無後繼時仍承諾「明天將學習 X」，皆屬問題。
 
 Concept: ${input.title}（id: ${input.conceptId}，宣告複雜度：${input.complexityLabel}）
 
@@ -42,7 +55,7 @@ ${input.articleMarkdown}
 --- 文章全文結束 ---
 
 回傳格式 MUST 為單一 JSON 物件：{ "confident": boolean, "issues": string[] }。
-若你對上述三項檢查皆有把握、無發現問題，回傳 { "confident": true, "issues": [] }。
+若你對上述四項檢查皆有把握、無發現問題，回傳 { "confident": true, "issues": [] }。
 若有任何一項不確定或發現問題，回傳 confident: false 並在 issues 逐條列出具體問題（供重生參考）。
 不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。`;
 }

@@ -11,13 +11,9 @@ prerequisite:
   - heap-find-median-from-data-stream
 next: []
 learning_goal:
-  - >-
-    Schedule tasks with cooldown periods using a max-heap of frequencies and a
-    waiting queue.
+  - 使用頻率 max-heap 與等待佇列，排程具有 cooldown 期間的任務。
 exit_criteria:
-  - >-
-    Can greedily process the most frequent available tasks while respecting
-    cooling timers.
+  - 能以 Greedy 方式處理當前可用且頻率最高的任務，同時遵守 cooldown 計時。
 leetcode:
   - 621
 tags:

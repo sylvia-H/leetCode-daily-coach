@@ -6,8 +6,8 @@ pattern_label: Breadth-First Search
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Process nodes level by level using queue size snapshots.
-  - Store child nodes into the queue for subsequent levels.
+  - 能利用佇列長度快照逐層處理節點。
+  - 能把子節點存入佇列，供後續層使用。
 ---
 ## Concept
 
@@ -68,77 +68,6 @@ def sum_queue(items: list[int]) -> int:
 
 result = sum_queue([1, 2, 3])
 assert result == 6, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function levelOrder(root: TreeNode | null): number[][] {
-  if (!root) return [];
-  const result: number[][] = [];
-  const queue: TreeNode[] = [root];
-  while (queue.length > 0) {
-    const levelSize = queue.length;
-    const currentLevel: number[] = [];
-    for (let i = 0; i < levelSize; i++) {
-      const node = queue.shift()!;
-      currentLevel.push(node.val);
-      if (node.left) queue.push(node.left);
-      if (node.right) queue.push(node.right);
-    }
-    result.push(currentLevel);
-  }
-  return result;
-}
-
-const root = new TreeNode(3, new TreeNode(9), new TreeNode(20, new TreeNode(15), new TreeNode(7)));
-const output = levelOrder(root);
-if (output.length !== 3 || output[0][0] !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import deque
-
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def levelOrder(root: TreeNode | None) -> list[list[int]]:
-    if not root:
-        return []
-    result = []
-    queue = deque([root])
-    while queue:
-        level_size = len(queue)
-        current_level = []
-        for _ in range(level_size):
-            node = queue.popleft()
-            current_level.append(node.val)
-            if node.left:
-                queue.append(node.left)
-            if node.right:
-                queue.append(node.right)
-        result.append(current_level)
-    return result
-
-root = TreeNode(3, TreeNode(9), TreeNode(20, TreeNode(15), TreeNode(7)))
-output = levelOrder(root)
-assert len(output) == 3 and output[0][0] == 3, "assertion failed"
 ```
 
 ## Takeaway

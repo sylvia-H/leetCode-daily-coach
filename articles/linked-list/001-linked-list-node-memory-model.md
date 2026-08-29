@@ -6,12 +6,8 @@ pattern_label: Pointer Structure
 complexity_label: O(1) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can manually instantiate a Node class with value and next pointer in TS and
-    Python
-  - >-
-    Can explain the difference between array contiguous layout and linked node
-    reference layout
+  - 能在 TS 與 Python 中手動建立含 value 與 next 指標的 Node class
+  - 能說明 array 連續記憶體配置與 linked list 節點參照式配置的差異
 ---
 ## Concept
 
@@ -66,35 +62,6 @@ class Node:
 
 node = Node(42)
 assert node.val == 42 and node.next is None, "Python slot node assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode<T> {
-  constructor(public val: T, public next: ListNode<T> | null = null) {}
-}
-
-const head = new ListNode<number>(1);
-head.next = new ListNode<number>(2);
-
-if (head.val !== 1 || head.next?.val !== 2) {
-  throw new Error("TypeScript Linked List initialization failed");
-}
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode | None' = None):
-        self.val = val
-        self.next = next
-
-head = ListNode(1)
-head.next = ListNode(2)
-
-assert head.val == 1 and head.next.val == 2, "Python Linked List initialization failed"
 ```
 
 ## Takeaway

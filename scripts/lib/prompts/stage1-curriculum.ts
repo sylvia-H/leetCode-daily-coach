@@ -249,7 +249,16 @@ Topic: ${input.topicTitle}（id: ${input.topicId}）
 5. leetcode_candidates 僅列出 1–3 個你認為適合的 LeetCode 題號（整數陣列），MUST NOT 自行編造 slug / title / url / difficulty——那些由程式從權威題庫帶入，你只需要選號。若判斷此 Concept 不需要對應題目，回傳空陣列 []。
 6. author_hints 需涵蓋：一句話核心觀念（core_idea）、Pattern 辨識線索（pattern_recognition）、解題思維（thinking）、常見錯誤（common_mistakes）、TypeScript 重點（ts_notes）、Python 重點（py_notes），以及每個候選題號「為何適合此 Pattern」一句話（leetcode_hints，須與 leetcode_candidates 一一對應）。
 7. **以下每一個欄位皆為必要欄位，即使內容簡短也 MUST 逐一填寫，不可省略**：slug、title、difficulty、estimated_minutes、pattern_label、complexity_label、prerequisite、next、learning_goal、exit_criteria、leetcode_candidates、tags、author_hints（含其六個文字欄位與 leetcode_hints）。
-8. 回傳格式 MUST 為單一 JSON 物件，且**每個 concept 物件的欄位形狀必須逐一比照下方範例**（範例只示範 1 個 concept，你需要依需求數量產出多個）：
+8. **語言（MUST）**：title／pattern_label／complexity_label／tags／slug MUST 保留英文；
+   **其餘所有自然語言欄位 MUST 以繁體中文撰寫**——包含 learning_goal、exit_criteria，以及
+   author_hints 的全部文字欄位（core_idea／pattern_recognition／thinking／common_mistakes／
+   ts_notes／py_notes／leetcode_hints）。技術術語、Pattern 名稱、API 與程式碼識別項 MUST 保留原文
+   （例：Sliding Window、Two Pointer、O(n)、bisect 不譯），但**句子本身 MUST 是中文**。
+   ⚠️ 這條 MUST NOT 只靠下方範例暗示：2026-08-29 查證，本 prompt 過去未明訂語言時，165 個 Concept
+   中有 114 個（11 個模組）的 learning_goal 與 exit_criteria 整句輸出成英文，且呈模組層級的
+   全有全無——顯示模型會逐批自行決定語言。exit_criteria 會原樣推播給中文學習者（spec §14.5 的
+   獨立區塊），輸出英文即為違規（spec §11、§10.2）。
+9. 回傳格式 MUST 為單一 JSON 物件，且**每個 concept 物件的欄位形狀必須逐一比照下方範例**（範例只示範 1 個 concept，你需要依需求數量產出多個）：
 
 ${example}
 

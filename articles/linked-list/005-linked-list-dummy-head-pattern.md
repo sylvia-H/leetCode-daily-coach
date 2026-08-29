@@ -6,8 +6,8 @@ pattern_label: Sentinel Node
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can initialize a dummy node pointing to the real head
-  - Can return dummy.next consistently as the modified list head
+  - 能初始化一個指向實際 head 的 dummy 節點
+  - 能一致地回傳 dummy.next 作為修改後的串列 head
 ---
 ## Concept
 
@@ -74,59 +74,6 @@ def create_list(nums: list[int]) -> ListNode | None:
 
 test_res = create_list([1, 2])
 assert test_res.val == 1, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-    val: number;
-    next: ListNode | null;
-    constructor(val?: number, next?: ListNode | null) {
-        this.val = (val===undefined ? 0 : val);
-        this.next = (next===undefined ? null : next);
-    }
-}
-
-function removeElements(head: ListNode | null, val: number): ListNode | null {
-    const dummy = new ListNode(0, head);
-    let current: ListNode | null = dummy;
-    while (current !== null && current.next !== null) {
-        if (current.next.val === val) {
-            current.next = current.next.next;
-        } else {
-            current = current.next;
-        }
-    }
-    return dummy.next;
-}
-
-const list = new ListNode(1, new ListNode(2, new ListNode(6, new ListNode(3))));
-const result = removeElements(list, 6);
-if (result?.next?.next?.val !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def removeElements(head: ListNode | None, val: int) -> ListNode | None:
-    dummy = ListNode(0, head)
-    current = dummy
-    while current and current.next:
-        if current.next.val == val:
-            current.next = current.next.next
-        else:
-            current = current.next
-    return dummy.next
-
-node = ListNode(1, ListNode(2, ListNode(6, ListNode(3))))
-res = removeElements(node, 6)
-assert res.next.next.val == 3, "assertion failed"
 ```
 
 ## Takeaway

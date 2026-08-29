@@ -12,16 +12,10 @@ prerequisite:
 next:
   - sliding-window-fixed-size
 learning_goal:
-  - >-
-    Understand how a sliding window optimizes subarray problems from O(n^2) to
-    O(n) by reusing overlapping computations.
+  - 理解 Sliding Window 如何藉由重用重疊的計算，將 subarray 問題從 O(n^2) 最佳化到 O(n)。
 exit_criteria:
-  - >-
-    Can explain why recalculating every subarray from scratch leads to redundant
-    work.
-  - >-
-    Can trace how adding a new element and dropping an old element updates the
-    window state.
+  - 能說明為何每個 subarray 都從頭重新計算會導致重複的工作。
+  - 能追蹤加入新元素與移除舊元素如何更新視窗狀態。
 leetcode: []
 tags:
   - sliding-window

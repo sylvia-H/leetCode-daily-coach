@@ -6,8 +6,8 @@ pattern_label: String Partitioning Pattern
 complexity_label: O(n * 2^n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Can slice strings at different cut points during recursion.
-  - Can integrate palindrome validation as a pruning condition.
+  - 能在遞迴過程中於不同切點切出子字串。
+  - 能把回文驗證整合為剪枝條件。
 ---
 ## Concept
 
@@ -55,71 +55,6 @@ def get_substring_demo(s: str) -> str:
     return sub
 
 get_substring_demo("a")
-```
-
-## TypeScript Corner
-
-```typescript
-function partition(s: string): string[][] {
-  const result: string[][] = [];
-  
-  function isPalindrome(str: string, low: number, high: number): boolean {
-    while (low < high) {
-      if (str[low++] !== str[high--]) return false;
-    }
-    return true;
-  }
-  
-  function backtrack(start: number, path: string[]) {
-    if (start === s.length) {
-      result.push([...path]);
-      return;
-    }
-    for (let end = start; end < s.length; end++) {
-      if (isPalindrome(s, start, end)) {
-        path.push(s.slice(start, end + 1));
-        backtrack(end + 1, path);
-        path.pop();
-      }
-    }
-  }
-  
-  backtrack(0, []);
-  if (result.length !== 1) throw new Error("assertion failed");
-  return result;
-}
-partition("a");
-```
-
-## Python Corner
-
-```python
-def partition(s: str) -> list[list[str]]:
-    result = []
-    
-    def is_palindrome(low: int, high: int) -> bool:
-        while low < high:
-            if s[low] != s[high]:
-                return False
-            low += 1
-            high -= 1
-        return True
-        
-    def backtrack(start: int, path: list[str]):
-        if start == len(s):
-            result.append(list(path))
-            return
-        for end in range(start, len(s)):
-            if is_palindrome(start, end):
-                path.append(s[start:end+1])
-                backtrack(end + 1, path)
-                path.pop()
-                
-    backtrack(0, [])
-    assert len(result) == 1, "assertion failed"
-    return result
-
-partition("a")
 ```
 
 ## Takeaway

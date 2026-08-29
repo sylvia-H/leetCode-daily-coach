@@ -6,10 +6,8 @@ pattern_label: Grid DFS Pathfinding
 complexity_label: O(N * 3^L) / O(L)
 estimated_minutes: 20
 exit_criteria:
-  - Can traverse 4-directional grid neighbors recursively.
-  - >-
-    Can temporarily mark visited cells in-place and restore them after
-    exploration.
+  - 能以遞迴走訪網格的四方向相鄰格。
+  - 能就地（in-place）暫時標記已走訪的格子，並在探索結束後還原。
 ---
 ## Concept
 
@@ -59,94 +57,6 @@ def check_bounds(r: int, c: int, rows: int, cols: int) -> bool:
     return 0 <= r < rows and 0 <= c < cols
 
 assert check_bounds(1, 1, 3, 3) == True, 'Bounds check failed'
-```
-
-## TypeScript Corner
-
-TypeScript 在實作二維網格搜尋時，需要妥善處理陣列型別與邊界檢查。以下為完整的實作範例與斷言測試：
-
-```typescript
-function exist(board: string[][], word: string): boolean {
-  const rows = board.length;
-  const cols = board[0].length;
-
-  function dfs(r: number, c: number, index: number): boolean {
-    if (index === word.length) return true;
-    if (r < 0 || c < 0 || r >= rows || c >= cols || board[r][c] !== word[index]) {
-      return false;
-    }
-
-    const temp = board[r][c];
-    board[r][c] = '#';
-
-    const found =
-      dfs(r + 1, c, index + 1) ||
-      dfs(r - 1, c, index + 1) ||
-      dfs(r, c + 1, index + 1) ||
-      dfs(r, c - 1, index + 1);
-
-    board[r][c] = temp;
-    return found;
-  }
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (dfs(r, c, 0)) return true;
-    }
-  }
-  return false;
-}
-
-const testBoard = [
-  ['A', 'B', 'C', 'E'],
-  ['S', 'F', 'C', 'S'],
-  ['A', 'D', 'E', 'E']
-];
-if (!exist(testBoard, 'ABCCED')) {
-  throw new Error('Assertion failed: should find ABCCED');
-}
-```
-
-## Python Corner
-
-Python 在處理二維串列時，利用字串的可變性進行原地狀態修改非常高效。以下為完整的實作範例與斷言測試：
-
-```python
-def exist(board: list[list[str]], word: str) -> bool:
-    rows, cols = len(board), len(board[0])
-
-    def dfs(r: int, c: int, index: int) -> bool:
-        if index == len(word):
-            return True
-        if r < 0 or c < 0 or r >= rows or c >= cols or board[r][c] != word[index]:
-            return False
-
-        temp = board[r][c]
-        board[r][c] = '#'
-
-        found = (
-            dfs(r + 1, c, index + 1)
-            or dfs(r - 1, c, index + 1)
-            or dfs(r, c + 1, index + 1)
-            or dfs(r, c - 1, index + 1)
-        )
-
-        board[r][c] = temp
-        return found
-
-    for r in range(rows):
-        for c in range(cols):
-            if dfs(r, c, 0):
-                return True
-    return False
-
-
-test_board = [
-    ['A', 'B', 'C', 'E'],
-    ['S', 'F', 'C', 'S'],
-    ['A', 'D', 'E', 'E'],
-]
-assert exist(test_board, 'ABCCED'), 'Assertion failed: should find ABCCED'
 ```
 
 ## Takeaway

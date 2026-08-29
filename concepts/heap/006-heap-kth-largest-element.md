@@ -12,11 +12,9 @@ prerequisite:
 next:
   - heap-top-k-frequent-elements
 learning_goal:
-  - >-
-    Use a fixed-size heap to find the Kth largest or smallest element
-    efficiently.
+  - 使用固定大小的 heap，高效地找出第 K 大或第 K 小的元素。
 exit_criteria:
-  - Can maintain a heap of size k to keep track of extreme values.
+  - 能維護大小為 k 的 heap 來追蹤極值。
 leetcode:
   - 215
   - 703

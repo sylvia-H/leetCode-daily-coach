@@ -6,130 +6,94 @@ pattern_label: Fixed/Variable Window + Frequency Comparison
 complexity_label: O(n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can initialize frequency arrays for both the target pattern and the sliding
-    window.
-  - >-
-    Can compare frequency structures efficiently in O(1) time by tracking
-    matched character counts.
+  - 能為目標 pattern 與滑動視窗分別初始化頻率陣列。
+  - 能透過追蹤已匹配的字元數，在 O(1) 時間內有效率地比較頻率結構。
 ---
 ## Concept
 
-Permutation in String 探討的是如何在主字串中尋找子字串的排列組合，亦即 Anagram。當我們面對這類需要檢查某個固定長度字串的所有字元頻率是否完全吻合時，最直覺的想法是逐一檢查每一個視窗。然而，暴力法會導致重複計算頻率。透過維護一個固定大小的 Sliding Window，我們可以藉由進入視窗與離開視窗的邊界字元更新，將頻率比較的複雜度從每個視窗都重新計算的 O(n * k) 降至整體的 O(n)。這種 Exact Frequency Match 的核心在於利用固定長度的陣列或雜湊表來追蹤目前視窗內的字元狀態，並透過增量更新來實現高效能的比對。
+「s2 是否含有 s1 的某個排列」等價於「s2 是否存在長度為 `len(s1)`、字元頻率與 s1 完全相同的視窗」——排列不管順序，只管每個字元各出現幾次。這不是你第一次碰頻率匹配：hash-table 課用 matched 計數器數過 anagram，string 課的固定視窗用整表比對把迴圈不變式講清楚，這一題也曾是該課的挑戰題。本課把 matched 計數器本身當主角：先釐清它維護的到底是什麼量，再證明為什麼它能把「兩張頻率表完全相等」這個等式判定壓到 O(1)。視窗慣例照舊：先把 `s2[right]` 納入統計，right >= k 時把 `s2[right - k]` 移出，合法比對點上視窗恆為 `[right - k + 1, right]`、長度恆為 k。
 
 ## Thinking
 
-在思考 Permutation in String 這類問題時，首要任務是釐清題目要求的子字串長度是固定的。既然 s1 的排列組合意味著長度必須完全等於 s1 的長度，這自然引導出 Fixed Size Sliding Window 的思維模型。我們可以建立一個大小為 26 的頻率陣列來記錄 s1 中各字元的出現次數，同時維護另一個大小同為 26 的頻率陣列來記錄 s2 中當前滑動視窗內的字元分佈。每當視窗向右滑動一格，左側移出視窗的字元頻率減一，右側新加入視窗的字元頻率加一。與其每次都費時比對整個長度為 26 的陣列，不如維護一個變數來追蹤已經完全匹配的字元數量（Matched Count），當該變數等於特定條件時即可判定找到解。
+建 `need`（s1 的頻率）與 `win`（視窗頻率）。matched 的精確語意是：**已達標——即 `win[c] >= need[c]`——的需求字元種類數**，不是「恰好相等的種類數」。所以增減時機只有兩個跨越點：納入使 `win[c]` 恰好升到 `need[c]` 時加一；移出使它從 `need[c]` 降到 `need[c] - 1` 時減一。升過頭（`need[c]` 到 `need[c] + 1`）與降回 `need[c]` 都不動它。為什麼「matched 等於 s1 的相異字元數」就能斷定視窗是 s1 的排列？靠固定長度的數量守恆：視窗恰有 k 個字元，而各字元需求量總和也是 k；若每個需求字元都達標，光它們的計數總和就已達 k，視窗塞不下任何超額或多餘字元，於是逐字元恰好相等。注意這個論證少了「長度固定為 k」就不成立——matched 湊滿只保證「涵蓋」，那是之後可變視窗題的語意。
 
 ## Pattern Recognition
 
-當題目要求在一個字串中尋找另一個字串的 Permutation、Anagram 或 Substring Match，且字串長度固定時，應立即聯想至 Fixed Size Sliding Window 結合 Frequency Comparison 的 Pattern。辨識線索包括：第一，尋找的目標是集合的排列而非特定順序的連續子字串；第二，子字串的長度被嚴格限制為目標字串的長度。此時，利用陣列進行 O(1) 的頻率狀態更新與比對便成為最佳解法。
+題目出現「排列」「anagram」「頻率完全相同的子字串」，就把視窗長度釘在目標字串長度，走固定視窗；判定條件是**兩張頻率表的等式**，與昨天水果題「鍵數至多 k」的不等式判準相對照。想每步 O(1) 判定，就用 matched；小寫字母場景用 26 格陣列而非雜湊表，索引由 `charCodeAt` 或 `ord` 換算，更新與查值都是常數時間。整表比對每步 O(26) 也仍是線性，只是常數較大——string 課走過那條路，本課補上計數器這條。
 
 ## Common Mistakes
 
-最常見的盲點與效能瓶頸在於每一次滑動視窗時，都使用迴圈去完整比較兩個大小為 26 的頻率陣列是否相等，這會使總時間複雜度退化為 O(26 * n)，雖然在大 O 表記法中仍是 O(n)，但在常數時間上會大幅落後。另一個常見錯誤是沒有妥善處理視窗邊界的增減邏輯，導致當字元頻率剛好跨越匹配閾值時，匹配計算器（Match Counter）未能正確加總或扣除，進而造成漏掉正確的 Anagram 或產生誤判。
+第一，只加不減——右端一路納入卻忘了移出左端。對 s1 = "ab"、s2 = "acb"，讀完三個字元後 a 與 b 各自達標、matched 湊滿，誤報 true；但 "acb" 的任何長度 2 子字串都不是 "ab" 的排列。第二，移出端順序寫反：先把 `win[d]` 減一、再檢查是否等於 `need[d]`。對 s1 = "ab"、s2 = "aab"，a 的計數從 2 降到 1 時會被誤扣 matched 且再也補不回來，誤報 false——正確順序是移出前檢查「即將失去達標」，納入後檢查「剛好達標」，兩側鏡像對稱。第三，拿字元碼總和之類的單一數值當頻率簽章：`'a' + 'd'` 與 `'b' + 'c'` 的字元碼總和同為 197，s1 = "ad"、s2 = "bc" 會誤報 true。頻率是一個向量，壓成一個純量必有碰撞。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 為主字串 s2 的長度。因為我們僅需走訪 s2 一次，且每次視窗滑動的更新操作均為常數時間 O(1)。空間複雜度為 O(1)，因為英文字母總數固定為 26 個，頻率陣列的大小為常數級別，不隨輸入字串長度增長。
+時間 O(n)，n 為 s2 長度：每個字元進出視窗各一次，每次只做常數次計數更新與比較；建 `need` 表另花 O(len(s1))。空間 O(1)：兩個 26 格陣列與一個 matched 計數器，與輸入長度無關。
 
 ## Digest
 
-今日重點聚焦於 Permutation in String（LeetCode 567）。我們探討了如何運用 Fixed Size Sliding Window 搭配頻率陣列，在 O(n) 時間內高效檢查子字串排列組合。核心技巧在於使用匹配計數器（Match Counter）來避免每次滑動時重新掃描整個 26 字元頻率陣列，從而實現 O(1) 的狀態轉移。無論在 TypeScript 或 Python 中，善用數值陣列與字元碼轉換（charCodeAt / ord）均能帶來極佳的執行效能。
+排列存在性等於定長頻率匹配：視窗長度釘在 `len(s1)`，`need` 與 `win` 各 26 格，matched 記錄「已達標（win >= need）的需求字元種類數」。增減只在跨越點：納入後恰好升到需求量就加一，移出前恰在需求量就減一。matched 湊滿相異字元數即可回傳 true——因為視窗恰有 k 個字元、需求總和也是 k，全數達標就塞不下任何多餘字元，頻率必逐字元相等。實例 s1 = "ab"、s2 = "eidbaooo"：視窗滑到 "ba" 時 a、b 同時達標，matched = 2 即命中。整體 O(n) 時間、O(1) 空間。
 
 ## TypeScript Tip
 
-在 TypeScript 中處理英文字母頻率時，使用 `Int32Array(26)` 不僅記憶體配置緊湊，效能也優於一般 JavaScript Object 或 Map。透過 `charCodeAt(i) - 97` 可以將字元快速對應至 0 到 25 的索引。程式碼示範：
+`Int32Array` 取值在 `noUncheckedIndexedAccess` 下以 `?? 0` 收斂。
+
 ```typescript
-const freq = new Int32Array(26);
-const charCode = "a".charCodeAt(0);
-freq[charCode - 97]++;
-if (freq[0] !== 1) throw new Error("Failed");
+import assert from "node:assert";
+function checkInclusion(s1: string, s2: string): boolean {
+  const k = s1.length, need = new Int32Array(26), win = new Int32Array(26);
+  let uniq = 0, matched = 0;
+  for (const c of s1) { const i = c.charCodeAt(0) - 97; if (!need[i]) uniq++; need[i] = (need[i] ?? 0) + 1; }
+  for (let r = 0; r < s2.length; r++) {
+    const i = s2.charCodeAt(r) - 97;
+    win[i] = (win[i] ?? 0) + 1;
+    if (win[i] === need[i]) matched++;
+    if (r >= k) { const j = s2.charCodeAt(r - k) - 97; if (win[j] === need[j]) matched--; win[j] = (win[j] ?? 0) - 1; }
+    if (matched === uniq) return true;
+  }
+  return false;
+}
+assert(checkInclusion("abc", "cba") && !checkInclusion("ab", "acb"));
 ```
 
 ## Python Tip
 
-在 Python 中，雖然可用 `collections.Counter` 簡化程式碼，但在高效能場景下，使用長度為 26 的串列配合 `ord()` 函數更能精準控制運算開銷。程式碼示範：
-```python
-freq = [0] * 26
-idx = ord('a') - ord('a')
-freq[idx] += 1
-assert freq[0] == 1, "Failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function checkInclusion(s1: string, s2: string): boolean {
-  if (s1.length > s2.length) return false;
-  const s1Count = new Int32Array(26);
-  const s2Count = new Int32Array(26);
-  const charCodeA = 97;
-  for (let i = 0; i < s1.length; i++) {
-    s1Count[s1.charCodeAt(i) - charCodeA]++;
-    s2Count[s2.charCodeAt(i) - charCodeA]++;
-  }
-  let matches = 0;
-  for (let i = 0; i < 26; i++) {
-    if (s1Count[i] === s2Count[i]) matches++;
-  }
-  for (let i = 0; i < s2.length - s1.length; i++) {
-    if (matches === 26) return true;
-    const leftChar = s2.charCodeAt(i) - charCodeA;
-    const rightChar = s2.charCodeAt(i + s1.length) - charCodeA;
-    if (s2Count[leftChar] === s1Count[leftChar]) matches--;
-    s2Count[leftChar]--;
-    if (s2Count[leftChar] === s1Count[leftChar]) matches++;
-    if (s2Count[rightChar] === s1Count[rightChar]) matches--;
-    s2Count[rightChar]++;
-    if (s2Count[rightChar] === s1Count[rightChar]) matches++;
-  }
-  return matches === 26;
-}
-const result = checkInclusion("ab", "eidbaooo");
-if (result !== true) throw new Error("Assertion failed");
-```
-
-## Python Corner
+用 dict 版 matched：`need.get(c)` 對不在 s1 的字元回傳 None，整數比較必為 False，天然擋掉無關字元。
 
 ```python
-def checkInclusion(s1: str, s2: str) -> bool:
-    if len(s1) > len(s2):
-        return False
-    s1_count = [0] * 26
-    s2_count = [0] * 26
-    for i in range(len(s1)):
-        s1_count[ord(s1[i]) - ord('a')] += 1
-        s2_count[ord(s2[i]) - ord('a')] += 1
-    matches = sum(1 for i in range(26) if s1_count[i] == s2_count[i])
-    for i in range(len(s2) - len(s1)):
-        if matches == 26:
+def check_inclusion(s1: str, s2: str) -> bool:
+    k = len(s1)
+    need: dict[str, int] = {}
+    for c in s1:
+        need[c] = need.get(c, 0) + 1
+    win: dict[str, int] = {}
+    matched = 0
+    for r, c in enumerate(s2):
+        win[c] = win.get(c, 0) + 1
+        if win[c] == need.get(c):
+            matched += 1
+        if r >= k:
+            d = s2[r - k]
+            if win[d] == need.get(d):
+                matched -= 1
+            win[d] -= 1
+        if matched == len(need):
             return True
-        left_idx = ord(s2[i]) - ord('a')
-        right_idx = ord(s2[i + len(s1)]) - ord('a')
-        if s2_count[left_idx] == s1_count[left_idx]:
-            matches -= 1
-        s2_count[left_idx] -= 1
-        if s2_count[left_idx] == s1_count[left_idx]:
-            matches += 1
-        if s2_count[right_idx] == s1_count[right_idx]:
-            matches -= 1
-        s2_count[right_idx] += 1
-        if s2_count[right_idx] == s1_count[right_idx]:
-            matches += 1
-    return matches == 26
-assert checkInclusion("ab", "eidbaooo") == True
+    return False
+
+assert check_inclusion("ab", "axxab")
+assert not check_inclusion("ab", "axb")
+assert not check_inclusion("aaa", "aa")
 ```
 
 ## Takeaway
 
-掌握固定視窗與頻率陣列的增量比對，能將字串排列檢索優化至線性時間 O(n)。
+matched 記錄達標的需求字元種類數，配上視窗長度固定為 k 的數量守恆論證，頻率等式判定降為 O(1)。
 
 ## Tomorrow Preview
 
-明天我們將進一步探討當視窗大小不再固定、轉為 Variable Size Sliding Window 時的經典題型：Longest Substring Without Repeating Characters。我們將學習如何動態調整視窗邊界，並處理重複字元的剔除機制。
+明天同一副固定視窗骨架不再問「是否存在」，而是 Find All Anagrams in a String：把每一個頻率吻合的視窗起始索引全部收集起來——差別只在不能提前回傳，得掃完整個字串。
 
 ## Today's Challenge
 
-- **567** · 本題要求檢查 s2 中是否存在 s1 的任一排列組合子字串，完美符合固定長度視窗與字元頻率精確匹配的 Pattern。
-  - Hint: 維持一個大小等於 s1 長度的滑動視窗，並以匹配計數器追蹤 26 個字母的頻率吻合狀態。
+- **567** · 題目直接問 s2 是否含 s1 的任一排列，而排列等價於「長度為 `len(s1)` 且頻率完全相同的視窗」，是定長頻率匹配的原型題。
+  - Hint: need 與 win 各一張表；納入後檢查「剛好達標」、移出前檢查「將失去達標」，matched 湊滿相異字元數即回傳 true。

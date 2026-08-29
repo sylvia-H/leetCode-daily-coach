@@ -6,9 +6,7 @@ pattern_label: Depth-First Search
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Write a recursive function that visits left and right subtrees before
-    processing the root.
+  - 能寫出先造訪左右子樹、再處理根節點的遞迴函式。
 ---
 ## Concept
 
@@ -78,61 +76,6 @@ def maxDepth(root: TreeNode | None) -> int:
 
 tree = TreeNode(3, TreeNode(9), TreeNode(20, TreeNode(15), TreeNode(7)))
 assert maxDepth(tree) == 3
-```
-
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function postorderTraversal(root: TreeNode | null): number[] {
-  const res: number[] = [];
-  function dfs(node: TreeNode | null) {
-    if (!node) return;
-    dfs(node.left);
-    dfs(node.right);
-    res.push(node.val);
-  }
-  dfs(root);
-  return res;
-}
-
-import assert from "node:assert";
-const root = new TreeNode(1, null, new TreeNode(2, new TreeNode(3), null));
-assert.deepStrictEqual(postorderTraversal(root), [3, 2, 1]);
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def postorderTraversal(root: TreeNode | None) -> list[int]:
-    res = []
-    def dfs(node: TreeNode | None):
-        if not node:
-            return
-        dfs(node.left)
-        dfs(node.right)
-        res.append(node.val)
-    dfs(root)
-    return res
-
-root = TreeNode(1, None, TreeNode(2, TreeNode(3), None))
-assert postorderTraversal(root) == [3, 2, 1]
 ```
 
 ## Takeaway

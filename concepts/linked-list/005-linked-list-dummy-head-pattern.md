@@ -12,12 +12,10 @@ prerequisite:
 next:
   - linked-list-two-pointers-slow-fast
 learning_goal:
-  - >-
-    Use a dummy sentinel node to eliminate edge cases involving head
-    modifications.
+  - 使用 dummy sentinel 節點，消除涉及修改 head 的邊界情況。
 exit_criteria:
-  - Can initialize a dummy node pointing to the real head
-  - Can return dummy.next consistently as the modified list head
+  - 能初始化一個指向實際 head 的 dummy 節點
+  - 能一致地回傳 dummy.next 作為修改後的串列 head
 leetcode:
   - 203
   - 83

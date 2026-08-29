@@ -11,27 +11,27 @@ exit_criteria:
 ---
 ## Concept
 
-Moving Zeroes to End 是一種常見的陣列操作技巧，核心精神在於藉由 Fast-Slow Pointers 在原地（in-place）重新排列元素。當我們需要將某個特定元素（例如零）集中到陣列末端，同時維持其餘非零元素的相對順序時，暴力解法往往需要額外的儲存空間或多次走訪。透過 Fast-Slow Pointers，我們能夠在單一次走訪中完成非零元素的壓縮，並在後續階段補齊剩餘空間，達到時間複雜度 O(n) 與空間複雜度 O(1) 的最佳效率。
+Moving Zeroes to End 要求在原地（in-place）把陣列中所有的零集中到末端，同時保持非零元素的相對順序。它是 Fast-Slow Pointers 的又一經典應用，關鍵在於視角轉換：與其思考「怎麼把零往後丟」，不如反過來想「怎麼把非零元素依序往前收」。快指標負責由左至右找出每一個非零元素，慢指標標記下一個非零元素應該落腳的位置；當所有非零元素依掃描順序被安置到陣列前端後，剩下的位置自然就該全是零。這個轉換讓整個問題化約成一次線性掃描，達到 O(n) 時間與 O(1) 空間的最佳效率。
 
 ## Thinking
 
-在思考這類原地陣列調整問題時，直覺上可能會想要每遇到一個零就將其移除並塞到後面，但這會導致頻繁的陣列元素搬移，使得時間複雜度惡化至 O(n^2)。此時應轉念採用 Fast-Slow Pointers 策略。我們設定一個慢指標（slow pointer）用來記錄下一個非零元素應該擺放的位置，並用一個快指標（fast pointer）逐一掃描整個陣列。當快指標指向非零元素時，我們便將其賦值到慢指標所在的位置，並將慢指標向前推進。當快指標走完全部陣列後，所有非零元素都已經整齊地排列在陣列前端。最後，我們只需要從慢指標當前的位置開始，將陣列剩餘的空間全部填入零即可完成任務。
+直覺的做法是每遇到一個零就把它刪除、再補回尾端，但每次刪除都會牽動後方所有元素搬移，最壞情況退化為 O(n^2)。改用 Fast-Slow Pointers 後有兩種等價寫法。第一種是「覆寫＋補零」兩階段：fast 掃描整個陣列，遇到非零元素就寫入 nums[slow] 並推進 slow；掃描結束後，再把 slow 到結尾的區段全部填零。第二種是「交換」一趟完成：fast 遇到非零元素就把 nums[fast] 與 nums[slow] 交換，然後推進 slow。兩種寫法共享同一個迴圈不變式：任何時刻，nums[0..slow-1] 都是「目前已掃描到的全部非零元素，且維持原本的相對順序」；交換版還額外保證 nums[slow..fast-1] 全為零，因此每次交換必然是「非零往前、零往後」，不會波及其他元素。相對順序之所以不會亂，是因為 fast 由左至右逐一檢查、slow 依序遞增寫入——先被掃到的非零元素必定先落位，寫入順序與掃描順序完全一致。
 
 ## Pattern Recognition
 
-當題目要求符合以下特徵時，即可強烈識別出 Fast-Slow Pointers 的應用時機：第一，必須在原地修改陣列，不允許使用額外的陣列空間（Space Complexity: O(1)）；第二，需要過濾、移除或集中特定元素（如零、特定數值或重複元素）；第三，必須嚴格維持其餘未被移除元素的相對順序。這種雙指標的互動方式能有效避免不必要的元素搬移，是處理陣列重組問題的核心模型。
+三個訊號同時出現時，就該想到這個 Pattern：一、必須原地修改陣列，空間限制為 O(1)；二、需要過濾、移除或集中特定元素（零、特定數值）；三、其餘元素的相對順序必須保持不變。最後一點尤其關鍵——若順序允許打亂，從兩端夾擠的對撞指標也能解；正因為順序不可變，才必須採用同向前進的快慢指標。這個「同向掃描、條件寫入」的骨架，與先前的原地移除、原地去重是同一套模型，變的只是寫入條件：這裡的條件是「元素不為零」。
 
 ## Common Mistakes
 
-最常見的錯誤是在單一次迴圈中試圖同時處理非零元素的搬移與零的填補，導致指標邏輯混亂或覆寫了尚未處理的有效元素。另一個常見誤區是在交換或搬移過程中，不小心改變了非零元素原本的相對順序。此外，初學者常忽略最後必須將慢指標之後的空間補零的步驟，導致陣列長度改變或尾端殘留舊資料，進而引發測試案例驗證失敗。
+最常見的錯誤是想在同一次迴圈裡同時搬移非零元素又補零，兩件事的指標邏輯糾纏在一起，容易覆寫尚未處理的有效元素；兩階段寫法「先壓縮、後補零」分工清楚得多。第二種錯誤是採用會破壞相對順序的策略，例如從陣列兩端向中間交換，會讓後面的非零元素跑到前面。第三是兩階段版忘記最後補零，導致尾端殘留舊資料而驗證失敗。另外交換版有個細節：當 slow 與 fast 相等時，交換等於自己跟自己交換，雖然無害，但加上 `slow !== fast` 的判斷可以省去多餘寫入。
 
 ## Complexity
 
-Time Complexity: O(n)，其中 n 為陣列長度。我們僅需對陣列進行常數次的線性掃描（一次尋找非零並搬移、一次補零）。Space Complexity: O(1)，所有操作皆在原陣列上進行，不需要配置額外的儲存空間。
+Time Complexity: O(n)，其中 n 為陣列長度：交換版只需一趟線性掃描，覆寫版是「一趟壓縮＋一趟補零」，皆為常數次線性走訪。Space Complexity: O(1)，所有搬移都在原陣列上完成，不需配置額外空間。
 
 ## Digest
 
-Moving Zeroes to End 是學習 Fast-Slow Pointers 的經典範例。透過快指標掃描陣列尋找非零元素，慢指標標記放置位置，我們能在 O(n) 時間內完成非零元素的重組，並在結尾補上零。此技巧不僅能保持元素相對順序，更能達成 O(1) 的空間複雜度，是處理原地陣列變動不可或缺的核心手法。
+Moving Zeroes to End 是 Fast-Slow Pointers 的經典範例：fast 掃描陣列尋找非零元素，slow 標記下一個放置位置，nums[0..slow-1] 始終維持「已掃描的非零元素、順序不變」的不變式。可以選擇「覆寫＋補零」兩階段，或「交換」一趟完成——後者同時保證 slow 與 fast 之間全為零。兩者皆為 O(n) 時間、O(1) 空間，是原地陣列重組的核心手法。
 
 ## TypeScript Tip
 
@@ -41,8 +41,8 @@ function moveZeroesTS(nums: number[]): void {
   for (let fast = 0; fast < nums.length; fast++) {
     if (nums[fast] !== 0) {
       if (slow !== fast) {
-        const temp = nums[slow];
-        nums[slow] = nums[fast];
+        const temp = nums[slow]!;
+        nums[slow] = nums[fast]!;
         nums[fast] = temp;
       }
       slow++;
@@ -51,7 +51,7 @@ function moveZeroesTS(nums: number[]): void {
 }
 const testArr = [0, 1, 0, 3, 12];
 moveZeroesTS(testArr);
-if (testArr[0] !== 1) throw new Error('assertion failed');
+if (testArr.join(",") !== "1,3,12,0,0") throw new Error("assertion failed");
 ```
 
 ## Python Tip
@@ -66,57 +66,18 @@ def move_zeroes_py(nums: list[int]) -> None:
 
 test_arr = [0, 1, 0, 3, 12]
 move_zeroes_py(test_arr)
-assert test_arr[0] == 1, 'assertion failed'
-```
-
-## TypeScript Corner
-
-```typescript
-function moveZeroes(nums: number[]): void {
-  let slow = 0;
-  for (let fast = 0; fast < nums.length; fast++) {
-    if (nums[fast] !== 0) {
-      nums[slow] = nums[fast];
-      slow++;
-    }
-  }
-  while (slow < nums.length) {
-    nums[slow] = 0;
-    slow++;
-  }
-}
-const arr = [0, 1, 0, 3, 12];
-moveZeroes(arr);
-if (arr.join(',') !== '1,3,12,0,0') throw new Error('assertion failed');
-```
-
-## Python Corner
-
-```python
-def move_zeroes(nums: list[int]) -> None:
-    slow = 0
-    for fast in range(len(nums)):
-        if nums[fast] != 0:
-            nums[slow] = nums[fast]
-            slow += 1
-    while slow < len(nums):
-        nums[slow] = 0
-        slow += 1
-
-arr = [0, 1, 0, 3, 12]
-move_zeroes(arr)
-assert arr == [1, 3, 12, 0, 0], 'assertion failed'
+assert test_arr == [1, 3, 12, 0, 0], "assertion failed"
 ```
 
 ## Takeaway
 
-掌握 Fast-Slow Pointers 的核心精神：快指標探索、慢指標定位，原地達成 O(n) 時間與 O(1) 空間的陣列重組。
+快指標探索、慢指標定位，同向掃描讓非零元素依序前移，原地達成 O(n) 時間與 O(1) 空間的重組。
 
 ## Tomorrow Preview
 
-明天的課程將進入經典的 Two Pointers 延伸應用，探討如何利用左右雙指標在已排序陣列中尋找特定總和的數對，進一步深化指標在陣列搜尋與區間收斂上的強大威力。
+Moving Zeroes to End 為快慢指標的系列應用畫下句點。接下來課程將進入新的主題；行前不妨回顧這幾課的共同骨架——fast 負責探索、slow 維護已完成區間，變的永遠只是寫入條件。
 
 ## Today's Challenge
 
-- **283** · 題目要求原地將所有 0 移到結尾，同時必須維持非零元素的相對順序，這是 Fast-Slow Pointers 壓縮陣列元素的典型應用場景。
-  - Hint: 利用快指標尋找非零元素並將其搬移到慢指標所在位置，迴圈結束後再將慢指標之後的剩餘位置全部填入 0。
+- **283** · 原地把所有零移到結尾且維持非零元素的相對順序，是 Fast-Slow Pointers 壓縮陣列的典型場景。
+  - Hint: fast 找非零元素放到 slow 的位置；用交換一趟完成，或掃描後再把 slow 之後全部補零。

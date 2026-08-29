@@ -49,8 +49,9 @@ interface ArticleContent {
 | `article-challenge-format` | `Today's Challenge` 有內容但切不出任何條目、或條目缺 `whyThisPattern` | 指名檔案與條目 |
 | `article-challenge-duplicate` | 同一 `problemId` 出現多個條目 | 指名題號 |
 
-> `Concept` / `Thinking` / `Pattern Recognition` / `Common Mistakes` / `Complexity` / `TypeScript Corner` /
-> `Python Corner` / `Tomorrow Preview` 為 §10 的閱讀用固定區塊，本 Feature **解析但不進 `Lesson`**
+> `Concept` / `Thinking` / `Pattern Recognition` / `Common Mistakes` / `Complexity` /
+> `Tomorrow Preview` 為 §10 的閱讀用固定區塊（原列的 `TypeScript Corner` / `Python Corner`
+> 已於 F12 Phase 0 移除，見 contracts/article-format.md §3），本 Feature **解析但不進 `Lesson`**
 > （Discord 不推全文，§14.5）。它們的存在性檢查列為 `article-missing-section` 的一部分——缺漏代表教材
 > 不完整，F9 全文頁與 F7 產線都會受害，故在此一併攔下。
 

@@ -54,59 +54,6 @@ def check_python_tip() -> None:
 check_python_tip()
 ```
 
-## TypeScript Corner
-
-```typescript
-function isBipartite(graph: number[][]): boolean {
-  const n = graph.length;
-  const colors = new Array(n).fill(-1);
-  for (let i = 0; i < n; i++) {
-    if (colors[i] !== -1) continue;
-    const queue: number[] = [i];
-    colors[i] = 0;
-    while (queue.length > 0) {
-      const curr = queue.shift()!;
-      for (const neighbor of graph[curr]) {
-        if (colors[neighbor] === -1) {
-          colors[neighbor] = 1 - colors[curr];
-          queue.push(neighbor);
-        } else if (colors[neighbor] === colors[curr]) {
-          return false;
-        }
-      }
-    }
-  }
-  return true;
-}
-const testGraph = [[1, 3], [0, 2], [1, 3], [0, 2]];
-if (!isBipartite(testGraph)) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def isBipartite(graph: list[list[int]]) -> bool:
-    n = len(graph)
-    colors = [-1] * n
-    for i in range(n):
-        if colors[i] != -1:
-            continue
-        queue = [i]
-        colors[i] = 0
-        while queue:
-            curr = queue.pop(0)
-            for neighbor in graph[curr]:
-                if colors[neighbor] == -1:
-                    colors[neighbor] = 1 - colors[curr]
-                    queue.append(neighbor)
-                elif colors[neighbor] == colors[curr]:
-                    return False
-    return True
-
-test_graph = [[1, 3], [0, 2], [1, 3], [0, 2]]
-assert isBipartite(test_graph), "assertion failed"
-```
-
 ## Takeaway
 
 二分圖判定首重著色交替與獨立分量檢查，時間複雜度 O(V + E)。

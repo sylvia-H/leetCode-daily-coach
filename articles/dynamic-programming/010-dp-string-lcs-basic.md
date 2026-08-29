@@ -81,48 +81,6 @@ def lcs_optimized(text1: str, text2: str) -> int:
 lcs_optimized("abcde", "ace")
 ```
 
-## TypeScript Corner
-
-```typescript
-function longestCommonSubsequence(text1: string, text2: string): number {
-  const m = text1.length;
-  const n = text2.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (text1[i - 1] === text2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
-      } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-      }
-    }
-  }
-  const result = dp[m][n];
-  if (result !== 3) throw new Error("Assertion failed");
-  return result;
-}
-longestCommonSubsequence("abcde", "ace");
-```
-
-## Python Corner
-
-```python
-def longestCommonSubsequence(text1: str, text2: str) -> int:
-    m, n = len(text1), len(text2)
-    dp = [[0] * (n + 1) for _ in range(m + 1)]
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if text1[i - 1] == text2[j - 1]:
-                dp[i][j] = dp[i - 1][j - 1] + 1
-            else:
-                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
-    result = dp[m][n]
-    assert result == 3, "Assertion failed"
-    return result
-
-longestCommonSubsequence("abcde", "ace")
-```
-
 ## Takeaway
 
 雙序列 DP 核心在於定義 dp[i][j] 表示前綴匹配，字元相符取斜上加一，不相符取上或左最大值。

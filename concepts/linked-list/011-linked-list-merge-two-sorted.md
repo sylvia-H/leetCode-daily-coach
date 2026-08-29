@@ -12,12 +12,10 @@ prerequisite:
 next:
   - linked-list-palindrome-check
 learning_goal:
-  - >-
-    Merge two sorted linked lists into a single sorted chain using pointer
-    comparison.
+  - 使用指標比較，將兩個已排序的 linked list 合併成單一排序串鏈。
 exit_criteria:
-  - Can compare heads of two lists and attach the smaller node to a result tail
-  - Can handle remaining nodes when one list exhausts before the other
+  - 能比較兩個串列的 head，並將較小的節點接到結果串列的尾端
+  - 能在其中一個串列先耗盡時處理剩餘節點
 leetcode:
   - 21
   - 23

@@ -6,10 +6,8 @@ pattern_label: Include/Exclude Choice Pattern
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can write the subset generation recursive function without missing
-    combinations.
-  - Can collect results correctly at every node or leaf.
+  - 能寫出子集生成的遞迴函式，且不遺漏任何組合。
+  - 能在每個節點或葉節點正確收集結果。
 ---
 ## Concept
 
@@ -76,43 +74,6 @@ def subsets_tip(nums: list[int]) -> list[list[int]]:
     assert len(res) == 2, "assertion failed"
     return res
 subsets_tip([1])
-```
-
-## TypeScript Corner
-
-```typescript
-function subsets(nums: number[]): number[][] {
-  const result: number[][] = [];
-  function backtrack(start: number, path: number[]): void {
-    result.push([...path]);
-    for (let i = start; i < nums.length; i++) {
-      path.push(nums[i]);
-      backtrack(i + 1, path);
-      path.pop();
-    }
-  }
-  backtrack(0, []);
-  if (result.length !== 4) throw new Error("assertion failed");
-  return result;
-}
-subsets([1, 2]);
-```
-
-## Python Corner
-
-```python
-def subsets(nums: list[int]) -> list[list[int]]:
-    result = []
-    def backtrack(start: int, path: list[int]):
-        result.append(list(path))
-        for i in range(start, len(nums)):
-            path.append(nums[i])
-            backtrack(i + 1, path)
-            path.pop()
-    backtrack(0, [])
-    assert len(result) == 4, "assertion failed"
-    return result
-subsets([1, 2])
 ```
 
 ## Takeaway

@@ -6,10 +6,8 @@ pattern_label: Cycle Detection
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - Can implement Floyd's cycle-finding algorithm correctly
-  - >-
-    Can explain why slow and fast pointers are guaranteed to meet if a cycle
-    exists
+  - 能正確實作 Floyd's cycle-finding algorithm
+  - 能說明為何存在環時 slow 與 fast 指標保證會相遇
 ---
 ## Concept
 
@@ -75,65 +73,6 @@ def verify_pointers(head: ListNode | None) -> bool:
 
 node = ListNode(1)
 assert verify_pointers(node) is True
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-function hasCycle(head: ListNode | null): boolean {
-  let slow: ListNode | null = head;
-  let fast: ListNode | null = head;
-  while (fast !== null && fast.next !== null) {
-    slow = slow!.next;
-    fast = fast.next.next;
-    if (slow === fast) {
-      return true;
-    }
-  }
-  return false;
-}
-import assert from "node:assert";
-const n1 = new ListNode(3);
-const n2 = new ListNode(2);
-const n3 = new ListNode(0);
-const n4 = new ListNode(-4);
-n1.next = n2;
-n2.next = n3;
-n3.next = n4;
-n4.next = n2;
-assert.strictEqual(hasCycle(n1), true);
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, x):
-		self.val = x
-		self.next = None
-
-def hasCycle(head: ListNode | None) -> bool:
-    slow = head
-    fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-        if slow == fast:
-            return True
-    return False
-
-head = ListNode(1)
-head.next = ListNode(2)
-head.next.next = head
-assert hasCycle(head) is True
 ```
 
 ## Takeaway

@@ -6,8 +6,8 @@ pattern_label: Dynamic Array Wrapper
 complexity_label: O(1) amortized
 estimated_minutes: 15
 exit_criteria:
-  - 'Can implement push, pop, top, and isEmpty operations using an array.'
-  - Understand why push/pop at the end of an array is O(1) amortized.
+  - 能用陣列實作 push、pop、top 與 isEmpty 操作。
+  - 理解為何在陣列尾端進行 push/pop 是攤銷 O(1)。
 ---
 ## Concept
 
@@ -64,74 +64,6 @@ class SafeStack:
 st = SafeStack()
 st.push(42)
 assert st.peek() == 42, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ArrayStack<T> {
-  private items: T[] = [];
-
-  public push(item: T): void {
-    this.items.push(item);
-  }
-
-  public pop(): T {
-    if (this.isEmpty()) {
-      throw new Error("Stack Underflow");
-    }
-    return this.items.pop()!;
-  }
-
-  public top(): T {
-    if (this.isEmpty()) {
-      throw new Error("Stack is empty");
-    }
-    return this.items[this.items.length - 1];
-  }
-
-  public isEmpty(): boolean {
-    return this.items.length === 0;
-  }
-}
-
-const stack = new ArrayStack<number>();
-stack.push(10);
-stack.push(20);
-if (stack.top() !== 20) throw new Error("assertion failed");
-if (stack.pop() !== 20) throw new Error("assertion failed");
-if (stack.isEmpty() !== false) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ArrayStack:
-    def __init__(self) -> None:
-        self._items: list[int] = []
-
-    def push(self, item: int) -> None:
-        self._items.append(item)
-
-    def pop(self) -> int:
-        if self.isEmpty():
-            raise IndexError("Stack Underflow")
-        return self._items.pop()
-
-    def top(self) -> int:
-        if self.isEmpty():
-            raise IndexError("Stack is empty")
-        return self._items[-1]
-
-    def isEmpty(self) -> bool:
-        return len(self._items) == 0
-
-s = ArrayStack()
-s.push(10)
-s.push(20)
-assert s.top() == 20, "assertion failed"
-assert s.pop() == 20, "assertion failed"
-assert not s.isEmpty(), "assertion failed"
 ```
 
 ## Takeaway

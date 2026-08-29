@@ -6,135 +6,92 @@ pattern_label: Variable Sliding Window + Hash Map
 complexity_label: 'O(n) / O(min(n, charset))'
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can use a hash map or frequency array to detect duplicate characters in O(1)
-    time.
-  - >-
-    Can jump or contract the left pointer past the previous occurrence of a
-    duplicate character.
+  - 能使用 hash map 或頻率陣列在 O(1) 時間內偵測重複字元。
+  - 能將左指標跳過或收縮到重複字元前一次出現位置之後。
 ---
 ## Concept
 
-Longest Substring Without Repeating Characters 是一個經典的 Variable Sliding Window 問題。核心精神在於維護一個沒有重複字元的有效窗口，透過右指標不斷擴展來尋找最大長度，當遇到重複字元時，則透過左指標的調整來縮減窗口，確保窗口內的字元永遠保持唯一性。
+「無重複字元的最長子字串」這一題你其實已經見過三次：string 的線性掃描課初次照面（當時的 Hint 就點過「記最後索引、把左端跳過去」的想法），hash-table 課用 Set 走「先查、再縮、後加」，string 的可變視窗課用頻率表走「先納入、違規就逐格收縮」。逐格收縮的兩種寫法都正確，攤銷後也都是 O(n)。本課把線性掃描課 Hint 裡的跳躍想法完整實作並論證：Hash Map 不記次數，改記每個字元「最後一次出現的索引」——遇到重複時，left 不再逐格右移，而是直接跳到 `map[c] + 1`。慣例照舊：視窗是閉區間 `[left, right]`，長度為 `right - left + 1`；改變的只有收縮方式，從「一步步走回合法」變成「一步跳到合法」。
 
 ## Thinking
 
-在處理字串子字串問題時，暴力解法需要檢查所有可能的子字串，時間複雜度高達 O(n^2) 甚至 O(n^3)。透過 Variable Sliding Window，我們可以使用兩個指標 left 與 right 來代表當前視窗的邊界。為了在 O(1) 時間內檢測重複字元並定位其上一次出現的位置，我們可以使用 Hash Map 記錄每個字元最後一次出現的索引。當 right 指標掃描到一個已經存在於 Hash Map 中的字元，且該字元上次出現的位置大於或等於 left 指標時，我們必須將 left 指標直接跳轉到該重複字元上次出現位置的下一個位置（即 map[char] + 1），藉此快速排除重複字元並維持視窗的有效性。
+為什麼跳到 `map[c] + 1` 是安全的？納入 `s[right]`（記為 c）後若視窗違規，原因唯一：c 在窗內另有一次出現，位置就是 `map[c]`。任何左端 ≤ `map[c]` 的視窗都同時包含兩個 c，必然違規；所以以 right 結尾的最長合法視窗，左端最小就是 `map[c] + 1`——直接跳過去不會漏解，中間被略過的起點本來就全是非法起點。
+
+跳躍帶來一個逐格收縮沒有的陷阱：map 記的是整個掃過的前綴中每個字元的最後位置，那個字元可能早已被丟出視窗，索引是過期的。因此更新必須寫成 `left = max(left, map[c] + 1)`——若 `map[c] < left`，那次出現在窗外，left 保持不動。「left 單調不回退」正是本演算法的迴圈不變式。每輪最後把 `map[c]` 更新為 right，並記錄 `right - left + 1`。
+
+要誠實說明：這不是漸進複雜度上的優化。逐格收縮的 left 同樣只前進不後退，攤銷後一樣是 O(n)。跳躍版的差別在每一輪都是最壞情況 O(1)（沒有內層 while），以及「記位置而非記次數」這個想法本身——它在之後許多題目還會再出現。
 
 ## Pattern Recognition
 
-當題目要求找出符合特定條件的「連續子陣列」或「子字串」，且該條件與元素的唯一性、總和限制或頻率限制有關，且視窗大小可變動時，通常就是 Variable Sliding Window 模式的強烈信號。特別是關鍵字包含 'longest substring without repeating characters' 或強調不重複元素時，配合 Hash Map 記錄最後位置是標準解法。
+何時記位置、何時記次數？「無重複」這種約束，違規來源唯一（就是剛納入的字元）且一步可定位，位置 map 才有用武之地。若約束是「至多 k 種相異字元」「允許替換至多 k 次」，違規時該退多遠無法一步算出，仍要用頻率表逐格收縮——那是更一般的模板，位置 map 是唯一性約束下的特化。看到「最長子字串」加上「無重複／全相異」的題目，兩條路都通；目標是兩種都能寫、也說得出差異。
 
 ## Common Mistakes
 
-最常見的錯誤是讓左指標（left pointer）往回移動。當使用雜湊表記錄字元索引時，如果字元上次出現的位置小於當前的 left 指標，我們不應該將 left 往回移，因為該重複字元已經不在當前的視窗範圍內。因此，在更新 left 指標時必須取當前 left 與 map[char] + 1 的最大值：left = Math.max(left, map.get(char) + 1)。另一個常見錯誤是忘記在每次遇到字元時更新其在 Hash Map 中的最新索引。
+以下每一條都實際執行驗證過：
+
+1. 忘了取 max，直接寫 `left = map[c] + 1`：left 會回退。輸入 `"abba"`，掃到第二個 a 時 `map['a']` 是 0，left 從 2 退回 1，視窗 "bba" 內含重複的 b，答案算成 3（正確為 2）。
+2. 先更新 map 再判斷重複：`map[c]` 已被覆寫成 right，left 每輪都被推到 `right + 1`，長度永遠是 0。輸入 `"abc"` 答案算成 0（正確為 3）。
+3. 只在字元第一次出現時寫入索引、重複時不更新：索引停在最舊位置。輸入 `"aaa"`，掃到第三個 a 時 `map['a']` 仍是 0、小於 left，被誤判為窗外而不收縮，答案算成 2（正確為 1）。每一輪都必須執行 `map[c] = right`。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 是字串長度。左右指標各自最多只會走訪字串一次。空間複雜度為 O(min(n, m))，其中 m 是字元集的大小（例如英文字母 26 個或 ASCII 128 個），因為 Hash Map 最多儲存字元集大小的鍵值對。
+時間複雜度 O(n)：右指標走 n 步，每步做一次查表、一次寫表、一次取 max，皆為 O(1)，沒有內層迴圈。空間複雜度 O(min(n, m))，m 為字元集大小：map 的鍵數不超過相異字元數，例如全小寫字母時至多 26 個鍵。
 
 ## Digest
 
-本篇探討 Longest Substring Without Repeating Characters，掌握 Variable Sliding Window 搭配 Hash Map 的核心架構。透過記錄字元最後出現的索引，我們能夠在 O(n) 時間內動態調整視窗邊界，避免暴力解法的重複計算。重點在於確保左指標單調遞增，利用 Math.max 避開過期索引的干擾。
+無重複最長子字串的跳躍版解法：Hash Map 記每個字元最後一次出現的索引，納入 `s[right]` 發現重複時，left 直接跳到 `map[c] + 1`——左端 ≤ `map[c]` 的視窗必含兩個同字元，全是非法起點，跳過不漏解。但 map 記的是全前綴的位置、可能過期，必須寫 `left = max(left, map[c] + 1)` 防回退：輸入 `"abba"` 掃到第二個 a 時 `map['a']` 是 0、已在窗外，left 若退回會錯算成 3（正確 2）。每輪更新 `map[c] = right`、記錄 `right - left + 1`。與先前的逐格收縮同為攤銷 O(n)；跳躍版的差別是每輪最壞 O(1)、沒有內層 while。
 
 ## TypeScript Tip
 
+`noUncheckedIndexedAccess` 下 `s[right]` 是 `string | undefined`，迴圈邊界保證存在，用 `!` 收斂；`map.get()` 即使在 `has()` 之後型別仍是 `number | undefined`，同樣用 `!`：
+
 ```typescript
 import assert from "node:assert";
-
-// TypeScript 提示：使用 Map 時明確指定型別，並注意非空斷言運算子的正確使用。
-function optimizedLength(s: string): number {
-    const map = new Map<string, number>();
-    let max = 0, left = 0;
-    for (let right = 0; right < s.length; right++) {
-        const c = s[right];
-        if (map.has(c)) {
-            left = Math.max(left, map.get(c)! + 1);
-        }
-        map.set(c, right);
-        max = Math.max(max, right - left + 1);
-    }
-    return max;
+function lengthOfLongestSubstring(s: string): number {
+  const last = new Map<string, number>();
+  let left = 0, best = 0;
+  for (let right = 0; right < s.length; right++) {
+    const c = s[right]!;
+    if (last.has(c)) left = Math.max(left, last.get(c)! + 1);
+    last.set(c, right);
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
 }
-
-assert.strictEqual(optimizedLength("au"), 2);
+assert.strictEqual(lengthOfLongestSubstring("abba"), 2);
+assert.strictEqual(lengthOfLongestSubstring("bbbbb"), 1);
+assert.strictEqual(lengthOfLongestSubstring("abcdef"), 6);
+assert.strictEqual(lengthOfLongestSubstring(""), 0);
 ```
 
 ## Python Tip
 
-```python
-# Python 提示：利用 enumerate 同時獲取索引與字元，並善用字典的 get 方法簡化查詢邏輯。
-def optimized_length(s: str) -> int:
-    char_map = {}
-    max_len = 0
-    left = 0
-    for right, char in enumerate(s):
-        if char in char_map:
-            left = max(left, char_map[char] + 1)
-        char_map[char] = right
-        max_len = max(max_len, right - left + 1)
-    return max_len
-
-assert optimized_length("au") == 2
-```
-
-## TypeScript Corner
-
-```typescript
-import assert from "node:assert";
-
-function lengthOfLongestSubstring(s: string): number {
-    const charIndexMap = new Map<string, number>();
-    let maxLength = 0;
-    let left = 0;
-
-    for (let right = 0; right < s.length; right++) {
-        const char = s[right];
-        if (charIndexMap.has(char) && charIndexMap.get(char)! >= left) {
-            left = charIndexMap.get(char)! + 1;
-        }
-        charIndexMap.set(char, right);
-        maxLength = Math.max(maxLength, right - left + 1);
-    }
-
-    return maxLength;
-}
-
-assert.strictEqual(lengthOfLongestSubstring("abcabcbb"), 3);
-assert.strictEqual(lengthOfLongestSubstring("bbbbb"), 1);
-assert.strictEqual(lengthOfLongestSubstring("pwwkew"), 3);
-```
-
-## Python Corner
+`dict.get` 給預設值 -1，可把「沒出現過」與「出現在窗外」合併成同一條 max 更新，省掉 if 分支：
 
 ```python
 def length_of_longest_substring(s: str) -> int:
-    char_index_map = {}
-    max_length = 0
-    left = 0
+    last: dict[str, int] = {}
+    left = best = 0
+    for right, c in enumerate(s):
+        left = max(left, last.get(c, -1) + 1)
+        last[c] = right
+        best = max(best, right - left + 1)
+    return best
 
-    for right, char in enumerate(s):
-        if char in char_index_map and char_index_map[char] >= left:
-            left = char_index_map[char] + 1
-        char_index_map[char] = right
-        max_length = max(max_length, right - left + 1)
-
-    return max_length
-
-assert length_of_longest_substring("abcabcbb") == 3
-assert length_of_longest_substring("bbbbb") == 1
-assert length_of_longest_substring("pwwkew") == 3
+assert length_of_longest_substring("tmmzuxt") == 5
+assert length_of_longest_substring("aaaa") == 1
+assert length_of_longest_substring("abc") == 3
 ```
 
 ## Takeaway
 
-Variable Sliding Window 透過動態調整左右指標與 Hash Map 紀錄，將無重複子字串問題優化至 O(n) 時間複雜度。
+map 記字元最後索引，重複時 left 一步跳到 `map[c] + 1`；取 max 保證 left 只前進不回退。
 
 ## Tomorrow Preview
 
-明天我們將探討 Sliding Window 的另一個延伸應用：Fixed Size Sliding Window，學習如何在固定長度的視窗內高效計算統計數據，並搭配雙端佇列或頻率陣列解決更複雜的區間最值問題。
+明天進入 Max Consecutive Ones with Replacements：約束從「零重複」換成「至多 k 個可翻轉的 0」，狀態退回計數式的收縮判準；之後的 Fruit Into Baskets 再把配額推廣到「至多兩種相異元素」。
 
 ## Today's Challenge
 
-- **3** · 本題為最經典的 Variable Sliding Window 問題，要求找出不含重複字元的最長子字串長度，透過 Hash Map 記錄字元索引可將時間複雜度降至線性。
-  - Hint: 使用 Hash Map 記錄每個字元最近出現的索引位置，當遇到重複字元且其位置大於等於左指標時，直接將左指標移動到該位置的下一個。
+- **3** · 先修課已用 Set 與頻率表逐格收縮解過本題；這次把位置 map 跳躍完整落地，重點在過期索引與 left 不回退。
+  - Hint: map 記每個字元最後索引；納入 `s[right]` 時 `left = max(left, map[c] + 1)`，再更新 `map[c] = right` 並記錄長度。

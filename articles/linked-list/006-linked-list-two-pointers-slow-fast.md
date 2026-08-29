@@ -6,8 +6,8 @@ pattern_label: Slow and Fast Pointers
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - Can find the middle node of a linked list in a single pass
-  - Can find the kth node from the end using an offset gap
+  - 能在單趟走訪中找到 linked list 的中間節點
+  - 能利用位移間距找到倒數第 k 個節點
 ---
 ## Concept
 
@@ -84,63 +84,6 @@ def find_middle(head: ListNode | None) -> ListNode | None:
 head = ListNode(100, ListNode(200, ListNode(300)))
 mid = find_middle(head)
 assert mid.val == 200
-```
-
-## TypeScript Corner
-
-```typescript
-import assert from "node:assert";
-
-class ListNode {
-    val: number;
-    next: ListNode | null;
-    constructor(val?: number, next?: ListNode | null) {
-        this.val = (val===undefined ? 0 : val);
-        this.next = (next===undefined ? null : next);
-    }
-}
-
-function middleNode(head: ListNode | null): ListNode | null {
-    let slow: ListNode | null = head;
-    let fast: ListNode | null = head;
-    while (fast !== null && fast.next !== null) {
-        slow = slow!.next;
-        fast = fast.next.next;
-    }
-    return slow;
-}
-
-const head = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
-const mid = middleNode(head);
-assert.strictEqual(mid?.val, 3);
-```
-
-## Python Corner
-
-```python
-import unittest
-
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def removeNthFromEnd(head: ListNode | None, n: int) -> ListNode | None:
-    dummy = ListNode(0, head)
-    slow = dummy
-    fast = dummy
-    for _ in range(n + 1):
-        fast = fast.next
-    while fast is not None:
-        slow = slow.next
-        fast = fast.next
-    slow.next = slow.next.next
-    return dummy.next
-
-head = ListNode(1, ListNode(2, ListNode(3)))
-res = removeNthFromEnd(head, 2)
-assert res.val == 1
-assert res.next.val == 3
 ```
 
 ## Takeaway

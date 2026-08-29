@@ -11,12 +11,10 @@ prerequisite:
   - stack-sum-of-subarray-minimums
 next: []
 learning_goal:
-  - >-
-    Calculate the largest rectangular area in a histogram using a monotonic
-    stack.
+  - 使用 Monotonic Stack 計算直方圖中最大的矩形面積。
 exit_criteria:
-  - Can find left and right boundary limits for each histogram bar height.
-  - Can compute maximum rectangular area efficiently in linear time.
+  - 能為直方圖中每個柱高找出左右邊界限制。
+  - 能在線性時間內有效率地計算最大矩形面積。
 leetcode:
   - 84
 tags:

@@ -6,8 +6,8 @@ pattern_label: Largest Rectangle in Histogram Core
 complexity_label: O(n) / O(n)
 estimated_minutes: 25
 exit_criteria:
-  - Can find left and right boundary limits for each histogram bar height.
-  - Can compute maximum rectangular area efficiently in linear time.
+  - 能為直方圖中每個柱高找出左右邊界限制。
+  - 能在線性時間內有效率地計算最大矩形面積。
 ---
 ## Concept
 
@@ -55,51 +55,6 @@ def py_tip_example() -> None:
     assert len(padded) == 5, "Sentinel padding failed"
 
 py_tip_example()
-```
-
-## TypeScript Corner
-
-```typescript
-function largestRectangleArea(heights: number[]):
-  number {
-  const padded = [0, ...heights, 0];
-  const stack: number[] = [];
-  let maxArea = 0;
-  for (let i = 0; i < padded.length; i++) {
-    while (
-      stack.length > 0 &&
-      padded[stack[stack.length - 1]] > padded[i]
-    ) {
-      const h = padded[stack.pop()!];
-      const w = i - stack[stack.length - 1] - 1;
-      maxArea = Math.max(maxArea, h * w);
-    }
-    stack.push(i);
-  }
-  return maxArea;
-}
-const testResult = largestRectangleArea([2, 1, 5, 6, 2, 3]);
-if (testResult !== 10) {
-  throw new Error(`Assertion failed: expected 10, got ${testResult}`);
-}
-```
-
-## Python Corner
-
-```python
-def largest_rectangle_area(heights: list[int]) -> int:
-    padded = [0] + heights + [0]
-    stack: list[int] = []
-    max_area = 0
-    for i, h in enumerate(padded):
-        while stack and padded[stack[-1]] > h:
-            height = padded[stack.pop()]
-            width = i - stack[-1] - 1
-            max_area = max(max_area, height * width)
-        stack.append(i)
-    return max_area
-
-assert largest_rectangle_area([2, 1, 5, 6, 2, 3]) == 10, "Assertion failed"
 ```
 
 ## Takeaway

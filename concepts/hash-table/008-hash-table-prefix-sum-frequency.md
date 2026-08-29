@@ -14,14 +14,10 @@ prerequisite:
 next:
   - hash-table-longest-consecutive-sequence
 learning_goal:
-  - >-
-    Count subarrays matching a target sum using prefix sums stored in a
-    frequency hash map.
+  - '利用存放在頻率 hash map 中的 prefix sum，計算符合目標總和的子陣列數量。'
 exit_criteria:
-  - Can compute running prefix sum
-  - >-
-    Can check if prefix_sum - target exists in the frequency map to count valid
-    subarrays
+  - '能計算累積的 prefix sum'
+  - '能檢查 prefix_sum - target 是否存在於 frequency map 中，以計算合法子陣列的數量'
 leetcode:
   - 560
   - 525

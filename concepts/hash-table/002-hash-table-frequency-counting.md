@@ -18,10 +18,10 @@ next:
   - sliding-window-permutation-in-string
   - sliding-window-minimum-window-substring
 learning_goal:
-  - Count occurrences of elements in a collection efficiently using a hash map.
+  - '使用 hash map 有效率地計算集合中元素的出現次數。'
 exit_criteria:
-  - Can build a frequency map from an array
-  - Can iterate through map entries to find maximum or matching frequencies
+  - '能從陣列建立 frequency map'
+  - '能走訪 map 的項目以找出最大或符合條件的頻率'
 leetcode:
   - 387
   - 383

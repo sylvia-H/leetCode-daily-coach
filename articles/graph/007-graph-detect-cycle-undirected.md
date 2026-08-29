@@ -6,9 +6,7 @@ pattern_label: Cycle Detection
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Identify if any visited neighbor is not the direct parent of the current
-    node.
+  - 能辨識是否有已造訪的鄰居不是目前節點的直接父節點。
 ---
 ## Concept
 
@@ -79,64 +77,6 @@ def check(n: int, edges: list[list[int]]) -> bool:
         return False
     return dfs(0, -1)
 assert check(3, [[0, 1], [1, 2], [2, 0]]) == True
-```
-
-## TypeScript Corner
-
-```typescript
-function hasCycle(n: number, edges: number[][]): boolean {
-  const adj: number[][] = Array.from({ length: n }, () => []);
-  for (const [u, v] of edges) {
-    adj[u].push(v);
-    adj[v].push(u);
-  }
-  const visited = new Set<number>();
-  function dfs(curr: number, parent: number): boolean {
-    visited.add(curr);
-    for (const neighbor of adj[curr]) {
-      if (neighbor === parent) continue;
-      if (visited.has(neighbor)) return true;
-      if (dfs(neighbor, curr)) return true;
-    }
-    return false;
-  }
-  for (let i = 0; i < n; i++) {
-    if (!visited.has(i)) {
-      if (dfs(i, -1)) return true;
-    }
-  }
-  return false;
-}
-const result = hasCycle(3, [[0, 1], [1, 2], [2, 0]]);
-if (!result) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def has_cycle(n: int, edges: list[list[int]]) -> bool:
-    adj = [[] for _ in range(n)]
-    for u, v in edges:
-        adj[u].append(v)
-        adj[v].append(u)
-    visited = set()
-    def dfs(curr: int, parent: int) -> bool:
-        visited.add(curr)
-        for neighbor in adj[curr]:
-            if neighbor == parent:
-                continue
-            if neighbor in visited:
-                return True
-            if dfs(neighbor, curr):
-                return True
-        return False
-    for i in range(n):
-        if i not in visited:
-            if dfs(i, -1):
-                return True
-    return False
-result = has_cycle(3, [[0, 1], [1, 2], [2, 0]])
-assert result == True, "assertion failed"
 ```
 
 ## Takeaway

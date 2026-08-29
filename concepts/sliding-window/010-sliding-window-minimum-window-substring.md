@@ -13,16 +13,10 @@ prerequisite:
   - sliding-window-find-all-anagrams
 next: []
 learning_goal:
-  - >-
-    Master the advanced variable sliding window pattern for covering all
-    required characters in minimum length.
+  - 精通進階的變動長度 Sliding Window pattern，以最短長度涵蓋所有必要字元。
 exit_criteria:
-  - >-
-    Can track how many unique required characters have met their target
-    frequencies.
-  - >-
-    Can contract the left pointer greedily while maintaining full coverage of
-    all required characters.
+  - 能追蹤有多少個必要的相異字元已達到其目標頻率。
+  - 能在維持完整涵蓋所有必要字元的同時，貪婪地收縮左指標。
 leetcode:
   - 76
 tags:

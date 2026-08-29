@@ -72,38 +72,6 @@ ways = find_target_sum_ways([1, 1, 1, 1, 1], 3)
 assert ways == 5, "assertion failed: expected 5 ways"
 ```
 
-## TypeScript Corner
-
-```typescript
-function knapsack01(weights: number[], values: number[], capacity: number): number {
-  const dp = new Array(capacity + 1).fill(0);
-  for (let i = 0; i < weights.length; i++) {
-    const w = weights[i];
-    const v = values[i];
-    for (let currentCapacity = capacity; currentCapacity >= w; currentCapacity--) {
-      dp[currentCapacity] = Math.max(dp[currentCapacity], dp[currentCapacity - w] + v);
-    }
-  }
-  return dp[capacity];
-}
-const maxVal = knapsack01([1, 3, 4, 5], [1, 4, 5, 7], 7);
-if (maxVal !== 9) throw new Error("assertion failed: expected maximum value 9");
-```
-
-## Python Corner
-
-```python
-def knapsack_01(weights: list[int], values: list[int], capacity: int) -> int:
-    dp = [0] * (capacity + 1)
-    for w, v in zip(weights, values):
-        for current_capacity in range(capacity, w - 1, -1):
-            dp[current_capacity] = max(dp[current_capacity], dp[current_capacity - w] + v)
-    return dp[capacity]
-
-max_val = knapsack_01([1, 3, 4, 5], [1, 4, 5, 7], 7)
-assert max_val == 9, "assertion failed: expected maximum value 9"
-```
-
 ## Takeaway
 
 0/1 Knapsack 核心在於『選或不選』與『逆向迴圈』，確保物品不重複使用，並透過空間優化將維度降至一維。

@@ -6,7 +6,7 @@ pattern_label: Bottom-up Heapify
 complexity_label: O(n) time / O(1) space
 estimated_minutes: 25
 exit_criteria:
-  - Can explain why bottom-up heap construction is O(n) instead of O(n log n).
+  - 能說明為何 bottom-up 建構 heap 是 O(n) 而非 O(n log n)。
 ---
 ## Concept
 
@@ -64,77 +64,6 @@ def verify_max_heap(arr: list[int]) -> bool:
     return True
 sample = [10, 5, 8, 1, 2]
 assert verify_max_heap(sample), "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function heapify(arr: number[]): number[] {
-  const n = arr.length;
-  const lastNonLeaf = Math.floor(n / 2) - 1;
-
-  function siftDown(i: number, length: number) {
-    let parent = i;
-    while (2 * parent + 1 < length) {
-      let left = 2 * parent + 1;
-      let right = left + 1;
-      let largest = parent;
-
-      if (arr[left] > arr[largest]) {
-        largest = left;
-      }
-      if (right < length && arr[right] > arr[largest]) {
-        largest = right;
-      }
-      if (largest === parent) break;
-
-      [arr[parent], arr[largest]] = [arr[largest], arr[parent]];
-      parent = largest;
-    }
-  }
-
-  for (let i = lastNonLeaf; i >= 0; i--) {
-    siftDown(i, n);
-  }
-  return arr;
-}
-
-const testArr = [3, 1, 6, 5, 2, 4];
-heapify(testArr);
-if (testArr[0] !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def heapify(arr: list[int]) -> list[int]:
-    n = len(arr)
-    last_non_leaf = n // 2 - 1
-
-    def sift_down(i: int, length: int):
-        parent = i
-        while 2 * parent + 1 < length:
-            left = 2 * parent + 1
-            right = left + 1
-            largest = parent
-
-            if arr[left] > arr[largest]:
-                largest = left
-            if right < length and arr[right] > arr[largest]:
-                largest = right
-            if largest == parent:
-                break
-
-            arr[parent], arr[largest] = arr[largest], arr[parent]
-            parent = largest
-
-    for i in range(last_non_leaf, -1, -1):
-        sift_down(i, n)
-    return arr
-
-test_arr = [3, 1, 6, 5, 2, 4]
-heapify(test_arr)
-assert test_arr[0] == 6, "assertion failed"
 ```
 
 ## Takeaway

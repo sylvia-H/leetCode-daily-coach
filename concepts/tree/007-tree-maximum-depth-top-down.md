@@ -12,9 +12,9 @@ prerequisite:
 next:
   - tree-balanced-binary-tree-check
 learning_goal:
-  - Pass accumulated state down the recursive tree paths (top-down approach).
+  - '沿遞迴的樹路徑向下傳遞累積狀態（top-down 作法）。'
 exit_criteria:
-  - Maintain and update a global or passed-down depth counter during traversal.
+  - '能在走訪過程中維護並更新全域或向下傳遞的深度計數器。'
 leetcode:
   - 104
 tags:

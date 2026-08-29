@@ -6,8 +6,8 @@ pattern_label: Two-Pointer Merge
 complexity_label: O(n + m) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - Can compare heads of two lists and attach the smaller node to a result tail
-  - Can handle remaining nodes when one list exhausts before the other
+  - 能比較兩個串列的 head，並將較小的節點接到結果串列的尾端
+  - 能在其中一個串列先耗盡時處理剩餘節點
 ---
 ## Concept
 
@@ -50,65 +50,6 @@ def verify_merge() -> None:
     n1 = {"val": 1, "next": None}
     assert n1["val"] == 1, "Python tip check failed"
 verify_merge()
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  constructor(public val: number = 0, public next: ListNode | null = null) {}
-}
-function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
-  const dummy = new ListNode(0);
-  let tail = dummy;
-  let p1 = list1;
-  let p2 = list2;
-  while (p1 !== null && p2 !== null) {
-    if (p1.val < p2.val) {
-      tail.next = p1;
-      p1 = p1.next;
-    } else {
-      tail.next = p2;
-      p2 = p2.next;
-    }
-    tail = tail.next;
-  }
-  tail.next = p1 !== null ? p1 : p2;
-  return dummy.next;
-}
-const l1 = new ListNode(1, new ListNode(2, new ListNode(4)));
-const l2 = new ListNode(1, new ListNode(3, new ListNode(4)));
-const res = mergeTwoLists(l1, l2);
-if (res === null || res.val !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def mergeTwoLists(list1: ListNode | None, list2: ListNode | None) -> ListNode | None:
-    dummy = ListNode(0)
-    tail = dummy
-    p1, p2 = list1, list2
-    while p1 and p2:
-        if p1.val < p2.val:
-            tail.next = p1
-            p1 = p1.next
-        else:
-            tail.next = p2
-            p2 = p2.next
-        tail = tail.next
-    tail.next = p1 if p1 is not None else p2
-    return dummy.next
-
-l1 = ListNode(1, ListNode(2, ListNode(4)))
-l2 = ListNode(1, ListNode(3, ListNode(4)))
-res = mergeTwoLists(l1, l2)
-assert res is not None and res.val == 1, "assertion failed"
 ```
 
 ## Takeaway

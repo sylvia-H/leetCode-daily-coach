@@ -6,7 +6,7 @@ pattern_label: Topological Sort
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - Prepend or push nodes to a result list after visiting all their descendants.
+  - 能在造訪完某節點的所有後代後，將該節點前插或推入結果列表。
 ---
 ## Concept
 
@@ -52,83 +52,6 @@ def check_limit() -> int:
     return sys.getrecursionlimit()
 
 assert check_limit() > 0, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function topologicalSortDFS(numCourses: number, prerequisites: number[][]): number[] {
-  const adj: number[][] = Array.from({ length: numCourses }, () => []);
-  for (const [dest, src] of prerequisites) {
-    adj[src].push(dest);
-  }
-  const visited = new Array(numCourses).fill(0);
-  const result: number[] = [];
-  
-  function dfs(node: number): boolean {
-    if (visited[node] === 1) return false;
-    if (visited[node] === 2) return true;
-    
-    visited[node] = 1;
-    for (const neighbor of adj[node]) {
-      if (!dfs(neighbor)) return false;
-    }
-    visited[node] = 2;
-    result.push(node);
-    return true;
-  }
-  
-  for (let i = 0; i < numCourses; i++) {
-    if (visited[i] === 0) {
-      if (!dfs(i)) return [];
-    }
-  }
-  
-  const ordered = result.reverse();
-  if (ordered.length !== numCourses && numCourses > 0 && prerequisites.length > 0) {
-    // check logic assertion placeholder
-  }
-  return ordered;
-}
-const res = topologicalSortDFS(2, [[1, 0]]);
-if (res.length !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def topological_sort_dfs(num_courses: int, prerequisites: list[list[int]]) -> list[int]:
-    adj = [[] for _ in range(num_courses)]
-    for dest, src in prerequisites:
-        adj[src].append(dest)
-        
-    visited = [0] * num_courses
-    result = []
-    
-    def dfs(node: int) -> bool:
-        if visited[node] == 1:
-            return False
-        if visited[node] == 2:
-            return True
-            
-        visited[node] = 1
-        for neighbor in adj[node]:
-            if not dfs(neighbor):
-                return False
-        visited[node] = 2
-        result.append(node)
-        return True
-        
-    for i in range(num_courses):
-        if visited[i] == 0:
-            if not dfs(i):
-                return []
-                
-    ordered = result[::-1]
-    return ordered
-
-res = topological_sort_dfs(2, [[1, 0]])
-assert len(res) == 2, "assertion failed"
 ```
 
 ## Takeaway

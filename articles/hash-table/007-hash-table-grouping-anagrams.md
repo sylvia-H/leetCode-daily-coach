@@ -6,128 +6,83 @@ pattern_label: Canonical Key Grouping
 complexity_label: O(n * k log k) / O(n * k)
 estimated_minutes: 15
 exit_criteria:
-  - Can generate a canonical representation for items that share properties
-  - Can store and append items to lists inside a hash map
+  - 能為具有共同性質的項目產生 canonical 表示
+  - 能在 hash map 內以 list 儲存並附加項目
 ---
 ## Concept
 
-Grouping Elements by Canonical Hash Key 是一種透過將資料轉換成「標準化鍵值」（Canonical Hash Key）來進行分類與分組的核心演算法模式。當我們面對需要將具備相同本質但外觀不同的資料（例如字位變異詞 Anagrams、位移字串 Shifted Strings、或是具有相同頻率分佈的結構）聚合在一起時，若直接進行兩兩比較，時間複雜度往往會高達 O(n^2) 甚至更高。透過 Hash Map 的輔助，我們能夠將每個元素映射到一個唯一的標準化鍵值上，進而將查詢與插入的時間複雜度優化至 O(1)。這種模式的核心精神在於「特徵萃取」，即過濾掉不影響分組結果的表面差異（例如字元順序），萃取出決定性的本質特徵（例如排序後的字元序列或相對差值元組），作為雜湊表的鍵值。
+Canonical Key Grouping 是把「本質相同、外觀不同」的資料聚成一組的核心模式。互為 Anagram 的字串、位移後等價的字串，若靠兩兩比較來分組，成本至少 O(n^2)。更好的做法是替每個元素計算一個標準化鍵值（Canonical Key）：過濾掉不影響分組的表面差異（例如字元順序），萃取出決定分組的本質特徵（例如排序後的字元序列、字元頻率、相鄰差值序列），再以它作為 Hash Map 的鍵，讓同組元素自動落進同一個桶。這個做法正確的前提，是鍵值設計滿足「同組必同鍵、異組必異鍵」：以排序簽章為例，兩個字串互為 Anagram 等價於兩者的字元多重集相同，而多重集相同又等價於排序後字串相同，因此排序簽章精準刻劃了這個等價關係，既不漏分也不誤併。
 
 ## Thinking
 
-在思考這類分組問題時，首要任務是定義「什麼是相同」。以 Group Anagrams 為例，'eat'、'tea' 和 'ate' 雖然字元順序不同，但它們包含相同的字元與各自的數量。因此，我們的思考邏輯會經歷以下步驟：第一步，辨識分組依據：題目要求將互為 Anagrams 的字串歸納至同一個集合中。第二步，決定 Canonical Form：我們需要將每一個字串轉化為一個不因排列順序而改變的唯一簽章（Signature）。最直覺的做法是將字串的字元進行排序，例如將 'eat' 排序後得到 'aet'。第三步，建構 Hash Map：以這個排序後的字串作為 Key，而原本的字串陣列作為 Value。第四步，走訪輸入陣列：對於每個字串，計算其 Canonical Key，檢查 Hash Map 中是否存在該 Key。若存在，則將原字串推入對應的陣列中；若不存在，則建立一個包含該字串的新陣列並放入 Hash Map 中。最後，將 Hash Map 中的所有 Value 集合回傳即可。
+面對分組問題，第一步是定義「什麼算相同」。以 Anagram 分組為例，eat、tea、ate 順序不同但字元組成完全一致。思考流程如下：第一，確認分組依據是「字元多重集相同」；第二，設計 Canonical Form——最直覺的是把字串排序，eat 排序後得到 aet，三個字串都會映射到同一個鍵；第三，建立 Hash Map，鍵是簽章、值是該組的字串串列；第四，走訪輸入，對每個字串計算簽章，鍵已存在就把原字串附加進對應串列，不存在就先建立新串列。最後回傳 Hash Map 的所有值即是分組結果。當字串很長或數量很大時，可把簽章從排序改為頻率計數（長度 26 的計數陣列轉成字串或 tuple），把單一字串的處理成本從 O(k log k) 降到 O(k)。
 
 ## Pattern Recognition
 
-當題目要求「將具有相同特徵、相同屬性、或經過某種對稱轉換後等價的元素進行分組或歸類」時，即可強烈懷疑此問題適用 Canonical Key Grouping 模式。常見的辨識線索包括：第一，題目出現關鍵字如 group、categorize、anagram、shifted strings、isomorphic；第二，元素之間存在某種等價關係（Equivalence Relation），且這種等價關係可以透過某種標準化函數（Normalization Function）消除雜訊（如順序、大小寫、相對位移量）；第三，輸出結果通常為一個二維陣列或分組集合（List of Lists）。若符合上述特徵，通常不需要考慮複雜的圖論演算法，直接運用 Hash Map 結合標準化鍵值即可在線性或對數時間內完美解開。
+當題目要求「把具有相同特徵、或經某種轉換後等價的元素分組」時，即可懷疑此模式。辨識線索有三：第一，題目出現 group、categorize、anagram、shifted strings 這類字眼；第二，元素之間存在等價關係，且能用標準化函數消除雜訊（順序、大小寫、相對位移）；第三，輸出通常是分組集合（List of Lists）。符合上述特徵時，不需要動用複雜的圖論演算法，Hash Map 配上正確設計的標準化鍵值即可解決，整體成本由「元素數量乘上單一元素的標準化成本」決定。
 
 ## Common Mistakes
 
-開發者在實作此模式時最常犯的錯誤，是直接將未經標準化的原始資料或不可雜湊（Un-hashable）的結構作為 Hash Map 的 Key。具體錯誤包括：第一，直接使用未排序的字串作為 Key，導致實際上互為 Anagrams 的字串因為順序不同而被分到不同的桶子中。第二，嘗試直接使用 JavaScript 的 Array 作為物件的 Key，由於 JavaScript 物件鍵值預設會將其隱式轉換為字串，或是因為參考相等性（Reference Equality）導致無法正確命中。第三，在 Python 中使用 List 作為字典的 Key，由於 List 是可變動（Mutable）且不可雜湊的，會直接引發 TypeError。第四，誤用字元ASCII總和作為 Key，這會忽略字元組合的差異而導致嚴重的雜湊碰撞（Hash Collision），例如 'ab' 和 'ba' 的總和相同，但 'ac' 和 'bb' 的總和也可能相同，無法正確區分。
+第一，直接拿未標準化的原始字串當鍵，互為 Anagram 的字串會因順序不同而分散到不同桶。第二，用字元編碼總和當鍵：這種壓縮丟失了組成資訊，會產生嚴重碰撞——ac 與 bb 的編碼總和同為 196，卻不是 Anagram，會被誤併成一組。第三，語言特性坑：JavaScript 拿陣列當物件鍵會被隱式轉成字串、放進 Map 則以參考位址比較，兩個內容相同的陣列不會命中同一鍵，必須先 join 成字串；Python 的 list 可變、不可雜湊，當 dict 鍵會直接拋出 TypeError，必須轉成 tuple。第四，位移字串分組時忘記處理差值為負的環繞情形：az 與 ba 的相鄰差值分別是 25 與 -1，必須 mod 26 之後才會一致。
 
 ## Complexity
 
-時間複雜度為 O(n * k log k)，其中 n 是陣列中元素的總個數，k 是字串的最大長度。主要的開銷來自於對每個字串進行排序（k log k），共需要處理 n 個字串；若使用計數排序（Counting Sort）則可將單一字串處理時間優化至 O(k)。空間複雜度為 O(n * k)，用於儲存 Hash Map 中的所有字串及其對應的鍵值，在最壞情況下所有字串皆不相同時，需要完整保留所有原始資料。
+時間複雜度 O(n * k log k)：n 是字串個數、k 是最長字串長度，主要成本是替每個字串排序產生簽章；改用頻率計數簽章可降為 O(n * k)。空間複雜度 O(n * k)：Hash Map 必須保存所有原始字串與其簽章，最壞情況（全部不同組）需完整保留全部資料。
 
 ## Digest
 
-今日課程深入探討了 Canonical Key Grouping 模式，核心在於將複雜且具備對稱關係的資料轉換為標準化簽章，並以此作為 Hash Map 的鍵值進行高效分組。我們剖析了以字串排序或頻率元組作為 Key 的原理，並強調了避免雜湊碰撞與處理語言特性的重要性。透過實作題號 49 Group Anagrams 與題號 249 Group Shifted Strings，我們學會了如何萃取資料本質，將原本需要兩兩比較的 O(n^2) 問題優化至 O(n * k log k)。掌握此模式後，面對各類型的分類與聚合題目將能游刃有餘。
+今天學習 Canonical Key Grouping：把具備等價關係的資料轉換為標準化簽章，作為 Hash Map 的鍵完成高效分組。正確性來自鍵值設計滿足「同組必同鍵、異組必異鍵」——排序簽章刻劃字元多重集、相鄰差值序列刻劃位移等價。實作上以簽章為鍵、串列為值，逐一把原字串附加進對應的桶，將原本 O(n^2) 的兩兩比較降為 O(n * k log k)，頻率計數簽章更可達 O(n * k)。同時留意語言特性：JavaScript 需把簽章轉成字串才能命中同一鍵，Python 需用 tuple 這類不可變結構當鍵。
 
 ## TypeScript Tip
 
+Map 拿陣列當鍵比的是參考位址而非內容，簽章務必先轉成字串再放入。
+
 ```typescript
-import assert from 'node:assert';
-function groupShiftedStrings(strings: string[]): string[][] {
+import assert from "node:assert";
+function groupAnagrams(strs: string[]): string[][] {
   const map = new Map<string, string[]>();
-  for (const s of strings) {
-    const key = s
-      .split('')
-      .map((c, i, arr) =>
-        i === 0 ? 0 : (c.charCodeAt(0) - arr[i - 1].charCodeAt(0) + 26) % 26
-      )
-      .join(',');
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(s);
+  for (const s of strs) {
+    const key = [...s].sort().join("");
+    const bucket = map.get(key);
+    if (bucket) bucket.push(s);
+    else map.set(key, [s]);
   }
-  return Array.from(map.values());
+  return [...map.values()];
 }
-const res = groupShiftedStrings(['abc', 'bcd', 'acef', 'xyz', 'az', 'ba', 'a']);
-assert.strictEqual(res.length, 4);
+const groups = groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]);
+assert.strictEqual(groups.length, 3);
 ```
 
 ## Python Tip
 
-```python
-import collections
-
-def group_shifted_strings(strings: list[str]) -> list[list[str]]:
-    groups = collections.defaultdict(list)
-    for s in strings:
-        key = tuple(
-            (ord(s[i]) - ord(s[i-1])) % 26 
-            for i in range(1, len(s))
-        )
-        groups[key].append(s)
-    return list(groups.values())
-
-res = group_shifted_strings(["abc", "bcd", "acef", "xyz", "az", "ba", "a"])
-assert len(res) == 4
-```
-
-## TypeScript Corner
-
-```typescript
-function groupAnagrams(strs: string[]):
-string[][] {
-  const map = new Map<string, string[]>();
-  for (const str of strs) {
-    const sortedKey = str.split('').sort().join('');
-    if (!map.has(sortedKey)) {
-      map.set(sortedKey, []);
-    }
-    map.get(sortedKey)!.push(str);
-  }
-  const result = Array.from(map.values());
-  if (result.length === 0 && strs.length > 0) {
-    throw new Error('Assertion failed: Result should not be empty');
-  }
-  return result;
-}
-const output = groupAnagrams(['eat', 'tea', 'tan', 'ate', 'nat', 'bat']);
-if (output.length !== 3) {
-  throw new Error('Assertion failed: Expected 3 groups');
-}
-```
-
-## Python Corner
+list 不可雜湊、不能當 dict 鍵；改用 tuple 頻率簽章，單一字串的處理成本從 O(k log k) 降到 O(k)。
 
 ```python
 from collections import defaultdict
 
 def group_anagrams(strs: list[str]) -> list[list[str]]:
-    map_groups = defaultdict(list)
+    groups = defaultdict(list)
     for s in strs:
-        sorted_key = ''.join(sorted(s))
-        map_groups[sorted_key].append(s)
-    result = list(map_groups.values())
-    assert len(result) == 3 or len(strs) == 0, "Assertion failed: Expected groups"
-    return result
+        key = [0] * 26
+        for c in s:
+            key[ord(c) - ord("a")] += 1
+        groups[tuple(key)].append(s)
+    return list(groups.values())
 
-output = group_anagrams(["eat", "tea", "tan", "ate", "nat", "bat"])
-assert len(output) == 3
+assert len(group_anagrams(["eat", "tea", "tan", "ate", "nat", "bat"])) == 3
 ```
 
 ## Takeaway
 
-萃取本質特徵為標準化鍵值，善用 Hash Map 消除重複比較，將分組複雜度由 O(n^2) 降至線性對數級別。
+分組的關鍵是設計「同組必同鍵、異組必異鍵」的標準化簽章，Hash Map 讓等價元素自動聚成同一桶。
 
 ## Tomorrow Preview
 
-明天我們將探討 Sliding Window 模式，學習如何在連續子陣列或子字串的問題中，利用雙指標動態維護視窗狀態，進一步將暴力解的 O(n^2) 降至 O(n)。
+明天把頻率統計搬到數值陣列上：用 Prefix Sum 搭配頻率 Hash Map，在 O(n) 內數出總和等於目標值的子陣列，處理 Sliding Window 因負數而失效的情境。
 
 ## Today's Challenge
 
-- **49** · 題目要求將互為字位變異詞的字串歸類在一起，完美對應以排序後字串作為 Canonical Hash Key 的分組模式。
-  - Hint: 將每個字串的字元重新排序作為 Dictionary 的 Key，原字串附加到對應的 List 中。
-- **249** · 字串透過相對位移量等價，可以透過計算相鄰字元間的字元差值序列作為標準化鍵值進行分組。
-  - Hint: 計算相鄰字元差值並處理負數環繞問題，將差值元組或字串作為 Map 的 Key。
+- **49** · 互為 Anagram 等價於字元多重集相同，以排序後的字串作為標準化鍵值即可一次分組完成。
+  - Hint: 把每個字串的字元排序後當作鍵，原字串附加到對應串列，最後回傳所有串列。
+- **249** · 位移等價的字串具有相同的相鄰字元差值序列，以差值序列作為標準化鍵值分組。
+  - Hint: 相鄰差值取 mod 26 處理負數環繞，再把差值序列轉成可雜湊的鍵。

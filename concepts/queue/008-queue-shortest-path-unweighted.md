@@ -12,12 +12,10 @@ prerequisite:
 next:
   - queue-matrix-multi-source-bfs
 learning_goal:
-  - >-
-    Find the shortest path in an unweighted graph or grid using BFS and a
-    distance tracking structure.
+  - '用 BFS 搭配距離追蹤結構，在無權重圖或網格中找出最短路徑。'
 exit_criteria:
-  - Track visited nodes to prevent cycles and redundant work.
-  - Increment distance step-by-step as queue expands.
+  - '能追蹤已走訪節點，避免環與重複計算。'
+  - '能隨著佇列擴展逐步遞增距離。'
 leetcode:
   - 111
   - 934

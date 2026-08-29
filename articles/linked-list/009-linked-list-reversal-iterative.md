@@ -6,8 +6,8 @@ pattern_label: Pointer Reversal
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - 'Can reverse a linked list iteratively using prev, curr, and next pointers'
-  - Can return the new head correctly
+  - 能使用 prev、curr、next 三個指標迭代地反轉 linked list
+  - 能正確回傳新的 head
 ---
 ## Concept
 
@@ -89,66 +89,6 @@ node = ListNode(1, ListNode(2))
 res = reverseList(node)
 assert res.val == 2
 assert res.next.val == 1
-```
-
-## TypeScript Corner
-
-```typescript
-import assert from "node:assert";
-
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-
-function reverseList(head: ListNode | null): ListNode | null {
-  let prev: ListNode | null = null;
-  let curr: ListNode | null = head;
-  while (curr !== null) {
-    let nextTemp: ListNode | null = curr.next;
-    curr.next = prev;
-    prev = curr;
-    curr = nextTemp;
-  }
-  return prev;
-}
-
-const head = new ListNode(1, new ListNode(2, new ListNode(3)));
-const reversed = reverseList(head);
-assert.strictEqual(reversed?.val, 3);
-assert.strictEqual(reversed?.next?.val, 2);
-assert.strictEqual(reversed?.next?.next?.val, 1);
-assert.strictEqual(reversed?.next?.next?.next, null);
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def reverseList(head: ListNode | None) -> ListNode | None:
-    prev = None
-    curr = head
-    while curr is not None:
-        next_temp = curr.next
-        curr.next = prev
-        prev = curr
-        curr = next_temp
-    return prev
-
-head = ListNode(1, ListNode(2, ListNode(3)))
-reversed_head = reverseList(head)
-assert reversed_head.val == 3
-assert reversed_head.next.val == 2
-assert reversed_head.next.next.val == 1
-assert reversed_head.next.next.next is None
 ```
 
 ## Takeaway

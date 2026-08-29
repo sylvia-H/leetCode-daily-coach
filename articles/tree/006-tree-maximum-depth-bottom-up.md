@@ -6,7 +6,7 @@ pattern_label: Bottom-Up DFS
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - Return 1 plus the maximum of left and right subtree depths.
+  - 能回傳左右子樹深度的最大值加 1。
 ---
 ## Concept
 
@@ -71,54 +71,6 @@ def maxDepth(root: TreeNode | None) -> int:
 
 node = TreeNode(1, None, TreeNode(2))
 assert maxDepth(node) == 2, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function maxDepth(root: TreeNode | null): number {
-  if (root === null) {
-    return 0;
-  }
-  const leftDepth = maxDepth(root.left);
-  const rightDepth = maxDepth(root.right);
-  return Math.max(leftDepth, rightDepth) + 1;
-}
-
-const root = new TreeNode(3, new TreeNode(9), new TreeNode(20, new TreeNode(15), new TreeNode(7)));
-const depth = maxDepth(root);
-if (depth !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def maxDepth(root: TreeNode | None) -> int:
-    if root is None:
-        return 0
-    left_depth = maxDepth(root.left)
-    right_depth = maxDepth(root.right)
-    return max(left_depth, right_depth) + 1
-
-root = TreeNode(3, TreeNode(9), TreeNode(20, TreeNode(15), TreeNode(7)))
-assert maxDepth(root) == 3, "assertion failed"
 ```
 
 ## Takeaway

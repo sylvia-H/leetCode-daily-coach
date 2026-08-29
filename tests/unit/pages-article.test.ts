@@ -58,14 +58,6 @@ ts tip。
 
 py tip。
 
-## TypeScript Corner
-
-TS Corner 內容 F。
-
-## Python Corner
-
-Python Corner 內容 G。
-
 ## Takeaway
 
 一句話帶走。
@@ -97,13 +89,16 @@ describe("buildArticlePageView（research R2／R12）", () => {
       "Pattern Recognition",
       "Common Mistakes",
       "Complexity",
-      "TypeScript Corner",
-      "Python Corner",
+      "TypeScript Tip",
+      "Python Tip",
       "Tomorrow Preview",
     ]);
     expect(view.sections[0]?.html).toContain("Concept 內容 A");
     expect(view.sections[1]?.html).toContain("Thinking 內容 B");
     expect(view.sections[4]?.html).toContain("Complexity 內容 E");
+    // F12 Phase 0：Corner 移除後，語言區塊由 Discord 共用的 Tip 承擔，MUST 出現在全文頁。
+    expect(view.sections[5]?.html).toContain("ts tip");
+    expect(view.sections[6]?.html).toContain("py tip");
     expect(view.sections[7]?.html).toContain("Tomorrow 內容 H");
     // MUST NOT 出現合併字串（conceptBody 會把四段接在一起，不會各自獨立成 8 筆）
     expect(view.sections).toHaveLength(8);
@@ -200,7 +195,7 @@ describe("buildArticlePageView（research R2／R12）", () => {
 });
 
 describe("renderArticlePage", () => {
-  it("含 8 段固定區塊與結構化 Today's Challenge 連結，不含 Digest／TypeScript Tip／Python Tip", () => {
+  it("含 8 段固定區塊與結構化 Today's Challenge 連結；呈現 Tip 但不含 Digest", () => {
     const article = parseArticle(makeRawArticle(), "test-concept", ARTICLE_PATH);
     const view = buildArticlePageView(article, makeTestBank());
     const html = renderArticlePage(view);
@@ -210,8 +205,9 @@ describe("renderArticlePage", () => {
     expect(html).toContain('href="https://leetcode.com/problems/problem-1/"');
     expect(html).toContain("Easy");
     expect(html).not.toContain("Digest 內容");
-    expect(html).not.toContain("ts tip");
-    expect(html).not.toContain("py tip");
+    // F12 Phase 0：Tip 為 Discord 與 Pages 共用的唯一語言區塊（docs/spec.md §10）。
+    expect(html).toContain("ts tip");
+    expect(html).toContain("py tip");
   });
 
   it("動態文字（title／patternLabel／problem title／whyThisPattern／takeaway）皆經 HTML escape", () => {

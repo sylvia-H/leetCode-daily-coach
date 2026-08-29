@@ -6,119 +6,85 @@ pattern_label: Sliding Window Set
 complexity_label: O(n) / O(k)
 estimated_minutes: 15
 exit_criteria:
-  - Can expand window and add to set
-  - Can shrink window from the left and remove from set when duplicates occur
+  - 能擴張視窗並將元素加入 set
+  - 能在出現重複時從左側收縮視窗並自 set 移除元素
 ---
 ## Concept
 
-Sliding Window 結合 Hash Set 是一種用來追蹤子字串或子陣列中「不重複元素」的高效演算法模式。當我們需要在動態或固定大小的區間內維護唯一性時，可以使用兩個指標（Left Pointer 與 Right Pointer）來界定視窗範圍，並利用 Hash Set 在 O(1) 的平均時間複雜度內進行元素的查詢、新增與刪除。
+這個 Pattern 把兩樣你已熟悉的工具接在一起：滑動視窗用左右指標界定「目前考慮的連續區間」，Hash Set 以平均 O(1) 回答「這個元素在視窗裡嗎」。核心是一條不變式：Set 的內容恆等於視窗 [left, right] 內的元素集合，且視窗內沒有重複。右指標擴張時把新元素加入 Set，左指標收縮時把離開視窗的元素移除——兩邊只要有一步沒同步，Set 就不再代表視窗，後續所有判斷都會失真。
 
 ## Thinking
 
-在處理這類問題時，我們的思考邏輯是透過 Right Pointer 不斷向右擴展視窗，將新遇到的元素加入 Hash Set 中。若新元素已經存在於 Set 內，代表違反了不重複的條件。此時，我們必須啟動內層的收縮機制，讓 Left Pointer 向右移動，並從 Hash Set 中依序移除左側的元素，直到該重複元素被完全排除在視窗之外，視窗重新恢復合法狀態。透過這種擴展與收縮的交替，我們能夠掃描整個資料結構。
+正確的流程是「先查、再縮、後加」。對每個 right：先查 s[right] 在不在 Set。在——代表視窗內有一個舊的同值元素，進入 while 迴圈：把 s[left] 移出 Set、left 加一，反覆執行直到 s[right] 不再存在於 Set，才把它加入。為什麼刪到衝突解除就能停？因為視窗原本無重複，同值的舊元素恰有一個，把它（連同它左側的元素）移出即可；左側元素被丟棄並不可惜——包含重複的區間不可能是答案，而以它們開頭的更短合法區間早在先前的迭代被算過。又因為 left 每次只前進到「剛好合法」為止，每輪結束時的 [left, right] 正是以 right 結尾的最長無重複區間，對所有 right 取最大值就涵蓋了全部候選答案。O(n) 的理由是攤銷：left 與 right 都單調前進，每個元素至多被加入一次、移除一次，總步數與 n 成正比。
 
 ## Pattern Recognition
 
-當題目要求尋找「包含唯一元素的的最長子字串」、「不含重複字元的子陣列長度」，或是「在固定大小 k 視窗內是否存在重複元素」時，即可高度識別出此 Pattern 的應用時機。
+辨識線索是「連續區間＋唯一性」：最長不重複子字串、固定範圍內是否有相同元素。動態視窗由「出現重複」觸發收縮，收縮量不定；固定視窗則在長度超過 k 時從左端刪除一個，兩端等速推進。兩者都靠 Set 提供 O(1) 成員查詢。若條件從「不重複」放寬成「每個元素至多出現 f 次」，二元的存在性就不夠，需要升級成記錄次數的 Hash Map。
 
 ## Common Mistakes
 
-最常見的錯誤在於當視窗發生衝突需要收縮時，開發者容易忘記將移出視窗範圍的元素從 Hash Set 中刪除。這會導致 Hash Set 內仍殘留舊元素，進而引發後續的邏輯判斷錯誤。另一個錯誤則是混淆了指標移動的條件，導致進入無窮迴圈。
+頭號錯誤：left 右移了卻忘記 set.delete()。Set 是獨立結構，不會因為指標變數加一就自動剔除元素，殘留的過期元素會讓之後的重複判斷誤報。第二個是順序錯誤：先 add 再查——Set 對重複的 add 靜默忽略，加入後查 has 永遠為真，重複根本測不出來，必須先查後加。第三個是收縮只做一步：重複的舊元素不一定貼著左端，用 if 只刪一次會留下仍含重複的非法視窗，必須用 while 刪到衝突解除為止。
 
 ## Complexity
 
-Time Complexity: O(n)，其中 n 為陣列或字串長度，因為每個元素最多被 Right Pointer 訪問一次、被 Left Pointer 移除一次。
-Space Complexity: O(k)，其中 k 為視窗內的元素數量或字元集大小，用以儲存 Hash Set。
+時間複雜度 O(n)：left 與 right 各自最多前進 n 步，每個元素至多被加入與移除 Set 各一次，攤銷後每步 O(1)。空間複雜度 O(k)：Set 最多存視窗大小（或字元集大小）個元素。
 
 ## Digest
 
-本篇介紹了 Sliding Window 搭配 Hash Set 的核心觀念，透過動態調整左右指標並維護集合內的唯一元素，將暴力解法的 O(n^2) 降至線性時間 O(n)。這種技巧在處理字串與子陣列問題時非常實用。
+本篇把滑動視窗與 Hash Set 接在一起：視窗界定目前考慮的連續區間，Set 以 O(1) 回答「這個元素在視窗裡嗎」，全程維持不變式「Set＝視窗內容、視窗內無重複」。流程是「先查、再縮、後加」：右擴前先查 Set，命中就用 while 反覆刪除左端元素並右移 left，直到衝突解除才加入新元素。因為 left 每次只前進到剛好合法，每輪的視窗就是以 right 結尾的最長無重複區間，對所有 right 取最大值即為答案。兩個指標都單調前進，每個元素至多加入與移除各一次，整體 O(n)。最容易踩的坑：left 右移了，卻忘了同步執行 set.delete()。
 
 ## TypeScript Tip
 
+固定視窗版本：先查後加，Set 大小超過 k 就刪除 nums[i - k]，恆存最近 k 個元素。嚴格索引設定下以 `!` 把 `number | undefined` 收斂成 `number`。
+
 ```typescript
 function containsNearbyDuplicate(nums: number[], k: number): boolean {
-  const windowSet = new Set<number>();
+  const window = new Set<number>();
   for (let i = 0; i < nums.length; i++) {
-    if (windowSet.has(nums[i])) return true;
-    windowSet.add(nums[i]);
-    if (windowSet.size > k) {
-      windowSet.delete(nums[i - k]);
-    }
+    const num = nums[i]!;
+    if (window.has(num)) return true;
+    window.add(num);
+    if (window.size > k) window.delete(nums[i - k]!);
   }
   return false;
 }
-const result = containsNearbyDuplicate([1,2,3,1], 3);
-if (result !== true) throw new Error("assertion failed");
+if (!containsNearbyDuplicate([1, 2, 3, 1], 3)) throw new Error("assertion failed");
+if (containsNearbyDuplicate([1, 2, 3, 1], 2)) throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
-```python
-def contains_nearby_duplicate(nums: list[int], k: int) -> bool:
-    window_set = set()
-    for i, num in enumerate(nums):
-        if num in window_set:
-            return True
-        window_set.add(num)
-        if len(window_set) > k:
-            window_set.remove(nums[i - k])
-    return False
-
-assert contains_nearby_duplicate([1, 2, 3, 1], 3) == True, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function lengthOfLongestSubstring(s: string): number {
-  const charSet = new Set<string>();
-  let left = 0;
-  let maxLength = 0;
-  for (let right = 0; right < s.length; right++) {
-    while (charSet.has(s[right])) {
-      charSet.delete(s[left]);
-      left++;
-    }
-    charSet.add(s[right]);
-    maxLength = Math.max(maxLength, right - left + 1);
-  }
-  if (maxLength !== 3) throw new Error("assertion failed");
-  return maxLength;
-}
-lengthOfLongestSubstring("abcabcbb");
-```
-
-## Python Corner
+動態視窗版本：while 迴圈把造成衝突的舊字元刪到消失；每輪結束時的視窗就是以 right 結尾的最長合法區間。
 
 ```python
-def length_of_longest_substring(s: str) -> int:
-    char_set = set()
+def longest_unique_substring(s: str) -> int:
+    seen: set[str] = set()
     left = 0
-    max_length = 0
-    for right in range(len(s)):
-        while s[right] in char_set:
-            char_set.remove(s[left])
+    best = 0
+    for right, ch in enumerate(s):
+        while ch in seen:
+            seen.remove(s[left])
             left += 1
-        char_set.add(s[right])
-        max_length = max(max_length, right - left + 1)
-    assert max_length == 3, "assertion failed"
-    return max_length
+        seen.add(ch)
+        best = max(best, right - left + 1)
+    return best
 
-length_of_longest_substring("abcabcbb")
+assert longest_unique_substring("abcabcbb") == 3
+assert longest_unique_substring("bbbbb") == 1
+assert longest_unique_substring("") == 0
 ```
 
 ## Takeaway
 
-運用 Sliding Window 搭配 Hash Set 時，務必確保擴展時加入、收縮時移除，才能維持正確的視窗狀態。
+視窗動、Set 跟著動：右擴前先查、衝突時用 while 刪到解除，Set 恆等於視窗內容才有正確答案。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 在排序陣列中的進階應用，學習如何利用雙向夾擠來解決更複雜的查找問題。
+明天進入 Sliding Window with Frequency：當條件從「不重複」放寬成「次數受限」，Set 的二元存在性不敷使用，改用 Hash Map 統計視窗內每個元素的出現次數。
 
 ## Today's Challenge
 
-- **3** · 要求找出不含重複字元的最長子字串，完美對應動態視窗與 Hash Set 追蹤唯一元素的特性。
-  - Hint: 當右側字元已存在於 Set 中時，持續移動左側指標並從 Set 移除元素。
-- **219** · 要求檢查陣列中是否存在相同元素且其索引距離小於或等於 k，適合使用大小為 k 的固定視窗來維護。
-  - Hint: 當視窗大小超過 k 時，必須移除最左側的元素以維持視窗邊界。
+- **3** · 動態視窗的原型題：用 Set 維護以 right 結尾的最長無重複子字串，對所有 right 取最大值。
+  - Hint: 新字元已在 Set 時，反覆刪除 s[left] 並右移 left 直到衝突解除，再加入新字元並更新答案。
+- **219** · 固定視窗版本：距離限制讓 Set 只保留最近 k 個元素，查到重複即符合索引距離條件。
+  - Hint: 每步先查再加；Set 大小超過 k 就刪除 nums[i - k]，維持「在 Set 裡」等價於「距離不超過 k」。

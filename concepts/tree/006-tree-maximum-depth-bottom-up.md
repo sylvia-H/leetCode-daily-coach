@@ -14,9 +14,9 @@ next:
   - tree-balanced-binary-tree-check
   - tree-same-tree-validation
 learning_goal:
-  - Compute tree depth using a postorder bottom-up recursive strategy.
+  - '使用 postorder 的 bottom-up 遞迴策略計算樹的深度。'
 exit_criteria:
-  - Return 1 plus the maximum of left and right subtree depths.
+  - '能回傳左右子樹深度的最大值加 1。'
 leetcode:
   - 104
 tags:

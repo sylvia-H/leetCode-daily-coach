@@ -58,51 +58,6 @@ def create_graph() -> dict[str, list[str]]:
 create_graph()
 ```
 
-## TypeScript Corner
-
-```typescript
-function dfsGraph(graph: Map<number, number[]>, start: number): number[] {
-  const visited = new Set<number>();
-  const result: number[] = [];
-  function traverse(node: number) {
-    if (visited.has(node)) return;
-    visited.add(node);
-    result.push(node);
-    const neighbors = graph.get(node) || [];
-    for (const neighbor of neighbors) {
-      traverse(neighbor);
-    }
-  }
-  traverse(start);
-  if (result.length !== 3) throw new Error("assertion failed");
-  return result;
-}
-const testGraph = new Map<number, number[]>([[1, [2]], [2, [3]], [3, []]]);
-dfsGraph(testGraph, 1);
-```
-
-## Python Corner
-
-```python
-def bfs_graph(graph: dict[int, list[int]], start: int) -> list[int]:
-    from collections import deque
-    visited = set([start])
-    queue = deque([start])
-    result = []
-    while queue:
-        node = queue.popleft()
-        result.append(node)
-        for neighbor in graph.get(node, []):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append(neighbor)
-    assert len(result) == 3, "assertion failed"
-    return result
-
-test_graph = {1: [2, 3], 2: [], 3: []}
-bfs_graph(test_graph, 1)
-```
-
 ## Takeaway
 
 掌握 DFS 深入與 BFS 廣度特性，善用 Visited Set 避免重複與迴圈，時間空間複雜度均為 O(V + E) 與 O(V)。

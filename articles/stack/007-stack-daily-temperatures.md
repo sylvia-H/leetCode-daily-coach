@@ -6,8 +6,8 @@ pattern_label: Monotonic Stack (Next Greater Element)
 complexity_label: O(n) / O(n)
 estimated_minutes: 25
 exit_criteria:
-  - Can store indices in a stack while maintaining decreasing order of values.
-  - Can resolve pending indices when a greater element is encountered.
+  - 能在 stack 中儲存索引，同時維持對應值的遞減順序。
+  - 能在遇到更大的元素時，結算尚待處理的索引。
 ---
 ## Concept
 
@@ -56,46 +56,6 @@ def py_tip_demo() -> None:
     val = stack.pop()
     assert val == 10, "assertion failed"
 py_tip_demo()
-```
-
-## TypeScript Corner
-
-```typescript
-function dailyTemperatures(temperatures: number[]): number[] {
-  const n = temperatures.length;
-  const result = new Array(n).fill(0);
-  const stack: number[] = [];
-  for (let i = 0; i < n; i++) {
-    while (stack.length > 0 && temperatures[i] > temperatures[stack[stack.length - 1]!]) {
-      const prevIndex = stack.pop()!;
-      result[prevIndex] = i - prevIndex;
-    }
-    stack.push(i);
-  }
-  if (result.length !== 4) throw new Error("assertion failed");
-  return result;
-}
-const output = dailyTemperatures([73, 74, 75, 71]);
-if (output[0] !== 1) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def daily_temperatures(temperatures: list[int]) -> list[int]:
-    n = len(temperatures)
-    result = [0] * n
-    stack: list[int] = []
-    for i in range(n):
-        while stack and temperatures[i] > temperatures[stack[-1]]:
-            prev_index = stack.pop()
-            result[prev_index] = i - prev_index
-        stack.append(i)
-    assert len(result) == 4, "assertion failed"
-    return result
-
-output = daily_temperatures([73, 74, 75, 71])
-assert output[0] == 1, "assertion failed"
 ```
 
 ## Takeaway

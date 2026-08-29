@@ -6,7 +6,7 @@ pattern_label: Bounded Priority Queue
 complexity_label: O(n log k) time / O(k) space
 estimated_minutes: 20
 exit_criteria:
-  - Can maintain a heap of size k to keep track of extreme values.
+  - 能維護大小為 k 的 heap 來追蹤極值。
 ---
 ## Concept
 
@@ -68,91 +68,6 @@ def solve_with_nlargest(nums: list[int], k: int) -> int:
     return result
 
 solve_with_nlargest([3, 2, 1, 5, 6, 4], 2)
-```
-
-## TypeScript Corner
-
-```typescript
-class MinHeap {
-  private heap: number[] = [];
-  constructor(private k: number) {}
-  
-  public push(val: number): void {
-    this.heap.push(val);
-    this.up(this.heap.length - 1);
-    if (this.heap.length > this.k) {
-      this.pop();
-    }
-  }
-  
-  public peek(): number {
-    return this.heap[0];
-  }
-  
-  private pop(): number {
-    const top = this.heap[0];
-    const bottom = this.heap.pop()!;
-    if (this.heap.length > 0) {
-      this.heap[0] = bottom;
-      this.down(0);
-    }
-    return top;
-  }
-  
-  private up(i: number): void {
-    while (i > 0) {
-      const p = (i - 1) >> 1;
-      if (this.heap[i] >= this.heap[p]) break;
-      [this.heap[i], this.heap[p]] = [this.heap[p], this.heap[i]];
-      i = p;
-    }
-  }
-  
-  private down(i: number): void {
-    const len = this.heap.length;
-    while ((i << 1) + 1 < len) {
-      let left = (i << 1) + 1;
-      let right = left + 1;
-      let target = i;
-      if (this.heap[left] < this.heap[target]) target = left;
-      if (right < len && this.heap[right] < this.heap[target]) target = right;
-      if (target === i) break;
-      [this.heap[i], this.heap[target]] = [this.heap[target], this.heap[i]];
-      i = target;
-    }
-  }
-}
-
-function findKthLargest(nums: number[], k: number): number {
-  const mh = new MinHeap(k);
-  for (const num of nums) {
-    mh.push(num);
-  }
-  const result = mh.peek();
-  if (result !== 5) throw new Error("assertion failed");
-  return result;
-}
-
-findKthLargest([3, 2, 1, 5, 6, 4], 2);
-```
-
-## Python Corner
-
-```python
-import heapq
-
-def findKthLargest(nums: list[int], k: int) -> int:
-    min_heap = []
-    for num in nums:
-        if len(min_heap) < k:
-            heapq.heappush(min_heap, num)
-        elif num > min_heap[0]:
-            heapq.heappushpop(min_heap, num)
-    result = min_heap[0]
-    assert result == 5, "assertion failed"
-    return result
-
-findKthLargest([3, 2, 1, 5, 6, 4], 2)
 ```
 
 ## Takeaway

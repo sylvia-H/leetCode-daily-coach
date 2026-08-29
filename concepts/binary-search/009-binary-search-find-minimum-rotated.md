@@ -12,9 +12,9 @@ prerequisite:
 next:
   - binary-search-matrix-search
 learning_goal:
-  - Locate the inflection point (minimum element) in a rotated sorted array.
+  - '定位旋轉排序陣列中的轉折點（最小元素）。'
 exit_criteria:
-  - Compare mid element with right element to decide search direction.
+  - '能比較 mid 元素與最右端元素，以決定搜尋方向。'
 leetcode:
   - 153
 tags:

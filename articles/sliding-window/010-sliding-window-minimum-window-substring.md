@@ -6,12 +6,8 @@ pattern_label: Variable Sliding Window + Requirement Counter
 complexity_label: O(n + m) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Can track how many unique required characters have met their target
-    frequencies.
-  - >-
-    Can contract the left pointer greedily while maintaining full coverage of
-    all required characters.
+  - 能追蹤有多少個必要的相異字元已達到其目標頻率。
+  - 能在維持完整涵蓋所有必要字元的同時，貪婪地收縮左指標。
 ---
 ## Concept
 
@@ -64,87 +60,6 @@ def fast_counter_check() -> bool:
     return d["a"] == 1
 
 assert fast_counter_check() == True, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function minWindow(s: string, t: string): string {
-  if (s.length === 0 || t.length === 0) return "";
-  const dictT = new Map<string, number>();
-  for (let i = 0; i < t.length; i++) {
-    const char = t[i];
-    dictT.set(char, (dictT.get(char) || 0) + 1);
-  }
-  const required = dictT.size;
-  let formed = 0;
-  const windowCounts = new Map<string, number>();
-  let l = 0, r = 0;
-  let ans: [number, number, number] = [-1, 0, 0];
-  while (r < s.length) {
-    const c = s[r];
-    const count = windowCounts.get(c) || 0;
-    windowCounts.set(c, count + 1);
-    if (dictT.has(c) && windowCounts.get(c) === dictT.get(c)) {
-      formed++;
-    }
-    while (l <= r && formed === required) {
-      const leftChar = s[l];
-      if (ans[0] === -1 || r - l + 1 < ans[0]) {
-        ans = [r - l + 1, l, r];
-      }
-      windowCounts.set(leftChar, windowCounts.get(leftChar)! - 1);
-      if (dictT.has(leftChar) && windowCounts.get(leftChar)! < dictT.get(leftChar)!) {
-        formed--;
-      }
-      l++;
-    }
-    r++;
-  }
-  return ans[0] === -1 ? "" : s.substring(ans[1], ans[2] + 1);
-}
-const result = minWindow("ADOBECODEBANC", "ABC");
-if (result !== "BANC") throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import Counter
-
-def min_window(s: str, t: str) -> str:
-    if not s or not t:
-        return ""
-    dict_t = Counter(t)
-    required = len(dict_t)
-    window_counts = Counter()
-    l, r = 0, 0
-    formed = 0
-    ans = float("inf"), None, None
-    
-    while r < len(s):
-        character = s[r]
-        window_counts[character] += 1
-        
-        if character in dict_t and window_counts[character] == dict_t[character]:
-            formed += 1
-            
-        while l <= r and formed == required:
-            character = s[l]
-            if (r - l + 1) < ans[0]:
-                ans = (r - l + 1, l, r)
-                
-            window_counts[character] -= 1
-            if character in dict_t and window_counts[character] < dict_t[character]:
-                formed -= 1
-            l += 1
-            
-        r += 1
-        
-    return "" if ans[0] == float("inf") else s[ans[1] : ans[2] + 1]
-
-res = min_window("ADOBECODEBANC", "ABC")
-assert res == "BANC", "assertion failed"
 ```
 
 ## Takeaway

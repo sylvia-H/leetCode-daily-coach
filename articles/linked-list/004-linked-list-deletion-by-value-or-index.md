@@ -6,8 +6,8 @@ pattern_label: Pointer Manipulation
 complexity_label: O(n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - 'Can remove a node from the middle, head, or tail of a list'
-  - Can correctly deallocate or bypass the target node reference
+  - 能從串列的中間、開頭或結尾移除節點
+  - 能正確釋放或繞過目標節點的參照
 ---
 ## Concept
 
@@ -72,67 +72,6 @@ n2 = ListNode(2, None)
 n1 = ListNode(1, n2)
 deleteNode(n1)
 assert n1.val == 2 and n1.next is None, "Tip failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-
-function removeElements(head: ListNode | null, val: number): ListNode | null {
-  const dummy = new ListNode(0, head);
-  let prev: ListNode = dummy;
-  let curr: ListNode | null = head;
-  while (curr !== null) {
-    if (curr.val === val) {
-      prev.next = curr.next;
-    } else {
-      prev = curr;
-    }
-    curr = curr.next;
-  }
-  return dummy.next;
-}
-
-const node3 = new ListNode(3, null);
-const node2 = new ListNode(2, node3);
-const head = new ListNode(1, node2);
-const newHead = removeElements(head, 2);
-if (newHead?.next?.val !== 3) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def removeElements(head: ListNode | None, val: int) -> ListNode | None:
-    dummy = ListNode(0, head)
-    prev = dummy
-    curr = head
-    while curr is not None:
-        if curr.val == val:
-            prev.next = curr.next
-        else:
-            prev = curr
-        curr = curr.next
-    return dummy.next
-
-node3 = ListNode(3, None)
-node2 = ListNode(2, node3)
-head = ListNode(1, node2)
-new_head = removeElements(head, 2)
-assert new_head.next.val == 3, "Assertion failed"
 ```
 
 ## Takeaway

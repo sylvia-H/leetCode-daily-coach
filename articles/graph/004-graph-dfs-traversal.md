@@ -6,7 +6,7 @@ pattern_label: Depth-First Search
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - Avoid infinite loops on cyclic graphs by using a visited set.
+  - 能使用 visited set 避免在含環的圖上陷入無窮迴圈。
 ---
 ## Concept
 
@@ -72,39 +72,6 @@ def has_path(graph: list[list[int]], start: int, target: int) -> bool:
     assert result is True, "Assertion failed"
     return result
 has_path([[1], [2], []], 0, 2)
-```
-
-## TypeScript Corner
-
-```typescript
-function dfsGraph(node: number, adjList: number[][], visited: Set<number>): void {
-  visited.add(node);
-  for (const neighbor of adjList[node]) {
-    if (!visited.has(neighbor)) {
-      dfsGraph(neighbor, adjList, visited);
-    }
-  }
-}
-
-const adj = [[1, 2], [0], [0]];
-const visitedSet = new Set<number>();
-dfsGraph(0, adj, visitedSet);
-if (visitedSet.size !== 3) throw new Error("Assertion failed: not all nodes visited");
-```
-
-## Python Corner
-
-```python
-def dfs_graph(node: int, adj_list: list[list[int]], visited: set[int]) -> None:
-    visited.add(node)
-    for neighbor in adj_list[node]:
-        if neighbor not in visited:
-            dfs_graph(neighbor, adj_list, visited)
-
-adj = [[1, 2], [0], [0]]
-visited_set = set()
-dfs_graph(0, adj, visited_set)
-assert len(visited_set) == 3, "Assertion failed: not all nodes visited"
 ```
 
 ## Takeaway

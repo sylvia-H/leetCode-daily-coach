@@ -6,8 +6,8 @@ pattern_label: Last-In-First-Out (LIFO)
 complexity_label: O(1) push/pop
 estimated_minutes: 10
 exit_criteria:
-  - Can explain why elements are retrieved in reverse order of insertion.
-  - Can trace push and pop operations manually.
+  - 能說明為何元素會以與加入相反的順序被取出。
+  - 能手動追蹤 push 與 pop 操作。
 ---
 ## Concept
 
@@ -51,70 +51,6 @@ stack.append(1)
 stack.append(2)
 top = stack.pop()
 assert top == 2, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class Stack<T> {
-  private items: T[] = [];
-
-  push(item: T): void {
-    this.items.push(item);
-  }
-
-  pop(): T | undefined {
-    return this.items.pop();
-  }
-
-  peek(): T | undefined {
-    return this.items[this.items.length - 1];
-  }
-
-  isEmpty(): boolean {
-    return this.items.length === 0;
-  }
-}
-
-const stack = new Stack<number>();
-stack.push(10);
-stack.push(20);
-if (stack.peek() !== 20) throw new Error("assertion failed");
-if (stack.pop() !== 20) throw new Error("assertion failed");
-if (stack.pop() !== 10) throw new Error("assertion failed");
-if (!stack.isEmpty()) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class Stack:
-    def __init__(self):
-        self.items = []
-
-    def push(self, item):
-        self.items.append(item)
-
-    def pop(self):
-        if not self.isEmpty():
-            return self.items.pop()
-        return None
-
-    def peek(self):
-        if not self.isEmpty():
-            return self.items[-1]
-        return None
-
-    def isEmpty(self):
-        return len(self.items) == 0
-
-s = Stack()
-s.push(10)
-s.push(20)
-assert s.peek() == 20, "assertion failed"
-assert s.pop() == 20, "assertion failed"
-assert s.pop() == 10, "assertion failed"
-assert s.isEmpty() == True, "assertion failed"
 ```
 
 ## Takeaway

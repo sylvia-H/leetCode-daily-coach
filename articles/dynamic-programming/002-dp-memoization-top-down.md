@@ -72,43 +72,6 @@ def fib(n: int) -> int:
 fib(5)
 ```
 
-## TypeScript Corner
-
-```typescript
-function climbStairs(n: number): number {
-  const memo: number[] = new Array(n + 1).fill(-1);
-  function dp(i: number): number {
-    if (i <= 2) return i;
-    if (memo[i] !== -1) return memo[i];
-    memo[i] = dp(i - 1) + dp(i - 2);
-    return memo[i];
-  }
-  const result = dp(n);
-  if (result !== 3) throw new Error("assertion failed");
-  return result;
-}
-climbStairs(3);
-```
-
-## Python Corner
-
-```python
-import functools
-
-def climb_stairs(n: int) -> int:
-    @functools.cache
-    def dp(i: int) -> int:
-        if i <= 2:
-            return i
-        return dp(i - 1) + dp(i - 2)
-    
-    result = dp(n)
-    assert result == 3, "assertion failed"
-    return result
-
-climb_stairs(3)
-```
-
 ## Takeaway
 
 Memoization 讓遞迴不再重複計算，透過快取將時間複雜度從指數級降為線性，是動態規劃的重要基石。

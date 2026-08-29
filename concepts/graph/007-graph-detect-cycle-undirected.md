@@ -12,11 +12,9 @@ prerequisite:
 next:
   - graph-detect-cycle-directed
 learning_goal:
-  - Detect cycles in an undirected graph using DFS or BFS with parent tracking.
+  - 使用 DFS 或 BFS 搭配父節點追蹤，偵測無向圖中的環。
 exit_criteria:
-  - >-
-    Identify if any visited neighbor is not the direct parent of the current
-    node.
+  - 能辨識是否有已造訪的鄰居不是目前節點的直接父節點。
 leetcode:
   - 261
 tags:

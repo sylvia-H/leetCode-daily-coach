@@ -13,16 +13,10 @@ next:
   - linked-list-traversal-basics
   - tree-core-concept-introduction
 learning_goal:
-  - >-
-    Understand how nodes store values and references to subsequent nodes in
-    non-contiguous memory.
+  - 理解節點如何在非連續記憶體中儲存值與指向後續節點的參照。
 exit_criteria:
-  - >-
-    Can manually instantiate a Node class with value and next pointer in TS and
-    Python
-  - >-
-    Can explain the difference between array contiguous layout and linked node
-    reference layout
+  - 能在 TS 與 Python 中手動建立含 value 與 next 指標的 Node class
+  - 能說明 array 連續記憶體配置與 linked list 節點參照式配置的差異
 leetcode: []
 tags:
   - linked-list

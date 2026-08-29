@@ -12,11 +12,9 @@ prerequisite:
 next:
   - string-sliding-window-fixed
 learning_goal:
-  - Skip non-alphanumeric or invalid characters while running two pointers.
+  - '在移動 Two Pointer 的過程中跳過非英數或無效字元。'
 exit_criteria:
-  - >-
-    Can skip unwanted characters on-the-fly without allocating extra memory for
-    filtered strings.
+  - '能即時跳過不需要的字元，而不為過濾後的字串配置額外記憶體。'
 leetcode:
   - 125
   - 680

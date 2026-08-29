@@ -13,14 +13,10 @@ prerequisite:
 next:
   - stack-maximal-rectangle-foundation
 learning_goal:
-  - >-
-    Find the contribution of each element as a minimum across all subarrays
-    using left and right bounds.
+  - 利用左右邊界，找出每個元素在所有 subarray 中作為最小值的貢獻。
 exit_criteria:
-  - >-
-    Can determine how far left and right an element can extend while remaining
-    the minimum.
-  - Can calculate total contribution using bounds and modulo arithmetic.
+  - 能判斷每個元素在維持最小值的前提下，向左與向右可延伸多遠。
+  - 能利用邊界與 modulo 運算計算總貢獻。
 leetcode:
   - 907
 tags:

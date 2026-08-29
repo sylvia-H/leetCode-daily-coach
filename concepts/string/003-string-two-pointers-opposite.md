@@ -15,11 +15,9 @@ next:
   - string-palindrome-expansion
   - two-pointer-valid-palindrome-ii
 learning_goal:
-  - >-
-    Use left and right pointers moving inward to process symmetric string
-    properties.
+  - '使用相向移動的 left 與 right 指標處理字串的對稱性質。'
 exit_criteria:
-  - Can implement palindrome checks efficiently using two pointers.
+  - '能使用 Two Pointer 有效率地實作回文檢查。'
 leetcode:
   - 125
   - 151

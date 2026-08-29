@@ -6,9 +6,7 @@ pattern_label: Kahn's Algorithm
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Calculate in-degrees for all nodes, enqueue 0-in-degree nodes, and process
-    level by level.
+  - 能計算所有節點的 in-degree，將 in-degree 為 0 的節點加入佇列並逐層處理。
 ---
 ## Concept
 
@@ -58,79 +56,6 @@ def test_deque() -> None:
     assert d.popleft() == 1, "Deque popleft error"
 
 test_deque()
-```
-
-## TypeScript Corner
-
-在 TypeScript 中實作 Kahn's Algorithm 時，建議使用陣列來儲存入度，並使用陣列模擬 Queue 以維持高效能。以下為 LeetCode 207 的標準解答範例：
-```typescript
-function canFinish(numCourses: number, prerequisites: number[][]): boolean {
-  const adj: number[][] = Array.from({ length: numCourses }, () => []);
-  const inDegree: number[] = new Array(numCourses).fill(0);
-
-  for (const [course, pre] of prerequisites) {
-    adj[pre].push(course);
-    inDegree[course]++;
-  }
-
-  const queue: number[] = [];
-  for (let i = 0; i < numCourses; i++) {
-    if (inDegree[i] === 0) {
-      queue.push(i);
-    }
-  }
-
-  let processedCount = 0;
-  let head = 0;
-
-  while (head < queue.length) {
-    const curr = queue[head++];
-    processedCount++;
-
-    for (const neighbor of adj[curr]) {
-      inDegree[neighbor]--;
-      if (inDegree[neighbor] === 0) {
-        queue.push(neighbor);
-      }
-    }
-  }
-
-  return processedCount === numCourses;
-}
-
-const result = canFinish(2, [[1, 0]]);
-if (result !== true) throw new Error("Assertion failed: expected true");
-```
-
-## Python Corner
-
-在 Python 中實作時，建議使用 collections.deque 作為 Queue，因為其 popleft() 操作的時間複雜度為 O(1)。以下為對應的實作範例：
-```python
-from collections import deque
-
-def canFinish(numCourses: int, prerequisites: list[list[int]]) -> bool:
-    adj = [[] for _ in range(numCourses)]
-    in_degree = [0] * numCourses
-
-    for course, pre in prerequisites:
-        adj[pre].append(course)
-        in_degree[course] += 1
-
-    queue = deque([i for i in range(numCourses) if in_degree[i] == 0])
-    processed_count = 0
-
-    while queue:
-        curr = queue.popleft()
-        processed_count += 1
-
-        for neighbor in adj[curr]:
-            in_degree[neighbor] -= 1
-            if in_degree[neighbor] == 0:
-                queue.append(neighbor)
-
-    return processed_count == numCourses
-
-assert canFinish(2, [[1, 0]]) == True, "Assertion failed: expected True"
 ```
 
 ## Takeaway

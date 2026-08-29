@@ -6,8 +6,8 @@ pattern_label: Unique Combination Sum Pattern
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - 'Can combine sorting, level-skip duplicate checks, and target subtraction.'
-  - Can ensure each combination is unique.
+  - 能結合排序、同層跳過的重複檢查與目標值扣減。
+  - 能確保每個組合都是唯一的。
 ---
 ## Concept
 
@@ -51,62 +51,6 @@ if (!validateSum([1, 2], 5)) throw new Error("Tip test failed");
 def quick_check(nums: list[int]) -> bool:
     return all(x > 0 for x in nums)
 assert quick_check([1, 2, 3]), "Tip test failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function combinationSum2(candidates: number[], target: number): number[][] {
-  candidates.sort((a, b) => a - b);
-  const result: number[][] = [];
-  
-  function backtrack(start: number, current: number[], sum: number) {
-    if (sum === target) {
-      result.push([...current]);
-      return;
-    }
-    for (let i = start; i < candidates.length; i++) {
-      if (sum + candidates[i] > target) break;
-      if (i > start && candidates[i] === candidates[i - 1]) continue;
-      current.push(candidates[i]);
-      backtrack(i + 1, current, sum + candidates[i]);
-      current.pop();
-    }
-  }
-  
-  backtrack(0, [], 0);
-  return result;
-}
-
-const ans = combinationSum2([10, 1, 2, 7, 6, 1, 5], 8);
-if (ans.length !== 4) throw new Error("Assertion failed");
-```
-
-## Python Corner
-
-```python
-def combinationSum2(candidates: list[int], target: int) -> list[list[int]]:
-    candidates.sort()
-    result = []
-    
-    def backtrack(start: int, current: list[int], total: int):
-        if total == target:
-            result.append(list(current))
-            return
-        for i in range(start, len(candidates)):
-            if total + candidates[i] > target:
-                break
-            if i > start and candidates[i] == candidates[i - 1]:
-                continue
-            current.append(candidates[i])
-            backtrack(i + 1, current, total + candidates[i])
-            current.pop()
-            
-    backtrack(0, [], 0)
-    return result
-
-ans = combinationSum2([10, 1, 2, 7, 6, 1, 5], 8)
-assert len(ans) == 4, "Assertion failed"
 ```
 
 ## Takeaway

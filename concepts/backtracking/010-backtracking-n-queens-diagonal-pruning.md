@@ -12,12 +12,10 @@ prerequisite:
   - backtracking-word-search
 next: []
 learning_goal:
-  - >-
-    Understand how to use mathematical relationships (row +/- col) for O(1)
-    diagonal conflict checks in constraint satisfaction problems.
+  - '理解在約束滿足問題中，如何利用數學關係（row +/- col）做 O(1) 的對角線衝突檢查。'
 exit_criteria:
-  - Can formulate column and diagonal tracking sets/arrays.
-  - Can place queens row by row with immediate pruning.
+  - '能設計出追蹤 column 與對角線的 set／陣列。'
+  - '能逐列（row by row）放置皇后並立即剪枝。'
 leetcode:
   - 51
 tags:

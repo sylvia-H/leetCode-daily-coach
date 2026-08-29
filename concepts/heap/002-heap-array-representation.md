@@ -12,11 +12,9 @@ prerequisite:
 next:
   - heap-sift-up-insertion
 learning_goal:
-  - Map a complete binary heap into a 1D array using index formulas.
+  - 使用索引公式，將 complete binary heap 映射到一維陣列。
 exit_criteria:
-  - >-
-    Can correctly calculate left child, right child, and parent indices for any
-    index i.
+  - 能對任意索引 i 正確計算左子節點、右子節點與父節點的索引。
 leetcode: []
 tags:
   - heap

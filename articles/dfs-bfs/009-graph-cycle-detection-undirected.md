@@ -64,62 +64,6 @@ res = solve([[0, 1]])
 assert res == True, "assertion failed"
 ```
 
-## TypeScript Corner
-
-```typescript
-function hasCycleUndirected(n: number, edges: number[][]): boolean {
-  const adj: number[][] = Array.from({ length: n }, () => []);
-  for (const [u, v] of edges) {
-    adj[u].push(v);
-    adj[v].push(u);
-  }
-  const visited = new Set<number>();
-  function dfs(curr: number, parent: number): boolean {
-    visited.add(curr);
-    for (const neighbor of adj[curr]) {
-      if (!visited.has(neighbor)) {
-        if (dfs(neighbor, curr)) return true;
-      } else if (neighbor !== parent) {
-        return true;
-      }
-    }
-    return false;
-  }
-  if (n === 0) return false;
-  if (dfs(0, -1)) return true;
-  return visited.size === n;
-}
-const result = hasCycleUndirected(3, [[0, 1], [1, 2], [2, 0]]);
-if (!result) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-def has_cycle_undirected(n: int, edges: list[list[int]]) -> bool:
-    adj = [[] for _ in range(n)]
-    for u, v in edges:
-        adj[u].append(v)
-        adj[v].append(u)
-    visited = set()
-    def dfs(curr: int, parent: int) -> bool:
-        visited.add(curr)
-        for neighbor in adj[curr]:
-            if neighbor not in visited:
-                if dfs(neighbor, curr):
-                    return True
-            elif neighbor != parent:
-                return True
-        return False
-    if n == 0:
-        return False
-    if dfs(0, -1):
-        return True
-    return len(visited) == n
-result = has_cycle_undirected(3, [[0, 1], [1, 2], [2, 0]])
-assert result == True, "assertion failed"
-```
-
 ## Takeaway
 
 無向圖 DFS 傳遞 parent 參數，遇已造訪且非父節點即為環。

@@ -6,8 +6,8 @@ pattern_label: Duplicate Elimination
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can compare current element with stack top to remove duplicates.
-  - Can reconstruct the resulting string from the stack.
+  - 能將目前元素與 stack 頂端比較以移除重複。
+  - 能從 stack 重建出結果字串。
 ---
 ## Concept
 
@@ -67,42 +67,6 @@ def remove_duplicates(s: str) -> str:
     return result
 
 remove_duplicates("abbaca")
-```
-
-## TypeScript Corner
-
-```typescript
-function solve(s: string): string {
-  const stack: string[] = [];
-  for (const char of s) {
-    if (stack.length > 0 && stack[stack.length - 1] === char) {
-      stack.pop();
-    } else {
-      stack.push(char);
-    }
-  }
-  const ans = stack.join("");
-  if (ans !== "ca") throw new Error("assertion failed");
-  return ans;
-}
-solve("abbaca");
-```
-
-## Python Corner
-
-```python
-def solve(s: str) -> str:
-    stack = []
-    for char in s:
-        if stack and stack[-1] == char:
-            stack.pop()
-        else:
-            stack.append(char)
-    ans = "".join(stack)
-    assert ans == "ca", "assertion failed"
-    return ans
-
-solve("abbaca")
 ```
 
 ## Takeaway

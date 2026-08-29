@@ -6,10 +6,8 @@ pattern_label: Mathematical Cycle Resolution
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Can reset one pointer to the head after collision and advance both at speed
-    1 to find the entry node
-  - Can explain the mathematical proof behind the meeting distance
+  - 能在相遇後將其中一個指標重設回 head，並讓兩者以速度 1 前進，找到入環節點
+  - 能說明相遇距離背後的數學證明
 ---
 ## Concept
 
@@ -71,96 +69,6 @@ def verify_cycle_start(head: ListNode | None) -> bool:
 
 assert verify_cycle_start(None) == True, "Tip failed"
 print("Python Tip passed.")
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-
-function detectCycle(head: ListNode | null): ListNode | null {
-  if (!head || !head.next) return null;
-  let slow: ListNode | null = head;
-  let fast: ListNode | null = head;
-  let hasCycle = false;
-  while (fast && fast.next) {
-    slow = slow!.next;
-    fast = fast.next.next;
-    if (slow === fast) {
-      hasCycle = true;
-      break;
-    }
-  }
-  if (!hasCycle) return null;
-  let pointer: ListNode | null = head;
-  while (pointer !== slow) {
-    pointer = pointer!.next;
-    slow = slow!.next;
-  }
-  return pointer;
-}
-
-const n1 = new ListNode(3);
-const n2 = new ListNode(2);
-const n3 = new ListNode(0);
-const n4 = new ListNode(-4);
-n1.next = n2;
-n2.next = n3;
-n3.next = n4;
-n4.next = n2;
-
-const startNode = detectCycle(n1);
-if (startNode !== n2) throw new Error("Assertion failed: cycle start mismatch");
-console.log("TypeScript Corner executed successfully.");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, x: int):
-        self.val = x
-        self.next = None
-
-def detectCycle(head: ListNode | None) -> ListNode | None:
-    if not head or not head.next:
-        return None
-    slow = head
-    fast = head
-    has_cycle = False
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-        if slow == fast:
-            has_cycle = True
-            break
-    if not has_cycle:
-        return None
-    pointer = head
-    while pointer != slow:
-        pointer = pointer.next
-        slow = slow.next
-    return pointer
-
-n1 = ListNode(3)
-n2 = ListNode(2)
-n3 = ListNode(0)
-n4 = ListNode(-4)
-n1.next = n2
-n2.next = n3
-n3.next = n4
-n4.next = n2
-
-start_node = detectCycle(n1)
-assert start_node == n2, "Assertion failed: cycle start mismatch"
-print("Python Corner executed successfully.")
 ```
 
 ## Takeaway
