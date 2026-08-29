@@ -31,7 +31,7 @@ export function stripJsonFence(raw: string): string {
 
 export function buildSelfCheckPrompt(input: SelfCheckPromptInput): string {
   return `你是 LeetCode Daily Coach 課程引擎的教材審稿者。請複審以下已展開完成的教學文章，檢查：
-1. Complexity 區塊描述的時間/空間複雜度是否與 TypeScript/Python Corner 的程式碼實際邏輯一致。
+1. Complexity 區塊描述的時間/空間複雜度是否與 TypeScript/Python Tip 的程式碼實際邏輯一致。
 2. Pattern（${input.patternLabel}）是否確實適用於本文描述的解法與候選題目。
 3. 全文前後是否一致（Digest / Concept / Takeaway 對同一個觀念的描述無矛盾）。
 

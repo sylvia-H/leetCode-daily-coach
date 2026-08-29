@@ -1,5 +1,5 @@
 // F7 程式碼實測（Q2 / R6，contracts/content-quality-gate.md §2）：抽出 Article 的 TypeScript/Python
-// Corner/Tip fenced code blocks，缺斷言即失敗；否則實際編譯 + 執行斷言。供本機 Stage 2 生成期與
+// Tip fenced code blocks，缺斷言即失敗；否則實際編譯 + 執行斷言。供本機 Stage 2 生成期與
 // CI content-gate.yml 共用（憲章 IX，單一實作）。純抽取/判斷（extractCodeBlocks/hasAssertion/
 // checkCodeBlocks）與實際 spawn 外部工具（tsc/tsx/python）分離，前者可在無 tsc/python 環境下單測
 // （外部呼叫以 mock 測，教材程式碼實測只在 Gate/CI 跑）。
@@ -19,24 +19,24 @@ export interface CodeBlock {
   code: string;
 }
 
+// F12 Phase 0 起只剩 Tip 兩段：`TypeScript Corner` / `Python Corner` 已自 §10 固定區塊移除，
+// 語言實戰內容 Discord 與 Pages 共用同一份 Tip。
 const TARGET_SECTIONS: { name: string; lang: CodeLang }[] = [
-  { name: "TypeScript Corner", lang: "typescript" },
   { name: "TypeScript Tip", lang: "typescript" },
-  { name: "Python Corner", lang: "python" },
   { name: "Python Tip", lang: "python" },
 ];
 
 const FENCE_RE = /```(?:\w+)?\r?\n([\s\S]*?)```/g;
 
 /**
- * 找出「區塊存在、卻沒有任何 fenced code block」的 Corner/Tip 區塊名稱。
+ * 找出「區塊存在、卻沒有任何 fenced code block」的 Tip 區塊名稱。
  *
  * 為何 MUST 有這道檢查（實測踩過）：`extractCodeBlocks` 對這種情形只是抽不到東西、靜默略過，
  * 於是**整篇文章零區塊 → 零失敗 → 通過**，形成**真空通過**（vacuous pass）——比沒有 Gate 更危險，
- * 因為它會回報綠燈。實測 Stage 2 產出的第一篇文章，Corner 區塊把程式碼寫成單行純文字（無 fence、
+ * 因為它會回報綠燈。實測 Stage 2 產出的第一篇文章，語言區塊把程式碼寫成單行純文字（無 fence、
  * 換行全失），生成期與 CI 的程式碼實測都毫無異狀地放行。
  *
- * §10 要求 TypeScript/Python 的 Corner 與 Tip 各自內含可執行且自帶斷言的 fenced code block，
+ * §10 要求 `TypeScript Tip` 與 `Python Tip` 各自內含可執行且自帶斷言的 fenced code block，
  * 故「區塊在、fence 不在」一律視為缺陷。區塊本身不存在則不在此檢查範圍（由 §10 固定區塊解析負責）。
  */
 export function findSectionsWithoutCode(articleMarkdown: string): string[] {
@@ -52,7 +52,7 @@ export function findSectionsWithoutCode(articleMarkdown: string): string[] {
   return missing;
 }
 
-/** 抽出 Article 內 TypeScript/Python Corner/Tip 的 fenced code blocks（frontmatter 已由 gray-matter 剝除）。 */
+/** 抽出 Article 內 TypeScript/Python Tip 的 fenced code blocks（frontmatter 已由 gray-matter 剝除）。 */
 export function extractCodeBlocks(articleMarkdown: string): CodeBlock[] {
   const { content } = matter(articleMarkdown);
   const sections = parseSections(content);

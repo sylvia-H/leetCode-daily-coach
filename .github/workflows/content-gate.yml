@@ -37,7 +37,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      # F7：run-code-blocks.ts 的程式碼實測需要 python 執行 Python Corner/Tip 的斷言（關卡 3，
+      # F7：run-code-blocks.ts 的程式碼實測需要 python 執行 Python Tip 的斷言（關卡 3，
       # contracts/content-quality-gate.md §1）。本步驟只裝直譯器，不需 GEMINI_API_KEY（憲章 VIII）。
       - name: Setup Python 3
         uses: actions/setup-python@v5

@@ -45,15 +45,11 @@ export interface DraftArticleResponse {
   patternRecognition: string;
   commonMistakes: string;
   complexity: string;
-  /** 內含 fenced ```typescript code block，MUST 自帶斷言（`throw` 或 `node:assert`）。 */
-  tsCorner: string;
-  /** 內含 fenced ```python code block，MUST 自帶斷言（`assert`）。 */
-  pyCorner: string;
   tomorrowPreview: string;
   digest: string;
-  /** 內含 fenced ```typescript code block，MUST 自帶斷言。 */
+  /** 內含 fenced ```typescript code block，MUST 自帶斷言（`throw` 或 `node:assert`）。 */
   tsTip: string;
-  /** 內含 fenced ```python code block，MUST 自帶斷言。 */
+  /** 內含 fenced ```python code block，MUST 自帶斷言（`assert`）。 */
   pyTip: string;
   takeaway: string;
   challenge: DraftChallengeEntry[];
@@ -72,8 +68,6 @@ export const REQUIRED_ARTICLE_TEXT_FIELDS = [
   "patternRecognition",
   "commonMistakes",
   "complexity",
-  "tsCorner",
-  "pyCorner",
   "tomorrowPreview",
   "digest",
   "tsTip",
@@ -86,7 +80,8 @@ export const REQUIRED_ARTICLE_TEXT_FIELDS = [
  * 區塊，取代原本「prompt 規則 6 列出欄位清單、請 LLM 自律」的做法。
  *
  * 實測起因：以純文字輸出跑第一篇（computational-thinking-basics）時，**連續三次重生都缺
- * `complexity` / `tsCorner` / `pyCorner` 三個欄位**——與 Stage 1「總是回 9 個 Concept」同性質的
+ * `complexity` 與當時尚存的兩個 Corner 欄位**（Corner 已於 F12 Phase 0 移除）——與 Stage 1
+ * 「總是回 9 個 Concept」同性質的
  * 系統性偏差，重打同一份 prompt 不會變好（缺欄位會讓 `assembleArticleMarkdown` 把字面字串
  * `undefined` 插進文章，故 parseDraftArticleResponse 以 fail loud 擋下，見該函式註解）。
  *
@@ -155,10 +150,10 @@ ${problemsList}
    例：MUST 寫「程式碼」或保留英文 code，**MUST NOT 寫「扣」「寫扣」「敲扣」**（實測曾在一篇文章內
    誤用 6 次）；同理 MUST NOT 使用「ㄊ」「der」「4」等諧音或口語簡寫。
 2. concept + thinking + patternRecognition + commonMistakes 四段敘述性文字合計 MUST ≤2000 字（觀念本體，不含程式碼）。
-3. **tsCorner / tsTip / pyCorner / pyTip 四個欄位的值 MUST 各自包含一個 markdown fenced code block**，
+3. **tsTip / pyTip 兩個欄位的值 MUST 各自包含一個 markdown fenced code block**，
    格式**完全比照**下例（含開頭的三個反引號與語言標示、以及真正的換行字元）：
 
-   tsCorner 的值範例：
+   tsTip 的值範例：
    \`\`\`typescript
    function solve(nums: number[]): number {
      const result = nums.reduce((a, b) => a + b, 0);
@@ -168,7 +163,7 @@ ${problemsList}
    solve([1, 2, 3]);
    \`\`\`
 
-   pyCorner 的值範例：
+   pyTip 的值範例：
    \`\`\`python
    def solve(nums: list[int]) -> int:
        result = sum(nums)
@@ -200,7 +195,7 @@ ${problemsList}
 4. challenge 陣列 MUST 為每個候選題目各提供恰好一條，欄位為 { id, whyThisPattern, hint? }；id MUST 與候選題目一致，MUST NOT 新增、刪除或替換題號。
 5. digest ≤900 字、tsTip/pyTip 各 ≤800 字（**含 fenced code block 與其中的型別定義本身**）、takeaway ≤120 字
    （Discord 字元預算，§14.5）；超限請自行精簡，MUST NOT 期待後續被截斷。
-6. 回傳格式 MUST 為單一 JSON 物件，形狀為 DraftArticleResponse（concept/thinking/patternRecognition/commonMistakes/complexity/tsCorner/pyCorner/tomorrowPreview/digest/tsTip/pyTip/takeaway/challenge），不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。
+6. 回傳格式 MUST 為單一 JSON 物件，形狀為 DraftArticleResponse（concept/thinking/patternRecognition/commonMistakes/complexity/tomorrowPreview/digest/tsTip/pyTip/takeaway/challenge），不得包含 JSON 以外的文字或 markdown code fence 包裹整個回應。
 
 請開始展開。`;
 }
