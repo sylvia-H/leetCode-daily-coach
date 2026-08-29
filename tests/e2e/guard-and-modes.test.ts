@@ -103,7 +103,14 @@ describe("US2: 同一天不重複打擾、漏跑不跳課（AC3）", () => {
   it("台北凌晨（對應 UTC 前一日）MUST 判定為今天已推而跳過（US2-4，時區換算以 Asia/Taipei 為準）", async () => {
     const boundaryISO = taipeiMidnightTodayISO();
     // 確認此 fixture 真的落在 UTC 前一日，否則本測試沒有驗到跨日邊界。
-    expect(new Date(boundaryISO).getUTCDate()).not.toBe(new Date().getUTCDate());
+    //
+    // ⚠️ MUST 比對「同一個時間點」的台北日期與 UTC 日期，MUST NOT 拿它跟「現在」的 UTC 日期比。
+    // 台北午夜（UTC+8）恆等於 UTC 前一日 16:00，所以「台北日期 ≠ UTC 日期」是恆真的不變式；
+    // 但「現在」的 UTC 日期在台北 00:00–08:00 之間也還停在前一日，兩者會相等——
+    // 舊寫法因此每天有 8 小時是紅的（2026-08-30 00:39 實測踩到）。
+    const boundaryTaipeiDay = toTaipeiDateString(new Date(boundaryISO));
+    const boundaryUtcDay = new Date(boundaryISO).toISOString().slice(0, 10);
+    expect(boundaryUtcDay).not.toBe(boundaryTaipeiDay);
 
     writeState(stateFile, { foundation: boundaryISO, interviewReady: null, interviewMastery: null });
 
