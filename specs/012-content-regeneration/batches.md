@@ -31,6 +31,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 1 | idx 21–34 | 14 個（array 收尾 + hash-table 開頭），quiz 105 題 | fable | （本批） | article 14/14 ✓、quiz 零違規、962 tests ✓、641 筆 Lesson ✓、330 區塊 ✓ | 4 agent 並行；subagent 計數合計 730K tokens。A 的 3 個 Concept 因 `quiz-longest-option-bias` 退回重修一輪 |
 | 2 | idx 14–41 | 8 個（array 前四課 + hash-table 收尾 + string 開頭），quiz 55 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道全過：article 8/8 ✓、quiz 合併 55 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（142.6s） | 4 agent 並行；subagent 計數 fable 746K + opus 148K ≈ 894K tokens。reviewer 退修 4 篇（1 MAJOR / 3 MINOR），另因 quiz 簡體字檢查退修 1 次 |
 | 3 | idx 7–48 | 9 個（programming-mindset 006–010 + string 003–006），quiz 72 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 72 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（148.4s） | subagent 計數 fable 1,009K + opus 187K ≈ 1,196K tokens。batch D 曾因 API 內容過濾中斷，檔案已寫出故恢復收尾、未重跑。reviewer 退修 8 篇（2 MAJOR / 6 MINOR） |
+| 4 | idx 0–55 | 10 個（programming-mindset 001–005 + string 007–010 + two-pointer 001），quiz 76 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 76 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.7s） | subagent 計數 fable 1,060K + opus 173K ≈ 1,233K tokens。**reviewer 判定退修 0 篇**（F12 首次），僅順手修 3 項 MINOR |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -140,3 +141,60 @@ reviewer 逐項對照 exit criteria 確認**未漏重點**，判為 MINOR、不�
   亂譯詞（「字安格斯群組化雜湊」＝ anagram 音譯）、簡體字「额」、
   中國用語「指針」「遞歸」「越界訪問」、錯字「演邏輯」「家目錄」、
   斷言只對特定輸入成立的假測試（`assert max_val == 5` 寫在函式內）。全數於重寫時清除。
+
+## Phase 4 — programming-mindset 001–005 + string 007–010 + two-pointer 001（2026-08-29）
+
+**reviewer 判定：10 篇全數可收、退修 0 篇，無 BLOCKER 亦無 MAJOR。** F12 至今首次。
+
+品質提升可歸因於 Phase 4 起在 agent prompt 明列**前三批反覆出現的四種樣態**
+（引言說 A 程式碼做 B、死斷言、教材示範自己批評的做法、Digest 只給規則不給錨點）。
+reviewer 逐一驗算 20 個 code block 確認**新版未重蹈死斷言覆轍**，且多數斷言正對著該課點名的失誤
+（`isLeap` 把 `% 4` 提前會真的失敗、拿掉 RLE 收尾即失敗、刪掉任一條去重 while 就回傳重複組合）。
+
+### 6 項 MINOR 的處置（3 修 3 不修）
+
+| 項目 | 處置 | 理由 |
+| --- | --- | --- |
+| `string-pattern-matching-basic` 686 的 Hint 漏了無解（-1）的可能 | **修** | 事實不完整的 Hint，學員照著推會漏掉無解情形（見 D9） |
+| `tracing-execution-flow` 全批唯一未回指先修，且落在跨 agent 交界 | **修** | 一句話的成本 |
+| `string-anagram-grouping` TS 斷言未覆蓋正文最強調的 join 分隔符陷阱 | **修** | 斷言沒驗到教材自己強調的點＝白測（見 D8） |
+| `two-pointer-three-sum-basic` TS Tip 只示範 `sort()` 陷阱、演算法全靠 Python Tip | 不修 | 需重寫整段 TS Tip，代價與收益不成比例 |
+| `tracing-execution-flow` quiz item[9] 輕微前傾 | 不修 | reviewer 判定可由追蹤表直接推得，不算超綱 |
+| `computational-thinking-basics`「任務演化」用詞不自然 | **不能修** | 源自 Skeleton 的 `exit_criteria`；F12 MUST NOT 動 `concepts/**`（見下方待辦） |
+
+**判準**：每次退修都是一次完整 agent 回合，Phase 3 就是被 8/9 篇的退修率推高到每 Concept
+0.67 個百分點（Phase 1+2 為 0.41）。故 MINOR **只修「錯的」與「白測的」**，不修「可以更好的」。
+
+### 三個交界的結論
+
+- **003→004**（跨 agent）：術語（盒子／快照）銜接得上，無事實衝突；唯一缺口是 004 未回指 003，已修。
+- **008→009**（跨 agent）：本批品質最高的交界。009 主動把兩課接起來（中心擴展枚舉回文中心 vs
+  枚舉匹配起點，驗證器不同、骨架一致），複雜度記帳亦不互相矛盾。
+- **跨 Phase 005→006、006→007**：reviewer 比對的是 Phase 3 定稿檔案的**實際內容**而非標題，
+  兩處皆相符。
+
+**D1 狀態**：Tomorrow Preview 對 `next` **10/10 全數命中**。舊教材則有 **9 篇預告錯誤**
+（001 預告不存在的課、002 預告憑空的課、010 在 `next: []` 下仍預告明日課程…），樣態與前三批一致。
+
+## Phase 4 查證出的既有缺陷
+
+- **quiz 正解標錯（第二例）**：`string-palindrome-expansion` item[7] 的 `answerIndex` 指向
+  「指標跳躍整併中心區段」，但正確描述（向外擴張至不同字元終止）被列為錯項且無任何解釋；
+  同篇 item[4] 的 `explanation[3]` 解釋的是正解、某個錯項完全沒被解釋（結構壞損）。
+- **一題兩解**：`string-pattern-matching-basic` item[6] 因題幹歧義而有兩個可辯護的答案。
+  作者原判為正解標錯，**reviewer 獨立複核後判定較輕**，本紀錄採 reviewer 的保守判定。
+- **誤導性 Hint**（新增 D9）：舊版 `two-pointer-three-sum-basic` 對 Two Sum 教
+  「排序搭配相向雙指標」，但該題要求回傳**原始索引**，排序會打亂索引——此法解不了該題。
+- **死斷言全面存在**（新增 D8）：`gate:code` 只驗「能跑且不拋錯」，**永真斷言完美通過**。
+  舊教材實例涵蓋函式永遠回傳 true、斷言硬編在函式本體、寫在 `return` 之後、條件永假、
+  常數事實斷言五種樣態。
+- **D4 樣本擴大到 14 個 Concept／4 模組／3 個 Phase**：本批 10 卷舊題庫**全部**是
+  `explanation[0]` 逐字複製正解選項，無一例外。
+
+## 待辦（不屬 F12 範圍）
+
+- **Skeleton 用詞**：`computational-thinking-basics` 的 `exit_criteria` 使用「任務演化」，
+  用詞不自然並傳導至教材。修正 MUST 動 `concepts/**`，F12 明訂 MUST NOT 觸碰——
+  待 F12 結束後另立任務。
+- **D6 的統一收斂**：見 `pipeline-defects.md` D6 的「F12 修不掉這一條」——
+  MUST 待 F12 全部跑完後以一次機械替換處理，MUST NOT 在個別批次零星修補。
