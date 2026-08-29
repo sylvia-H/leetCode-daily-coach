@@ -387,8 +387,6 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
 - Pattern Recognition  （看到什麼特徵就該想到它）
 - Common Mistakes      （常見誤區）
 - Complexity           （時間 / 空間複雜度）
-- TypeScript Corner    （TS 實戰技巧與陷阱，含可執行程式碼）
-- Python Corner        （Python 實戰技巧與陷阱，含可執行程式碼）
 - Today's Challenge    （今日題目：1~3 題、觀念對應、每題含 Hint）
 - Takeaway             （一句話帶走）
 - Tomorrow Preview     （明天預告：取自 DAG 的 next）
@@ -398,6 +396,17 @@ Delivery 頻道      → Different   （每 Track 一個 Discord Webhook / 頻�
 - TypeScript Tip       （TS 一則實戰要點，含短程式碼）
 - Python Tip           （Python 一則實戰要點，含短程式碼）
 ```
+
+**語言實戰內容只有一份 Tip（MUST，F12 Phase 0 定案 2026-08-29）**：`TypeScript Corner` /
+`Python Corner` 兩個固定區塊**已移除**，Discord 推播與 GitHub Pages 全文閱讀頁 MUST **共用同一份**
+`TypeScript Tip` / `Python Tip`，MUST NOT 為閱讀情境另立一組更長的語言區塊。
+**理由**：Corner 與 Tip 的職責完全重疊（同樣是「語言特性與陷阱＋可執行程式碼」，只差長度），
+一篇教材以兩段講同一件事是設計冗餘；且 Corner 只出現在 Pages，卻要付出與 Tip 相同的生成、
+斷言撰寫與 CI 實測成本（每篇實測片段由 4 段降為 2 段）。
+**連帶規則**：語言特有陷阱的**論述**改寫進 `Common Mistakes`（觀念本體 ≤2,000 字尚有餘裕，
+見 §10.3），**程式碼示範**留在 Tip；`Common Mistakes` 因此 MUST 涵蓋 TypeScript / Python 的
+語言層陷阱，而不只是演算法層誤區。**Pages 全文閱讀頁 MUST 呈現 Tip 兩段**（推翻 F9 research R2
+第 3 點「Tips 不在全文頁重複呈現」）；`Digest` 仍 MUST NOT 於全文頁呈現（與該頁前三段重複）。
 
 **`Today's Challenge` 的機器可解析格式（MUST，F5 定案 2026-07-23）**：該區塊 MUST 以巢狀 markdown list
 逐題描述，每題一個頂層項目、以 `**{leetcodeId}**` 開頭，其後文字即「為什麼適合此 Pattern」（MUST 非空）；
@@ -462,9 +471,9 @@ tags: [array, in-place, sorted]
 ### 10.3 內容長度與詳盡度
 
 - **全文（閱讀用區塊）**：「≤ 2,000 字（中文字）」的上限**只針對 Concept 觀念本體**——即 `Concept` / `Thinking` / `Pattern Recognition` / `Common Mistakes` 等**敘述性文字**；這段 SHOULD **詳盡**，把「怎麼想到、為什麼這樣用、什麼時機不適用」講清楚。
-- **不計入**此上限的部分：`TypeScript Corner` / `Python Corner`（程式碼與語言技巧）、程式碼區塊、`Today's Challenge` 題目清單、`Complexity` 的算式。這些為必備固定區塊，MAY 依需要充分展開。
+- **不計入**此上限的部分：`TypeScript Tip` / `Python Tip`（程式碼與語言技巧）、程式碼區塊、`Today's Challenge` 題目清單、`Complexity` 的算式。這些為必備固定區塊，MAY 依需要充分展開。
 - **推播用區塊（Digest / Tips）**：受 §14.5 的字元預算硬限制，由 Gate 逐一檢查。
-- 目標節奏：核心觀念本體 SHOULD 在「每天約 20 分鐘內」可讀完；語言 Corner 與題目視為延伸練習。
+- 目標節奏：核心觀念本體 SHOULD 在「每天約 20 分鐘內」可讀完；語言 Tip 與題目視為延伸練習。
 - 觀念本體過長（單一 Concept 塞入多個新 Pattern）時 MUST 分割為多個 Concept（呼應 Small Learning Steps），MUST NOT 硬塞。
 
 #### 10.3.1 `difficulty` 判定基準（MUST，F7 定案 2026-07-30）
@@ -494,7 +503,7 @@ Skeleton（`concepts/**`）是內容的來源真相，MUST 只含兩部分：
    - Pattern 辨識線索（看到什麼特徵就該想到它）
    - 要強調的重點與直覺來源（Thinking）
    - 要提醒的常見誤區（Common Mistakes）
-   - TypeScript / Python 各自要點到的語言重點（供 Corner / Tip 展開）
+   - TypeScript / Python 各自要點到的語言重點（供 Tip 展開，及 `Common Mistakes` 的語言層陷阱）
    - 對應題目為何適合此 Pattern 的一句話（供 whyThisPattern / Hint 展開）
 
 產出方式（MUST，呼應 §4-17）：
@@ -508,11 +517,11 @@ Skeleton（`concepts/**`）是內容的來源真相，MUST 只含兩部分：
 
 ## 11. Content Style Guide
 
-- **語言：教學文章 MUST 以繁體中文輸出**，但**技術術語、Pattern 名稱、API / 類別 / 函式名與程式碼（含 Corner / Tip）MUST 保留原文**（英文），不強制翻譯（例：Sliding Window、Two Pointer、Hash Table、`O(n)`、`bisect` 等不譯）。
+- **語言：教學文章 MUST 以繁體中文輸出**，但**技術術語、Pattern 名稱、API / 類別 / 函式名與程式碼（含 Tip）MUST 保留原文**（英文），不強制翻譯（例：Sliding Window、Two Pointer、Hash Table、`O(n)`、`bisect` 等不譯）。
 - 語氣：教練式、務實、鼓勵；避免學術腔與冗長證明。
 - 觀念先行：先講「怎麼想到」（Thinking / Pattern Recognition），再講「怎麼做」。
 - 每個 Concept MUST 至少一個具體例子帶出直覺（例：Sliding Window 的核心是「每個元素最多進出視窗一次 → O(n)」，而非「視窗」本身）。
-- 程式碼：TypeScript Corner 與 Python Corner MUST 包含可執行片段，聚焦**語言特性與陷阱**（例：Python 的 `bisect`、TS 的 `number` 邊界、深淺拷貝、負索引），而不只是抄一份解答。
+- 程式碼：TypeScript Tip 與 Python Tip MUST 包含可執行片段，聚焦**語言特性與陷阱**（例：Python 的 `bisect`、TS 的 `number` 邊界、深淺拷貝、負索引），而不只是抄一份解答。無法在 Tip 的字元預算內講完的語言陷阱，其**論述** MUST 寫進 `Common Mistakes`（§10），MUST NOT 另立區塊。
 - 題目：只呈現題號 / 官方標題 / LeetCode 連結 / 為什麼適合此 Pattern；MUST NOT 轉載題目完整描述。
 - 一致性：所有 Concept 依 §10 的固定區塊順序撰寫，讓 Compiler 能穩定解析。
 
@@ -861,7 +870,7 @@ Discord 的限制（全部 MUST 遵守，且由 **Gate 對每一筆 Lesson 的 r
   「本週涵蓋」）。
 - Render 後單則訊息總長 MUST ≤ **5,500** 字元（保留 500 安全餘裕）。
 - 一則訊息裝不下時 MUST 確定性拆為第二則訊息（fallback，正常情況下預算設計應使其不發生）。
-- 全文（Corner 等閱讀用區塊）不進 Discord；留待未來 GitHub Pages（F9）以連結提供。
+- 全文（`Concept` / `Thinking` / `Pattern Recognition` / `Common Mistakes` / `Complexity` 等閱讀用區塊）不進 Discord；留待 GitHub Pages（F9）以連結提供。`TypeScript Tip` / `Python Tip` 是唯一兩端共用的區塊（§10），故其字元預算 MUST 以 Discord 為準——Pages 不得因閱讀情境要求更長的 Tip。
 - 推播失敗 MUST 發一則紅色告警 Embed（若 webhook 本身可用），MUST NOT 無聲失敗。
 
 ### 14.6 推播實際長相（mock，concept 類 Session）
@@ -1388,7 +1397,7 @@ LLM 定位為 **Build-time Author, Never a Runtime Dependency**——在唯一�
 LLM MAY（僅 build-time 批次生成，全部過 §20.3 Gate 後凍結）
 - Stage 1：批次起草課綱（Module / Topic / Concept 清單、frontmatter、DAG 依賴、題目對應）
   與每個 Concept 的 Author Hints（產出 Skeleton 與課綱大綱表）
-- Stage 2：依 Skeleton 批次展開 Full Article（含 Digest / TS Tip / Python Tip / Corner / Exit Criteria）
+- Stage 2：依 Skeleton 批次展開 Full Article（含 Digest / TS Tip / Python Tip / Exit Criteria）
 - 為每個「Concept × 題目」組合生成 Hint 與 whyThisPattern 一句話
 - 生成 Weekly Reflection 題庫（data/reflection-bank.json）
 - 生成鼓勵語錄池（data/encouragement.json）。**F8 定案 2026-08-01：採 LLM 生成 + 自動 Gate，不採人工撰寫**
@@ -1438,7 +1447,7 @@ LLM MUST NOT
 
 讀凍結的 Skeleton → LLM 依 Author Hints 展開 Full Article（含 Digest / Tips / Hints）→ 通過下列 Gate → 凍結至 `articles/` 與 `data/`：
 
-1. **程式碼實測（最強把關；編譯 + 內嵌斷言，F7 定案 2026-07-30）**：TS Corner / TS Tip MUST `tsc` 編譯通過且以 `vitest`/`tsx` 執行**內嵌斷言**、Python Corner / Tip MUST 以 `pytest` 執行**內嵌斷言**；每個程式碼片段 MUST 自帶最小測試（呼叫函式並斷言預期輸出），**編譯通過且斷言成功**才過關——僅編譯通過、或僅「執行不拋例外」均不足。跑不過 ⇒ 這關擋生成。
+1. **程式碼實測（最強把關；編譯 + 內嵌斷言，F7 定案 2026-07-30）**：`TypeScript Tip` MUST `tsc` 編譯通過且以 `vitest`/`tsx` 執行**內嵌斷言**、`Python Tip` MUST 以 `pytest` 執行**內嵌斷言**（F12 Phase 0 移除 Corner 後，每篇實測片段由 4 段降為 2 段）；每個程式碼片段 MUST 自帶最小測試（呼叫函式並斷言預期輸出），**編譯通過且斷言成功**才過關——僅編譯通過、或僅「執行不拋例外」均不足。跑不過 ⇒ 這關擋生成。
 2. **結構 / schema 檢查**：§10 固定區塊（含 Digest / Tips）都在、frontmatter schema（zod）符合、觀念本體 ≤ 2,000 字（§10.3）；**繁中機器可驗（F7 定案 2026-07-30）**：全文無簡體字、CJK 字元佔比達門檻（程式碼區塊與行內英文術語排除在分母外），違反 ⇒ 擋生成。
 3. **字元預算檢查**：Digest / Tips / Exit Criteria / Takeaway 各自符合 §14.5 預算。
 4. **DAG 驗證**：`prerequisite` / `next` 無環 / 無前向依賴 / 參照完整（§8.3）。
@@ -1767,7 +1776,7 @@ MUST 有單元測試：
 
 - 範圍：
   - **Stage 1**：`generate-curriculum.ts`——LLM 批次起草完整課綱（150+ Concept 的 frontmatter + Author Hints）→ 結構 Gate → 產出 `curriculum/outline.md` → **你一次性定稿（唯一人工檢查點）** → Skeleton 凍結。
-  - **Stage 2**：`generate-content.ts`——全量展開 Full Article（**繁體中文、詳盡、觀念本體 ≤2,000 字、含 Digest / TS·Python Tip / Corner / Exit Criteria / 每題 Hint**）；§20.3 全部 Gate；§20.4 節流 + 斷點續跑 + 冪等。
+  - **Stage 2**：`generate-content.ts`——全量展開 Full Article（**繁體中文、詳盡、觀念本體 ≤2,000 字、含 Digest / TS·Python Tip / Exit Criteria / 每題 Hint**）；§20.3 全部 Gate；§20.4 節流 + 斷點續跑 + 冪等。
   - 課綱凍結後執行 `generate-schedule.ts` 產出三份正式課表並 commit。
   - **補入 `content-gate.yml` 的 TS/Python 程式碼實測步驟**（§21.3、§20.3 Stage 2-1；F5 定案 2026-07-23 由本 Feature 承接）。
 - 定位：內容工程主軸，**可與 F5/F6 並行**（機器批次 2～4 天）。
