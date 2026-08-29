@@ -1,0 +1,91 @@
+{
+  "phase": 1,
+  "window": "sessionIndex 21-34",
+  "model": "fable",
+  "concepts": [
+    {
+      "conceptId": "array-in-place-deduplication",
+      "skeleton": "concepts/array/009-array-in-place-deduplication.md",
+      "article": "articles/array/009-array-in-place-deduplication.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "array-in-place-removal",
+      "skeleton": "concepts/array/008-array-in-place-removal.md",
+      "article": "articles/array/008-array-in-place-removal.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "array-move-zeroes",
+      "skeleton": "concepts/array/010-array-move-zeroes.md",
+      "article": "articles/array/010-array-move-zeroes.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "array-two-pointers-opposite",
+      "skeleton": "concepts/array/005-array-two-pointers-opposite.md",
+      "article": "articles/array/005-array-two-pointers-opposite.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "array-two-pointers-sliding",
+      "skeleton": "concepts/array/006-array-two-pointers-sliding.md",
+      "article": "articles/array/006-array-two-pointers-sliding.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "array-two-pointers-variable",
+      "skeleton": "concepts/array/007-array-two-pointers-variable.md",
+      "article": "articles/array/007-array-two-pointers-variable.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "hash-table-complement-lookup",
+      "skeleton": "concepts/hash-table/003-hash-table-complement-lookup.md",
+      "article": "articles/hash-table/003-hash-table-complement-lookup.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "hash-table-concept-introduction",
+      "skeleton": "concepts/hash-table/001-hash-table-concept-introduction.md",
+      "article": "articles/hash-table/001-hash-table-concept-introduction.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "hash-table-existence-tracking",
+      "skeleton": "concepts/hash-table/004-hash-table-existence-tracking.md",
+      "article": "articles/hash-table/004-hash-table-existence-tracking.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "hash-table-frequency-counting",
+      "skeleton": "concepts/hash-table/002-hash-table-frequency-counting.md",
+      "article": "articles/hash-table/002-hash-table-frequency-counting.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "hash-table-grouping-anagrams",
+      "skeleton": "concepts/hash-table/007-hash-table-grouping-anagrams.md",
+      "article": "articles/hash-table/007-hash-table-grouping-anagrams.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "hash-table-prefix-sum-frequency",
+      "skeleton": "concepts/hash-table/008-hash-table-prefix-sum-frequency.md",
+      "article": "articles/hash-table/008-hash-table-prefix-sum-frequency.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "hash-table-sliding-window-distinct",
+      "skeleton": "concepts/hash-table/005-hash-table-sliding-window-distinct.md",
+      "article": "articles/hash-table/005-hash-table-sliding-window-distinct.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "hash-table-sliding-window-frequency",
+      "skeleton": "concepts/hash-table/006-hash-table-sliding-window-frequency.md",
+      "article": "articles/hash-table/006-hash-table-sliding-window-frequency.md",
+      "quizCount": 9
+    }
+  ]
+}
