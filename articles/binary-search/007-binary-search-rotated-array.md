@@ -11,76 +11,98 @@ exit_criteria:
 ---
 ## Concept
 
-Binary Search in Rotated Sorted Array 是針對一個原本經過排序但隨後在未知樞紐點進行旋轉的陣列進行高效搜尋的演算法。其核心原理在於：當我們將一個排序陣列進行旋轉後，如果從中間（mid）切開，陣列的左右兩半中，必定至少有一半是保持嚴格遞增的完全排序狀態。這項特性讓我們能夠繼續利用標準 Binary Search 的對半分割精神，在 $O(\log n)$ 的時間複雜度內定位目標值。
+旋轉排序陣列：把遞增排序的陣列在未知位置切一刀、前後段對調，例如 `[0,1,2,4,5,6,7]` 變成 `[4,5,6,7,0,1,2]`。全域單調性被破壞了——第一課「一次比較代言整個半邊」的推論不能直接套用。但注意：旋轉只切了一刀。從任何 mid 把區間切成 `[left..mid]` 與 `[mid..right]` 兩半，那一刀至多落在其中一半，另一半必定完整落在原本的遞增段裡、維持有序。這就是本課的支點：**每一輪至少有一半是有序的**，而有序半的值域有明確的兩端——最小值在左端、最大值在右端，端點比較就能回答「target 可不可能在這一半」，砍半的能力因此找回來。判半的工具是 `nums[left] <= nums[mid]`：若旋轉點落在左半內部，left 屬於前段（值大的那段）、mid 屬於後段，在**元素互異**的前提下前段每個值都嚴格大於後段每個值，必有 `nums[left] > nums[mid]`；逆否過來，`nums[left] <= nums[mid]` 成立就保證旋轉點不在左半、左半有序。
 
 ## Thinking
 
-在處理這類旋轉排序陣列時，思維模式必須從『尋找全域中點』轉變成『識別哪一個半部是正規排序的』。首先，初始化左右指針 `left` 與 `right`。在每一次迴圈中計算出中點 `mid`。接著檢查 `nums[left] <= nums[mid]` 來判斷左半部是否有序。若成立，代表左半部是正常的遞增區間，此時再檢查目標值 `target` 是否落在此區間的範圍內（即 `nums[left] <= target && target < nums[mid]`）。如果在，則將 `right` 移動到 `mid - 1` 以縮小至左半部搜尋；否則捨棄左半部，將 `left` 移動到 `mid + 1`。反之，若左半部無序，則代表右半部必定有序，採用相同的邏輯判斷目標值是否落在右半部的範圍內，進而調整指針。重複此過程直到找到目標值或指針交錯。
+慣例整套沿用第一課：閉區間 `[left, right]`、`while (left <= right)`、更新一律 mid ± 1，不變式仍是「target 若存在，必在區間內」。每輪三步：一、`nums[mid]` 命中就回傳。二、判半：`nums[left] <= nums[mid]` 則左半有序，否則右半有序。等號不能省——區間縮到剩兩格時 mid 就是 left，靠等號才把單元素半邊正確視為有序。三、值域檢查：左半有序時，問 `nums[left] <= target && target < nums[mid]`；上界取嚴格小於，因為 mid 這一格剛比過、確定不是 target。成立就 `right = mid - 1` 收進左半；不成立就 `left = mid + 1` 丟掉左半。右半有序時鏡像處理：`nums[mid] < target && target <= nums[right]` 決定去留。這樣丟半為何安全？有序半的值全部落在兩端點之間，且另一半的值不是大於有序半上界、就是小於其下界（另一半是「接在 mid 之後的更大值＋開頭的低段」），兩半值域互不重疊——所以「在有序半值域內」與「只可能在另一半」是嚴格的二選一，每輪丟掉的半邊都被證明不含 target。區間每輪至少縮一格，必然終止；空了即可斷言不存在。
 
 ## Pattern Recognition
 
-當題目給定一個原本排序好但經過旋轉的陣列，且要求在 $O(\log n)$ 的時間複雜度內尋找特定元素、最小值或特定條件時，即可立即辨識出此 Pattern。其外在特徵包含：陣列局部有序、存在未知旋轉點、且暗示著需要修改傳統 Binary Search 的條件判斷式。若題目提及不能使用線性搜尋，或者暗示時間複雜度必須優於 $O(n)$，通常就是此類 Binary Search 變形題的強烈訊號。
+訊號：題目說「排序陣列在未知樞紐點旋轉」，又要求 O(log n)。找特定值、找最小值（也就是找旋轉點本身）都是同一族——後者不再與 target 比，改比 `nums[mid]` 與 `nums[right]`，鎖定無序的那一半。反向提醒：整套判半推論建立在**元素互異**上；題面若多說一句「可能包含重複元素」，`nums[left] <= nums[mid]` 的推論會出現破口，那是明天的主題。
 
 ## Common Mistakes
 
-最常見的錯誤在於邊界條件的處理失誤。開發者在判斷目標值是否落於有序半部時，經常忽略等號的處理，導致當 `target` 剛好等於邊界值時程式碼進入錯誤的分支。另一個常見錯誤是混淆了嚴格不等式（`<` 與 `<=`），在處理重複元素或邊界交界時引發無限迴圈或索引超界例外。此外，當陣列包含重複元素時，若未妥善處理 `nums[left] === nums[mid] && nums[mid] === nums[right]` 的情況，會導致無法正確辨識有序半部，進而退化為 $O(n)$ 的線性掃描。
+一、判半漏等號：寫成 `nums[left] < nums[mid]`，區間剩兩格時 mid 與 left 重合、條件恆假，誤入「右半有序」分支——`[3,1]` 找 1：mid = 0，被當成右半 `[3,1]` 有序，檢查 `3 < 1` 不成立而丟掉右半，錯回 -1。二、值域檢查漏下界等號：寫 `nums[left] < target`，target 恰等於 `nums[left]` 時被誤判不在左半——`[4,5,6,7,0,1,2]` 找 4 會一路往右、錯回 -1。三、不先判半就做端點值域檢查：無序半的值域斷在旋轉點、不連續，最大值在中間而非端點，端點夾不住其中的值，據此丟棄會把答案一起丟掉。四、對未排序陣列的教訓在此重演：判錯半不會當機，只會安靜回傳找不到，測試必須涵蓋旋轉點在頭、在尾與未旋轉的陣列。
 
 ## Complexity
 
-Time Complexity: O(log n)。因為每次迴圈都會將搜尋範圍減半，與標準 Binary Search 相同。Space Complexity: O(1)。僅使用常數級別的指針變數，不需要額外的儲存空間。
+判半比一次、值域檢查比兩次，都是 O(1) 的端點比較；每輪要嘛命中、要嘛把含 mid 的那一半整個丟掉，區間近乎減半，輪數約 log2(n)，時間 O(log n)。只用 left、right、mid 三個變數，空間 O(1)。
 
 ## Digest
 
-Binary Search in Rotated Sorted Array 是 Binary Search 的進階應用。核心精神在於：旋轉後的陣列從中點切開，必定有一半是完全排序的。透過比較 `nums[left]` 與 `nums[mid]` 可以精準識別出哪一半維持正規排序，接著判斷 target 是否落在此排序區間內，藉此決定指針的移動方向。在實作時，必須特別注意等號的包含範圍與邊界條件，以防範無限迴圈或漏掉邊界值。
+拿 `[4,5,6,7,0,1,2]` 找 0：第一輪 mid = 3、`nums[3]` = 7，`4 <= 7` 判左半有序，0 不在 [4, 7) → `left = 4`。第二輪 mid = 5、`nums[5]` = 1，`nums[4]` = 0 且 `0 <= 1` 判左半有序，0 在 [0, 1) → `right = 4`。第三輪 mid = 4 命中。公式：閉區間、`left <= right`、mid ± 1 全套沿用，只是「跟 target 比大小」換成三步——命中即回；`nums[left] <= nums[mid]` 認出有序半；用有序半值域決定收哪半。支點是旋轉只切一刀：任何 mid 切開必有一半有序，兩半值域互不重疊，端點比較就能安全丟掉一半。
 
 ## TypeScript Tip
 
 ```typescript
-function findMin(nums: number[]): number {
-  let left = 0;
-  let right = nums.length - 1;
-  while (left < right) {
-    const mid = Math.floor((left + right) / 2);
-    if (nums[mid] > nums[right]) {
+import assert from "node:assert";
+
+function search(nums: number[], target: number): number {
+  let left = 0, right = nums.length - 1;
+  while (left <= right) {
+    const mid = left + Math.floor((right - left) / 2);
+    if (nums[mid] === target) return mid;
+    if (nums[left]! <= nums[mid]!) {
+      if (nums[left]! <= target && target < nums[mid]!) right = mid - 1;
+      else left = mid + 1;
+    } else if (nums[mid]! < target && target <= nums[right]!) {
       left = mid + 1;
     } else {
-      right = mid;
+      right = mid - 1;
     }
   }
-  return nums[left];
+  return -1;
 }
-const minVal = findMin([3, 4, 5, 1, 2]);
-if (minVal !== 1) throw new Error("assertion failed");
+
+const a = [4, 5, 6, 7, 0, 1, 2];
+assert(search(a, 0) === 4);
+assert(search(a, 4) === 0); // 左界
+assert(search(a, 3) === -1); // 不存在
+assert(search([3, 1], 1) === 1); // mid 即 left
+assert(search([1, 2, 3], 3) === 2); // 未旋轉
 ```
 
 ## Python Tip
 
+鏈式比較讓值域檢查最貼近數學寫法。
+
 ```python
-def find_min(nums: list[int]) -> int:
+def search(nums: list[int], target: int) -> int:
     left, right = 0, len(nums) - 1
-    while left < right:
-        mid = (left + right) // 2
-        if nums[mid] > nums[right]:
+    while left <= right:
+        mid = left + (right - left) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[left] <= nums[mid]:  # 左半有序
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+        elif nums[mid] < target <= nums[right]:  # 右半有序
             left = mid + 1
         else:
-            right = mid
-    return nums[left]
+            right = mid - 1
+    return -1
 
-min_val = find_min([3, 4, 5, 1, 2])
-assert min_val == 1, "assertion failed"
+assert search([5, 1, 2, 3, 4], 5) == 0   # 旋轉點緊貼開頭
+assert search([2, 3, 4, 5, 1], 1) == 4   # 最小值在尾端
+assert search([2, 3, 4, 5, 1], 2) == 0   # target 是左界
+assert search([1], 1) == 0               # 單元素
+assert search([5, 1, 2, 3, 4], 6) == -1  # 不存在
 ```
 
 ## Takeaway
 
-掌握旋轉陣列的二分搜尋關鍵在於『先辨識有序半部，再檢查範圍』，嚴格維護邊界條件即可達成 O(log n) 高效解法。
+旋轉只切一刀：任 mid 切開必有一半有序。先用 nums[left] <= nums[mid] 認出有序半，再用它的值域決定丟哪一半。
 
 ## Tomorrow Preview
 
-明天我們將探討尋找旋轉排序陣列中最小值的變形應用，學習如何在包含重複元素的陣列中處理邊界退化問題。
+明天把「元素互異」這個前提拿掉：重複值會讓 `nums[left] == nums[mid]` 時判不出哪一半有序。看這個破口如何把最壞情況拖成 O(n)，以及如何收縮邊界自保。
 
 ## Today's Challenge
 
-- **33** · 此題為標準的旋轉排序陣列搜尋問題，完全符合透過辨識有序半部來套用 Binary Search 的核心 Pattern。
-  - Hint: 先確認左半部或右半部何者有序，再檢查 target 是否落在該有序區間內。
-- **153** · 此題為旋轉排序陣列的最小值尋找變形題，透過比較 mid 與 right 元素可以有效收斂搜尋範圍並找出旋轉樞紐點。
-  - Hint: 當 nums[mid] > nums[right] 時，最小值必定在右半部，否則在左半部包含 mid。
+- **33** · 旋轉排序陣列找目標值的原題：全域單調被破壞、局部單調還在，正是「判有序半＋值域檢查」的原樣落地。
+  - Hint: 閉區間模板不變；每輪先用 `nums[left] <= nums[mid]` 認出有序半，target 在其值域內就收進去，否則搜另一半；區間空了回 -1。
+- **153** · 找最小值＝定位旋轉點本身，同一個「有序半」觀察的變形：最小值必在含旋轉點的那一半（或就是 mid 自己）。
+  - Hint: 改比 `nums[mid]` 與 `nums[right]`：大於表示斷點在右側，`left = mid + 1`；否則最小值在含 mid 的左側，`right = mid`——這組更新要換成 `while (left < right)` 的成套慣例。

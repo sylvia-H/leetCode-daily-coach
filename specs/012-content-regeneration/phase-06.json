@@ -2,7 +2,7 @@
   "phase": 6,
   "window": "sessionIndex 70-83",
   "model": "fable",
-  "status": "pending",
+  "status": "done",
   "concepts": [
     {
       "conceptId": "binary-search-exclusive-bounds",

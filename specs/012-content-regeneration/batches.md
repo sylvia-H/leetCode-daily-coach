@@ -33,6 +33,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 3 | idx 7–48 | 9 個（programming-mindset 006–010 + string 003–006），quiz 72 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 72 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（148.4s） | subagent 計數 fable 1,009K + opus 187K ≈ 1,196K tokens。batch D 曾因 API 內容過濾中斷，檔案已寫出故恢復收尾、未重跑。reviewer 退修 8 篇（2 MAJOR / 6 MINOR） |
 | 4 | idx 0–55 | 10 個（programming-mindset 001–005 + string 007–010 + two-pointer 001），quiz 76 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 76 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.7s） | subagent 計數 fable 1,060K + opus 173K ≈ 1,233K tokens。**reviewer 判定退修 0 篇**（F12 首次），僅順手修 3 項 MINOR |
 | 5 | idx 56–69 | 10 個（two-pointer 002–010 + binary-search 001），quiz 82 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 82 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（136.4s） | subagent 計數 fable 1,244K + opus 181K ≈ 1,425K tokens。**reviewer 判定退修 0 篇**（連續第二批），僅順手修 2 項 MINOR |
+| 6 | idx 70–83 | 9 個（binary-search 002–010），quiz 61 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 61 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.1s） | subagent 計數 fable 1,258K + opus 209K ≈ 1,467K tokens。**reviewer 判定 0 BLOCKER / 0 MAJOR**（連續第三批），修 2 項 MINOR。用量 39%→45%（0.67／Concept） |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -327,3 +328,67 @@ spec §10.2 已註明 MUST NOT 因此把單條上限調回 60。
   真正的訊號是**測試總數少了 37**。紀律：改 prompt 後 MUST 跑 `npx tsc --noEmit`。
 - **D11 已標記為修復**，並存查 7 條「翻譯時發現、但依『僅限語言合規』刻意未改」的原文問題
   （文法錯誤、寫死 JS 語法、RPN 與 operator precedence 的語意矛盾等），待另立任務處理。
+
+## Phase 6 — binary-search 002–010（2026-08-29）
+
+**reviewer 判定：9 篇可收，0 BLOCKER、0 MAJOR**（連續第三批）。
+
+**分派依「概念配對」而非單純相鄰**：binary-search 是全課程最容易寫出「看起來對、實際差一」的模組，
+故把 002 閉區間 ↔ 004 半開區間交給同一個 agent（兩種慣例 MUST 用同一套語彙對照）、
+005 lower bound ↔ 006 upper bound 一組、007 旋轉 ↔ 008 旋轉含重複一組。
+四個 agent 都被要求先讀 Phase 5 定稿的 001，沿用其「**區間定義、迴圈條件、更新方式三者必須成套**」框架。
+
+### reviewer 首次大規模執行驗算（本批的關鍵作法）
+
+授權 reviewer 跑只讀腳本後，它做的不是抽樣讀文字，而是**窮舉驗證**：
+
+| 驗證對象 | 規模 | 結果 |
+| --- | --- | --- |
+| 002/004 終止狀態（閉區間 `left == right + 1`、半開 `left == right`） | 30,888 組 | 違反 **0** |
+| 007 演算法正確性（對照暴力法） | 25,245 組 | 全對 |
+| 007 判半論證、兩半值域不重疊 | 11,439 / 19,728 次 | 無反例 |
+| 008 含重複值 | 4,950 組 | 全對 |
+| 009 findMin | 2,295 組 | 全對 |
+| **突變測試（全部 18 個 code block、20 個突變）** | 20 個 | **20/20 KILLED、0 存活** |
+| 30+ 條 Common Mistakes 的反例 | 全部 | **實際重現**（含 5 處無窮迴圈以熔斷計數確認） |
+
+**這是機械 Gate 永遠做不到的層次**：`gate:code` 只驗「能跑且不拋錯」，驗不了「這個論證是否為真」。
+
+### 2 項 MINOR 的處置——都是 D10 在新教材裡復發
+
+| 篇章 | 教材宣稱 | 實測 | 處置 |
+| --- | --- | --- | --- |
+| `binary-search-matrix-search` | 少寫 `Math.floor` 會「安靜地永遠為否」 | 兩層索引 `matrix[1.25][0]` **當場拋 TypeError** | 教材與 quiz 兩處同步改正 |
+| `binary-search-inclusive-bounds` | 閉區間 `right = n` 在 JS「安靜讀到 undefined、比出錯誤結果」 | 窮舉 7,392 組錯誤結果 **0**，只是多白跑幾輪 | 改為真實後果，並保留 Python 拋 IndexError 的對照 |
+
+**修法比原文更有教學價值**：同一個寫錯，**JS 是安靜做白工、Python 是直接爆**——
+兩種語言的失效形式對照本身就值得講。作者**下筆前先自行窮舉 99 組驗證**才改寫，順序正確。
+
+另 2 項 MINOR 不修：quiz `explanation[0]` 與正解語意重疊 0.71（已一併修）、
+**inline code 反引號用量在交界處斷崖**（37–42 處 vs 3–5 處）——後者是全庫規模的版面問題，
+與 D6 同類，**MUST 待 F12 跑完以腳本統一掃描**，零星修補只會製造新的不一致。
+
+### 三個交界
+
+004→005「三者成套」口訣**逐字同構**；006→007 是半開→閉區間的慣例回切，007 明寫「整套沿用第一課」
+且 004 已預先鋪陳；008→009 是第二次切換，009 明寫「換了基準就重新配一套」並論證為何不能沿用 `<=`，
+且 007 對 153 的 Hint 與 009 正文**逐字一致**。舊 010 的行列術語自相矛盾已根除
+（全篇 m=列、n=欄、除數恆為欄數）。
+
+**D1 狀態**：Tomorrow Preview 對 `next` **9/9 全中**（含 010 空 `next` 正確寫成收尾語）。
+舊教材則有多篇預告錯課，其中 **009 預告的是「昨天的課」**（008），方向寫反。
+
+## Phase 6 查證出的既有缺陷
+
+- **quiz 正解標錯（第四例）**：`binary-search-rotated-duplicates` item[3] 宣稱「照搬無重複模板會
+  指標停滯、陷入無窮迴圈」——偽。`mid ± 1` 更新下指標必前進，真正後果是**安靜漏解**
+  （`[1,0,1,1,1]` 找 0 可重現），且**四個選項無一正確**。
+- **整課建立在對語言的誤解上**：舊 `003-overflow-prevention` 把 TypeScript 說成固定位寬整數語言。
+  JS 的 `Number` 是 IEEE 754 雙精度，陣列索引範圍內 `(left + right)` 根本不會溢位；
+  **真正會溢位的是 `>> 1`**（先做 ToInt32）。舊 quiz 卻有一題宣稱「`>> 1` 不會增加溢位風險」，
+  方向剛好相反——reviewer 獨立複核確認為事實錯誤，並補充 Java 的修法是無號 `>>>`、有號 `>>` 同樣救不了。
+  同卷還有作者未發現的自相矛盾（item[3] 說溢位「崩潰」vs item[0] 說「安靜截斷」）。
+- **D4 的第三、四種變體**（見 `pipeline-defects.md` D4）：
+  **亂碼填充字串** `aspectpiicidv`（`aspect` 是 `quiz-aspects.ts` 的欄位名，研判為產線識別項洩漏）、
+  **引述不存在的選項文字**。四種變體同指一個根因：`explanation` 各段職責從未被定義。
+- **簡體字與中國用語**：舊 002 quiz 選項含「空间」、item[0] 用「指針」。

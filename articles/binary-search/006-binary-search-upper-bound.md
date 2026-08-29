@@ -10,68 +10,86 @@ exit_criteria:
 ---
 ## Concept
 
-Binary Search Upper Bound 是一種二分搜尋的變體演算法，其主要目的是在一個已排序的陣列中，尋找第一個「大於」目標值（target）的元素索引。相較於標準的二分搜尋法在找到目標值時即回傳，Upper Bound 尋找的是大於目標的極限位置，因此當 `nums[mid] > target` 時，我們不能直接回傳該索引，而是必須將右界收縮至 `mid`，繼續在左半邊尋找更小的符合條件之索引。這種演算法在處理範圍查詢（Range Queries）以及計算重複元素的頻率時扮演著不可或缺的角色。
+Upper bound 的定義：在已排序陣列中，**第一個滿足 nums[i] > target 的索引**；所有元素都不大於 target 時，答案是 n。它與昨天的 lower bound 是一對鏡像，程式碼的差別**只有收右界的判斷式那一行**：lower bound 寫 `nums[mid] >= target` 才 right = mid，upper bound 寫 `nums[mid] > target` 才 right = mid。少掉的那個等號，決定了等於 target 的元素站在分界線哪一側：用 >=，等值被視為候選、右界收下來壓住它，分界線落在等值區的**左端**；用 >，等值被視為不合格、左界推過它，分界線落在等值區**右端的下一格**。於是兩條分界線恰好框住所有等於 target 的元素：[lowerBound, upperBound) 就是 target 佔據的區間，upperBound - lowerBound 就是出現次數，不必線性去數。
 
 ## Thinking
 
-在設計 Upper Bound 演算法時，核心思維在於處理等於目標值的情況。當我們計算出中間索引 `mid` 並比較 `nums[mid]` 與 `target` 時，若 `nums[mid] <= target`，代表此時的元素仍然小於或等於目標值，不可能是我們所尋找的「第一個大於目標的元素」，因此左界應當前進至 `mid + 1`；反之，若 `nums[mid] > target`，此時該元素有可能是我們要找的答案，但為了確保它是「第一個」，我們必須將右界收縮至 `mid`。透過這種區間不斷收縮的機制，最終 `left` 與 `right` 指標會交會於正確的上界位置。
+模板與昨天完全同一套：[left, right)、`left < right`、right = mid 與 left = mid + 1，只有不變式的內容跟著那一行改變：**[0, left) 內全部 <= target，[right, n) 內全部 > target**。每輪比較：nums[mid] <= target——注意等於也走這條——mid 不可能是「第一個嚴格大於」，left = mid + 1，等值被歸到左段丟下，這正是那一個等號造成的行為分歧；nums[mid] > target 則 mid 可能是答案，right = mid 保留。終止時 left == right，即第一個嚴格大於 target 的位置。用它取「target 最後一次出現的位置」：就是 upperBound - 1，但**必須先確認 target 存在**（lowerBound 小於 upperBound），否則兩者相等、減 1 會指到不相干的元素。另一個實用恆等式：整數陣列上 upperBound(target) 等於 lowerBound(target + 1)——昨天 Hint 用的正是這一點，今天起可以直接寫 upper bound，不必繞道。
 
 ## Pattern Recognition
 
-當題目要求尋找「第一個大於某個值的元素」、「大於目標的最小索引」、或是計算某個數值在排序陣列中出現的區間範圍時，這就是明顯的 Binary Search Upper Bound Pattern。與傳統的 Binary Search 尋找精確匹配不同，此 Pattern 著重於邊界條件的處理與指標的收縮方向。若發現題目涉及區間左右端點的定位，且陣列已排序，通常都可以透過調整 Upper Bound 與 Lower Bound 的搭配來解決。
+直接訊號：first element greater than、strictly greater、「大於 target 的最小索引」。成對訊號：要「起訖位置」「出現次數」「等值區段的右端」時，lower 與 upper bound 幾乎總是成對出場——左端用 >=、右端用 >。Python 標準庫把這一對取名為 bisect_left 與 bisect_right，名字說的就是等值時各靠哪一側。
 
 ## Common Mistakes
 
-最常見的錯誤在於指標更新時發生無窮迴圈，例如在 `nums[mid] > target` 時錯誤地寫成 `right = mid - 1`，這會導致跳過正確的大於元素。另一個常見錯誤是迴圈終止條件設定不當，導致當陣列中所有元素都小於或等於目標時，回傳的索引超出陣列範圍，或者沒有妥善處理陣列中存在重複元素時的邊界偏移問題。此外，將 `mid` 的計算寫錯導致溢位也是初學者常犯的技術失誤。
+一、把 > 手滑寫成 >=：整支函式退化成 lower bound——nums = [1, 3, 3, 5] 找 3，upper bound 應回 3，寫錯會回 1；兩個結果都「看起來像邊界」，不對拍很難發現。二、nums[mid] > target 時寫 right = mid - 1：nums = [2, 3] 找 2——mid = 1、nums[1] > 2 → right = 0，回 0，但正解是 1；與昨天同一種病：把可能的答案砍掉了。三、誤解回傳值：upperBound 指向最後一個等值元素的**下一格**，不是它本身；且全陣列 <= target 時回 n——nums = [2, 2] 找 2 回 2，直接索引就越界。四、漏掉「不存在」：nums = [1, 5] 找 3，lowerBound 與 upperBound 都是 1，次數為 0；不檢查就回報起訖 [1, 0]，是空區間卻被當成有效答案。
 
 ## Complexity
 
-時間複雜度為 O(log n)，因為每一次迴圈都將搜尋範圍縮減一半。空間複雜度為 O(1)，僅使用常數級別的指標變數來儲存左右界與中間索引。
+單次 upper bound 與 lower bound 相同：每輪砍半、時間 O(log n)，三個變數、空間 O(1)。合起來解「起訖位置」是兩次獨立二分，O(log n) 加 O(log n) 仍是 O(log n)；對照線性掃描找兩端的 O(n)，在重複值極多的長陣列上差距最明顯。
 
 ## Digest
 
-本日重點學習 Binary Search Upper Bound 演算法，核心在於尋找陣列中第一個大於 target 的元素索引。透過當 nums[mid] <= target 時移動 left = mid + 1，以及 nums[mid] > target 時移動 right = mid，我們能夠精準定位上界。此技術是解決範圍查詢與多重複元素題目的關鍵基礎。
+同一個例子 nums = [1, 2, 3, 3, 3, 5] 找 3：昨天 lower bound 收在 2；今天 upper bound——left = 0、right = 6，mid = 3、nums[3] = 3 <= 3 → left = 4（等值被推過去）；mid = 5、nums[5] = 5 > 3 → right = 5；mid = 4、nums[4] = 3 <= 3 → left = 5；left == right = 5。5 - 2 = 3，恰是三個 3 的個數。整份程式碼與 lower bound 只差判斷式一行：>= 改成 >，等值元素就從「保留在右段」變成「排除到左段」，分界線從等值區左端移到右端下一格。
 
 ## TypeScript Tip
 
+與昨天的 lowerBound 逐行對照，唯一不同的是判斷式那一行；回傳值減 1 之前先確認 target 存在。
+
 ```typescript
-// TypeScript 提示：使用半開區間 [left, right)
-function upperBoundSafe(nums: number[], target: number): number {
-  let l = 0, r = nums.length;
-  while (l < r) {
-    const m = Math.trunc((l + r) / 2);
-    if (nums[m] <= target) l = m + 1;
-    else r = m;
+import assert from "node:assert";
+
+function upperBound(nums: number[], target: number): number {
+  let left = 0;
+  let right = nums.length;
+  while (left < right) {
+    const mid = left + Math.floor((right - left) / 2);
+    if (nums[mid]! > target) right = mid; // lower bound 在這行用 >=
+    else left = mid + 1;
   }
-  if (l !== 3) throw new Error("assertion failed");
-  return l;
+  return left;
 }
-upperBoundSafe([1, 2, 2, 4], 2);
+
+const a = [1, 2, 3, 3, 3, 5];
+assert.strictEqual(upperBound(a, 3), 5); // 跳過全部的 3
+assert.strictEqual(upperBound(a, 4), 5); // 不存在
+assert.strictEqual(upperBound(a, 0), 0); // 小於全部
+assert.strictEqual(upperBound(a, 9), 6); // 大於全部：回 n
 ```
 
 ## Python Tip
 
+bisect_right 就是 upper bound；拿它交叉驗證，並特別驗空陣列與「全部等於 target」。
+
 ```python
-# Python 提示：利用 bisect 模組驗證自定義 Upper Bound 邏輯
-import bisect
+from bisect import bisect_right
 
-def verify_upper_bound(nums: list[int], target: int) -> int:
-    expected = bisect.bisect_right(nums, target)
-    return expected
+def upper_bound(nums: list[int], target: int) -> int:
+    left, right = 0, len(nums)
+    while left < right:
+        mid = (left + right) // 2
+        if nums[mid] > target:  # lower bound 在這行用 >=
+            right = mid
+        else:
+            left = mid + 1
+    return left
 
-res = verify_upper_bound([1, 2, 2, 4], 2)
-assert res == 3, "assertion failed"
+a = [1, 2, 3, 3, 3, 5]
+for t in (0, 3, 4, 9):
+    assert upper_bound(a, t) == bisect_right(a, t)
+assert upper_bound([], 7) == 0  # 空陣列
+assert upper_bound([2, 2], 2) == 2  # 全部等於 target：回 n
 ```
 
 ## Takeaway
 
-掌握 Upper Bound 的關鍵在於：小於等於時向右逼近，大於時保留並向左收縮，迴圈結束時 left 即為解答。
+upper bound 與 lower bound 只差判斷式的一個等號：> 讓等值被左界推過，回傳第一個嚴格大於 target 的位置。
 
 ## Tomorrow Preview
 
-明天我們將探討 Search Insert Position 相關的衍生應用，學習如何在未找到精確匹配時正確地插入元素並維持排序結構。
+明天離開整齊的排序陣列：旋轉過的排序陣列（如 [4, 5, 6, 7, 0, 1, 2]）單調性斷成兩截，nums[mid] 一次比較還能代言半邊嗎？關鍵觀察是每輪至少有一半仍然有序——判斷哪一半有序，就知道往哪邊收。
 
 ## Today's Challenge
 
-- **34** · 題號 34 需要找出陣列中目標值的起始與結束位置，其中結束位置的尋找正是透過 Upper Bound 配合 Lower Bound 來精準計算區間邊界。
-  - Hint: 分別使用 Lower Bound 尋找第一個大於或等於目標的位置，以及 Upper Bound 尋找第一個大於目標的位置。
+- **34** · ending position 正是 upperBound - 1；與昨天的 lowerBound 湊成一對，同一題今天可以完整收工。
+  - Hint: 左界 = lowerBound(nums, target)、右界 = upperBound(nums, target) - 1；兩個 bound 相等表示 target 不存在，回 [-1, -1]。

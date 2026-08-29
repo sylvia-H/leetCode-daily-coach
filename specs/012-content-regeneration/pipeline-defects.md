@@ -147,6 +147,16 @@ docblock 記載的實測教訓一致。
 各自獨立讀到的既有題庫都是同一句式。已可排除「單卷失誤」，判定為產線的確定性行為。
 
 **Phase 4 再擴大**：該批 10 個 Concept 的**舊**題庫，10 卷**全部**是同一句式（reviewer 獨立複核）。
+
+**Phase 6 發現第三、四種變體**（同一根因的不同表現）：
+
+| 變體 | 實例 |
+| --- | --- |
+| **亂碼填充字串** | `binary-search-lower-bound` 舊卷 4 題的 `explanation[4]` 是 `aspectpiicidv`——`aspect` 正是 `quiz-aspects.ts` 裡「出題面向」的欄位名，研判為**產線內部識別項洩漏並被截斷** |
+| **引述不存在的選項文字** | `binary-search-find-minimum-rotated` item[1]、`binary-search-matrix-search` item[4] 的 explanation 引述了選項裡根本沒有的敘述 |
+
+四種變體（複製正解／洩漏學習目標／亂碼填充／引述不存在的選項）指向同一件事：
+**`explanation` 各段的職責在產線 prompt 裡從未被定義**，模型在缺乏指示時各自退化成不同的填充策略。
 累計樣本 **14 個 Concept / 4 模組 / 3 個 Phase**，無一例外。確定性判定完全坐實。
 
 **優先度上調**：這是目前唯一「已確認為系統性、且有可靠機械判準」的缺陷。
@@ -327,6 +337,9 @@ Phase 4 的 reviewer 確認該批 10 篇仍全面使用「明天」。
 | `two-pointer-container-water` | Common Mistakes：「等高時同時移動兩端會漏解」 | **偽**。三次獨立窮舉（Phase 1 的 203,276 組、作者的 335,916 組、reviewer 的 97,650 組）對照暴力法，不一致均為 **0** 組 |
 | `two-pointer-trapping-rain-water` | Common Mistakes：「比較當前高度會導致計算失效」 | **偽**，且**同篇程式碼用的正是該寫法**。窮舉 97,655 組驗證三種變體全部正確 |
 | `two-pointer-sort-array-by-parity` | Common Mistakes：「無限迭代」「空陣列越界」 | 兩條在其自身示範結構下都不可能發生 |
+| `binary-search-rotated-duplicates`（舊） | 「照搬無重複模板會指標停滯、陷入無窮迴圈」 | **偽**。`mid ± 1` 更新下指標必前進；真正後果是判錯有序半、**安靜漏解**（`[1,0,1,1,1]` 找 0 可重現）。且該題四個選項無一正確 |
+| `binary-search-matrix-search`（**Phase 6 新寫**） | 「少寫 `Math.floor` 會安靜地永遠為否」 | **偽**。兩層索引 `matrix[1.25][0]` **當場拋 TypeError** |
+| `binary-search-inclusive-bounds`（**Phase 6 新寫**） | 「閉區間 `right = n` 在 JS 會安靜讀到 undefined、比出錯誤結果」 | **偽**。窮舉 7,392 組錯誤結果 **0**——`undefined` 參與比較恆為 false，只是多白跑幾輪。（Python 端拋 IndexError 的敘述正確） |
 
 第一例是 **D2 的傳染源頭**：偽命題先寫進教材 Common Mistakes，再流入 quiz item[5]
 （且該題原四個選項**無一正確**，正確答案根本不在選項裡）。

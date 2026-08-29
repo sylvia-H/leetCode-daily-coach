@@ -10,71 +10,86 @@ exit_criteria:
 ---
 ## Concept
 
-Binary Search Lower Bound 是一種衍生自標準二元搜尋的進階演算法，專門用於在排序陣列中尋找第一個大於或等於指定目標值（target）的元素位置。與傳統二元搜尋在找到目標值時立即返回不同，Lower Bound 演算法在遇到 nums[mid] >= target 時，不會直接中斷搜尋，而是將搜尋區間向左收縮（即將右邊界更新為 mid），以確保能找出所有相同元素中最左側的那一個。這種特性使其在處理包含重複元素的陣列時特別強大與精確。
+Lower bound 的定義：在已排序陣列中，**第一個滿足 nums[i] >= target 的索引**；所有元素都小於 target 時，答案是 n。這一個定義同時回答三種常見問法：target 存在時，它是 target 第一次出現的位置；不存在時，它是插入 target 後仍保持排序的位置；不論存在與否，它都是第一個不小於 target 的元素所在。與標準二分「命中就回傳」的本質差異在答案的性質：標準二分找的是「任何一個等於 target 的索引」，重複值時命中哪一個取決於切點，結果不唯一；lower bound 找的是一條**分界線**——線的左邊全部小於 target、線上與線右全部大於等於 target。排序保證這條線存在且唯一，所以答案永遠唯一，這正是它能處理重複元素的原因。
 
 ## Thinking
 
-當我們面對尋找特定數值的任務時，直覺往往是當 nums[mid] === target 時就立刻返回當前索引。然而，當陣列中存在重複的目標值時，這種傳統作法無法保證找到的是第一個出現的位置。為了克服這個限制，我們的思考邏輯必須轉變為：當 nums[mid] >= target 時，當前的 mid 位置有可能就是我們要找的答案，但為了追求「第一個」，我們必須把右指標收斂到 mid，繼續在左半邊尋找是否有更早出現的合法位置。這種把等於的情況歸類在左半邊搜尋的思維，是掌握 Lower Bound 與 Upper Bound 的核心關鍵。
+沿用昨天半開區間那一套慣例：區間 [left, right)、迴圈條件 `left < right`、更新用 right = mid 與 left = mid + 1——三者成套，不混搭。換掉的是迴圈不變式的內容：**[0, left) 內全部 < target，[right, n) 內全部 >= target**，分界線永遠被夾在 left 與 right 之間。初始 left = 0、right = n，兩段都是空集合，不變式自動成立。每輪比較 nums[mid]：若 nums[mid] >= target，由排序可知 mid 右邊也全部 >= target，分界線在 mid 或更左——right = mid，注意**不是 mid - 1**：mid 本身可能就是答案，多減 1 會把候選砍掉；若 nums[mid] < target，mid 與其左全部 < target，分界線至少在 mid + 1——left = mid + 1。關鍵轉念是**等於 target 也不回傳**：等於只證明「答案不在 mid 右邊」，不證明 mid 是第一個，所以照樣收右界、繼續往左找。終止時 left == right，兩段描述在同一點會合：左邊全小於、從這點起全不小於——這一點就是答案。也不會無窮迴圈：`left < right` 時向下取整保證 mid < right，right = mid 至少縮 1；left = mid + 1 也至少縮 1。
 
 ## Pattern Recognition
 
-當題目描述中出現「first position」、「lower bound」、「smallest index such that」、「first occurrence」或暗示陣列中含有重複元素時，我們應立即聯想到 Binary Search Lower Bound 的 Pattern。此外，若題目要求在 O(log n) 時間複雜度內找出符合特定條件的邊界索引，這也是標準的模式辨識線索。
+直接訊號：題目出現 first position、first occurrence、lower bound、smallest index such that，或明說含重複元素而要最左邊那個。隱含訊號：要求「插入位置」——lower bound 天生就是插入點。更一般的形式：把 nums[i] >= target 換成任何「前段全為否、後段全為是」的單調條件，同一套模板就能找出第一個「是」；lower bound 是這個一般形最常用的特例。
 
 ## Common Mistakes
 
-最常見的錯誤是在找到 nums[mid] === target 時直接 return mid，導致無法處理重複元素的最左側邊界。另一個常見失誤是迴圈條件設定不當（如使用 <= 而非 <），或者指標更新時沒有妥善包含 mid（例如寫成 high = mid - 1 而非 high = mid），這會導致當目標值不存在於陣列中時，演算法陷入無限迴圈或漏掉正確的插入位置。
+一、命中就回傳：nums = [3, 3, 3] 找 3，標準二分第一輪 mid = 1 直接回 1，但第一次出現在索引 0。二、right 誤寫成 mid - 1：nums = [2, 3] 找 3——mid = 1、nums[1] >= 3 → right = 0，迴圈結束回 0，但正解是 1，候選被多減的那個 1 砍掉了。三、慣例混搭：半開區間卻寫 `left <= right`——nums = [3] 找 3，right = mid 後區間停在 [0, 0]，`0 <= 0` 仍成立，無窮迴圈；回想第一課：區間定義、迴圈條件、更新方式三者必須成套。四、忘了答案可能是 n：nums = [1, 2] 找 5 回傳 2，直接拿去索引就越界；判斷「找到了沒」要先檢查回傳值小於 n，再比對該位置元素是否等於 target。
 
 ## Complexity
 
-時間複雜度為 O(log n)，因為每一次迭代都將搜尋範圍減半；空間複雜度為 O(1)，僅使用常數級別的指標變數。
+每輪比較一次、區間砍半，時間 O(log n)；只用 left、right、mid 三個變數，空間 O(1)。與標準二分同階——「命中不停手、繼續逼邊界」沒有增加漸進成本，只是把終點從「任一命中」改成「最左分界」。找一段重複值的起訖位置也只是兩次二分，仍是 O(log n)。
 
 ## Digest
 
-Binary Search Lower Bound 旨在尋找排序陣列中第一個大與或等於 target 的元素索引。核心精神在於 nums[mid] >= target 時收縮右邊界（high = mid），確保不漏掉左側可能的重複答案。時間複雜度 O(log n)，空間複雜度 O(1)。
+拿 nums = [1, 2, 3, 3, 3, 5] 找 3：left = 0、right = 6，mid = 3、nums[3] = 3 >= 3 → right = 3（命中不回傳，往左）；mid = 1、nums[1] = 2 < 3 → left = 2；mid = 2、nums[2] = 3 >= 3 → right = 2；left == right = 2，答案是 2——三個 3 裡最左的那個。公式：半開區間 [left, right) ＋ `while (left < right)`；nums[mid] >= target → right = mid（保留候選），否則 left = mid + 1；出迴圈時 left 即「第一個 >= target 的索引」，全陣列都小於 target 時是 n，同時就是合法插入位置。
 
 ## TypeScript Tip
 
+right = mid 保留候選、left = mid + 1 排除確定不可能的；回傳值可能是 n，拿來索引前要先檢查。
+
 ```typescript
-function tsTipExample(): void {
-  const nums: number[] = [1, 2, 3, 3, 5];
-  const target = 3;
-  let low = 0, high = nums.length;
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    if (nums[mid] >= target) high = mid;
-    else low = mid + 1;
+import assert from "node:assert";
+
+function lowerBound(nums: number[], target: number): number {
+  let left = 0;
+  let right = nums.length;
+  while (left < right) {
+    const mid = left + Math.floor((right - left) / 2);
+    if (nums[mid]! >= target) right = mid;
+    else left = mid + 1;
   }
-  if (low !== 2) throw new Error("assertion failed");
+  return left;
 }
-tsTipExample();
+
+const a = [1, 2, 3, 3, 3, 5];
+assert.strictEqual(lowerBound(a, 3), 2); // 重複值取最左
+assert.strictEqual(lowerBound(a, 4), 5); // 不存在：插入位置
+assert.strictEqual(lowerBound(a, 0), 0); // 小於全部
+assert.strictEqual(lowerBound(a, 9), 6); // 大於全部：回 n
 ```
 
 ## Python Tip
 
+標準庫的 bisect_left 就是 lower bound；自己實作一次，再拿它交叉驗證四種輸入。
+
 ```python
-def py_tip_example() -> None:
-    nums = [1, 2, 3, 3, 5]
-    target = 3
-    low, high = 0, len(nums)
-    while low < high:
-        mid = (low + high) // 2
+from bisect import bisect_left
+
+def lower_bound(nums: list[int], target: int) -> int:
+    left, right = 0, len(nums)
+    while left < right:
+        mid = (left + right) // 2
         if nums[mid] >= target:
-            high = mid
+            right = mid
         else:
-            low = mid + 1
-    assert low == 2, "assertion failed"
-py_tip_example()
+            left = mid + 1
+    return left
+
+a = [1, 2, 3, 3, 3, 5]
+for t in (0, 3, 4, 9):
+    assert lower_bound(a, t) == bisect_left(a, t)
+assert lower_bound(a, 3) == 2  # 最左的 3
+assert lower_bound([], 7) == 0  # 空陣列
 ```
 
 ## Takeaway
 
-掌握 nums[mid] >= target 時收縮右邊界的關鍵邏輯，精準解決重複元素的邊界查詢問題。
+lower bound 找第一個 nums[i] >= target：大於等於就 right = mid 保留候選、小於就 left = mid + 1，會合點即分界線。
 
 ## Tomorrow Preview
 
-明天我們將探討 Binary Search Upper Bound 的實作與應用，學習如何尋找第一個大於目標值的元素位置，並進一步融會貫通左右邊界的區間查詢技巧。
+明天是今天的鏡像：upper bound 找第一個**嚴格大於** target 的位置。程式碼與今天只差判斷式那一行的一個等號，卻讓等於 target 的元素從「保留」變成「跳過」；兩者相減，還能直接算出 target 的出現次數。
 
 ## Today's Challenge
 
-- **34** · 題目要求找出陣列中目標值的起始與結束位置，其中尋找起始位置（starting position）正是標準的 Binary Search Lower Bound 應用場景。
-  - Hint: 分別執行兩次二元搜尋：第一次使用 Lower Bound 找起始點，第二次微調條件找結束點。
+- **34** · 找 starting position 就是 lower bound 原樣落地：第一個 >= target 的位置加存在性檢查。
+  - Hint: lb = lowerBound(nums, target)；lb == n 或 nums[lb] != target 回 [-1, -1]；右界可用 lowerBound(nums, target + 1) - 1。
