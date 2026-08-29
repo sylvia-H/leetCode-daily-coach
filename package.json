@@ -22,6 +22,7 @@
     "gate:code": "tsx scripts/run-code-blocks.ts",
     "gate:articles": "tsx scripts/gate-articles.ts",
     "merge:quiz": "tsx scripts/merge-quiz-fragments.ts",
+    "verify:phase": "tsx scripts/verify-phase.ts",
     "build:pages": "tsx scripts/build-pages.ts",
     "start": "node dist/main.js",
     "supplement:problems": "tsx scripts/supplement-problems.ts"
