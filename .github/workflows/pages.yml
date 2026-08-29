@@ -1,0 +1,99 @@
+name: Pages Publish (manual)
+
+# F9 009-pages-publish 把 Pages 部署設計成 `daily.yml` 的附加末段（`needs: push`），
+# 因此**唯一**能重新部署站台的方式是跑一次每日推播——但那會真的送出 Discord 訊息並推進 state。
+# 想「只更新站台」時，`dry_run: true` 又會讓 pages job 整個被跳過（`inputs.dry_run != true`）。
+#
+# 本 workflow 補上這個缺口：不碰 Discord、不碰 state，只依「目前已 commit 的 state 分支」
+# 與當前 ref 的教材內容重新產生並部署 Pages。典型用途是併入新教材後想立刻看到站台更新。
+#
+# MUST NOT 在此加入任何推播或寫 state 的步驟——那會讓本 workflow 與 daily.yml 的職責重疊，
+# 且失去「安全地重跑」這個唯一價值。
+
+on:
+  workflow_dispatch:
+
+# 與 daily.yml 的 pages job 共用同一個 concurrency group：GitHub Pages 同時執行兩個
+# `deploy-pages` 會有一個失敗。`cancel-in-progress: false` 讓後到者排隊而非砍掉進行中的部署。
+concurrency:
+  group: github-pages-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # MUST NOT 加 `ref:`——不加則 checkout 觸發此次 workflow 的那個 ref，
+      # 使用者因此可在 Actions UI 選擇要部署哪個分支的內容（與 daily.yml 的理由一致）。
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+
+      # state 是唯一權威進度來源，且**只讀**：本 workflow MUST NOT 寫回 state 分支。
+      - name: Checkout state branch
+        uses: actions/checkout@v4
+        with:
+          ref: state
+          path: .state
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: 偵測 repo 可見性
+        id: visibility
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          IS_PRIVATE=$(gh api repos/${{ github.repository }} --jq .private)
+          if [ "$IS_PRIVATE" = "false" ]; then
+            echo "is_public=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::repo 為 private，略過 Pages 部署（與 daily.yml 的判準一致）"
+          fi
+
+      - name: Build pages
+        if: steps.visibility.outputs.is_public == 'true'
+        run: npm run build:pages
+        env:
+          STATE_FILE: .state/state.json
+          PAGES_OUTPUT_DIR: pages-dist
+          PAGES_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          DISCORD_WEBHOOK_URL_FOUNDATION: ${{ secrets.DISCORD_WEBHOOK_URL_FOUNDATION }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_READY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_READY }}
+          DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY: ${{ secrets.DISCORD_WEBHOOK_URL_INTERVIEW_MASTERY }}
+
+      - name: Configure Pages
+        if: steps.visibility.outputs.is_public == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        if: steps.visibility.outputs.is_public == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-dist
+
+      - name: Deploy to GitHub Pages
+        if: steps.visibility.outputs.is_public == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # 刻意**不**發 Discord 失敗告警（與 daily.yml 的 pages job 不同）：
+      # daily.yml 在台北 06:07 自動執行、沒有人在看，故 MUST 主動告警；
+      # 本 workflow 一律由人手動觸發，失敗會直接顯示在 Actions UI，
+      # 對三個頻道發紅色告警只是噪音。
