@@ -6,8 +6,8 @@ pattern_label: Dynamic Array Wrapper
 complexity_label: O(1) amortized
 estimated_minutes: 15
 exit_criteria:
-  - 'Can implement push, pop, top, and isEmpty operations using an array.'
-  - Understand why push/pop at the end of an array is O(1) amortized.
+  - 能用陣列實作 push、pop、top 與 isEmpty 操作。
+  - 理解為何在陣列尾端進行 push/pop 是攤銷 O(1)。
 ---
 ## Concept
 

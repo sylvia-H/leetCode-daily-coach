@@ -11,9 +11,9 @@ prerequisite:
   - tree-symmetric-tree-check
 next: []
 learning_goal:
-  - Transform a binary tree by swapping left and right children recursively.
+  - '透過遞迴交換左右子節點來轉換二元樹。'
 exit_criteria:
-  - Swap left and right pointers for every node in the binary tree.
+  - '能對二元樹中的每個節點交換 left 與 right 指標。'
 leetcode:
   - 226
 tags:

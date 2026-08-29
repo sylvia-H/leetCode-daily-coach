@@ -6,7 +6,7 @@ pattern_label: Binary Search
 complexity_label: O(n) worst / O(log n) average
 estimated_minutes: 20
 exit_criteria:
-  - 'Detect when nums[left] == nums[mid] == nums[right] and shrink boundaries.'
+  - '能偵測 nums[left] == nums[mid] == nums[right] 的情況並收縮邊界。'
 ---
 ## Concept
 

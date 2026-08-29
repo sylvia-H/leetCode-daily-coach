@@ -6,8 +6,8 @@ pattern_label: Pointer Manipulation
 complexity_label: O(n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - 'Can remove a node from the middle, head, or tail of a list'
-  - Can correctly deallocate or bypass the target node reference
+  - 能從串列的中間、開頭或結尾移除節點
+  - 能正確釋放或繞過目標節點的參照
 ---
 ## Concept
 

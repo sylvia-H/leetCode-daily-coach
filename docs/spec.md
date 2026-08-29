@@ -134,7 +134,7 @@ LeetCode Daily Coach 是一套**演算法課程引擎（Learning Pipeline）**�
 14. **Secrets never in repo**：Discord Webhook URL、LLM API key MUST 只走 Actions Secrets，MUST NOT 進 repo 或任何發佈產物。
 15. **Source isolation & fault tolerance**：任一非核心步驟（如未來的 Pages 發佈）失敗 MUST NOT 中斷核心推播；**多 Track 推播時，單一 Track 失敗 MUST NOT 中斷其他 Track（§18）**；核心步驟失敗 MUST 大聲失敗（紅色告警 + 非零 exit code）。
 16. **Free-tier only**：MUST 僅使用 GitHub Actions + Discord Webhook + LLM 免費層（僅 build-time）+ committed `state.json`，MUST NOT 引入付費或常駐 infra。
-17. **One Human Checkpoint**：內容產線唯一的常態性人工檢查點是「課綱大綱定稿」（§20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全自動生成、僅由自動 Gate 把關；MUST NOT 引入其他常態性人工審核關卡（Gate 擋下時的例外介入除外）。 **例外——一次性內容重生（one-off regeneration campaign）**：為更換生成模型或系統性提升既有教材品質而發起的、**有明確起訖且非週期性**的重生活動，MAY 由 agent 在互動 session 中逐批改寫 `articles/**` 與 `data/quiz-bank.json`，但 MUST 全數滿足：(a) 通過與產線**同一顆**自動 Gate（per-article Gate／`runContentGate`／`gate:code`），MUST NOT 另立平行判準；(b) MUST NOT 改動 Skeleton 的結構欄位（`id`／`module`／`topic`／`prerequisite`／`next`／`leetcode`／`localOrder`），以保證 `schedules/**` 維持 byte-identical、`state.json` 不受影響；(c) MUST 在對應 Feature 的 `specs/NNN-*/` 留下批次範圍、使用模型與逐批 commit 紀錄；(d) 活動結束後產線 MUST 恢復全自動，此例外 MUST NOT 演變為常態流程。
+17. **One Human Checkpoint**：內容產線唯一的常態性人工檢查點是「課綱大綱定稿」（§20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全自動生成、僅由自動 Gate 把關；MUST NOT 引入其他常態性人工審核關卡（Gate 擋下時的例外介入除外）。 **例外——一次性內容重生（one-off regeneration campaign）**：為更換生成模型或系統性提升既有教材品質而發起的、**有明確起訖且非週期性**的重生活動，MAY 由 agent 在互動 session 中逐批改寫 `articles/**` 與 `data/quiz-bank.json`，但 MUST 全數滿足：(a) 通過與產線**同一顆**自動 Gate（per-article Gate／`runContentGate`／`gate:code`），MUST NOT 另立平行判準；(b) MUST NOT 改動 Skeleton 的結構欄位（`id`／`module`／`topic`／`prerequisite`／`next`／`leetcode`／`localOrder`），以保證 `schedules/**` 維持 byte-identical、`state.json` 不受影響； **(b-2) 例外之例外——語言合規翻譯（2026-08-29 定案）**：`learning_goal` 與 `exit_criteria` **是推播內容、不是結構欄位**（Exit Criteria 於 §14.5 有獨立字元預算並原樣推播給學習者）。若其內容違反 §11 的語言規範（整句英文），**MAY 於本活動期間翻譯為繁體中文**，但 MUST 全數滿足：逐條**語意等價**、**MUST NOT 增刪條數或改變順序**、MUST 同步更新**已重生 Article frontmatter 中的複本**（兩者由 `assembleArticleMarkdown` 原樣複製而來，分歧無 Gate 可擋）、MUST 通過 §10.2 的條數與單條長度上限。此授權**僅限語言合規**，MUST NOT 擴及任何其他 Skeleton 欄位、MUST NOT 藉此修改語意或增補內容。翻譯**不影響 `schedules/**` 與 `state.json`**（兩者只依結構欄位）；(c) MUST 在對應 Feature 的 `specs/NNN-*/` 留下批次範圍、使用模型與逐批 commit 紀錄；(d) 活動結束後產線 MUST 恢復全自動，此例外 MUST NOT 演變為常態流程。
 
 ---
 
@@ -467,6 +467,8 @@ tags: [array, in-place, sorted]
   真正的封頂「整體 ≤400」與「≤6 條」皆未更動，實測全 165 個 Concept 整體最長僅 **197 / 400**、條數最多
   僅 **2 / 6**，單條上限實為被整體上限吸收的次級限制。**MUST NOT** 改以手改已凍結 `concepts/**` 解決
   （生成物不得手改），亦不採重跑 Stage 1（會使 165 篇 Article 的 Skeleton 雜湊全變而觸發全量重生）。
+- **⚠️ 上一條的英文前提已於 2026-08-29 查證更正**：F7 當時寫下「`exit_criteria` 為英文完整句子（§11）」是**由部分樣本歸納**，實際僅 **114 / 165（69.1%）**為英文，其餘 **51 個為中文**，且分布是**模組層級的全有全無**（array／dfs-bfs／dynamic-programming／programming-mindset／two-pointer 五個模組全中文，其餘十一個模組全英文）。查證結果：`concepts/**` 自 Stage 1 生成後**從未被手改**（僅 `07debd5` 純新增 `leetcode` 題號與 Author Hints），而 **Stage 1 的 prompt 8 條 MUST 規則中沒有任何一條指定輸出語言**——英文**不是設計決策，是 prompt 缺漏造成的批次差異**（產線缺陷，修法見 §20.3 Stage 1 的語言規則）。故 §11 已明訂此二欄位 MUST 為繁體中文，既有 114 個 Concept 的翻譯授權見 §4-17 (b-2)。
+- **單條 110 字元上限維持不變**：翻為繁中後字元數只會更短（中文資訊密度高於英文），110 因而成為更寬鬆的次級限制；真正的封頂「整體 ≤400、≤6 條」亦不受影響。**MUST NOT** 因為欄位改中文而回頭把上限調回 60——那會重新製造 F7 已解決過的超標問題。
 
 ### 10.3 內容長度與詳盡度
 
@@ -518,6 +520,7 @@ Skeleton（`concepts/**`）是內容的來源真相，MUST 只含兩部分：
 ## 11. Content Style Guide
 
 - **語言：教學文章 MUST 以繁體中文輸出**，但**技術術語、Pattern 名稱、API / 類別 / 函式名與程式碼（含 Tip）MUST 保留原文**（英文），不強制翻譯（例：Sliding Window、Two Pointer、Hash Table、`O(n)`、`bisect` 等不譯）。
+- **`learning_goal` 與 `exit_criteria` MUST 為繁體中文**（2026-08-29 定案）。此二欄位雖位於 Skeleton frontmatter，但 **Exit Criteria 是 Discord 的獨立推播區塊**（§14.5 給予 ≤400 字元的獨立預算），會**原樣推播給中文學習者**，故適用本節的語言規範；**整句英文的學習目標與驗收標準不屬於「技術術語」**，MUST NOT 以本節首條的技術術語例外為由保留英文（術語本身仍 MUST 保留原文，例：「能說明為何 Sliding Window 的攤銷複雜度是 `O(n)`」）。F7 全量課綱凍結時 165 個 Concept 中有 **114 個（69.1%）**違反此規則，處置見 §4-17 (b-2) 與 §10.2。
 - 語氣：教練式、務實、鼓勵；避免學術腔與冗長證明。
 - 觀念先行：先講「怎麼想到」（Thinking / Pattern Recognition），再講「怎麼做」。
 - 每個 Concept MUST 至少一個具體例子帶出直覺（例：Sliding Window 的核心是「每個元素最多進出視窗一次 → O(n)」，而非「視窗」本身）。
@@ -1430,6 +1433,16 @@ LLM MUST NOT
      （165 個 Concept 中 103 個只有 1 題），導致 Foundation 65%、InterviewMastery 46% 的 concept Session
      無題可練。此為 SHOULD 而非 MUST，因為部分主題（backtracking / heap / DP…）在該難度帶確實無對應題，
      **寧可留白也 MUST NOT 硬塞不相干的題目**。
+1a. **輸出語言 MUST 由 prompt 明訂（F12 定案 2026-08-29）**：Stage 1 起草的 `learning_goal`、
+   `exit_criteria` 與 author_hints 全部文字欄位 **MUST 為繁體中文**（技術術語 / Pattern 名稱 /
+   API / 程式碼識別項仍 MUST 保留原文，§11）；`title` / `pattern_label` / `complexity_label` /
+   `tags` / `slug` MUST 保留英文。
+   **實測教訓**：初版 prompt 的 8 條 MUST 規則**沒有任何一條指定語言**，僅在欄位範例中用了中文——
+   結果 165 個 Concept 中 **114 個（69.1%）的 `learning_goal` 與 `exit_criteria` 整句輸出成英文**，
+   且呈**模組層級的全有全無**（5 個模組全中文、11 個模組全英文），顯示模型會**逐批自行決定語言**。
+   `exit_criteria` 是 Discord 的獨立推播區塊（§14.5），輸出英文即直接推給中文學習者。
+   **範例不是規則**：MUST 以編號 MUST 規則明寫，MUST NOT 期待模型從範例推斷。
+   既有 114 個 Concept 的補救見 §4-17 (b-2) 與 §10.2。
 1b. **題庫擴充（build-time，F7 定案 2026-07-30）**：以 `scripts/` 步驟驗證 Stage 1 提出的每個候選題號**真實存在**並從權威來源填入 `id / slug / title / url / difficulty` 至 `data/problem-bank.json`（**只取 metadata、不抓題目描述**，§5 / §12），commit 凍結；查無 / 錯號回報以驅動 Stage 1 重生。metadata 來源（即時抓取 vs. 靜態快照）為實作細節。
 1c. **補題 pass（`scripts/supplement-problems.ts`，F7 新增 2026-07-31）**：對「候選題只落在單一難度帶」的
    既有 Concept，以 LLM 補上缺少難度帶的候選題。**MUST 為純追加**——只擴充 frontmatter 的 `leetcode` 與

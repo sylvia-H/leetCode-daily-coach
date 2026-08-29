@@ -6,8 +6,8 @@ pattern_label: Sliding Window Frequency Map
 complexity_label: O(n) / O(k)
 estimated_minutes: 15
 exit_criteria:
-  - Can update frequency map when sliding window boundaries move
-  - Can evaluate window validity based on frequency conditions
+  - 能在視窗邊界移動時更新 frequency map
+  - 能依據頻率條件判斷視窗是否合法
 ---
 ## Concept
 

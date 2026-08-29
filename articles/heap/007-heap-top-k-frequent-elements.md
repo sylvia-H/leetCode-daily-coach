@@ -6,7 +6,7 @@ pattern_label: Frequency Heap
 complexity_label: O(n log k) time / O(n) space
 estimated_minutes: 25
 exit_criteria:
-  - Can extract the K elements with highest frequencies using a min-heap.
+  - 能使用 min-heap 取出頻率最高的 K 個元素。
 ---
 ## Concept
 

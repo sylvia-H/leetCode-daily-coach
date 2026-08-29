@@ -6,10 +6,8 @@ pattern_label: Visited-Aware Duplicate Skipping
 complexity_label: O(n!) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can apply both visited tracking and conditional duplicate skipping for
-    permutations.
-  - Can prevent duplicate permutation branches.
+  - 能對排列同時套用 visited 追蹤與條件式的重複跳過。
+  - 能防止產生重複的排列分支。
 ---
 ## Concept
 

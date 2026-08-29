@@ -6,8 +6,8 @@ pattern_label: Duplicate Elimination
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can compare current element with stack top to remove duplicates.
-  - Can reconstruct the resulting string from the stack.
+  - 能將目前元素與 stack 頂端比較以移除重複。
+  - 能從 stack 重建出結果字串。
 ---
 ## Concept
 

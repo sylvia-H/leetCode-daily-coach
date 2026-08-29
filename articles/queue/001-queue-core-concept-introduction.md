@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(1) / O(n)
 estimated_minutes: 10
 exit_criteria:
-  - Can trace enqueue and dequeue operations mentally.
-  - Understand why queues are used for order-preserving processing.
+  - 能在腦中追蹤 enqueue 與 dequeue 的操作過程。
+  - 能理解為何佇列被用於保持順序的處理。
 ---
 ## Concept
 

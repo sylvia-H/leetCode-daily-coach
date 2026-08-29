@@ -12,12 +12,10 @@ prerequisite:
 next:
   - queue-using-stacks
 learning_goal:
-  - >-
-    Implement a fixed-size queue using a circular array with head, tail, and
-    modulo arithmetic.
+  - '用環狀陣列搭配 head、tail 與模數運算，實作固定大小的佇列。'
 exit_criteria:
-  - Use modulo arithmetic to wrap around array indices.
-  - Distinguish between full and empty states in a circular buffer.
+  - '能用模數運算讓陣列索引繞回開頭。'
+  - '能區分 circular buffer 的滿與空兩種狀態。'
 leetcode:
   - 622
 tags:

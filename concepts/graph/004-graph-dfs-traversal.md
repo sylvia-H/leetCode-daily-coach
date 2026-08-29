@@ -16,9 +16,9 @@ next:
   - backtracking-word-search
   - graph-connected-components
 learning_goal:
-  - Implement Depth-First Search on a graph to visit all reachable nodes.
+  - 在圖上實作 Depth-First Search，走訪所有可到達的節點。
 exit_criteria:
-  - Avoid infinite loops on cyclic graphs by using a visited set.
+  - 能使用 visited set 避免在含環的圖上陷入無窮迴圈。
 leetcode:
   - 200
 tags:

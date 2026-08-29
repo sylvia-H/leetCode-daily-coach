@@ -6,8 +6,8 @@ pattern_label: Canonical Key Grouping
 complexity_label: O(n * k log k) / O(n * k)
 estimated_minutes: 15
 exit_criteria:
-  - Can generate a canonical representation for items that share properties
-  - Can store and append items to lists inside a hash map
+  - 能為具有共同性質的項目產生 canonical 表示
+  - 能在 hash map 內以 list 儲存並附加項目
 ---
 ## Concept
 

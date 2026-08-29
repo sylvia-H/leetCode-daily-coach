@@ -15,12 +15,10 @@ next:
   - queue-using-stacks
   - stack-using-queues
 learning_goal:
-  - >-
-    Understand the Last-In-First-Out data structure principle and its primary
-    operations.
+  - 理解 Last-In-First-Out 資料結構原理及其主要操作。
 exit_criteria:
-  - Can explain why elements are retrieved in reverse order of insertion.
-  - Can trace push and pop operations manually.
+  - 能說明為何元素會以與加入相反的順序被取出。
+  - 能手動追蹤 push 與 pop 操作。
 leetcode: []
 tags:
   - stack

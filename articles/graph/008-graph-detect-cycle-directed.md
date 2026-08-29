@@ -6,9 +6,7 @@ pattern_label: Cycle Detection
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Distinguish between globally visited nodes and nodes currently in the
-    recursion stack.
+  - 能區分全域已造訪的節點與目前位於遞迴堆疊中的節點。
 ---
 ## Concept
 

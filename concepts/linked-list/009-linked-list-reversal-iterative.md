@@ -12,12 +12,10 @@ prerequisite:
 next:
   - linked-list-reversal-recursive
 learning_goal:
-  - >-
-    Master the three-pointer technique to reverse the direction of links in a
-    singly linked list.
+  - 精通三指標技巧，反轉 singly linked list 中連結的方向。
 exit_criteria:
-  - 'Can reverse a linked list iteratively using prev, curr, and next pointers'
-  - Can return the new head correctly
+  - 能使用 prev、curr、next 三個指標迭代地反轉 linked list
+  - 能正確回傳新的 head
 leetcode:
   - 206
   - 92

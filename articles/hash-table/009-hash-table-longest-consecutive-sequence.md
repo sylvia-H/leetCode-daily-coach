@@ -6,10 +6,8 @@ pattern_label: Sequence Hash Set
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can insert all array elements into a hash set
-  - >-
-    Can check if an element is the start of a sequence by verifying the absence
-    of element - 1
+  - 能將所有陣列元素插入 hash set
+  - 能透過確認 element - 1 不存在，判斷某元素是否為序列的起點
 ---
 ## Concept
 

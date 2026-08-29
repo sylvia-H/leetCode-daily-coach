@@ -6,10 +6,8 @@ pattern_label: Collision Resolution
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can simulate continuous interactions where current elements affect
-    previously stored elements.
-  - Can manage loop conditions with stack modifications.
+  - 能模擬目前元素會影響先前已儲存元素的連續交互過程。
+  - 能在修改 stack 的同時管理迴圈條件。
 ---
 ## Concept
 

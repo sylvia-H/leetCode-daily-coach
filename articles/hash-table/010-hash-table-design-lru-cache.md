@@ -6,10 +6,8 @@ pattern_label: HashMap + Doubly Linked List
 complexity_label: O(1) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can explain why a hash map alone is insufficient for LRU cache (needs
-    ordering)
-  - Can implement node relocation and eviction using a linked list
+  - 能說明為何單靠 hash map 不足以實作 LRU cache（需要順序性）
+  - 能使用 linked list 實作節點的搬移與淘汰
 ---
 ## Concept
 

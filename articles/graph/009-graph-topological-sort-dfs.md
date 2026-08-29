@@ -6,7 +6,7 @@ pattern_label: Topological Sort
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - Prepend or push nodes to a result list after visiting all their descendants.
+  - 能在造訪完某節點的所有後代後，將該節點前插或推入結果列表。
 ---
 ## Concept
 

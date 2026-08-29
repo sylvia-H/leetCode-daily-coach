@@ -12,11 +12,9 @@ prerequisite:
 next:
   - tree-dfs-postorder-traversal
 learning_goal:
-  - Master the Left -> Root -> Right traversal pattern for binary search trees.
+  - '熟練適用於 BST 的 Left -> Root -> Right 走訪模式。'
 exit_criteria:
-  - >-
-    Write a recursive function that visits the left subtree, then root, then
-    right subtree.
+  - '能寫出先造訪左子樹、再根節點、再右子樹的遞迴函式。'
 leetcode:
   - 94
   - 230

@@ -14,11 +14,9 @@ prerequisite:
 next:
   - string-sliding-window-variable
 learning_goal:
-  - Maintain a fixed window of characters to find patterns like anagrams.
+  - '維護固定大小的字元視窗，以找出 anagram 等模式。'
 exit_criteria:
-  - >-
-    Can slide a window of size k across a string while updating frequency maps
-    efficiently.
+  - '能讓大小為 k 的視窗滑過字串，並有效率地更新 frequency map。'
 leetcode:
   - 438
   - 567

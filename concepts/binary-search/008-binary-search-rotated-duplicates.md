@@ -12,9 +12,9 @@ prerequisite:
 next:
   - binary-search-find-minimum-rotated
 learning_goal:
-  - Handle ambiguous duplicate elements in rotated sorted arrays.
+  - '處理旋轉排序陣列中造成判斷模糊的重複元素。'
 exit_criteria:
-  - 'Detect when nums[left] == nums[mid] == nums[right] and shrink boundaries.'
+  - '能偵測 nums[left] == nums[mid] == nums[right] 的情況並收縮邊界。'
 leetcode:
   - 81
 tags:

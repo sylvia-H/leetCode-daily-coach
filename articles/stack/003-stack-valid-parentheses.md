@@ -6,8 +6,8 @@ pattern_label: Bracket Matching
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can write a matching algorithm using a stack for open and close symbols.
-  - Can handle edge cases like unmatched closing or leftover opening symbols.
+  - 能用 stack 針對開啟與閉合符號寫出匹配演算法。
+  - 能處理未匹配的閉合符號或殘留的開啟符號等邊界情況。
 ---
 ## Concept
 

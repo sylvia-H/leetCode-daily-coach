@@ -13,13 +13,9 @@ prerequisite:
 next:
   - tree-same-tree-validation
 learning_goal:
-  - >-
-    Optimize validation checks by returning height and boolean status
-    simultaneously.
+  - '透過同時回傳高度與布林狀態來最佳化驗證檢查。'
 exit_criteria:
-  - >-
-    Detect imbalance early and propagate failure upwards without redundant
-    height computations.
+  - '能及早偵測不平衡並將失敗向上傳遞，不做多餘的高度計算。'
 leetcode:
   - 110
 tags:

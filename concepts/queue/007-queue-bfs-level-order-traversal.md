@@ -13,12 +13,10 @@ prerequisite:
 next:
   - queue-shortest-path-unweighted
 learning_goal:
-  - >-
-    Use a queue to traverse tree or graph nodes level by level in Breadth-First
-    Search.
+  - '在 Breadth-First Search 中用佇列逐層走訪樹或圖的節點。'
 exit_criteria:
-  - Process nodes level by level using queue size snapshots.
-  - Store child nodes into the queue for subsequent levels.
+  - '能利用佇列長度快照逐層處理節點。'
+  - '能把子節點存入佇列，供後續層使用。'
 leetcode:
   - 102
   - 104

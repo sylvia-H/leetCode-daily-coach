@@ -6,8 +6,8 @@ pattern_label: String Partitioning Pattern
 complexity_label: O(n * 2^n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Can slice strings at different cut points during recursion.
-  - Can integrate palindrome validation as a pruning condition.
+  - 能在遞迴過程中於不同切點切出子字串。
+  - 能把回文驗證整合為剪枝條件。
 ---
 ## Concept
 

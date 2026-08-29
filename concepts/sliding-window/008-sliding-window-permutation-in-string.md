@@ -14,16 +14,10 @@ prerequisite:
 next:
   - sliding-window-find-all-anagrams
 learning_goal:
-  - >-
-    Use a fixed-size sliding window with frequency arrays to check for exact
-    anagram matches.
+  - 使用固定長度 Sliding Window 搭配頻率陣列，檢查是否為完全相符的 anagram。
 exit_criteria:
-  - >-
-    Can initialize frequency arrays for both the target pattern and the sliding
-    window.
-  - >-
-    Can compare frequency structures efficiently in O(1) time by tracking
-    matched character counts.
+  - 能為目標 pattern 與滑動視窗分別初始化頻率陣列。
+  - 能透過追蹤已匹配的字元數，在 O(1) 時間內有效率地比較頻率結構。
 leetcode:
   - 567
 tags:

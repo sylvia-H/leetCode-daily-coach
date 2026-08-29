@@ -6,12 +6,8 @@ pattern_label: Pointer Structure
 complexity_label: O(1) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can manually instantiate a Node class with value and next pointer in TS and
-    Python
-  - >-
-    Can explain the difference between array contiguous layout and linked node
-    reference layout
+  - 能在 TS 與 Python 中手動建立含 value 與 next 指標的 Node class
+  - 能說明 array 連續記憶體配置與 linked list 節點參照式配置的差異
 ---
 ## Concept
 

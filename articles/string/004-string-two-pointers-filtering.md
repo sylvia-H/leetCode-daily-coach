@@ -6,9 +6,7 @@ pattern_label: Two Pointers
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can skip unwanted characters on-the-fly without allocating extra memory for
-    filtered strings.
+  - 能即時跳過不需要的字元，而不為過濾後的字串配置額外記憶體。
 ---
 ## Concept
 

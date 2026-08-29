@@ -12,12 +12,10 @@ prerequisite:
 next:
   - binary-search-overflow-prevention
 learning_goal:
-  - >-
-    Master the [left, right] inclusive pointer configuration and loop condition
-    left <= right.
+  - '熟練閉區間 [left, right] 的指標設定與迴圈條件 left <= right。'
 exit_criteria:
-  - Correctly initialize pointers for inclusive bounds.
-  - Use correct termination condition.
+  - '能為閉區間正確初始化指標。'
+  - '能使用正確的終止條件。'
 leetcode:
   - 704
   - 34

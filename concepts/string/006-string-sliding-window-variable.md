@@ -12,11 +12,9 @@ prerequisite:
 next:
   - string-anagram-grouping
 learning_goal:
-  - Expand and shrink windows dynamically based on validity conditions.
+  - '依據合法性條件動態擴張與收縮視窗。'
 exit_criteria:
-  - >-
-    Can solve longest substring problems without repeating characters or with
-    character constraints.
+  - '能解決無重複字元或帶有字元限制條件的最長子字串問題。'
 leetcode:
   - 3
   - 424

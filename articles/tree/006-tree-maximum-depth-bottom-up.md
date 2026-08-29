@@ -6,7 +6,7 @@ pattern_label: Bottom-Up DFS
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - Return 1 plus the maximum of left and right subtree depths.
+  - 能回傳左右子樹深度的最大值加 1。
 ---
 ## Concept
 

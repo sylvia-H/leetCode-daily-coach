@@ -6,10 +6,8 @@ pattern_label: Variable Sliding Window
 complexity_label: O(n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can track the count of the most frequent element or invalid elements within
-    the window.
-  - Can maintain window validity based on (window_length - max_freq <= k).
+  - 能追蹤視窗內最高頻元素或無效元素的數量。
+  - 能依據 (window_length - max_freq <= k) 維持視窗合法性。
 ---
 ## Concept
 

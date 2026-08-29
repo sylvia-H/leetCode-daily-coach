@@ -6,8 +6,8 @@ pattern_label: Complement Hash
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - 'Can identify the complement condition (e.g., target - current)'
-  - Can retrieve past elements during a single linear scan
+  - 能辨識補數條件（例如 target - current）
+  - 能在單次線性掃描中取回先前出現過的元素
 ---
 ## Concept
 

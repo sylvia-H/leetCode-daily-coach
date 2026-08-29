@@ -6,9 +6,7 @@ pattern_label: Array-based Tree Indexing
 complexity_label: O(1) index access / O(n) space
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can correctly calculate left child, right child, and parent indices for any
-    index i.
+  - 能對任意索引 i 正確計算左子節點、右子節點與父節點的索引。
 ---
 ## Concept
 

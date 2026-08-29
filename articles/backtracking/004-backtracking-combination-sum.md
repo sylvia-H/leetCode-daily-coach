@@ -6,8 +6,8 @@ pattern_label: Reusable Elements Sum Pattern
 complexity_label: O(2^(t/min)) / O(t/min)
 estimated_minutes: 20
 exit_criteria:
-  - Can manage target deduction during recursion.
-  - Can pass the current index back into the recursive call to allow reuse.
+  - 能在遞迴過程中管理目標值的扣減。
+  - 能把當前索引原樣傳回遞迴呼叫，以允許元素重複使用。
 ---
 ## Concept
 

@@ -6,8 +6,8 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - 'Determine sorted half using nums[left] <= nums[mid].'
-  - Check if target falls within the sorted half range.
+  - '能用 nums[left] <= nums[mid] 判斷哪一半已排序。'
+  - 能檢查 target 是否落在已排序那一半的範圍內。
 ---
 ## Concept
 

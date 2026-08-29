@@ -6,9 +6,7 @@ pattern_label: Parallel Tree Traversal
 complexity_label: O(n) / O(h)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Return true if two trees are identical in structure and node values, false
-    otherwise.
+  - 能在兩棵樹的結構與節點值完全相同時回傳 true，否則回傳 false。
 ---
 ## Concept
 

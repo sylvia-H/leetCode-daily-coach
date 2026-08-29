@@ -6,9 +6,7 @@ pattern_label: Bottom-Up Validation
 complexity_label: O(n) / O(h)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Detect imbalance early and propagate failure upwards without redundant
-    height computations.
+  - 能及早偵測不平衡並將失敗向上傳遞，不做多餘的高度計算。
 ---
 ## Concept
 

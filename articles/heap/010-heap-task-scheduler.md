@@ -6,9 +6,7 @@ pattern_label: Greedy Frequency Heap
 complexity_label: O(n log k) time / O(k) space
 estimated_minutes: 30
 exit_criteria:
-  - >-
-    Can greedily process the most frequent available tasks while respecting
-    cooling timers.
+  - 能以 Greedy 方式處理當前可用且頻率最高的任務，同時遵守 cooldown 計時。
 ---
 ## Concept
 

@@ -6,7 +6,7 @@ pattern_label: Mirror Image DFS
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - 'Compare left subtree''s left with right subtree''s right, and left with right.'
+  - 能比較左子樹的 left 與右子樹的 right，並比較 left 與 right。
 ---
 ## Concept
 

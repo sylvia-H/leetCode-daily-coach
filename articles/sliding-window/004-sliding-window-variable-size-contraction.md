@@ -6,12 +6,8 @@ pattern_label: Variable Sliding Window
 complexity_label: O(n) / O(k)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can write the inner while-loop that shrinks the window from the left when a
-    constraint is violated.
-  - >-
-    Can update the global optimal result (max or min length) correctly during
-    contraction.
+  - 能寫出在限制被違反時，從左側收縮視窗的內層 while 迴圈。
+  - 能在收縮過程中正確更新全域最佳結果（最大或最小長度）。
 ---
 ## Concept
 

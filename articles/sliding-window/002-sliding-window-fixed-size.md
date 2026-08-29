@@ -6,8 +6,8 @@ pattern_label: Fixed-Size Sliding Window
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can write the loop structure to initialize the first window of size k.
-  - Can correctly slide the window across the rest of the array in O(n) time.
+  - 能寫出初始化第一個大小為 k 的視窗的迴圈結構。
+  - 能在 O(n) 時間內正確地將視窗滑過陣列其餘部分。
 ---
 ## Concept
 

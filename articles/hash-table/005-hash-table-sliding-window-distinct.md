@@ -6,8 +6,8 @@ pattern_label: Sliding Window Set
 complexity_label: O(n) / O(k)
 estimated_minutes: 15
 exit_criteria:
-  - Can expand window and add to set
-  - Can shrink window from the left and remove from set when duplicates occur
+  - 能擴張視窗並將元素加入 set
+  - 能在出現重複時從左側收縮視窗並自 set 移除元素
 ---
 ## Concept
 

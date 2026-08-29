@@ -6,7 +6,7 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - Compare mid element with right element to decide search direction.
+  - 能比較 mid 元素與最右端元素，以決定搜尋方向。
 ---
 ## Concept
 

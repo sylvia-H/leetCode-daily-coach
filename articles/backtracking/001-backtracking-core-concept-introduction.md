@@ -6,8 +6,8 @@ pattern_label: Decision Tree Exploration
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can explain the choice-explore-unchoose pattern.
-  - Can trace how states are modified and restored.
+  - 能說明「選擇—探索—撤銷選擇」（choose–explore–unchoose）的模式。
+  - 能追蹤狀態如何被修改與還原。
 ---
 ## Concept
 

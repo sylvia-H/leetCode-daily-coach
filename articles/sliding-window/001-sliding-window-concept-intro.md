@@ -6,12 +6,8 @@ pattern_label: Sliding Window
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can explain why recalculating every subarray from scratch leads to redundant
-    work.
-  - >-
-    Can trace how adding a new element and dropping an old element updates the
-    window state.
+  - 能說明為何每個 subarray 都從頭重新計算會導致重複的工作。
+  - 能追蹤加入新元素與移除舊元素如何更新視窗狀態。
 ---
 ## Concept
 

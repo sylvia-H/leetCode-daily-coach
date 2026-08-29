@@ -6,9 +6,7 @@ pattern_label: Binary Search
 complexity_label: O(log(m * n)) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Convert 1D index to 2D coordinates using row = mid / cols and col = mid %
-    cols.
+  - 能用 row = mid / cols 與 col = mid % cols 把 1D 索引轉換成 2D 座標。
 ---
 ## Concept
 

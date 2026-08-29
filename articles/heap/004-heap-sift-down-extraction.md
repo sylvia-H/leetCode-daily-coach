@@ -6,7 +6,7 @@ pattern_label: Percolate Down
 complexity_label: O(log n) time / O(1) space
 estimated_minutes: 25
 exit_criteria:
-  - 'Can swap the root with the last element, pop, and sift down the new root.'
+  - 能將根與最後一個元素交換、pop 出來，並對新的根執行 sift down。
 ---
 ## Concept
 

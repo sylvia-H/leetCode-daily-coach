@@ -6,8 +6,8 @@ pattern_label: Stack-to-Queue Transformation
 complexity_label: O(1) amortized / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Manage input and output stacks correctly.
-  - Understand why amortized analysis guarantees O(1) per operation.
+  - 能正確管理 input 與 output 兩個堆疊。
+  - 能理解為何攤銷分析能保證每次操作為 O(1)。
 ---
 ## Concept
 

@@ -6,7 +6,7 @@ pattern_label: Data Representation
 complexity_label: O(V + E) / O(V + E)
 estimated_minutes: 12
 exit_criteria:
-  - Successfully build an adjacency list from a list of edges.
+  - 能從邊的列表成功建立 adjacency list。
 ---
 ## Concept
 

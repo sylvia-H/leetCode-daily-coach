@@ -6,8 +6,8 @@ pattern_label: Unique Combination Sum Pattern
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - 'Can combine sorting, level-skip duplicate checks, and target subtraction.'
-  - Can ensure each combination is unique.
+  - 能結合排序、同層跳過的重複檢查與目標值扣減。
+  - 能確保每個組合都是唯一的。
 ---
 ## Concept
 

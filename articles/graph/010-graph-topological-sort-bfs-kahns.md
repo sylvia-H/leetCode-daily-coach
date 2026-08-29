@@ -6,9 +6,7 @@ pattern_label: Kahn's Algorithm
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Calculate in-degrees for all nodes, enqueue 0-in-degree nodes, and process
-    level by level.
+  - 能計算所有節點的 in-degree，將 in-degree 為 0 的節點加入佇列並逐層處理。
 ---
 ## Concept
 

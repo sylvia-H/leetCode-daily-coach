@@ -6,7 +6,7 @@ pattern_label: Tree Transformation
 complexity_label: O(n) / O(h)
 estimated_minutes: 15
 exit_criteria:
-  - Swap left and right pointers for every node in the binary tree.
+  - 能對二元樹中的每個節點交換 left 與 right 指標。
 ---
 ## Concept
 

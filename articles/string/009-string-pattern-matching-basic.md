@@ -6,7 +6,7 @@ pattern_label: Linear Scan
 complexity_label: O(n * m) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can implement indexOf or find a needle in a haystack using nested loops.
+  - 能使用巢狀迴圈實作 indexOf 或在 haystack 中找出 needle。
 ---
 ## Concept
 

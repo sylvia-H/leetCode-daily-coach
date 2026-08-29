@@ -6,7 +6,7 @@ pattern_label: Graph Modeling
 complexity_label: O(V + E) / O(V + E)
 estimated_minutes: 10
 exit_criteria:
-  - Distinguish between directed and undirected edges.
+  - 能區分有向邊與無向邊。
 ---
 ## Concept
 

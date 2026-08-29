@@ -6,8 +6,8 @@ pattern_label: Breadth-First Search
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Process nodes level by level using queue size snapshots.
-  - Store child nodes into the queue for subsequent levels.
+  - 能利用佇列長度快照逐層處理節點。
+  - 能把子節點存入佇列，供後續層使用。
 ---
 ## Concept
 

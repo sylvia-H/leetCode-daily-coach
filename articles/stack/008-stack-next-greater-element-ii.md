@@ -6,8 +6,8 @@ pattern_label: Circular Monotonic Stack
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Can simulate circular array traversal using modulo indexing.
-  - Can find next greater elements across array wrap-arounds.
+  - 能用 modulo 索引模擬環狀陣列的走訪。
+  - 能跨越陣列的環狀邊界找出 next greater element。
 ---
 ## Concept
 

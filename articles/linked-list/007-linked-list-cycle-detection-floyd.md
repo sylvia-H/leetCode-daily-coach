@@ -6,10 +6,8 @@ pattern_label: Cycle Detection
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - Can implement Floyd's cycle-finding algorithm correctly
-  - >-
-    Can explain why slow and fast pointers are guaranteed to meet if a cycle
-    exists
+  - 能正確實作 Floyd's cycle-finding algorithm
+  - 能說明為何存在環時 slow 與 fast 指標保證會相遇
 ---
 ## Concept
 

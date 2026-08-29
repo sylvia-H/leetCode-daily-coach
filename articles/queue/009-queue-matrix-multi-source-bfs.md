@@ -6,8 +6,8 @@ pattern_label: Multi-Source BFS
 complexity_label: O(m * n) / O(m * n)
 estimated_minutes: 20
 exit_criteria:
-  - Enqueue all starting sources initially before starting the BFS loop.
-  - Update grid values in-place or use a distance matrix.
+  - 能在 BFS 迴圈開始前，先把所有起始來源加入佇列。
+  - 能就地（in-place）更新網格值，或改用距離矩陣。
 ---
 ## Concept
 

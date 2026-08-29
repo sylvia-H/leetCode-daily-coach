@@ -6,9 +6,7 @@ pattern_label: Binary Tree Node
 complexity_label: O(1) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Successfully instantiate a binary tree node and assign child pointers in
-    code.
+  - 能在程式碼中成功建立二元樹節點並指定子節點指標。
 ---
 ## Concept
 

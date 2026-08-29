@@ -6,8 +6,8 @@ pattern_label: Last-In-First-Out (LIFO)
 complexity_label: O(1) push/pop
 estimated_minutes: 10
 exit_criteria:
-  - Can explain why elements are retrieved in reverse order of insertion.
-  - Can trace push and pop operations manually.
+  - 能說明為何元素會以與加入相反的順序被取出。
+  - 能手動追蹤 push 與 pop 操作。
 ---
 ## Concept
 

@@ -6,9 +6,7 @@ pattern_label: Depth-First Search
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Write a recursive function that visits the current node first, then left,
-    then right.
+  - 能寫出先造訪當前節點、再左子樹、再右子樹的遞迴函式。
 ---
 ## Concept
 

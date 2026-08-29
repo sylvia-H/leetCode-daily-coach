@@ -16,12 +16,10 @@ next:
   - queue-bfs-level-order-traversal
   - queue-sliding-window-maximum
 learning_goal:
-  - >-
-    Understand the First-In, First-Out (FIFO) principle and how elements enter
-    from the rear and leave from the front.
+  - '理解先進先出（FIFO）原則，以及元素如何從尾端進入、從前端離開。'
 exit_criteria:
-  - Can trace enqueue and dequeue operations mentally.
-  - Understand why queues are used for order-preserving processing.
+  - '能在腦中追蹤 enqueue 與 dequeue 的操作過程。'
+  - '能理解為何佇列被用於保持順序的處理。'
 leetcode: []
 tags:
   - queue

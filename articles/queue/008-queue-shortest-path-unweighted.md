@@ -6,8 +6,8 @@ pattern_label: Breadth-First Search
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 20
 exit_criteria:
-  - Track visited nodes to prevent cycles and redundant work.
-  - Increment distance step-by-step as queue expands.
+  - 能追蹤已走訪節點，避免環與重複計算。
+  - 能隨著佇列擴展逐步遞增距離。
 ---
 ## Concept
 

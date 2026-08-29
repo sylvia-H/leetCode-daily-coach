@@ -6,9 +6,7 @@ pattern_label: Connected Components
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 12
 exit_criteria:
-  - >-
-    Iterate through all nodes, launching DFS/BFS on unvisited nodes to count
-    components.
+  - 能走訪所有節點，對未造訪的節點啟動 DFS/BFS 以計數 components。
 ---
 ## Concept
 

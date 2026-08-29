@@ -6,7 +6,7 @@ pattern_label: Heap / Priority Queue
 complexity_label: O(log n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can explain the difference between min-heap and max-heap properties.
+  - 能說明 min-heap 與 max-heap 性質的差異。
 ---
 ## Concept
 

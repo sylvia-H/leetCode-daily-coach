@@ -11,11 +11,9 @@ prerequisite:
   - binary-search-find-minimum-rotated
 next: []
 learning_goal:
-  - Flatten a 2D matrix conceptually into a 1D array using coordinate mapping.
+  - '利用座標映射，在概念上把 2D 矩陣攤平成 1D 陣列。'
 exit_criteria:
-  - >-
-    Convert 1D index to 2D coordinates using row = mid / cols and col = mid %
-    cols.
+  - '能用 row = mid / cols 與 col = mid % cols 把 1D 索引轉換成 2D 座標。'
 leetcode:
   - 74
 tags:

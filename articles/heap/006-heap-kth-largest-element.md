@@ -6,7 +6,7 @@ pattern_label: Bounded Priority Queue
 complexity_label: O(n log k) time / O(k) space
 estimated_minutes: 20
 exit_criteria:
-  - Can maintain a heap of size k to keep track of extreme values.
+  - 能維護大小為 k 的 heap 來追蹤極值。
 ---
 ## Concept
 

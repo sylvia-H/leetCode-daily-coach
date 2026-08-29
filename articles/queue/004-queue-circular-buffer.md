@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(1) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - Use modulo arithmetic to wrap around array indices.
-  - Distinguish between full and empty states in a circular buffer.
+  - 能用模數運算讓陣列索引繞回開頭。
+  - 能區分 circular buffer 的滿與空兩種狀態。
 ---
 ## Concept
 

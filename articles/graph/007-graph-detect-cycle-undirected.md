@@ -6,9 +6,7 @@ pattern_label: Cycle Detection
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Identify if any visited neighbor is not the direct parent of the current
-    node.
+  - 能辨識是否有已造訪的鄰居不是目前節點的直接父節點。
 ---
 ## Concept
 

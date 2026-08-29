@@ -14,14 +14,10 @@ prerequisite:
 next:
   - backtracking-n-queens-diagonal-pruning
 learning_goal:
-  - >-
-    Apply backtracking to a 2D grid to search for a sequence of characters
-    matching a target word.
+  - '把 Backtracking 應用在 2D 網格上，搜尋與目標單字相符的字元序列。'
 exit_criteria:
-  - Can traverse 4-directional grid neighbors recursively.
-  - >-
-    Can temporarily mark visited cells in-place and restore them after
-    exploration.
+  - '能以遞迴走訪網格的四方向相鄰格。'
+  - '能就地（in-place）暫時標記已走訪的格子，並在探索結束後還原。'
 leetcode:
   - 79
 tags:

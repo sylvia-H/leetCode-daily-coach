@@ -14,16 +14,10 @@ next:
   - sliding-window-max-consecutive-ones
   - sliding-window-fruit-into-baskets
 learning_goal:
-  - >-
-    Combine a variable sliding window with frequency or position tracking to
-    handle duplicate constraints.
+  - 結合變動長度 Sliding Window 與頻率或位置追蹤，處理重複元素的限制。
 exit_criteria:
-  - >-
-    Can use a hash map or frequency array to detect duplicate characters in O(1)
-    time.
-  - >-
-    Can jump or contract the left pointer past the previous occurrence of a
-    duplicate character.
+  - 能使用 hash map 或頻率陣列在 O(1) 時間內偵測重複字元。
+  - 能將左指標跳過或收縮到重複字元前一次出現位置之後。
 leetcode:
   - 3
 tags:

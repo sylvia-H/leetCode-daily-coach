@@ -6,10 +6,8 @@ pattern_label: Grid DFS Pathfinding
 complexity_label: O(N * 3^L) / O(L)
 estimated_minutes: 20
 exit_criteria:
-  - Can traverse 4-directional grid neighbors recursively.
-  - >-
-    Can temporarily mark visited cells in-place and restore them after
-    exploration.
+  - 能以遞迴走訪網格的四方向相鄰格。
+  - 能就地（in-place）暫時標記已走訪的格子，並在探索結束後還原。
 ---
 ## Concept
 

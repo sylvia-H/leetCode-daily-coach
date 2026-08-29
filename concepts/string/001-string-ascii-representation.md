@@ -12,13 +12,9 @@ prerequisite:
 next:
   - string-linear-scan
 learning_goal:
-  - >-
-    Understand how characters are represented numerically via ASCII or Unicode
-    codes in memory.
+  - '理解字元在記憶體中如何透過 ASCII 或 Unicode 編碼以數值表示。'
 exit_criteria:
-  - >-
-    Can convert characters to integer codes and vice versa in both Python and
-    TypeScript.
+  - '能在 Python 與 TypeScript 中將字元轉為整數編碼並反向轉換。'
 leetcode:
   - 387
   - 8

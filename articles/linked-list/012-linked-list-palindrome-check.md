@@ -6,10 +6,8 @@ pattern_label: Composite Pattern (Midpoint + Reverse + Compare)
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Can find the middle, reverse the second half, compare values symmetrically,
-    and optionally restore the list
-  - Can explain why O(1) space requires structural modification
+  - 能找出中點、反轉後半段、對稱地比較值，並可選擇性地還原串列
+  - 能說明為何 O(1) 空間需要修改結構
 ---
 ## Concept
 

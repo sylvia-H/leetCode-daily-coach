@@ -6,10 +6,8 @@ pattern_label: Prefix Sum Hash Map
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can compute running prefix sum
-  - >-
-    Can check if prefix_sum - target exists in the frequency map to count valid
-    subarrays
+  - 能計算累積的 prefix sum
+  - 能檢查 prefix_sum - target 是否存在於 frequency map 中，以計算合法子陣列的數量
 ---
 ## Concept
 

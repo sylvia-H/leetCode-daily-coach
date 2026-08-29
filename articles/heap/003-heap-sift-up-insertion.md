@@ -6,7 +6,7 @@ pattern_label: Percolate Up
 complexity_label: O(log n) time / O(1) space
 estimated_minutes: 20
 exit_criteria:
-  - Can trace how a newly added element bubbles up to its correct position.
+  - 能追蹤新加入的元素如何向上冒泡到正確位置。
 ---
 ## Concept
 

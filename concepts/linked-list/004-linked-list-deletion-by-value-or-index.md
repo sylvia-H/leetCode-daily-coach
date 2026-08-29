@@ -12,12 +12,10 @@ prerequisite:
 next:
   - linked-list-dummy-head-pattern
 learning_goal:
-  - >-
-    Understand how to bypass a target node by adjusting the previous node's next
-    pointer.
+  - 理解如何透過調整前一個節點的 next 指標來繞過目標節點。
 exit_criteria:
-  - 'Can remove a node from the middle, head, or tail of a list'
-  - Can correctly deallocate or bypass the target node reference
+  - 能從串列的中間、開頭或結尾移除節點
+  - 能正確釋放或繞過目標節點的參照
 leetcode:
   - 237
   - 203

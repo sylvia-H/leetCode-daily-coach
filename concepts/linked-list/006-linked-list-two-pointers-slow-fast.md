@@ -12,12 +12,10 @@ prerequisite:
 next:
   - linked-list-cycle-detection-floyd
 learning_goal:
-  - >-
-    Master the offset traversal technique using two pointers moving at different
-    speeds.
+  - 精通使用兩個以不同速度移動的指標進行位移走訪的技巧。
 exit_criteria:
-  - Can find the middle node of a linked list in a single pass
-  - Can find the kth node from the end using an offset gap
+  - 能在單趟走訪中找到 linked list 的中間節點
+  - 能利用位移間距找到倒數第 k 個節點
 leetcode:
   - 876
   - 19

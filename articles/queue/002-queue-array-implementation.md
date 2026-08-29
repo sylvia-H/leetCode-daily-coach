@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Can write a basic queue class using an array.
-  - Explain why shift() or pop(0) takes O(n) time complexity in standard arrays.
+  - 能用陣列寫出基本的佇列 class。
+  - 能說明為何在一般陣列上 shift() 或 pop(0) 的時間複雜度是 O(n)。
 ---
 ## Concept
 

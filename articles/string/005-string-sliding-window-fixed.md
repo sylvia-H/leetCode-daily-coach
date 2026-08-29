@@ -6,9 +6,7 @@ pattern_label: Sliding Window
 complexity_label: O(n) / O(k)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can slide a window of size k across a string while updating frequency maps
-    efficiently.
+  - 能讓大小為 k 的視窗滑過字串，並有效率地更新 frequency map。
 ---
 ## Concept
 

@@ -6,8 +6,8 @@ pattern_label: FIFO Queue
 complexity_label: O(1) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - Maintain head and tail pointers correctly during push and pop.
-  - Handle edge cases like an empty queue or single-element queue.
+  - 能在 push 與 pop 時正確維護 head 與 tail 指標。
+  - 能處理空佇列或只有單一元素的佇列等邊界情況。
 ---
 ## Concept
 

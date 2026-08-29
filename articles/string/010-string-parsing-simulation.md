@@ -6,9 +6,7 @@ pattern_label: Simulation
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can parse structured string formats like run-length encodings or basic
-    calculators.
+  - 能解析結構化的字串格式，例如 run-length encoding 或基本計算機。
 ---
 ## Concept
 

@@ -6,12 +6,8 @@ pattern_label: Monotonic Queue
 complexity_label: O(n) / O(k)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Remove elements from the back of the queue that are smaller than the
-    incoming element.
-  - >-
-    Remove elements from the front of the queue that fall out of the sliding
-    window.
+  - 能從佇列尾端移除比新進元素小的元素。
+  - 能從佇列前端移除已滑出 Sliding Window 範圍的元素。
 ---
 ## Concept
 

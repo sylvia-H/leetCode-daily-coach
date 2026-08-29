@@ -12,11 +12,9 @@ prerequisite:
 next:
   - tree-dfs-inorder-traversal
 learning_goal:
-  - Master the Root -> Left -> Right traversal pattern using recursion.
+  - '熟練運用遞迴實作 Root -> Left -> Right 的走訪模式。'
 exit_criteria:
-  - >-
-    Write a recursive function that visits the current node first, then left,
-    then right.
+  - '能寫出先造訪當前節點、再左子樹、再右子樹的遞迴函式。'
 leetcode:
   - 144
   - 114

@@ -6,9 +6,7 @@ pattern_label: Sliding Window
 complexity_label: O(n) / O(k)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can solve longest substring problems without repeating characters or with
-    character constraints.
+  - 能解決無重複字元或帶有字元限制條件的最長子字串問題。
 ---
 ## Concept
 

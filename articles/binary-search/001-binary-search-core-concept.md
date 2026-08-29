@@ -6,8 +6,8 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can explain why time complexity is logarithmic.
-  - Can identify sorted array precondition.
+  - 能說明為何時間複雜度是對數級 O(log n)。
+  - 能辨識「陣列必須已排序」這項前提。
 ---
 ## Concept
 

@@ -6,12 +6,8 @@ pattern_label: Variable Sliding Window
 complexity_label: O(n) / O(k)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can write a loop that greedily expands the right pointer until a condition
-    is met or violated.
-  - >-
-    Can update window state correctly upon incorporating a new element at the
-    right pointer.
+  - 能寫出貪婪地擴張右指標的迴圈，直到條件滿足或被違反為止。
+  - 能在右指標納入新元素時正確更新視窗狀態。
 ---
 ## Concept
 

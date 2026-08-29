@@ -14,9 +14,9 @@ next:
   - graph-core-concept-introduction
   - heap-core-concept-introduction
 learning_goal:
-  - Understand the terminology and recursive nature of tree structures.
+  - '理解樹狀結構的術語與遞迴本質。'
 exit_criteria:
-  - 'Define root, parent, child, leaf, depth, and height correctly.'
+  - '能正確定義 root、parent、child、leaf、depth 與 height。'
 leetcode: []
 tags:
   - tree

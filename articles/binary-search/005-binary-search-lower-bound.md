@@ -6,7 +6,7 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - 'Correctly identify lower bound conditions when nums[mid] >= target.'
+  - '能在 nums[mid] >= target 時正確判斷 lower bound 的條件。'
 ---
 ## Concept
 

@@ -6,8 +6,8 @@ pattern_label: Largest Rectangle in Histogram Core
 complexity_label: O(n) / O(n)
 estimated_minutes: 25
 exit_criteria:
-  - Can find left and right boundary limits for each histogram bar height.
-  - Can compute maximum rectangular area efficiently in linear time.
+  - 能為直方圖中每個柱高找出左右邊界限制。
+  - 能在線性時間內有效率地計算最大矩形面積。
 ---
 ## Concept
 

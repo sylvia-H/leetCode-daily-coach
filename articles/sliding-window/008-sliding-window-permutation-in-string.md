@@ -6,12 +6,8 @@ pattern_label: Fixed/Variable Window + Frequency Comparison
 complexity_label: O(n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can initialize frequency arrays for both the target pattern and the sliding
-    window.
-  - >-
-    Can compare frequency structures efficiently in O(1) time by tracking
-    matched character counts.
+  - 能為目標 pattern 與滑動視窗分別初始化頻率陣列。
+  - 能透過追蹤已匹配的字元數，在 O(1) 時間內有效率地比較頻率結構。
 ---
 ## Concept
 

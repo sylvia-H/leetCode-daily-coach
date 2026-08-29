@@ -12,12 +12,10 @@ prerequisite:
 next:
   - queue-sliding-window-maximum
 learning_goal:
-  - >-
-    Initialize a queue with multiple starting points to calculate shortest
-    distances from any source simultaneously.
+  - '以多個起點初始化佇列，同時計算從任一來源出發的最短距離。'
 exit_criteria:
-  - Enqueue all starting sources initially before starting the BFS loop.
-  - Update grid values in-place or use a distance matrix.
+  - '能在 BFS 迴圈開始前，先把所有起始來源加入佇列。'
+  - '能就地（in-place）更新網格值，或改用距離矩陣。'
 leetcode:
   - 542
   - 994

@@ -6,12 +6,8 @@ pattern_label: Variable Sliding Window + Requirement Counter
 complexity_label: O(n + m) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Can track how many unique required characters have met their target
-    frequencies.
-  - >-
-    Can contract the left pointer greedily while maintaining full coverage of
-    all required characters.
+  - 能追蹤有多少個必要的相異字元已達到其目標頻率。
+  - 能在維持完整涵蓋所有必要字元的同時，貪婪地收縮左指標。
 ---
 ## Concept
 

@@ -14,14 +14,10 @@ next:
   - backtracking-combination-sum-ii
   - backtracking-permutation-with-duplicates
 learning_goal:
-  - >-
-    Learn how to sort and skip adjacent duplicate elements at the same recursion
-    level to avoid generating duplicate subsets.
+  - '學會先排序並在同一遞迴層跳過相鄰的重複元素，以避免生成重複的子集。'
 exit_criteria:
-  - >-
-    Can correctly identify when an element is a duplicate within the same tree
-    level.
-  - Can implement sorting and skipping logic cleanly.
+  - '能正確判斷元素在同一樹層中何時屬於重複。'
+  - '能乾淨俐落地實作排序與跳過的邏輯。'
 leetcode:
   - 90
 tags:

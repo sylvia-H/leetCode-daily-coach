@@ -6,7 +6,7 @@ pattern_label: Breadth-First Search
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - Find shortest paths in unweighted graphs using BFS.
+  - 能使用 BFS 在無權重圖中找出最短路徑。
 ---
 ## Concept
 

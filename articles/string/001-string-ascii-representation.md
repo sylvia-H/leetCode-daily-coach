@@ -6,9 +6,7 @@ pattern_label: Character Mapping
 complexity_label: O(1) / O(1)
 estimated_minutes: 10
 exit_criteria:
-  - >-
-    Can convert characters to integer codes and vice versa in both Python and
-    TypeScript.
+  - 能在 Python 與 TypeScript 中將字元轉為整數編碼並反向轉換。
 ---
 ## Concept
 

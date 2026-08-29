@@ -6,8 +6,8 @@ pattern_label: Two-Pointer Merge
 complexity_label: O(n + m) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - Can compare heads of two lists and attach the smaller node to a result tail
-  - Can handle remaining nodes when one list exhausts before the other
+  - 能比較兩個串列的 head，並將較小的節點接到結果串列的尾端
+  - 能在其中一個串列先耗盡時處理剩餘節點
 ---
 ## Concept
 

@@ -6,8 +6,8 @@ pattern_label: Frequency Map
 complexity_label: O(n) / O(n)
 estimated_minutes: 10
 exit_criteria:
-  - Can build a frequency map from an array
-  - Can iterate through map entries to find maximum or matching frequencies
+  - 能從陣列建立 frequency map
+  - 能走訪 map 的項目以找出最大或符合條件的頻率
 ---
 ## Concept
 

@@ -11,13 +11,9 @@ prerequisite:
   - graph-topological-sort-dfs
 next: []
 learning_goal:
-  - >-
-    Implement Kahn's algorithm using in-degrees and a queue for topological
-    sorting.
+  - 使用 in-degree 與佇列實作 Kahn's algorithm 進行拓樸排序。
 exit_criteria:
-  - >-
-    Calculate in-degrees for all nodes, enqueue 0-in-degree nodes, and process
-    level by level.
+  - 能計算所有節點的 in-degree，將 in-degree 為 0 的節點加入佇列並逐層處理。
 leetcode:
   - 207
 tags:

@@ -6,8 +6,8 @@ pattern_label: Sentinel Node
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can initialize a dummy node pointing to the real head
-  - Can return dummy.next consistently as the modified list head
+  - 能初始化一個指向實際 head 的 dummy 節點
+  - 能一致地回傳 dummy.next 作為修改後的串列 head
 ---
 ## Concept
 

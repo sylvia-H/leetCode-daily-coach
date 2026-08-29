@@ -6,8 +6,8 @@ pattern_label: Constraint Propagation Pattern
 complexity_label: O(n!) / O(n)
 estimated_minutes: 25
 exit_criteria:
-  - Can formulate column and diagonal tracking sets/arrays.
-  - Can place queens row by row with immediate pruning.
+  - 能設計出追蹤 column 與對角線的 set／陣列。
+  - 能逐列（row by row）放置皇后並立即剪枝。
 ---
 ## Concept
 

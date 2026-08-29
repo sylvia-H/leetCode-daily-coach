@@ -12,9 +12,9 @@ prerequisite:
 next:
   - graph-dfs-traversal
 learning_goal:
-  - Represent a graph using a 2D matrix (adjacency matrix).
+  - 使用二維矩陣（adjacency matrix）表示圖。
 exit_criteria:
-  - Check edge existence in O(1) time using a matrix.
+  - 能使用矩陣在 O(1) 時間內檢查邊是否存在。
 leetcode: []
 tags:
   - graph

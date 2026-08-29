@@ -6,12 +6,8 @@ pattern_label: Variable Sliding Window + Hash Map
 complexity_label: 'O(n) / O(min(n, charset))'
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can use a hash map or frequency array to detect duplicate characters in O(1)
-    time.
-  - >-
-    Can jump or contract the left pointer past the previous occurrence of a
-    duplicate character.
+  - 能使用 hash map 或頻率陣列在 O(1) 時間內偵測重複字元。
+  - 能將左指標跳過或收縮到重複字元前一次出現位置之後。
 ---
 ## Concept
 

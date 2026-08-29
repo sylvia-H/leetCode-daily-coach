@@ -6,10 +6,8 @@ pattern_label: Duplicate Skip Pattern
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can correctly identify when an element is a duplicate within the same tree
-    level.
-  - Can implement sorting and skipping logic cleanly.
+  - 能正確判斷元素在同一樹層中何時屬於重複。
+  - 能乾淨俐落地實作排序與跳過的邏輯。
 ---
 ## Concept
 

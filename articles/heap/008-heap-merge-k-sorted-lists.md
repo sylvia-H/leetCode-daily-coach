@@ -6,9 +6,7 @@ pattern_label: Multi-way Merge
 complexity_label: O(N log k) time / O(k) space
 estimated_minutes: 30
 exit_criteria:
-  - >-
-    Can maintain one active node per list in a heap and push its successor upon
-    extraction.
+  - 能在 heap 中為每個串列維護一個作用中節點，並在取出時推入其後繼節點。
 ---
 ## Concept
 

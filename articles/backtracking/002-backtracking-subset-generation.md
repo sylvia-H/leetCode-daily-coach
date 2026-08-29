@@ -6,10 +6,8 @@ pattern_label: Include/Exclude Choice Pattern
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can write the subset generation recursive function without missing
-    combinations.
-  - Can collect results correctly at every node or leaf.
+  - 能寫出子集生成的遞迴函式，且不遺漏任何組合。
+  - 能在每個節點或葉節點正確收集結果。
 ---
 ## Concept
 

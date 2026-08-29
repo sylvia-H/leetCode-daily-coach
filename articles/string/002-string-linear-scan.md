@@ -6,9 +6,7 @@ pattern_label: Linear Scan
 complexity_label: O(n) / O(1)
 estimated_minutes: 10
 exit_criteria:
-  - >-
-    Can write a standard loop over string indices or characters without
-    off-by-one errors.
+  - 能寫出走訪字串索引或字元的標準迴圈，且沒有 off-by-one 錯誤。
 ---
 ## Concept
 

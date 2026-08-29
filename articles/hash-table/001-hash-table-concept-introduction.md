@@ -6,8 +6,8 @@ pattern_label: Hash Map
 complexity_label: O(1) / O(n)
 estimated_minutes: 10
 exit_criteria:
-  - Can explain why average lookup time is O(1)
-  - Can write a basic map insertion and retrieval
+  - 能說明為何平均查找時間是 O(1)
+  - 能寫出基本的 map 插入與取值操作
 ---
 ## Concept
 

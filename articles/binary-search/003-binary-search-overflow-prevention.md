@@ -6,9 +6,7 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Use mid = left + Math.floor((right - left) / 2) instead of (left + right) /
-    2.
+  - 能改用 mid = left + Math.floor((right - left) / 2)，而非 (left + right) / 2。
 ---
 ## Concept
 

@@ -13,11 +13,9 @@ prerequisite:
 next:
   - string-pattern-matching-basic
 learning_goal:
-  - Find palindromic substrings by expanding outward from all possible centers.
+  - '從所有可能的中心向外擴展，找出回文子字串。'
 exit_criteria:
-  - >-
-    Can write a helper function to expand around single and double character
-    centers.
+  - '能寫出對單字元與雙字元中心進行擴展的輔助函式。'
 leetcode:
   - 5
 tags:

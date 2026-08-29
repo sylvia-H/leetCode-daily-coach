@@ -13,14 +13,10 @@ next:
   - backtracking-subset-with-duplicates
   - backtracking-combination-sum
 learning_goal:
-  - >-
-    Master generating all subsets of a set by making a binary choice (take or
-    skip) at each index.
+  - '熟練透過在每個索引做二元選擇（取或不取）來生成一個集合的所有子集。'
 exit_criteria:
-  - >-
-    Can write the subset generation recursive function without missing
-    combinations.
-  - Can collect results correctly at every node or leaf.
+  - '能寫出子集生成的遞迴函式，且不遺漏任何組合。'
+  - '能在每個節點或葉節點正確收集結果。'
 leetcode:
   - 78
   - 90

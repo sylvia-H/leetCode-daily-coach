@@ -6,10 +6,8 @@ pattern_label: Recursion
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can write a recursive function that reverses the rest of the list and fixes
-    pointer directions on unwinding
-  - Can identify base cases for recursion
+  - 能寫出遞迴函式，先反轉串列的其餘部分，並在回溯（unwinding）時修正指標方向
+  - 能辨識遞迴的 base case
 ---
 ## Concept
 

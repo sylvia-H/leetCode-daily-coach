@@ -12,12 +12,10 @@ prerequisite:
 next:
   - queue-linked-list-implementation
 learning_goal:
-  - >-
-    Implement a basic queue using a dynamic array and recognize the performance
-    bottleneck of shifting elements.
+  - '用動態陣列實作基本佇列，並認識搬移元素造成的效能瓶頸。'
 exit_criteria:
-  - Can write a basic queue class using an array.
-  - Explain why shift() or pop(0) takes O(n) time complexity in standard arrays.
+  - '能用陣列寫出基本的佇列 class。'
+  - '能說明為何在一般陣列上 shift() 或 pop(0) 的時間複雜度是 O(n)。'
 leetcode: []
 tags:
   - queue

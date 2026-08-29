@@ -6,8 +6,8 @@ pattern_label: Queue-to-Stack Transformation
 complexity_label: O(n) push / O(1) pop
 estimated_minutes: 15
 exit_criteria:
-  - Reorder queue elements so the newest element stays at the front.
-  - Analyze the time trade-off between costly push vs costly pop.
+  - 能重排佇列元素，讓最新的元素保持在最前端。
+  - 能分析「push 昂貴」與「pop 昂貴」兩種做法之間的時間取捨。
 ---
 ## Concept
 

@@ -6,8 +6,8 @@ pattern_label: Monotonic Stack with Accumulation
 complexity_label: O(1) amortized
 estimated_minutes: 20
 exit_criteria:
-  - 'Can store pairs of (value, span) in a monotonic stack.'
-  - Can aggregate counts of consecutive smaller elements efficiently.
+  - '能在 Monotonic Stack 中儲存 (value, span) 的成對資料。'
+  - 能有效率地累計連續較小元素的數量。
 ---
 ## Concept
 

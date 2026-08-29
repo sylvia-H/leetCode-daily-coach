@@ -12,13 +12,9 @@ prerequisite:
 next:
   - tree-maximum-depth-bottom-up
 learning_goal:
-  - >-
-    Master the Left -> Right -> Root traversal pattern for bottom-up
-    aggregation.
+  - '熟練用於 bottom-up 彙整的 Left -> Right -> Root 走訪模式。'
 exit_criteria:
-  - >-
-    Write a recursive function that visits left and right subtrees before
-    processing the root.
+  - '能寫出先造訪左右子樹、再處理根節點的遞迴函式。'
 leetcode:
   - 145
   - 1245

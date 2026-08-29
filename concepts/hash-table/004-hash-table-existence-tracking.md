@@ -15,12 +15,10 @@ next:
   - hash-table-longest-consecutive-sequence
   - sliding-window-longest-substring-no-repeat
 learning_goal:
-  - Use hash sets to track whether elements have been seen before in O(1) time.
+  - '使用 hash set 以 O(1) 時間追蹤元素是否曾出現過。'
 exit_criteria:
-  - >-
-    Can choose between a hash map and a hash set based on whether values need to
-    be stored
-  - Can detect duplicates during iteration using a set
+  - '能依據是否需要儲存 value 來選擇使用 hash map 或 hash set'
+  - '能在走訪過程中使用 set 偵測重複元素'
 leetcode:
   - 217
   - 219

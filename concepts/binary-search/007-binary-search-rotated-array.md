@@ -12,12 +12,10 @@ prerequisite:
 next:
   - binary-search-rotated-duplicates
 learning_goal:
-  - >-
-    Identify which half of a rotated sorted array is normally sorted and apply
-    binary search.
+  - '辨識旋轉排序陣列中哪一半仍是正常排序，並套用 Binary Search。'
 exit_criteria:
-  - 'Determine sorted half using nums[left] <= nums[mid].'
-  - Check if target falls within the sorted half range.
+  - '能用 nums[left] <= nums[mid] 判斷哪一半已排序。'
+  - '能檢查 target 是否落在已排序那一半的範圍內。'
 leetcode:
   - 33
   - 153

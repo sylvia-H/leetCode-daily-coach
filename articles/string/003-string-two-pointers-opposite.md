@@ -6,7 +6,7 @@ pattern_label: Two Pointers
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can implement palindrome checks efficiently using two pointers.
+  - 能使用 Two Pointer 有效率地實作回文檢查。
 ---
 ## Concept
 

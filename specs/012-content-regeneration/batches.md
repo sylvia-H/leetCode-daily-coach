@@ -270,3 +270,60 @@ TS Tip 還放了 `binarySearch([5], 5)` 這條斷言守著它。
   而 Exit Criteria 是 Discord 的獨立推播區塊，會原樣推給中文學習者，牴觸 spec §11。
   修法在 `concepts/**`，F12 MUST NOT 觸碰。**需使用者裁定三個選項之一並落地到 `docs/spec.md`**，
   詳見 `pipeline-defects.md` D11。
+
+## 插入工作 — Exit Criteria / Learning Goal 語言合規（2026-08-29）
+
+**不是 Phase**：這是在 Phase 5 收批後、Phase 6 開跑前插入的一次性修復，範圍是 `concepts/**`
+的兩個文字欄位，與逐 Phase 的教材重生無關。
+
+### 起因與查證
+
+Phase 5 的 Opus reviewer 回報「114 個 Concept 的 `exit_criteria` 是英文，會直接推播給中文學習者」。
+主控查證後推翻了兩個先前的說法：
+
+1. **不是設計決策**。spec §10.2 原本寫「`exit_criteria` 為英文完整句子（§11）」——那是 F7 **由部分
+   樣本歸納**，實際只有 69% 為英文，另 31% 是中文，且分布是**模組層級的全有全無**。
+2. **根因是 Stage 1 的 prompt 沒有指定語言**。該 prompt 有 8 條編號 MUST 規則，**沒有一條講語言**；
+   欄位範例雖是中文，但**範例不是規則**，模型逐批自行決定。
+   `concepts/**` 自生成後**從未被手改**（唯一的修改 commit 是 102 行純新增的題號與 Author Hints）。
+
+### 處置（憲章修訂 → 修根因 → 翻譯 → 補 Gate）
+
+| 步驟 | 內容 | 額度 |
+| --- | --- | --- |
+| 1 | 憲章 **v1.1.0 → v1.2.0**：XVII 新增 `2-2` 例外之例外，窄範圍授權翻譯此二欄位；**把「MUST 同時修正 Stage 1 的 prompt」列為授權成立條件 (iv)** | 0 |
+| 2 | `stage1-curriculum.ts` 新增規則 8（語言），附 114/165 的實測證據與「MUST NOT 只靠範例暗示」 | 0 |
+| 3 | 4 個 Fable agent 並行翻譯 114 個 Skeleton（22 / 31 / 31 / 30） | 約 2 個百分點 |
+| 4 | `sync-article-exit-criteria.ts` **腳本**回填 114 篇 Article frontmatter | 0 |
+| 5 | `article-gate.ts` 補逐字比對 Gate + 6 項單元測試 | 0 |
+
+**步驟 4 刻意用腳本而非 agent**：機械複製的正確結果唯一且可驗證，派 agent 會改寫措辭、
+破壞「逐字一致」這個 Gate 條件，且要燒額度。
+
+### 主控獨立驗證（未採信 agent 自述）
+
+- 114 個 Skeleton：**結構欄位 0 改動、Author Hints 正文 0 改動、條數 0 改變**（逐檔對照 HEAD）。
+- 165 個 Concept：全數繁中、無簡體字、符合上限。
+- 全庫四關：`npm test` 107/107 檔、`validate:content` 641 筆、`sync --check` 一致、
+  `gate:articles --all` 全數通過。
+
+### 預算反而更寬鬆
+
+`exit_criteria` 單條最長 **107 → 70**（上限 110）、合計最長 **197 → 90**（上限 400）。
+spec §10.2 已註明 MUST NOT 因此把單條上限調回 60。
+
+### 回填範圍是 114 篇而非 21 篇
+
+推播讀的是 **Article** 的 frontmatter，而回填是零額度的腳本——因此一次補滿全部 114 篇，
+**推播端立刻全部改善**，不必等剩下 13 個 Phase 跑完。尚未重生的 93 篇正文品質問題依然存在，
+翻譯不會順便修好它們。
+
+### 新增缺陷紀錄
+
+- **D12**：Article 與 Skeleton 的 `exit_criteria` 有兩份副本卻無 Gate 比對（已修）。
+- **D13**：`scripts/lib/prompts/**` 是 template literal，寫入反引號會靜默截斷字串。
+  本次踩到——`gate:articles` / `validate:content` / `gate:code` **全都不會發現**，
+  只有 `npm test` 的**檔案載入失敗**會，而它顯示成「1 failed / 0 tests failed」，
+  真正的訊號是**測試總數少了 37**。紀律：改 prompt 後 MUST 跑 `npx tsc --noEmit`。
+- **D11 已標記為修復**，並存查 7 條「翻譯時發現、但依『僅限語言合規』刻意未改」的原文問題
+  （文法錯誤、寫死 JS 語法、RPN 與 operator precedence 的語意矛盾等），待另立任務處理。

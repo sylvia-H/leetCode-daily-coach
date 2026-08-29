@@ -6,10 +6,8 @@ pattern_label: Linear Scan
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can write a while loop that advances current = current.next without losing
-    references
-  - Can correctly handle empty list conditions
+  - 能寫出以 current = current.next 前進且不遺失參照的 while 迴圈
+  - 能正確處理空串列的情況
 ---
 ## Concept
 

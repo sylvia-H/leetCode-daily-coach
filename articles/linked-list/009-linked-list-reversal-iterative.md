@@ -6,8 +6,8 @@ pattern_label: Pointer Reversal
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - 'Can reverse a linked list iteratively using prev, curr, and next pointers'
-  - Can return the new head correctly
+  - 能使用 prev、curr、next 三個指標迭代地反轉 linked list
+  - 能正確回傳新的 head
 ---
 ## Concept
 

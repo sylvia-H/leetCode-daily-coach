@@ -6,7 +6,7 @@ pattern_label: Bottom-up Heapify
 complexity_label: O(n) time / O(1) space
 estimated_minutes: 25
 exit_criteria:
-  - Can explain why bottom-up heap construction is O(n) instead of O(n log n).
+  - 能說明為何 bottom-up 建構 heap 是 O(n) 而非 O(n log n)。
 ---
 ## Concept
 

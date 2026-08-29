@@ -177,6 +177,18 @@ spec §20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全�
 2. MUST NOT 改動 Skeleton 的結構欄位（`id`／`module`／`topic`／`prerequisite`／
    `next`／`leetcode`／`localOrder`），以保證 `schedules/**` 維持 byte-identical、
    `state.json` 不受影響；
+2-2. **例外之例外——語言合規翻譯（2026-08-29）**：`learning_goal` 與 `exit_criteria`
+   是**推播內容而非結構欄位**（Exit Criteria 於 spec §14.5 有獨立字元預算並原樣推播）。
+   經查證，`concepts/**` 中 114 / 165 個 Concept 的此二欄位為英文，成因是 Stage 1 的
+   prompt 未指定輸出語言（產線缺陷），**非設計決策**。為使其符合 spec §11 的語言規範，
+   MAY 於本活動期間將此二欄位翻譯為繁體中文，但 MUST 全數滿足：
+   (i) 逐條**語意等價**，MUST NOT 增刪條數、改變順序或藉機修改語意；
+   (ii) MUST 同步更新 `articles/**` frontmatter 中的 `exit_criteria` 複本，並 MUST 有
+        **自動 Gate** 保證兩者逐字一致；
+   (iii) MUST 通過 spec §10.2 的條數與單條長度上限；
+   (iv) **MUST 同時修正 Stage 1 的 prompt 使其釘死輸出語言**，否則產線重跑會重現同一缺陷。
+   本授權**僅限語言合規**，MUST NOT 擴及任何其他 Skeleton 欄位或內容變更，亦 MUST NOT
+   被援引為「Skeleton 可手改」的通則——**活動結束後即失效**；
 3. MUST 在對應 Feature 的 `specs/NNN-*/` 留下批次範圍、使用模型與逐批 commit 紀錄；
 4. 活動結束後產線 MUST 恢復全自動，此例外 MUST NOT 演變為常態流程。
 
@@ -248,4 +260,4 @@ spec §20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全�
   本憲章原則並記錄違反與正當化理由（無法正當化者退回設計）；`/speckit-analyze` MUST
   將憲章衝突列為 CRITICAL。程式碼審查與驗收 MUST 確認未違反任一 MUST / MUST NOT。
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-08-29
+**Version**: 1.2.0 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-08-29

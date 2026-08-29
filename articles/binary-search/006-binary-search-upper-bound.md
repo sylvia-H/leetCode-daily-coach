@@ -6,7 +6,7 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - 'Correctly adjust pointers when nums[mid] > target.'
+  - '能在 nums[mid] > target 時正確調整指標。'
 ---
 ## Concept
 

@@ -6,9 +6,7 @@ pattern_label: Depth-First Search
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Write a recursive function that visits the left subtree, then root, then
-    right subtree.
+  - 能寫出先造訪左子樹、再根節點、再右子樹的遞迴函式。
 ---
 ## Concept
 

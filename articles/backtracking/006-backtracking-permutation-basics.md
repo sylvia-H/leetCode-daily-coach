@@ -6,10 +6,8 @@ pattern_label: State Tracking Permutation
 complexity_label: O(n!) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can use a visited array or set to track which elements are currently
-    included in the path.
-  - Can generate all n! permutations.
+  - 能使用 visited 陣列或 set 追蹤哪些元素目前已包含在路徑中。
+  - 能生成全部 n! 種排列。
 ---
 ## Concept
 

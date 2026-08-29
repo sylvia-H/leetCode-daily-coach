@@ -68,6 +68,21 @@ export async function runPerArticleGate(
     return { reason: `觀念本體 ${bodyChars} 字，超過上限 ${CONCEPT_BODY_MAX_CHARS} 字` };
   }
 
+  // Article frontmatter 的 `exit_criteria` 由 `assembleArticleMarkdown` 從 Skeleton **原樣複製**而來，
+  // 兩份副本過去**沒有任何 Gate 比對**——F12 於 2026-08-29 翻譯 114 個 Skeleton 的 `exit_criteria`
+  // 時發現此洞：改了 Skeleton 而漏改 Article，推播出去的仍是舊值，且不會有任何檢查失敗。
+  // 憲章 XVII-2-2 (ii) 因此把「MUST 有自動 Gate 保證兩者逐字一致」列為該次翻譯授權的成立條件。
+  const skeletonEc = node.exitCriteria;
+  const articleEc = article.meta.exitCriteria;
+  if (articleEc.length !== skeletonEc.length || articleEc.some((v, i) => v !== skeletonEc[i])) {
+    return {
+      reason:
+        `exit_criteria 與 Skeleton 不一致：Article 有 ${articleEc.length} 條、Skeleton 有 ${skeletonEc.length} 條` +
+        `——Article frontmatter 的 exit_criteria MUST 逐字複製自 Skeleton（憲章 XVII-2-2），` +
+        `MUST NOT 手改。首個差異：Article=${JSON.stringify(articleEc.find((v, i) => v !== skeletonEc[i]) ?? null)}` +
+        ` / Skeleton=${JSON.stringify(skeletonEc.find((v, i) => v !== articleEc[i]) ?? null)}`,
+    };
+  }
   const tc = checkTraditionalChinese(article.rawContent);
   if (!tc.ok) {
     return { reason: `繁中判準：${tc.violations.map((v) => v.message).join("; ")}` };

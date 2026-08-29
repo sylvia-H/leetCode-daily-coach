@@ -6,7 +6,7 @@ pattern_label: Hierarchical Data Structure
 complexity_label: O(n) / O(h)
 estimated_minutes: 15
 exit_criteria:
-  - 'Define root, parent, child, leaf, depth, and height correctly.'
+  - 能正確定義 root、parent、child、leaf、depth 與 height。
 ---
 ## Concept
 

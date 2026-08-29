@@ -6,7 +6,7 @@ pattern_label: Depth-First Search
 complexity_label: O(V + E) / O(V)
 estimated_minutes: 15
 exit_criteria:
-  - Avoid infinite loops on cyclic graphs by using a visited set.
+  - 能使用 visited set 避免在含環的圖上陷入無窮迴圈。
 ---
 ## Concept
 

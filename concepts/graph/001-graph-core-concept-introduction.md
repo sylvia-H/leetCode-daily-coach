@@ -13,9 +13,9 @@ next:
   - graph-adjacency-list-representation
   - dfs-bfs-core-concept-introduction
 learning_goal:
-  - Understand the fundamental definitions of vertices and edges in graphs.
+  - 理解圖中頂點（vertex）與邊（edge）的基本定義。
 exit_criteria:
-  - Distinguish between directed and undirected edges.
+  - 能區分有向邊與無向邊。
 leetcode: []
 tags:
   - graph

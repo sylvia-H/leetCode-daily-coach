@@ -6,9 +6,7 @@ pattern_label: Two Pointers
 complexity_label: O(n^2) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - >-
-    Can write a helper function to expand around single and double character
-    centers.
+  - 能寫出對單字元與雙字元中心進行擴展的輔助函式。
 ---
 ## Concept
 

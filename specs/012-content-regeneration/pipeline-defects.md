@@ -352,7 +352,7 @@ Common Mistakes 是固定區塊，**prompt 要求「列出常見錯誤」但沒�
 
 ## D11 · 114 個 Concept 的 `exit_criteria` / `learning_goal` 是英文，會直接推播給中文學習者
 
-**狀態**：🔴 未修復，**F12 不得處理**（修法在 `concepts/**`）
+**狀態**：🟢 **已修復（2026-08-29）**——經憲章修訂 v1.2.0（XVII-2-2）授權後翻譯完成
 **嚴重度**：中——影響 165 個 Concept 中的 **114 個（69%）**。
 
 ### 證據（Phase 5 reviewer 查出）
@@ -383,3 +383,122 @@ F12 明訂 MUST NOT 觸碰 `concepts/**`（Skeleton 是內容的真實來源）�
 
 **MUST NOT 在 F12 內以任何方式繞過**（例如讓 agent 在教材裡自行翻譯 frontmatter——
 那會讓生成物與真實來源不一致，違反「Skeleton 是真實來源」）。
+
+---
+
+## D11 修復紀錄（2026-08-29）
+
+### 查證：英文不是設計決策，是 Stage 1 的 prompt 缺漏
+
+原本以為這是「spec §10.2 有意選了英文」，查證後推翻：
+
+| 事實 | 證據 |
+| --- | --- |
+| `concepts/**` **從未被手改** | 只有 3 個 commit；唯一的修改 commit `07debd5` 是 **102 行純新增、0 刪除**，加的全是 `leetcode` 題號與 Author Hints |
+| 分布是**模組層級的全有全無** | 5 個模組全中文（array／dfs-bfs／dynamic-programming／programming-mindset／two-pointer，51 個），11 個模組全英文（114 個）——這是「一個批次一個決定」的指紋 |
+| **Stage 1 的 prompt 沒有指定語言** | 該 prompt 有 8 條編號 MUST 規則（篇數、單一觀念、前向依賴、難度、題號、必填欄位、回傳格式…），**沒有任何一條講語言**；欄位範例雖是中文，但**範例不是規則** |
+
+故 spec §10.2 那句「`exit_criteria` 為英文完整句子（§11）」是 **F7 由部分樣本歸納**，
+對 165 個 Concept 只成立於 69%。已於同一次改動更正該段。
+
+### 處置（四件事，缺一不可）
+
+1. **憲章 v1.1.0 → v1.2.0**：XVII 新增 `2-2` 例外之例外，授權在 F12 期間翻譯
+   `learning_goal` / `exit_criteria`，並把**「MUST 同時修正 Stage 1 的 prompt」列為授權成立條件之一**
+   ——否則只治標，產線重跑會重現。
+2. **修根因**：`stage1-curriculum.ts` 新增規則 8（語言），明訂哪些欄位保留英文、哪些 MUST 繁中，
+   並寫入「MUST NOT 只靠範例暗示」與 114/165 的實測證據。
+3. **翻譯**：4 個 Fable agent 並行處理 114 個 Skeleton。主控**獨立驗證**（非採信 agent 自述）：
+   結構欄位 0 改動、Author Hints 正文 0 改動、條數 0 改變。
+4. **補 Gate + 同步器**：見下方 D12。
+
+### 副作用：預算反而更寬鬆
+
+| 指標 | 翻譯前（英文） | 翻譯後（繁中） | 上限 |
+| --- | --- | --- | --- |
+| `exit_criteria` 單條最長 | 107 | **70** | 110 |
+| 全部合計最長 | 197 | **90** | 400 |
+| 條數最多 | 2 | 2 | 6 |
+
+spec §10.2 已註明：**MUST NOT** 因為改中文就把單條上限調回 60——那會重新製造 F7 解決過的問題。
+
+### 翻譯時發現、但依「僅限語言合規」規則**刻意未改**的原文問題
+
+授權明訂 MUST NOT 藉翻譯之便修改語意，故以下一律照譯並在此存查，待另立任務處理：
+
+- `backtracking/001`：`learning_goal` 文法錯誤——`a implicit decision tree`（應為 `an`）。
+- `binary-search/003`：`exit_criteria` 只有 1 條且寫死 JavaScript 的 `Math.floor(...)`，
+  對 Python 學習者（`//`）不完全適用。
+- `binary-search/010`：`exit_criteria` 寫 `row = mid / cols`，在 JS 應為整數除法。
+- `stack/005`：`Understand operator precedence handling in postfix notation`——
+  postfix（RPN）正是為了**消除** operator precedence 而存在，此條語意可疑。
+- `tree/010`：`Compare left subtree's left with right subtree's right, and left with right`
+  ——對稱檢查的正確配對是「左的 right 對右的 left」，後半句語意含混。
+- `tree/007`：`Maintain and update a global or passed-down depth counter`——
+  「global counter」與專案教材偏好的純函式遞迴風格有張力。
+- `linked-list/004`：`Can correctly deallocate ... the target node reference`——
+  本課程語言是 TS / Python（皆為 GC 語言），`deallocate` 並非學習者實際會做的操作。
+
+---
+
+## D12 · Article 與 Skeleton 的 `exit_criteria` 有兩份副本，卻沒有任何 Gate 比對
+
+**狀態**：🟢 **已修復（2026-08-29）**
+**嚴重度**：中——這是「靜默分歧」型缺陷，錯了不會有任何檢查失敗。
+
+### 問題
+
+`assembleArticleMarkdown` 把 Skeleton 的 `exit_criteria` **原樣複製**進 Article frontmatter，
+於是同一份資料有兩個副本。而**推播讀的是 Article 那一份**
+（`src/compiler/lesson.ts` 用 `article.meta.exitCriteria`，非 Curriculum 的）。
+
+翻譯 114 個 Skeleton 時暴露此洞：**改了 Skeleton 而不動 Article，推播出去的仍是英文舊值，
+且不會有任何 Gate 失敗**。同理，未來任何 Skeleton 的 `exit_criteria` 調整都會靜默失效。
+
+### 修復
+
+1. **Gate**：`scripts/lib/article-gate.ts` 的 `runPerArticleGate` 新增逐字比對
+   （Article vs `node.exitCriteria`，條數／順序／內容全等）。掛在**產線與 `gate:articles` 共用的
+   那一顆** Gate 上，符合憲章 IX「MUST NOT 另立平行判準」；`verify:phase` 因而自動涵蓋。
+2. **同步器**：`scripts/sync-article-exit-criteria.ts`（`npm run sync:exit-criteria`），
+   扮演憲章 XIII 要求的「改來源 → 重跑生成器 → review diff → commit」中的生成器。
+   `--check` 模式供 CI／人工快速驗證。
+3. **測試**：`tests/unit/sync-article-exit-criteria.test.ts`（6 項）釘死冪等性、
+   只動 `exit_criteria`、以及**保留各檔原有行尾**（工作樹混用 LF / CRLF，正規化會產生無關的整檔 diff）。
+
+### 為何同步用腳本而非 agent
+
+這是**機械複製**，正確結果唯一且可驗證。派 agent 會改寫措辭、破壞「逐字一致」這個 Gate 條件，
+且要燒額度。**凡是有唯一正確答案的搬運工作，MUST 用腳本，MUST NOT 用 LLM。**
+
+---
+
+## D13 · prompt 檔是 template literal，寫入反引號會靜默截斷字串
+
+**狀態**：🟡 已知陷阱，已在本次踩過並修正；**無程式修法，靠紀律**
+**嚴重度**：低（會被 `npm test` 擋下），但**誤判成本高**
+
+### 事發經過（2026-08-29）
+
+修 Stage 1 的語言規則時，把新規則寫成 markdown 風格並用反引號標記欄位名
+（`` `title` ``／`` `O(n)` ``）。但 `scripts/lib/prompts/*.ts` 的 prompt 本體是
+**JS template literal**——反引號直接把字串截斷，整個檔案語法錯誤。
+
+**既有的 8 條規則全都刻意不用反引號**，改用「／」分隔與粗體，這個慣例沒有寫成註解，
+所以很容易被後人（包含 agent）破壞。
+
+### 為何誤判成本高
+
+- `gate:articles`、`validate:content`、`gate:code` **全都不會發現**——它們不編譯 `scripts/lib/prompts/`。
+- `npm test` 會擋，但輸出長這樣：**`Test Files 1 failed | 106 passed`，而 `Tests 925 passed` 且 0 failed**。
+  失敗的是**檔案載入**（esbuild transform），不是任何一條斷言。
+  在一堆 e2e 的 stdout／stderr 雜訊中，這行極易被當成無關訊息略過——
+  真正的訊號是**測試總數少了 37**（962 → 925）。
+
+### 紀律（MUST）
+
+1. 編輯 `scripts/lib/prompts/**` 的 prompt 字串時，**MUST NOT 使用反引號**；
+   欄位名用「／」分隔或粗體標示，程式碼片段直接寫裸文字（例：O(n)、bisect）。
+2. 改完 **MUST 跑 `npx tsc --noEmit`**——它會立刻抓到，比 `npm test` 快且訊號明確。
+3. 看 `npm test` 結果時，**MUST 同時核對測試總數**，不能只看 `failed` 是不是 0。
+   「檔案載入失敗」會讓整批測試消失，卻不計入 failed。

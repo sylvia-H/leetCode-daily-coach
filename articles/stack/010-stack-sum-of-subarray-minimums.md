@@ -6,10 +6,8 @@ pattern_label: Monotonic Stack Boundary Extension
 complexity_label: O(n) / O(n)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Can determine how far left and right an element can extend while remaining
-    the minimum.
-  - Can calculate total contribution using bounds and modulo arithmetic.
+  - 能判斷每個元素在維持最小值的前提下，向左與向右可延伸多遠。
+  - 能利用邊界與 modulo 運算計算總貢獻。
 ---
 ## Concept
 

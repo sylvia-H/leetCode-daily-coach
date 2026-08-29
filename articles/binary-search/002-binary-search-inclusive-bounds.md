@@ -6,8 +6,8 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Correctly initialize pointers for inclusive bounds.
-  - Use correct termination condition.
+  - 能為閉區間正確初始化指標。
+  - 能使用正確的終止條件。
 ---
 ## Concept
 

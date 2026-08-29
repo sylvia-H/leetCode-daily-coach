@@ -6,7 +6,7 @@ pattern_label: Data Representation
 complexity_label: O(V^2) / O(V^2)
 estimated_minutes: 10
 exit_criteria:
-  - Check edge existence in O(1) time using a matrix.
+  - 能使用矩陣在 O(1) 時間內檢查邊是否存在。
 ---
 ## Concept
 

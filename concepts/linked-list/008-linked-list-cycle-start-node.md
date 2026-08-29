@@ -12,14 +12,10 @@ prerequisite:
 next:
   - linked-list-reversal-iterative
 learning_goal:
-  - >-
-    Find the exact node where a linked list cycle begins using mathematical
-    pointer positioning.
+  - 利用數學上的指標定位，找出 linked list 環的確切起始節點。
 exit_criteria:
-  - >-
-    Can reset one pointer to the head after collision and advance both at speed
-    1 to find the entry node
-  - Can explain the mathematical proof behind the meeting distance
+  - 能在相遇後將其中一個指標重設回 head，並讓兩者以速度 1 前進，找到入環節點
+  - 能說明相遇距離背後的數學證明
 leetcode:
   - 142
 tags:

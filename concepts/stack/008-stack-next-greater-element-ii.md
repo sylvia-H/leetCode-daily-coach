@@ -12,10 +12,10 @@ prerequisite:
 next:
   - stack-online-stock-span
 learning_goal:
-  - Apply monotonic stack techniques to circular arrays by iterating twice.
+  - 透過走訪兩次，將 Monotonic Stack 技巧應用於環狀陣列。
 exit_criteria:
-  - Can simulate circular array traversal using modulo indexing.
-  - Can find next greater elements across array wrap-arounds.
+  - 能用 modulo 索引模擬環狀陣列的走訪。
+  - 能跨越陣列的環狀邊界找出 next greater element。
 leetcode:
   - 503
 tags:

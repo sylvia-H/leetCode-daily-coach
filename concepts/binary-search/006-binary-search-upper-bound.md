@@ -12,9 +12,9 @@ prerequisite:
 next:
   - binary-search-rotated-array
 learning_goal:
-  - Find the first element strictly greater than target.
+  - '找出第一個嚴格大於 target 的元素。'
 exit_criteria:
-  - 'Correctly adjust pointers when nums[mid] > target.'
+  - '能在 nums[mid] > target 時正確調整指標。'
 leetcode:
   - 34
 tags:

@@ -6,8 +6,8 @@ pattern_label: Pointer Manipulation
 complexity_label: 'O(1) for head, O(n) or O(1) with tail / O(1)'
 estimated_minutes: 20
 exit_criteria:
-  - Can prepend a node in O(1) time by updating head pointers correctly
-  - Can handle edge cases like inserting into an initially empty list
+  - 能藉由正確更新 head 指標，以 O(1) 時間在開頭插入節點
+  - 能處理如插入初始為空的串列等邊界情況
 ---
 ## Concept
 

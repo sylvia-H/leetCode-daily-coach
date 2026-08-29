@@ -6,9 +6,7 @@ pattern_label: Two Heaps Balance
 complexity_label: O(log n) insert / O(1) median / O(n) space
 estimated_minutes: 30
 exit_criteria:
-  - >-
-    Can maintain balance between two heaps such that roots give the median
-    directly.
+  - 能維持兩個 heap 之間的平衡，使兩者的根能直接給出中位數。
 ---
 ## Concept
 

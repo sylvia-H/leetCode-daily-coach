@@ -12,12 +12,10 @@ prerequisite:
 next:
   - queue-circular-buffer
 learning_goal:
-  - >-
-    Implement a queue using singly linked list pointers to achieve O(1) enqueue
-    and dequeue operations.
+  - '用單向鏈結串列的指標實作佇列，讓 enqueue 與 dequeue 都達到 O(1)。'
 exit_criteria:
-  - Maintain head and tail pointers correctly during push and pop.
-  - Handle edge cases like an empty queue or single-element queue.
+  - '能在 push 與 pop 時正確維護 head 與 tail 指標。'
+  - '能處理空佇列或只有單一元素的佇列等邊界情況。'
 leetcode: []
 tags:
   - queue

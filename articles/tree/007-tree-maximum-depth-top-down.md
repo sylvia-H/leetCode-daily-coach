@@ -6,7 +6,7 @@ pattern_label: Top-Down DFS (Accumulator)
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - Maintain and update a global or passed-down depth counter during traversal.
+  - 能在走訪過程中維護並更新全域或向下傳遞的深度計數器。
 ---
 ## Concept
 

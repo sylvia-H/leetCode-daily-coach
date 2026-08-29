@@ -6,8 +6,8 @@ pattern_label: Binary Search
 complexity_label: O(log n) / O(1)
 estimated_minutes: 20
 exit_criteria:
-  - Configure pointers with right = n.
-  - Update bounds correctly using right = mid.
+  - 能以 right = n 設定指標。
+  - 能用 right = mid 正確更新邊界。
 ---
 ## Concept
 

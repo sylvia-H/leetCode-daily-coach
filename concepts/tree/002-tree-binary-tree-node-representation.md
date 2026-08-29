@@ -12,11 +12,9 @@ prerequisite:
 next:
   - tree-dfs-preorder-traversal
 learning_goal:
-  - 'Implement a binary tree node structure with value, left, and right pointers.'
+  - '實作含 value、left、right 指標的二元樹節點結構。'
 exit_criteria:
-  - >-
-    Successfully instantiate a binary tree node and assign child pointers in
-    code.
+  - '能在程式碼中成功建立二元樹節點並指定子節點指標。'
 leetcode: []
 tags:
   - tree
