@@ -178,14 +178,6 @@ ${input.tsTip ?? "ts tip"}
 
 ${input.pyTip ?? "py tip"}
 
-## TypeScript Corner
-
-測試用內容。
-
-## Python Corner
-
-測試用內容。
-
 ## Takeaway
 
 ${input.takeaway ?? "一句話帶走"}

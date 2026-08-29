@@ -26,19 +26,6 @@ exit_criteria:
 ## Complexity
 O(1)。
 
-## TypeScript Corner
-閱讀用內容，含程式碼：
-
-```ts
-// 這是 Corner 的範例，不是推播內容
-function corner() {
-  return true;
-}
-```
-
-## Python Corner
-閱讀用內容。
-
 ## Today's Challenge
 
 - **1** · 測試用說明文字。

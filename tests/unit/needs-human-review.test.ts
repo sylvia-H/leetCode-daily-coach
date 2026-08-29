@@ -44,8 +44,6 @@ function badDraftResponse(): Record<string, unknown> {
     patternRecognition: "這是一段完全正常的繁體中文辨識線索說明。",
     commonMistakes: "這是一段完全正常的繁體中文常見錯誤說明。",
     complexity: "時間複雜度 O(n)，空間複雜度 O(1)。",
-    tsCorner: "```typescript\nconst x = 1 + 1;\nconsole.log(x);\n```",
-    pyCorner: "```python\nx = 1 + 1\nprint(x)\n```",
     tomorrowPreview: "明日預告內容。",
     digest: "摘要內容。",
     tsTip: "```typescript\nconst y = 2;\nconsole.log(y);\n```",

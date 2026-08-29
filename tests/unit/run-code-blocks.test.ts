@@ -20,27 +20,16 @@ function fakeExecutor(overrides: Partial<CodeExecutor> = {}): CodeExecutor {
   };
 }
 
-describe("extractCodeBlocks（抽出 TypeScript/Python Corner/Tip 的 fenced code blocks）", () => {
-  it("正確抽出四個目標區塊各自的程式碼與語言標籤", () => {
+describe("extractCodeBlocks（抽出 TypeScript/Python Tip 的 fenced code blocks）", () => {
+  it("正確抽出兩個目標區塊各自的程式碼與語言標籤", () => {
     const markdown = makeArticleMarkdown({
       id: "c1",
       tsTip: "```typescript\nif (1 + 1 !== 2) throw new Error('bad');\n```",
       pyTip: "```python\nassert 1 + 1 == 2\n```",
-    })
-      .replace(
-        "## TypeScript Corner\n\n測試用內容。",
-        "## TypeScript Corner\n\n```typescript\nif (2 + 2 !== 4) throw new Error('bad');\n```",
-      )
-      .replace(
-        "## Python Corner\n\n測試用內容。",
-        "## Python Corner\n\n```python\nassert 2 + 2 == 4\n```",
-      );
+    });
     const blocks = extractCodeBlocks(markdown);
     const sections = blocks.map((b) => b.section);
-    expect(sections).toContain("TypeScript Tip");
-    expect(sections).toContain("Python Tip");
-    expect(sections).toContain("TypeScript Corner");
-    expect(sections).toContain("Python Corner");
+    expect(sections).toEqual(["TypeScript Tip", "Python Tip"]);
     for (const b of blocks) {
       expect(b.lang).toBe(b.section.startsWith("TypeScript") ? "typescript" : "python");
     }
@@ -79,20 +68,20 @@ describe("hasAssertion（缺斷言判準，R6）", () => {
 
 describe("checkCodeBlocks（純邏輯，executor 注入替身）", () => {
   it("缺斷言 → missing-assertion，不呼叫 executor", async () => {
-    const blocks: CodeBlock[] = [{ section: "TypeScript Corner", lang: "typescript", code: "const x = 1;" }];
+    const blocks: CodeBlock[] = [{ section: "TypeScript Tip", lang: "typescript", code: "const x = 1;" }];
     let called = false;
     const executor = fakeExecutor({ runTypeScript: async () => ((called = true), { ok: true }) });
     const results = await checkCodeBlocks(blocks, executor);
-    expect(results).toEqual([{ section: "TypeScript Corner", lang: "typescript", ok: false, reason: "missing-assertion" }]);
+    expect(results).toEqual([{ section: "TypeScript Tip", lang: "typescript", ok: false, reason: "missing-assertion" }]);
     expect(called).toBe(false);
   });
 
   it("編譯/型別檢查失敗 → execution-failed，攜帶 detail", async () => {
-    const blocks: CodeBlock[] = [{ section: "TypeScript Corner", lang: "typescript", code: "throw new Error('x'); const y: number = 'oops';" }];
+    const blocks: CodeBlock[] = [{ section: "TypeScript Tip", lang: "typescript", code: "throw new Error('x'); const y: number = 'oops';" }];
     const executor = fakeExecutor({ runTypeScript: async () => ({ ok: false, detail: "TS2322: type mismatch" }) });
     const results = await checkCodeBlocks(blocks, executor);
     expect(results).toEqual([
-      { section: "TypeScript Corner", lang: "typescript", ok: false, reason: "execution-failed", detail: "TS2322: type mismatch" },
+      { section: "TypeScript Tip", lang: "typescript", ok: false, reason: "execution-failed", detail: "TS2322: type mismatch" },
     ]);
   });
 
@@ -138,7 +127,7 @@ describe("withTempDir（暫存資源清理，R6）", () => {
 });
 
 describe("findSectionsWithoutCode（擋真空通過：區塊在、fence 不在）", () => {
-  // 實測：Stage 2 產出的第一篇文章把 Corner 的程式碼寫成單行純文字（無 fence），
+  // 實測：Stage 2 產出的第一篇文章把語言區塊的程式碼寫成單行純文字（無 fence），
   // extractCodeBlocks 抽到 0 個區塊 → checkCodeBlocks 無失敗可報 → 生成期與 CI 雙雙回報通過。
   // 一個會回報綠燈的失效 Gate，比沒有 Gate 更危險。
   function article(sections: Record<string, string>): string {
@@ -150,23 +139,23 @@ describe("findSectionsWithoutCode（擋真空通過：區塊在、fence 不在�
 
   it("區塊存在但無 fenced code block → 具名列出該區塊", () => {
     const md = article({
-      "TypeScript Corner": "function f() { throw new Error('x'); } f();",
-      "Python Corner": "def f(): assert True",
+      "TypeScript Tip": "function f() { throw new Error('x'); } f();",
+      "Python Tip": "def f(): assert True",
     });
-    expect(findSectionsWithoutCode(md)).toEqual(["TypeScript Corner", "Python Corner"]);
+    expect(findSectionsWithoutCode(md)).toEqual(["TypeScript Tip", "Python Tip"]);
   });
 
   it("區塊有合法 fenced code block → 不列入", () => {
     const md = article({
-      "TypeScript Corner": "```typescript\nthrow new Error('x');\n```",
-      "Python Corner": "```python\nassert True\n```",
+      "TypeScript Tip": "```typescript\nthrow new Error('x');\n```",
+      "Python Tip": "```python\nassert True\n```",
     });
     expect(findSectionsWithoutCode(md)).toEqual([]);
   });
 
   it("fence 存在但內容為空 → 仍列為缺失（空 block 等於沒有可測程式碼）", () => {
-    expect(findSectionsWithoutCode(article({ "TypeScript Corner": "```typescript\n\n```" }))).toEqual([
-      "TypeScript Corner",
+    expect(findSectionsWithoutCode(article({ "TypeScript Tip": "```typescript\n\n```" }))).toEqual([
+      "TypeScript Tip",
     ]);
   });
 
