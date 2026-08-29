@@ -11,7 +11,8 @@
       "window": "21-34",
       "concepts": 14,
       "quiz": 105,
-      "cumulative": 14
+      "cumulative": 14,
+      "status": "done"
     },
     {
       "phase": 2,
@@ -19,7 +20,8 @@
       "window": "14-41",
       "concepts": 8,
       "quiz": 55,
-      "cumulative": 22
+      "cumulative": 22,
+      "status": "pending"
     },
     {
       "phase": 3,
@@ -27,7 +29,8 @@
       "window": "7-48",
       "concepts": 9,
       "quiz": 72,
-      "cumulative": 31
+      "cumulative": 31,
+      "status": "pending"
     },
     {
       "phase": 4,
@@ -35,7 +38,8 @@
       "window": "0-55",
       "concepts": 10,
       "quiz": 76,
-      "cumulative": 41
+      "cumulative": 41,
+      "status": "pending"
     },
     {
       "phase": 5,
@@ -43,7 +47,8 @@
       "window": "56-69",
       "concepts": 10,
       "quiz": 82,
-      "cumulative": 51
+      "cumulative": 51,
+      "status": "pending"
     },
     {
       "phase": 6,
@@ -51,7 +56,8 @@
       "window": "70-83",
       "concepts": 9,
       "quiz": 61,
-      "cumulative": 60
+      "cumulative": 60,
+      "status": "pending"
     },
     {
       "phase": 7,
@@ -59,7 +65,8 @@
       "window": "84-97",
       "concepts": 9,
       "quiz": 64,
-      "cumulative": 69
+      "cumulative": 69,
+      "status": "pending"
     },
     {
       "phase": 8,
@@ -67,7 +74,8 @@
       "window": "98-111",
       "concepts": 10,
       "quiz": 75,
-      "cumulative": 79
+      "cumulative": 79,
+      "status": "pending"
     },
     {
       "phase": 9,
@@ -75,7 +83,8 @@
       "window": "112-125",
       "concepts": 9,
       "quiz": 64,
-      "cumulative": 88
+      "cumulative": 88,
+      "status": "pending"
     },
     {
       "phase": 10,
@@ -83,7 +92,8 @@
       "window": "126-139",
       "concepts": 9,
       "quiz": 64,
-      "cumulative": 97
+      "cumulative": 97,
+      "status": "pending"
     },
     {
       "phase": 11,
@@ -91,7 +101,8 @@
       "window": "140-153",
       "concepts": 10,
       "quiz": 69,
-      "cumulative": 107
+      "cumulative": 107,
+      "status": "pending"
     },
     {
       "phase": 12,
@@ -99,7 +110,8 @@
       "window": "154-167",
       "concepts": 9,
       "quiz": 57,
-      "cumulative": 116
+      "cumulative": 116,
+      "status": "pending"
     },
     {
       "phase": 13,
@@ -107,7 +119,8 @@
       "window": "168-181",
       "concepts": 9,
       "quiz": 66,
-      "cumulative": 125
+      "cumulative": 125,
+      "status": "pending"
     },
     {
       "phase": 14,
@@ -115,7 +128,8 @@
       "window": "182-195",
       "concepts": 10,
       "quiz": 69,
-      "cumulative": 135
+      "cumulative": 135,
+      "status": "pending"
     },
     {
       "phase": 15,
@@ -123,7 +137,8 @@
       "window": "196-209",
       "concepts": 9,
       "quiz": 70,
-      "cumulative": 144
+      "cumulative": 144,
+      "status": "pending"
     },
     {
       "phase": 16,
@@ -131,7 +146,8 @@
       "window": "210-223",
       "concepts": 9,
       "quiz": 71,
-      "cumulative": 153
+      "cumulative": 153,
+      "status": "pending"
     },
     {
       "phase": 17,
@@ -139,7 +155,8 @@
       "window": "224-237",
       "concepts": 10,
       "quiz": 79,
-      "cumulative": 163
+      "cumulative": 163,
+      "status": "pending"
     },
     {
       "phase": 18,
@@ -147,7 +164,8 @@
       "window": "238-251",
       "concepts": 2,
       "quiz": 17,
-      "cumulative": 165
+      "cumulative": 165,
+      "status": "pending"
     }
   ]
 }

@@ -11,78 +11,80 @@ exit_criteria:
 ---
 ## Concept
 
-In-Place Element Removal with Fast-Slow Pointers 是一種在處理陣列資料時極具效率的演算法模式。當題目要求我們在原本的陣列空間內移除特定元素，且空間複雜度必須達到 O(1) 時，傳統的建立新陣列或使用額外資料結構的方法便不再適用。此時，我們利用兩個指標——快指標與慢指標，在同一個陣列上進行掃描與覆寫。快指標的職責在於遍歷整個陣列，尋找所有符合條件（例如不等於目標值）的有效元素；而慢指標則負責標記下一個有效元素應該被寫入的位置。透過這種分工，我們能夠在不佔用額外記憶體的狀況下，將陣列進行原地壓縮，並同時計算出新陣列的有效長度。
+In-Place Element Removal with Fast-Slow Pointers（快慢指標原地移除）解決的是「在原陣列空間內移除特定元素、空間複雜度必須是 O(1)」的問題。單一指標之所以辦不到，是因為「讀到哪裡」與「寫到哪裡」是兩個獨立前進的位置——每跳過一個要移除的元素，兩者的距離就拉開一格。快慢指標正是把這兩個職責拆開：**fast 負責讀**，逐格掃描整個陣列尋找要保留的元素；**slow 負責寫**，永遠指向下一個有效元素該存放的位置。fast 遇到有效元素就把它寫到 `nums[slow]` 並讓 slow 前進一格；遇到要移除的元素則只有 fast 前進。掃描結束時，陣列前段 `[0, slow - 1]` 恰好塞滿所有保留元素，slow 本身就是新的有效長度。
 
 ## Thinking
 
-在著手解決 In-Place Element Removal 相關問題時，思考的邏輯起點在於如何避免頻繁搬移元素所帶來的效能損耗。若使用暴力解法，每當找到一個要移除的元素就將後方所有元素往前搬移，時間複雜度會退化至 O(n^2)。此時我們轉換思維，採用 Fast-Slow Pointers。我們初始化一個慢指標 slow，通常從索引 0 開始，用來代表下一個有效資料的存放位置。接著讓快指標 fast 從頭到尾掃描陣列。當 fast 指向的元素是我們需要保留的有效元素時，我們就把它賦值給 arr[slow]，隨後將 slow 向右推動一格。若遇到需要移除的元素，fast 則繼續前進，而 slow 停留在原地等待下一個有效元素的覆蓋。如此一來，陣列前端會依序塞滿所有有效元素，而後端則成為未使用的殘留空間。當快指標掃描完畢時，slow 的數值剛好等於新陣列的有效長度。
+先看暴力解為何不行：每移除一個元素就把後方所有元素往前搬一格，最壞情況是 O(n^2)。快慢指標改為「一次掃描、就地覆寫」，其正確性由一條迴圈不變式保證：**任何時刻，`nums[0..slow-1]` 恰好是已掃描區段中所有應保留的元素，且維持原本的相對順序**。初始時 slow = 0、區間為空，不變式成立；每當 fast 找到保留元素並寫入 `nums[slow]`，不變式隨 slow++ 延續。另一個關鍵是安全性——覆寫會不會蓋掉還沒讀的資料？不會，因為 slow 只在 fast 完成一次讀取後才可能前進一格，所以恆有 `slow <= fast`：寫入的位置要麼是 fast 剛讀完的格子、要麼在它左邊，未讀區域永遠不受影響。掃描完畢後回傳 slow，即為壓縮後的有效長度。
 
 ## Pattern Recognition
 
-要辨識這類題目是否適用 Fast-Slow Pointers 模式，可以從幾個關鍵特徵來判斷。第一，題目明確要求 In-place 修改，即空間複雜度限制為 O(1)，不能宣告額外的陣列或集合來儲存結果。第二，題目牽涉到元素的篩選、移除特定數值、或是根據條件保留特定頻率的元素（例如最多允許重複兩次）。第三，陣列通常允許被破壞性修改，也就是說，原本陣列後方的順序或數值在處理過後可以被覆蓋或忽略。當觀察到這些線索時，即可直接聯想並套用快慢指標架構來建立有效區間。
+三個線索指向這個 Pattern：一、題目明確要求 in-place 修改、空間限制 O(1)，不允許開新陣列存結果；二、本質是「依條件篩選並保留元素」——移除指定值、去掉多餘重複、把不合格元素擠出去；三、有效長度之後的尾端內容允許是任意值，代表可以放心覆寫。此外，若題目要求保留元素的相對順序不變，快慢指標天然滿足（fast 由左往右依序搬運）；反之若順序可犧牲，還有「與尾端元素交換」的對向變體可將寫入次數壓到更低。
 
 ## Common Mistakes
 
-開發者在實作 Fast-Slow Pointers 時最常犯的錯誤，在於搞清楚快慢指標的更新時機與賦值順序。常見的錯誤是將條件判斷寫反，或者在不該推進慢指標時盲目將其遞增，導致有效元素被覆蓋或遺漏。另一個常見的迷思是誤以為需要額外呼叫陣列的刪除方法（如 splice 或 pop），這在大部分語言中會觸發底層陣列的大規模元素搬移，導致時間複雜度劣化至 O(n^2)。正確的做法是單純透過指派運算子進行覆寫，最後直接回傳慢指標的數值作為新長度，忽略索引大於等於該長度的後續元素即可。
+第一類錯誤是指標職責混淆：在不該推進 slow 時遞增它（例如 fast 遇到要移除的元素時也 slow++），會讓垃圾值混進有效區；或把判斷條件寫反，變成保留了要移除的值。第二類是依賴語言內建的刪除方法，如 `splice` 或 `list.pop(i)`——它們每次呼叫都觸發底層整段搬移，迴圈中使用會讓複雜度退化回 O(n^2)，而且一邊走訪一邊刪除還容易跳過相鄰元素。第三類是回傳值誤解：應回傳 slow（有效長度），而非陣列本身或被移除的個數；也不必去清空 slow 之後的殘留值，題目約定那段內容不被檢查。
 
 ## Complexity
 
-時間複雜度為 O(n)，因為快指標只需對整個陣列進行一次線性掃描；空間複雜度為 O(1)，全程僅使用固定的指標變數，未動用任何額外的動態記憶體。
+時間複雜度為 O(n)：fast 對陣列恰好做一次線性掃描，每個元素至多被讀一次、寫一次。空間複雜度為 O(1)：全程只用兩個指標變數，沒有任何隨輸入規模成長的額外配置。
 
 ## Digest
 
-本篇課程深入探討了 In-Place Element Removal 與 Fast-Slow Pointers 的核心運作機制。我們學習到如何透過快指標負責掃描、慢指標負責寫入的協同作業，在 O(n) 時間與 O(1) 空間下完成陣列壓縮。文章詳細剖析了 Pattern 的辨識線索、常見的指標更新錯誤，並透過 TypeScript 與 Python 的標準程式碼範例展示了實作細節。掌握此模式不僅能解決基本的值移除題，更能應對允許重複保留等進階變體。
+快慢指標把「讀」與「寫」拆成兩個獨立位置：fast 掃描找保留元素，slow 指向下一個寫入位置，遇到有效元素就 `nums[slow] = nums[fast]` 並 slow++。正確性由不變式「nums[0..slow-1] 恰為已掃描區段的保留元素、順序不變」保證；安全性由 `slow <= fast` 保證——寫入永不觸及未讀區域。一次掃描完成壓縮，slow 即新長度，O(n) 時間、O(1) 空間。切忌在迴圈中用 splice 這類會整段搬移的刪除方法。
 
 ## TypeScript Tip
 
+以「移除指定值 val」示範：注意 `nums[fast] !== val` 的比較可直接用可能為 `undefined` 的索引值，但寫入時要用 `!` 收斂型別（`noUncheckedIndexedAccess`）。
+
 ```typescript
-function removeDuplicates(nums: number[]): number {
-  if (nums.length === 0) return 0;
+import assert from "node:assert";
+function removeElement(nums: number[], val: number): number {
   let slow = 0;
-  for (let fast = 1; fast < nums.length; fast++) {
-    if (nums[fast] !== nums[slow]) {
+  for (let fast = 0; fast < nums.length; fast++) {
+    if (nums[fast] !== val) {
+      nums[slow] = nums[fast]!;
       slow++;
-      nums[slow] = nums[fast];
     }
   }
-  return slow + 1;
+  return slow;
 }
-const nums = [1, 1, 2];
-const len = removeDuplicates(nums);
-if (len !== 2) throw new Error("Length check failed");
-if (nums[0] !== 1 || nums[1] !== 2) throw new Error("Content check failed");
+const nums = [0, 1, 2, 2, 3, 0, 4, 2];
+const len = removeElement(nums, 2);
+assert.strictEqual(len, 5);
+assert.deepStrictEqual(nums.slice(0, len), [0, 1, 3, 0, 4]);
 ```
 
 ## Python Tip
 
-```python
-def remove_duplicates(nums: list[int]) -> int:
-    if not nums:
-        return 0
-    slow = 0
-    for fast in range(1, len(nums)):
-        if nums[fast] != nums[slow]:
-            slow += 1
-            nums[slow] = nums[fast]
-    return slow + 1
+Python 的 list 是傳參考：函式內的原地修改，呼叫端看得到。切片 `nums[:length]` 可用來驗證有效區內容。
 
-nums = [1, 1, 2]
-length = remove_duplicates(nums)
-assert length == 2, "Length check failed"
-assert nums[:2] == [1, 2], "Content check failed"
+```python
+def remove_element(nums: list[int], val: int) -> int:
+    slow = 0
+    for fast in range(len(nums)):
+        if nums[fast] != val:
+            nums[slow] = nums[fast]
+            slow += 1
+    return slow
+
+nums = [0, 1, 2, 2, 3, 0, 4, 2]
+length = remove_element(nums, 2)
+assert length == 5
+assert nums[:length] == [0, 1, 3, 0, 4]
 ```
 
 ## Takeaway
 
-快慢指標分工明確，快找有效、慢作寫入，O(1) 空間原地壓縮陣列。
+快慢指標把讀寫位置拆開：fast 掃描、slow 寫入，恆有 slow <= fast，一次掃描即以 O(1) 空間原地壓縮陣列。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 延伸的另一個經典架構：相向雙指標（Collision Pointers）。我們將學習如何利用左右雙指標在已排序陣列中尋找特定總和的數對，並進一步分析其在演算法效率上的優勢。
+明天用同一套快慢指標處理「已排序陣列的原地去重」：架構完全不變，只是判斷條件從「不等於指定的 val」換成「與已保留的前一個元素比較」，體會同一 Pattern 換條件就能解新題的威力。
 
 ## Today's Challenge
 
-- **27** · 題目要求原地移除指定數值且不使用額外記憶體，完全符合 Fast-Slow Pointers 的快指標掃描、慢指標覆寫之經典應用場景。
-  - Hint: 快指標掃描不等於 val 的元素，將其依序搬移到慢指標所在位置。
-- **80** · 允許元素最多重複兩次，可藉由調整快慢指標的比較條件與容忍次數，在原陣列中直接進行篩選與覆寫。
-  - Hint: 慢指標落後兩位進行比對，確保相同元素不超過兩次。
+- **27** · 原地移除指定值並回傳新長度，是快慢指標的標準入門題：fast 掃描、slow 寫入的分工在此題最純粹地呈現。
+  - Hint: fast 遇到不等於 val 的元素就寫到 nums[slow] 並讓 slow 前進，最後回傳 slow。
+- **80** · 允許每個值最多重複兩次的原地壓縮：判斷條件從「等於 val」升級為「與有效區倒數第二個元素比較」，示範同一架構的條件變形。
+  - Hint: 當 nums[fast] 不等於 nums[slow - 2] 時才寫入，前兩個元素一律直接保留。

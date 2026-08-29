@@ -149,7 +149,22 @@ MUST NOT 出現簡體字；CJK 佔比（CJK ÷（CJK + 拉丁詞數））MUST �
   下游會確定性重排選項順序，這類寫法重排後必然錯亂。
 - **MUST NOT 出現 LeetCode 題號**（題幹 / 選項 / 詳解皆是）。
 - 長度：`stem` ≤ 60、每個 `option` ≤ 55、`explanation[0]` ≤ 80（單題渲染上限 570 含連結保留 120）。
-- **MUST NOT 讓正解成為該題唯一最長的選項**——干擾項要寫得跟正解一樣完整。
+- **MUST NOT 讓正解成為該題「唯一最長」的選項**——判準是 `isAnswerUniqueLongestOption`，
+  **沒有容差**：正解只要比其餘三項都長 1 個字元就算違規（集合層上限為過半題數）。
+  ⚠️ Phase 1 實測：某 agent 自評「正解非唯一**顯著**最長」而放行，實際 7 題中 6 題違規——
+  「顯著」是你想像出來的容差，判準裡沒有。干擾項要寫得跟正解一樣完整，或至少讓其中一項等長。
+  **MUST 用下列腳本自驗到 `0/N`**（在 REPO 目錄執行，`<QUIZ_OUT>` 換成你的輸出目錄）：
+
+  ```
+  node -e "
+  const fs=require('fs');const L=s=>Array.from(s).length;const D='<QUIZ_OUT>/';
+  for(const f of fs.readdirSync(D).filter(x=>x.endsWith('.json'))){
+    const items=JSON.parse(fs.readFileSync(D+f,'utf8')).items;
+    const bad=items.filter(it=>{const l=it.options.map(L),m=Math.max(...l);
+      return l[it.answerIndex]===m&&l.filter(x=>x===m).length===1;}).length;
+    console.log(f, bad+'/'+items.length, bad===0?'OK':'FAIL');
+  }"
+  ```
 - **正解位置不用你操心**：下游 `rebalanceAnswerPositions` 會確定性重排，你照語意自然安排即可。
 - 題目 MUST 涵蓋**不同面向**（定義／正確性論證／複雜度／邊界／常見誤解／實作細節），
   MUST NOT 全部在問同一件事。

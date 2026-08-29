@@ -28,3 +28,26 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 **代價（已知並接受）**：Tip 的字元上限是為 Discord 6,000 總預算而訂，移除 Corner 後 Pages 的語言
 深度也被推播預算封頂。補償措施：語言特有陷阱的**論述**改寫進 `Common Mistakes`（觀念本體 ≤2,000 字
 目前僅用約 36%），程式碼示範留在 Tip；此規則已寫入 docs/spec.md §10／§11 與 agent-brief.md。
+| 1 | idx 21–34 | 14 個（array 收尾 + hash-table 開頭），quiz 105 題 | fable | （本批） | article 14/14 ✓、quiz 零違規、962 tests ✓、641 筆 Lesson ✓、330 區塊 ✓ | 4 agent 並行；subagent 計數合計 730K tokens。A 的 3 個 Concept 因 `quiz-longest-option-bias` 退回重修一輪 |
+
+## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
+
+- **Tomorrow Preview 與 Skeleton `next` 不符：14 篇中 13 篇錯。** 根因為 `Stage2PromptInput`
+  **沒有 `next` 欄位**，prompt 也無 Tomorrow Preview 的內容指示——模型只能編一個聽起來合理的
+  下一課，且無任何 Gate 判準檢查。**產線本身尚未修正**（見下方待辦）。
+- **quiz 正解標錯／命題瑕疵 3 起**：
+  1. `two-pointer-container-water` item[5]：「等高時同時移動兩端會漏解」為偽——窮舉
+     203,276 組（含首尾等高 50,004 組）不一致組數為 0。
+  2. `hash-table-sliding-window-distinct` item[0]：標定「先加入 Set、再判斷重複」，
+     在 TS/Python 上不可實作（`add` 對重複為靜默 no-op），且與同卷 item[1]/[2] 矛盾。
+     舊教材 Thinking 段有同一錯誤 ⇒ 錯誤自教材傳染至題庫。
+  3. `hash-table-sliding-window-frequency` item[2]：標定「頻率歸零**必須**刪鍵」，
+     與**同一課教材 Common Mistakes**「刪鍵是常見錯誤」正面矛盾；實際為策略相依，
+     四個選項無一無條件成立。
+
+## 待辦（不屬 Phase 1 範圍）
+
+- `scripts/lib/prompts/stage2-content.ts` 的 `Stage2PromptInput` MUST 補 `next` 欄位並在 prompt
+  指示 Tomorrow Preview 的內容來源；per-article Gate 宜加一條檢查。否則將來重跑產線會原樣重現
+  13/14 的缺陷。
+
