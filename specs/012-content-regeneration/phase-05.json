@@ -2,7 +2,7 @@
   "phase": 5,
   "window": "sessionIndex 56-69",
   "model": "fable",
-  "status": "pending",
+  "status": "done",
   "concepts": [
     {
       "conceptId": "binary-search-core-concept",

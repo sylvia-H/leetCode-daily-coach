@@ -312,3 +312,74 @@ Phase 4 的 reviewer 確認該批 10 篇仍全面使用「明天」。
    是否真的能產生該題要求的輸出格式？」特別點名**回傳索引 vs 回傳值**這類會被排序破壞的需求。
 2. **審查層（已實施）**：Phase 4 起列入 Opus reviewer 的必查清單，實測有效。
    F12 之後若無 reviewer，此缺陷會回到無人把關的狀態。
+
+---
+
+## D10 · 教材憑空捏造「常見錯誤」，且自己的示範程式碼就違反它
+
+**狀態**：🔴 未修復
+**嚴重度**：中高——這是**主動散布錯誤知識**，比缺漏嚴重。
+
+### 證據（Phase 5 查證，兩例皆經窮舉證偽）
+
+| Concept | 捏造的規則 | 事實 |
+| --- | --- | --- |
+| `two-pointer-container-water` | Common Mistakes：「等高時同時移動兩端會漏解」 | **偽**。三次獨立窮舉（Phase 1 的 203,276 組、作者的 335,916 組、reviewer 的 97,650 組）對照暴力法，不一致均為 **0** 組 |
+| `two-pointer-trapping-rain-water` | Common Mistakes：「比較當前高度會導致計算失效」 | **偽**，且**同篇程式碼用的正是該寫法**。窮舉 97,655 組驗證三種變體全部正確 |
+| `two-pointer-sort-array-by-parity` | Common Mistakes：「無限迭代」「空陣列越界」 | 兩條在其自身示範結構下都不可能發生 |
+
+第一例是 **D2 的傳染源頭**：偽命題先寫進教材 Common Mistakes，再流入 quiz item[5]
+（且該題原四個選項**無一正確**，正確答案根本不在選項裡）。
+
+### 根因假設
+
+Common Mistakes 是固定區塊，**prompt 要求「列出常見錯誤」但沒有要求「該錯誤必須真的會發生」**。
+模型在想不出真實陷阱時會編一個聽起來合理的——而演算法命題的真偽無法靠語感判斷。
+`gate:code` 只實測 Tip 的程式碼，**完全不驗 Common Mistakes 的敘述**。
+
+### 修復方向
+
+1. **prompt 層**：要求 Common Mistakes 的每一條 MUST 可被一個具體反例證實
+   （「什麼輸入下、寫成什麼樣、會得到什麼錯誤結果」），MUST NOT 只寫抽象告誡。
+   寫不出反例就不要列那一條。
+2. **self-check 層**：新增提問——「你列的每一條 Common Mistake，能不能舉出一組具體輸入
+   使該錯誤真的發生？若與本篇示範程式碼衝突，是哪一邊錯？」
+3. **審查層（已實施）**：Phase 5 起在 agent prompt 附上已證偽的命題與窮舉數據，
+   並要求「若推導出不同結論 MUST 先窮舉驗證再下筆」。實測有效——作者主動重驗後正面改寫，
+   reviewer 再獨立驗一次。**但這只治已知的偽命題，治不了未知的。**
+
+---
+
+## D11 · 114 個 Concept 的 `exit_criteria` / `learning_goal` 是英文，會直接推播給中文學習者
+
+**狀態**：🔴 未修復，**F12 不得處理**（修法在 `concepts/**`）
+**嚴重度**：中——影響 165 個 Concept 中的 **114 個（69%）**。
+
+### 證據（Phase 5 reviewer 查出）
+
+`binary-search-core-concept` 的 frontmatter `exit_criteria` 為英文；
+**backtracking / binary-search / graph / heap / stack / tree 等模組整批如此**。
+
+**Exit Criteria 是 Discord 的獨立推播區塊**（spec §14.5 給它 ≤400 字元的獨立預算），
+會原樣推給學習者。agent 依 brief「frontmatter 逐字沿用」照做是正確的——**問題在 Skeleton**。
+
+此事牴觸 spec §11 的教材語言規範（教學文章以繁體中文撰寫，僅技術術語 / Pattern 名稱 /
+API / 程式碼保留英文）。**整句英文的學習目標不屬於「技術術語」。**
+
+### 為何 F12 修不掉
+
+F12 明訂 MUST NOT 觸碰 `concepts/**`（Skeleton 是內容的真實來源）。
+從 Phase 6 起，backtracking / graph / heap / stack / tree 等模組會持續產生同樣的教材。
+
+### 需要的決策（MUST 由使用者裁定，MUST NOT 由 agent 自行決定）
+
+依 CLAUDE.md 的跨 Feature 規則，此決策 **MUST 落地到 `docs/spec.md`**。選項：
+
+1. **另立任務翻譯 114 個 Skeleton 的 frontmatter**——根治，但要動真實來源，
+   且 F12 產出的教材需連帶複查（Exit Criteria 區塊的內容會變）。
+2. **改推播版面不推 Exit Criteria**——最小改動，但等於承認該區塊沒有推播價值，
+   應同步檢討它在 spec §10 / §14.5 的定位。
+3. **維持現狀**——接受中文教材夾雜整句英文的學習目標。
+
+**MUST NOT 在 F12 內以任何方式繞過**（例如讓 agent 在教材裡自行翻譯 frontmatter——
+那會讓生成物與真實來源不一致，違反「Skeleton 是真實來源」）。

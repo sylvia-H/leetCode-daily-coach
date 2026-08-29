@@ -11,71 +11,95 @@ exit_criteria:
 ---
 ## Concept
 
-Sort Array by Parity Partition 涉及利用條件式雙指標（Two Pointers）在單一陣列中進行就地分割（Partitioning）。其核心目的在於將陣列中的元素依照特定屬性（例如奇偶性、正負號或特定數值）重新排列，將符合條件的元素歸類至陣列的一側，而不符合條件的元素則移至另一側。這種操作能夠在維持空間複雜度為 O(1) 的前提下，於 O(n) 的線性時間內完成資料重組。
+Sort Array by Parity Partition 把陣列課學過的對向雙指標從「驗證」升級為「搬動」：依某個條件（最典型是奇偶）把陣列原地分成前後兩群——偶數歸左、奇數歸右，群內順序不限。正確性靠一條三段式不變式：**[0, left) 已確定就位（偶數區）、(right, n-1] 已確定就位（奇數區）、[left, right] 是尚未檢查的未知區**。每輪迴圈只做一件事：縮小未知區。left 指到偶數（已在正確側）就 left++；right 指到奇數就 right--；兩者都停下，代表 left 停在放錯側的奇數、right 停在放錯側的偶數，交換一次同時修好兩個錯位。指標交會時未知區清空，不變式涵蓋整個陣列，分割即告完成。
 
 ## Thinking
 
-設定左右雙指標，left 初始化為陣列起始位置 0，right 初始化為陣列末端位置 n - 1。在迴圈進行中，當 left 指向符合條件且位於正確區側的元素時，將 left 向右推進；當 right 指向符合條件且位於正確區側的元素時，將 right 向左推進。若雙方皆未滿足各自的條件，代表兩者皆停留在錯誤的區側，此時將兩者指向的元素進行原地交換（Swap），隨後同時推進左右指標，直至 left 與 right 指標交會為止。
+實作骨架：left = 0、right = n - 1，`while (left < right)`。分支順序：先問 nums[left] 是否已就位，是就 left++ 進下一輪；再問 nums[right] 是否已就位，是就 right--；兩者皆否才交換，並同時 left++、right--。為什麼一定會結束？三個分支每輪都讓未知區至少縮小 1（交換分支縮小 2），未知區長度至多 n，所以至多 n 輪。為什麼交換後可以放心同時推進？因為交換那一刻兩端都已驗過：left 換來的是偶數、right 換來的是奇數，兩格都符合不變式，不推進只是白白重驗。終止沿用相向雙指標的慣例 `left < right`：left == right 那一格不需要處理——它左邊全是偶數、右邊全是奇數，這個元素無論奇偶，「偶前奇後」的分界都成立。
 
 ## Pattern Recognition
 
-當題目要求將一個一維陣列根據某種邏輯規則（例如奇偶數分離、將特定數值移至陣列兩端、或將陣列劃分為不同特徵的區段）進行原地重排時，即可辨識出此 Pattern 為 Two Pointers - Partitioning。此模式的特徵在於不需要額外配置新的記憶體空間來存放結果陣列。
+訊號：要求**原地**把陣列依布林條件分成兩群、群內順序不限——奇偶、正負、零與非零、小於 pivot 與否（快速排序的 partition 正是同一件事）。不需額外陣列是這個 Pattern 的招牌。反訊號：若題目要求保留群內相對順序（穩定分割），相向交換會打亂順序，得改用同向寫入的快慢指標（Move Zeroes 那一課的骨架）或額外空間；要分成三群以上，則升級為 Dutch National Flag 的三指標。
 
 ## Common Mistakes
 
-最常見的錯誤在於交換元素後忘記同時推進左右指標，導致迴圈陷入無限迭代。另一個常見失誤是忽略了指標邊界檢查，當陣列長度為零或邊端條件處理不當時，容易造成指標越界（Index Out of Bounds）的執行時期錯誤。
+一、條件寫反：讓 left 停在偶數、right 停在奇數再交換，等於把已就位的元素搬走，結果整組顛倒。二、用內層 while 掃描時漏掉 left < right 的守門：全偶陣列會讓 left 一路衝出陣列末端越界；本課的 if / elif 分支結構每輪重新檢查 left < right，不會有這個問題。三、交換後不推進指標：在分支結構裡下一輪會靠條件自我修正，只是多繞兩圈；但若寫成「不匹配就交換」的單一分支迴圈，交換後條件永遠不成立、指標永遠不動，就成了真正的無窮迴圈。四、誤以為分割是穩定的：交換會把右側元素直接甩到左側目前的位置，兩群內部順序都可能被打亂，題目若要求穩定就不能用這招。
 
 ## Complexity
 
-時間複雜度為 O(n)，因為左右指標在最壞的情況下只會遍歷陣列各一次；空間複雜度為 O(1)，因為所有的重排與交換動作均在原陣列內完成，不需額外配置線性記憶體。
+時間 O(n)：每輪至少推進一步、至多 n 輪，每輪只做常數次奇偶判斷與至多一次 O(1) 交換。空間 O(1)：只用兩個索引與交換暫存。對照組：另開新陣列、偶數從頭填、奇數從尾填，同樣 O(n) 時間但多付 O(n) 空間——原地版的價值就在省下這筆。
 
 ## Digest
 
-本次課程介紹了 Sort Array by Parity Partition 核心觀念，透過左右雙指標相向而行的方式，在 O(n) 時間與 O(1) 空間內完成條件分割。文章詳細說明了演算法思考過程、Pattern 辨識線索、常見實作錯誤及複雜度分析，並提供 TypeScript 與 Python 的實作範例。
+拿 [3, 1, 2, 4] 走一遍：left 停在 3（奇、錯位）、right 停在 4（偶、錯位），交換得 [4, 1, 2, 3] 並雙雙推進；left 停在 1、right 退到 2，再換得 [4, 2, 1, 3]，指標交錯——偶數 [4, 2] 全在前、奇數 [1, 3] 全在後。公式：left 找「不屬於左群的元素」、right 找「不屬於右群的元素」，各自停下就交換、同時推進；不變式「[0, left) 與 (right, n-1] 皆已就位」在交會時涵蓋全陣列。O(n) 時間、O(1) 空間，但群內順序不保證——要穩定就換同向寫入骨架。
 
 ## TypeScript Tip
 
+解構賦值一行完成交換。開啟 `noUncheckedIndexedAccess` 後 nums[i] 的型別是 `number | undefined`，取模與交換前用 `!` 收斂（迴圈條件已保證索引合法）。
+
 ```typescript
-function optimizeParity(nums: number[]): number[] {
-    let insertPos = 0;
-    for (let i = 0; i < nums.length; i++) {
-        if (nums[i] % 2 === 0) {
-            [nums[insertPos], nums[i]] = [nums[i], nums[insertPos]];
-            insertPos++;
-        }
+import assert from "node:assert";
+
+function sortByParity(nums: number[]): number[] {
+  let left = 0;
+  let right = nums.length - 1;
+  while (left < right) {
+    if (nums[left]! % 2 === 0) {
+      left++;
+    } else if (nums[right]! % 2 === 1) {
+      right--;
+    } else {
+      [nums[left], nums[right]] = [nums[right]!, nums[left]!];
+      left++;
+      right--;
     }
-    return nums;
+  }
+  return nums;
 }
-const res = optimizeParity([3, 1, 2, 4]);
-if (res[0] % 2 !== 0) throw new Error("assertion failed");
+
+const res = sortByParity([3, 1, 2, 4]);
+const firstOdd = res.findIndex((x) => x % 2 === 1);
+assert.ok(res.slice(0, firstOdd).every((x) => x % 2 === 0));
+assert.ok(res.slice(firstOdd).every((x) => x % 2 === 1));
+assert.deepStrictEqual([...res].sort((a, b) => a - b), [1, 2, 3, 4]);
 ```
 
 ## Python Tip
 
+Tuple unpacking 交換不需暫存變數；把「屬於左群」抽成參數，同一副骨架就能依任何條件分割。
+
 ```python
-def optimize_parity(nums: list[int]) -> list[int]:
-    insert_pos = 0
-    for i in range(len(nums)):
-        if nums[i] % 2 == 0:
-            nums[insert_pos], nums[i] = nums[i], nums[insert_pos]
-            insert_pos += 1
+def partition(nums: list[int], belongs_left) -> list[int]:
+    left, right = 0, len(nums) - 1
+    while left < right:
+        if belongs_left(nums[left]):
+            left += 1
+        elif not belongs_left(nums[right]):
+            right -= 1
+        else:
+            nums[left], nums[right] = nums[right], nums[left]
+            left += 1
+            right -= 1
     return nums
 
-res = optimize_parity([3, 1, 2, 4])
-assert res[0] % 2 == 0, "assertion failed"
+res = partition([3, 1, 2, 4], lambda x: x % 2 == 0)
+k = sum(1 for x in res if x % 2 == 0)
+assert all(x % 2 == 0 for x in res[:k])
+assert all(x % 2 == 1 for x in res[k:])
+assert sorted(res) == [1, 2, 3, 4]
 ```
 
 ## Takeaway
 
-掌握相向雙指標分割技巧，透過左右指標交會與元素交換，在原地達成 O(n) 時間與 O(1) 空間效率。
+left 找錯位、right 找錯位，交換一次修好兩個；未知區每輪縮小，指標交會即分割完成——O(n) 時間、O(1) 空間。
 
 ## Tomorrow Preview
 
-明天將探討更多涉及多指標（Multiple Pointers）與區間重構的進階技巧，學習如何在更複雜的排列限制下維持高效的線性執行時間。
+Two Pointers 模組到此收官——從排序夾擠、淘汰論證、條件分支到原地分割，相向與同向兩副骨架都已到手。明天起進入新的模組，用同樣的節奏繼續推進。
 
 ## Today's Challenge
 
-- **905** · 本題要求將陣列中的偶數移至奇數前方，是最經典的雙指標原地分割應用。
-  - Hint: 利用左右指標分別尋找左側的奇數與右側的偶數進行交換。
-- **75** · 本題要求將包含三種不同元素的陣列進行原地分類，是基礎 Partitioning 概念的進階延伸。
-  - Hint: 擴展雙指標為三指標（Dutch National Flag 演算法）來處理三種分類。
+- **905** · 最純粹的條件分割：偶前奇後、順序不限，本課骨架直接落地。
+  - Hint: left 找奇數、right 找偶數，兩者都停下就交換並同時推進；`while (left < right)` 收尾。
+- **75** · 三種顏色的原地分類，把兩群分割升級為 Dutch National Flag 三指標。
+  - Hint: 維護 low / mid / high 三區：mid 遇 0 與 low 交換後兩者都推進、遇 2 與 high 交換後 mid 不動（換來的元素還沒檢查）、遇 1 直接前進。

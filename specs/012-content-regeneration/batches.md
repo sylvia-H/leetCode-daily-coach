@@ -32,6 +32,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 2 | idx 14–41 | 8 個（array 前四課 + hash-table 收尾 + string 開頭），quiz 55 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道全過：article 8/8 ✓、quiz 合併 55 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（142.6s） | 4 agent 並行；subagent 計數 fable 746K + opus 148K ≈ 894K tokens。reviewer 退修 4 篇（1 MAJOR / 3 MINOR），另因 quiz 簡體字檢查退修 1 次 |
 | 3 | idx 7–48 | 9 個（programming-mindset 006–010 + string 003–006），quiz 72 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 72 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（148.4s） | subagent 計數 fable 1,009K + opus 187K ≈ 1,196K tokens。batch D 曾因 API 內容過濾中斷，檔案已寫出故恢復收尾、未重跑。reviewer 退修 8 篇（2 MAJOR / 6 MINOR） |
 | 4 | idx 0–55 | 10 個（programming-mindset 001–005 + string 007–010 + two-pointer 001），quiz 76 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 76 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.7s） | subagent 計數 fable 1,060K + opus 173K ≈ 1,233K tokens。**reviewer 判定退修 0 篇**（F12 首次），僅順手修 3 項 MINOR |
+| 5 | idx 56–69 | 10 個（two-pointer 002–010 + binary-search 001），quiz 82 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 82 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（136.4s） | subagent 計數 fable 1,244K + opus 181K ≈ 1,425K tokens。**reviewer 判定退修 0 篇**（連續第二批），僅順手修 2 項 MINOR |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -198,3 +199,74 @@ reviewer 逐一驗算 20 個 code block 確認**新版未重蹈死斷言覆轍**
   待 F12 結束後另立任務。
 - **D6 的統一收斂**：見 `pipeline-defects.md` D6 的「F12 修不掉這一條」——
   MUST 待 F12 全部跑完後以一次機械替換處理，MUST NOT 在個別批次零星修補。
+
+## Phase 5 — two-pointer 002–010 + binary-search 001（2026-08-29）
+
+**reviewer 判定：10 篇全數可收、退修 0 篇，無 BLOCKER 亦無 MAJOR**（連續第二批）。
+
+本批是 two-pointer 的**正確性論證重頭戲**，故 reviewer 首次被授權**執行只讀的驗算腳本**——
+純讀文字判斷不了「等高同移是否漏解」這類命題。實測證明這個授權是對的：
+reviewer 抽驗 **13 段程式碼、施加 28 種針對性變異並實際執行**，僅一項存活
+（而那正是教材主動宣告為等價、且經窮舉證實的變體，屬正確知識而非死斷言）；
+另對四支演算法做對照暴力法窮舉（valid palindrome II 29,524 組、boats vs bitmask DP 97,650 組、
+backspace 1,194,649 組、parity 87,381 組），不一致全為 0。
+
+### 偽命題的三次證偽與正面改寫
+
+「等高時同時移動兩端會漏解」此命題**為偽**，至此已被獨立窮舉三次：
+
+| 來源 | 測資組數 | 首尾等高 | 不一致 |
+| --- | --- | --- | --- |
+| Phase 1 查證 | 203,276 | 50,004 | **0** |
+| Phase 5 作者重驗 | 335,916 | 55,986 | **0** |
+| Phase 5 reviewer 複驗 | 97,650 | 19,530 | **0** |
+
+**作法**：orchestrator 在 agent prompt 附上既有結論與窮舉數據，並明令
+「若你的推導得出不同結論，MUST 先窮舉驗證再下筆」。作者**自己重跑了一次更大範圍的窮舉**
+才據以改寫——這是正確的：給的是既有結論，驗過才採信。
+新版 004 在 Thinking／Common Mistakes／Digest／quiz item[4] 四處一致，
+並把「以為同移會漏解」本身**反轉成教學點**列為常見誤解。
+
+### 2 項 MINOR 的處置（依 Phase 4 定下的判準：只修「錯的」與「白測的」）
+
+| 項目 | 處置 |
+| --- | --- |
+| `binary-search-core-concept` 對 34 的 Hint 未提無解回 `[-1, -1]`（同篇 704 已明寫回 -1） | **修**（D9 類） |
+| `two-pointer-container-water` 是同模組唯一未交代為何用 `left < right` | **修**（沿用模組共同判準「相遇那一格需不需要被處理？」） |
+| `binary-search-core-concept` 可補半句銜接前一課的 `left < right` | 不修（reviewer 自標為加分項；Common Mistakes 已用 `nums=[5]` 反例講清差異） |
+| 兩篇 Python Tip 各有一處刻意簡化的未防護邊界 | 不修（正文均已如此定位） |
+
+### 兩套邊界慣例（two-pointer `<` vs binary-search `<=`）
+
+reviewer 專項查核結論：**不會混淆，是本批處理得最好的一件事。**
+這不是「two-pointer 一律 `<`」的二分——模組內 005、006 本來就用 `<=` 且各有理由
+（要結算相遇格／最後一人也要一艘船）。教材已把判準統一到同一個問題：
+**「相遇那一格需不需要被處理？」** binary-search 001 再抽象成「區間定義、迴圈條件、
+更新方式三者必須成套」，並以 `nums=[5]` 找 5 的反例示範閉區間配 `<` 會錯回 -1，
+TS Tip 還放了 `binarySearch([5], 5)` 這條斷言守著它。
+
+**D1 狀態**：Tomorrow Preview 對 `next` **10/10 全數命中**；舊教材則有 **9 篇預告錯誤**。
+
+## Phase 5 查證出的既有缺陷
+
+- **一個被死斷言完美掩蓋的真 bug**（D8 的最佳例證）：舊 `two-pointer-valid-palindrome-ii`
+  的 Python Tip 把 `return True` 誤縮排進迴圈，`"abcdefba"` 會被誤判為回文——
+  而斷言只驗 `"aba"`，剛好蓋住。`gate:code` 跑得過、斷言不拋錯、程式碼是錯的、教材在教錯的東西。
+  reviewer 已確認新版把該縮排改壞後，`assert valid_palindrome_ii("abcda") is False` 會立即失敗。
+- **憑空捏造的 Common Mistakes**（新增 D10）：三個 Concept 的「常見錯誤」經窮舉證偽，
+  其中 `two-pointer-trapping-rain-water` 更是**同篇程式碼用的正是它指控的寫法**。
+- **quiz 正解標錯（第三例，且比前兩例更糟）**：`two-pointer-container-water` item[5]
+  不只正解標在偽命題上，而是**原四個選項無一正確**——正確答案根本不在選項裡。
+- **一題事實不通**：`two-pointer-four-sum-extension` item[7] 題幹稱「右指標自左而右移動」，
+  與相向夾擠的實際方向相反，explanation 亦自相矛盾。
+- **答案對、理由錯**：`two-pointer-backspace-string-compare` item[7] 正解的機制描述
+  與其舉例（`#a`）不符——開頭 `#` 根本沒有可略過的字元。
+- **D4 樣態持續**：`two-pointer-trapping-rain-water` 舊卷 7/7 題 `explanation[0]` 為正解逐字複製。
+- **殘骸**：「Container WithMost Water」「指子」「指針」、weight 誤作「體積」、多題 stem 超 60 上限。
+
+## 待辦（不屬 F12 範圍，新增）
+
+- **D11：114 個 Concept（69%）的 `exit_criteria` / `learning_goal` 是英文**，
+  而 Exit Criteria 是 Discord 的獨立推播區塊，會原樣推給中文學習者，牴觸 spec §11。
+  修法在 `concepts/**`，F12 MUST NOT 觸碰。**需使用者裁定三個選項之一並落地到 `docs/spec.md`**，
+  詳見 `pipeline-defects.md` D11。
