@@ -134,7 +134,7 @@ LeetCode Daily Coach 是一套**演算法課程引擎（Learning Pipeline）**�
 14. **Secrets never in repo**：Discord Webhook URL、LLM API key MUST 只走 Actions Secrets，MUST NOT 進 repo 或任何發佈產物。
 15. **Source isolation & fault tolerance**：任一非核心步驟（如未來的 Pages 發佈）失敗 MUST NOT 中斷核心推播；**多 Track 推播時，單一 Track 失敗 MUST NOT 中斷其他 Track（§18）**；核心步驟失敗 MUST 大聲失敗（紅色告警 + 非零 exit code）。
 16. **Free-tier only**：MUST 僅使用 GitHub Actions + Discord Webhook + LLM 免費層（僅 build-time）+ committed `state.json`，MUST NOT 引入付費或常駐 infra。
-17. **One Human Checkpoint**：內容產線唯一的常態性人工檢查點是「課綱大綱定稿」（§20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全自動生成、僅由自動 Gate 把關；MUST NOT 引入其他常態性人工審核關卡（Gate 擋下時的例外介入除外）。
+17. **One Human Checkpoint**：內容產線唯一的常態性人工檢查點是「課綱大綱定稿」（§20.3 Stage 1）。大綱凍結後，Skeleton、全文、課表 MUST 全自動生成、僅由自動 Gate 把關；MUST NOT 引入其他常態性人工審核關卡（Gate 擋下時的例外介入除外）。 **例外——一次性內容重生（one-off regeneration campaign）**：為更換生成模型或系統性提升既有教材品質而發起的、**有明確起訖且非週期性**的重生活動，MAY 由 agent 在互動 session 中逐批改寫 `articles/**` 與 `data/quiz-bank.json`，但 MUST 全數滿足：(a) 通過與產線**同一顆**自動 Gate（per-article Gate／`runContentGate`／`gate:code`），MUST NOT 另立平行判準；(b) MUST NOT 改動 Skeleton 的結構欄位（`id`／`module`／`topic`／`prerequisite`／`next`／`leetcode`／`localOrder`），以保證 `schedules/**` 維持 byte-identical、`state.json` 不受影響；(c) MUST 在對應 Feature 的 `specs/NNN-*/` 留下批次範圍、使用模型與逐批 commit 紀錄；(d) 活動結束後產線 MUST 恢復全自動，此例外 MUST NOT 演變為常態流程。
 
 ---
 
