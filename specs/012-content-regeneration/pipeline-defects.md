@@ -136,6 +136,19 @@ docblock 記載的實測教訓一致。
 「整卷一致」是關鍵：這不是模型偶爾偷懶，是 prompt 對 `explanation` 各段職責的定義不足，
 模型在缺乏明確指示時退化為填充。
 
+### Phase 3 追加證據：確定性行為，非抽樣觀察
+
+| Concept | 模組 | 樣態 | 範圍 |
+| --- | --- | --- | --- |
+| `error-driven-refinement` | programming-mindset | `explanation[0]` 是正解選項逐字複製 | 全部 8 題 |
+| `string-sliding-window-variable` | string | 同上 | 全部 9 題 |
+
+連同 Phase 2 的 `hash-table-design-lru-cache`（8/8），**三個模組、兩個 Phase、三個不同 agent**
+各自獨立讀到的既有題庫都是同一句式。已可排除「單卷失誤」，判定為產線的確定性行為。
+
+**優先度上調**：這是目前唯一「已確認為系統性、且有可靠機械判準」的缺陷。
+D1 因假陽性風險而否決了機械 Gate，D4 沒有這個問題——字串比對不需語意猜測。
+
 ### 根因假設（MUST 先驗證再動手）
 
 `scripts/generate-quiz-bank.ts` 的 prompt 未逐段定義 `explanation[0]`（正解結論）與
@@ -185,3 +198,35 @@ challenge / review / practice 槽，因此「明天我們將…」的「明天�
 Stage 2 prompt 的 Tomorrow Preview 規則改為要求**不綁定時間的措辭**
 （「接下來」「下一課」而非「明天」）。此為純 prompt 措辭調整，
 不影響既有 Gate，亦不需要重跑已凍結的教材——待下次改動 `stage2-content.ts` 時順手納入。
+
+---
+
+## D7 · 課綱層的配題重複：兩課用同一題、同一測資教同一件事
+
+**狀態**：🔴 未修復，且**不屬於 F12 範圍**（要動 `curriculum/`，非教材）
+**嚴重度**：中——影響學習體驗，且後一課讀起來像倒退。
+
+### 證據（Phase 3 reviewer 查出）
+
+`hash-table-sliding-window-frequency`（較早的 session）與 `string-sliding-window-fixed`
+（較晚的 session）：
+
+- **同一題** LeetCode 438，同時列為兩課的 Today's Challenge。
+- **同一組測資** `"cbaebabacd"` / `"abc"`。
+- **同一條迴圈不變式**。
+- 前一課還多教了 **matched 計數器**；後一課只教整表比對——**後一課教的方法更粗**。
+
+兩課的依賴關係本身是正當的：`concepts/string/005-string-sliding-window-fixed.md` 的
+`prerequisite` 明列 `hash-table-sliding-window-frequency`。**問題不在 DAG，在配題與內容切分。**
+
+### 已做的止血（Phase 3）
+
+`string-sliding-window-fixed` 補上一句誠實定位：先修課的 matched 計數器是同一副骨架的常數優化，
+本課先用整表比對把不變式講清楚。這讓「倒退感」變成「刻意的鋪陳」，但**沒有解決重複本身**。
+
+### 修復方向（MUST NOT 在 F12 處理）
+
+1. Problem Bank 的 Concept ↔ Problem 對應加一條檢查：同一題號被多個 Concept 列為
+   Today's Challenge 時 MUST 報告（是否允許重複由人判斷，但不該無聲發生）。
+2. 課綱層決定兩課的分工：或讓後一課直接以前一課的解法為起點只講差異，
+   或替後一課換一題。**此決策 MUST 落地到 `docs/spec.md` 與 `curriculum/`**（CLAUDE.md 跨 Feature 決策規則）。

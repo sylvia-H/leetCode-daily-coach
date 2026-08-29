@@ -10,65 +10,79 @@ exit_criteria:
 ---
 ## Concept
 
-Error-Driven Refinement 是一種將軟體開發過程中的編譯錯誤、執行期異常以及測資失敗，視為驗證與修正心智模型指引的系統化方法。在演算法解題與系統設計中，錯誤訊息往往提供了解題盲點的精準線索。透過這種疊代修正（Iterative Debugging）的思維，開發者能夠從盲目試錯轉變為精準診斷。
+Error-Driven Refinement 是把編譯錯誤、執行期例外與 Wrong Answer 當成精準訊號的偵錯方法：每一個錯誤都代表「你腦中的模型」與「程式的實際行為」在某處出現落差。它之所以可靠，是因為程式的行為完全確定——同樣的輸入必然產生同樣的結果，錯誤不是隨機的壞運氣，而是可以回溯的證據；每一筆失敗測資都是一個具體反例，指出你的假設在哪個輸入上破功。整套流程可以歸納為五步：分類錯誤、定位根因、縮小重現、提出假設、單一修改後驗證。
 
 ## Thinking
 
-當面對 Wrong Answer 或 Runtime Error 時，多數人的直覺是感到受挫或慌亂。然而，Error-Driven Refinement 要求我們冷靜下來，將每一個失敗的測資（Test Case）視為一個具體的反例。我們需要分析預期輸出與實際輸出的差異，找出心智模型與現實程式行為的落差，並透過精確的假設與驗證來調整邏輯，而不是憑感覺盲目修改程式碼。
+第一步先分類，因為不同類別的錯誤指向不同層面的根因：編譯或型別錯誤代表程式還沒開始跑，問題出在結構與型別的矛盾；Runtime Error 代表某個具體輸入觸發了非法操作（索引越界、除以零、存取空值）；Wrong Answer 代表語法與執行都正常，但邏輯與題意不符；Time Limit Exceeded 則多半是複雜度不足——回到上一課的時空取捨去換方法，而不是修小地方。
+
+第二步定位。要記住：報錯的位置是引爆點，不一定是根因。型別矛盾或非法值往往在更早的賦值、更上游的函式就已產生，要沿著資料來源與呼叫鏈往回追。
+
+第三步縮小重現：把失敗測資逐步刪減成「仍然會失敗的最小版本」。刪掉某段輸入後仍失敗，代表根因與那段無關；留到最後的最小輸入，通常直接點名出錯的邏輯。
+
+最後是假設與驗證：改程式之前先寫下「我認為錯在哪、改完後這筆測資會輸出什麼」，然後一次只改一個地方。預測對了，模型修正完成；預測錯了，代表你對程式的理解還有落差——這個落差本身就是下一條線索。
 
 ## Pattern Recognition
 
-當你在解題時遇到編譯失敗、型別不符、測試案例未通過（Wrong Answer），或是邊界條件引發的 Time Limit Exceeded 或 Memory Limit Exceeded 時，這就是啟動 Iterative Debugging 的最佳時機。不要把它們當作障礙，而是將其視為尋找正確演算法路徑的導航信標。
+啟動時機是任何失敗訊號出現的當下：編譯不過、Runtime Error、Wrong Answer、Time Limit Exceeded。另一個重要的辨識線索是內在的：當你發現自己想「隨便改改看會不會過」時，正是該停下來、把假設白紙黑字寫出來的時候——那個念頭本身就是流程即將失控的警訊。
 
 ## Common Mistakes
 
-最常見的錯誤是「瞎猜亂改」（Trial and Error Without Hypothesis），例如隨便加減括號、修改判斷條件，直到測資偶然通過為止。這種做法不僅浪費時間，更無法建立穩固的程式設計邏輯，且往往會在面對隱藏測資（Hidden Test Cases）時再次崩潰。
+第一，瞎猜亂改：沒有假設就動手，即使僥倖通過現有測資，錯誤的認知仍在，隱藏測資或下一題同類情境會原樣重演。第二，只修引爆點：在報錯行用強制轉型或特判把訊號壓掉，根因原封不動，錯誤只是換個地方再爆。第三，一次改多處：兩個修改互相干擾，通過了不知道是誰修好的，失敗了不知道是誰弄壞的，甚至兩個錯互相抵銷、造成假象通過。第四，把預期改成實際：實務上寫測試時，若把失敗測試的期望值改成程式的實際輸出，等於把缺陷合法化，從此還被測試保護起來。
 
 ## Complexity
 
-時間與空間複雜度取決於具體應用的演算法，但就 Error-Driven Refinement 流程本身而言，其認知與修正的額外開銷通常為 O(1)，不會增加額外的執行成本。
+O(1) / O(1)。Error-Driven Refinement 是解題流程而非演算法，不改變程式本身的時間與空間成本；它改變的是你收斂到正確解的速度。
 
 ## Digest
 
-Error-Driven Refinement 是一種將錯誤訊息與失敗測資轉化為進步動力的系統化方法。面對錯誤時，我們應冷靜分析心智模型與現實的落差，而非盲目修改。透過善用型別系統與呼叫堆疊，我們能精準定位問題根源並完成高效修正。
+錯誤不是壞運氣，而是可回溯的證據：程式行為完全確定，每筆失敗測資都是指出假設破功處的具體反例。流程五步——分類（編譯錯誤、Runtime Error、Wrong Answer、TLE 各指向不同根因）、定位（報錯行是引爆點，根因常在上游）、縮小重現（把測資刪到仍會失敗的最小版本）、提出假設（先預測改完的輸出）、單一修改後驗證。最忌沒有假設的亂改：僥倖通過修的是分數，不是心智模型。
 
 ## TypeScript Tip
 
-```typescript
-function parseConfig(config: { port?: number }): number {
-  const port = config.port;
-  if (port === undefined) {
-    throw new Error("Port is required");
-  }
-  return port;
-}
+把型別錯誤當成設計回饋：開著 strict，編譯器會逼你面對「可能沒有結果」的邊界。與其用 `!` 硬壓，不如把它寫進回傳型別，呼叫端就被迫處理——執行期的錯誤被提前成編譯期的提醒。
 
-const port = parseConfig({ port: 8080 });
-if (port !== 8080) {
-  throw new Error("Assertion failed");
+```typescript
+function firstPositive(nums: number[]): number | null {
+  for (const n of nums) {
+    if (n > 0) return n;
+  }
+  return null; // 「找不到」是合法結果，型別逼呼叫端面對它
 }
+if (firstPositive([-3, 0, 7]) !== 7) throw new Error("assertion failed");
+if (firstPositive([-1]) !== null) throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
-```python
-def parse_config(config: dict[str, int]) -> int:
-    if "port" not in config:
-        raise KeyError("Port is required")
-    return config["port"]
+Traceback 由上而下是呼叫鏈、最後一行是例外型別與訊息。先讀最後一行知道「爆了什麼」，再從最底層的堆疊框往上追「非法資料是從哪一層傳進來的」——下面用 extract_tb 把這條回溯路徑變成可以斷言的資料。
 
-port = parse_config({"port": 8080})
-assert port == 8080, "Assertion failed"
+```python
+import traceback
+
+def read_score(scores: list[int], i: int) -> int:
+    return scores[i]
+
+def report(scores: list[int]) -> int:
+    return read_score(scores, len(scores))  # 非法索引在這一層產生
+
+try:
+    report([90, 85])
+except IndexError as e:
+    frames = traceback.extract_tb(e.__traceback__)
+
+assert frames[-1].name == "read_score", "assertion failed"  # 最底層：引爆點
+assert frames[-2].name == "report", "assertion failed"  # 往上一層：根因所在
 ```
 
 ## Takeaway
 
-把錯誤視為導航信標，用嚴謹的假設與驗證取代盲目猜測。
+錯誤是可回溯的證據：分類、定位根因、縮小重現、寫下假設、一次只改一個地方。
 
 ## Tomorrow Preview
 
-明天我們將探討如何利用強健的單元測試與邊界條件檢查，在開發早期就攔截潛在的錯誤，進一步提升程式碼的可靠度與可維護性。
+明天進入 array 模組的 Moving Zeroes to End，用快慢指標把零集中到陣列末端、同時保持非零元素的相對順序。這是一題動手題——正好把今天的流程用上：提交、讀失敗測資、修正假設，而不是亂改。
 
 ## Today's Challenge
 
-本篇為觀念課，沒有對應的 LeetCode 練習題。請把時間花在把上面的觀念想透。
+本篇為觀念課，沒有對應的 LeetCode 練習題。建議翻出你最近一次 Wrong Answer 的紀錄，用今天的五步流程重新走一遍，看看當時的修法是「驗證假設」還是「碰運氣」。

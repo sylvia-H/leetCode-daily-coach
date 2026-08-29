@@ -30,6 +30,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 目前僅用約 36%），程式碼示範留在 Tip；此規則已寫入 docs/spec.md §10／§11 與 agent-brief.md。
 | 1 | idx 21–34 | 14 個（array 收尾 + hash-table 開頭），quiz 105 題 | fable | （本批） | article 14/14 ✓、quiz 零違規、962 tests ✓、641 筆 Lesson ✓、330 區塊 ✓ | 4 agent 並行；subagent 計數合計 730K tokens。A 的 3 個 Concept 因 `quiz-longest-option-bias` 退回重修一輪 |
 | 2 | idx 14–41 | 8 個（array 前四課 + hash-table 收尾 + string 開頭），quiz 55 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道全過：article 8/8 ✓、quiz 合併 55 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（142.6s） | 4 agent 並行；subagent 計數 fable 746K + opus 148K ≈ 894K tokens。reviewer 退修 4 篇（1 MAJOR / 3 MINOR），另因 quiz 簡體字檢查退修 1 次 |
+| 3 | idx 7–48 | 9 個（programming-mindset 006–010 + string 003–006），quiz 72 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 72 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（148.4s） | subagent 計數 fable 1,009K + opus 187K ≈ 1,196K tokens。batch D 曾因 API 內容過濾中斷，檔案已寫出故恢復收尾、未重跑。reviewer 退修 8 篇（2 MAJOR / 6 MINOR） |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -88,3 +89,54 @@ reviewer 讀內容做品質審查（不改檔）→ orchestrator 單一 `verify:
   `string-linear-scan` 的 `$O(n)$`）、機器翻譯錯譯（「在分析演化時」「大量數額計算」「演習策略」）、
   中國用語「指針」、TS Tip 程式碼在 `noUncheckedIndexedAccess` 下無法編譯、
   永不觸發的死斷言（`s[i] === ""` 永假、寫在 `return true` 之後的路徑）。全數於重寫時清除。
+
+## Phase 3 — programming-mindset 006–010 + string 003–006（2026-08-29）
+
+**分派原則（Phase 2 教訓的應用）**：Phase 2 查出 prefix sum 的索引慣例是跨篇矛盾的高風險處，
+故本批**刻意把成對的課派給同一個 agent**——Two Pointers 對（003–004）給一人、
+Sliding Window 對（005–006）給一人，並在 prompt 直接點名要防的慣例衝突。
+programming-mindset 五課因超過單 agent 負荷而切成 006–008 / 009–010。
+
+**結果**：兩條鏈被切開的**跨 agent 交界**（008→009、004→005）經 reviewer 專項查核**均無不一致**。
+004→005 是事前判定風險最高處，實測是全批處理最好的一處：005 開頭即釘死閉區間慣例，
+005/006 的慣例句逐字一致，「迴圈不變式」譯法自 003 貫穿至 006。**成對分派有效。**
+
+**reviewer 判定**：無 BLOCKER，9 篇可收；退修 8 篇（2 MAJOR / 6 MINOR）後全數通過。
+
+| 篇章 | 嚴重度 | 問題 |
+| --- | --- | --- |
+| `string-two-pointers-filtering` | MAJOR | Python Tip 引言宣稱示範 `isalnum()` / `lower()`，程式碼零過濾邏輯——**與作者自己在 findings 指認的舊缺陷同型，新版未真正修掉** |
+| `string-sliding-window-fixed` | MAJOR | Common Mistakes「未滿 k 比對會產生假陽性」不成立（計數總和 < k 永不匹配，只是白做工），且已傳染至 quiz `explanation[3]` |
+| `spacetime-tradeoff-awareness` | MINOR | 五課中唯一未回指 prerequisite；複雜度標籤與 Common Mistakes 版面與 006–008 不一致 |
+| `error-driven-refinement` | MINOR | Python Tip 說「往上追呼叫堆疊」，程式碼是單層呼叫 |
+| `edge-case-enumeration` | MINOR | TS Tip 引言說 optional chaining 但只有 `??`；`average([]) === 0` 正是本篇批評的「不崩潰但答錯」 |
+| `loop-invariant-thinking` | MINOR | Complexity 把 O(n) 歸因於「進展支柱」——進展保證的是終止，不是線性 |
+| `problem-simplification-strategy` | MINOR | TS Tip 說驗證長度 2、3，斷言只有 1 與 3 |
+| `string-two-pointers-opposite` | MINOR | Digest 無條件宣稱 O(1) 空間，但書只在正文 |
+
+**Digest 過短**：006/007/008 原為 125／137／126 字元（其餘六篇 190–240，上限 900）。
+reviewer 逐項對照 exit criteria 確認**未漏重點**，判為 MINOR、不構成退修理由——
+問題是「只給規則、不給錨點」。因該批本就要重開，順帶各補一句實例，改後為 176／193／157。
+
+**D1 狀態**：Tomorrow Preview 對 `next` **9/9 全數命中**（Phase 2 為 8/8）。
+惟本批 9 篇的**舊**教材中，A、B 兩批負責的 5 篇 Preview **全部錯誤**，樣態與 Phase 1、2 一致。
+
+**batch D 的 API 中斷**：batch D 在收尾階段因 API 內容過濾政策而終止。查證後確認
+**兩篇 article 與兩份 quiz 片段皆已寫出**，故以 SendMessage 恢復該 agent 只補跑驗證與 findings，
+未重跑生成。此為「中斷不退費」情境下的正確處置——先查磁碟狀態再決定救或重跑。
+
+## Phase 3 查證出的既有缺陷
+
+- **首次確認的 quiz 正解標錯**（Phase 1、2 逐題驗過 48 題皆無）：
+  `string-two-pointers-opposite` item[1] 的 `answerIndex` 指向 `<=`，但該題 explanation 自述
+  「通常設定為 `left < right`」自相矛盾，且駁斥 `<` 的理由「會漏掉奇數長度中央字元」為偽——
+  中央字元與自己比對恆真，不需比。正確答案應為 index 1。
+- **D4 樣態再現兩例**：`error-driven-refinement`（8/8）、`string-sliding-window-variable`（9/9）
+  的 `explanation[0]` 皆為正解選項逐字複製。詳見 `pipeline-defects.md` D4。
+- **課綱層配題重複**（新增 D7）：`hash-table-sliding-window-frequency` 與
+  `string-sliding-window-fixed` 用同一題 438、同一組測資、同一條不變式教同一件事，
+  且前者多教了 matched 計數器，後者反而只教整表比對。**不屬 F12 範圍，需動 `curriculum/`。**
+- **教材殘骸**：LaTeX 殘留（`problem-simplification-strategy` quiz 的 `$k$`）、
+  亂譯詞（「字安格斯群組化雜湊」＝ anagram 音譯）、簡體字「额」、
+  中國用語「指針」「遞歸」「越界訪問」、錯字「演邏輯」「家目錄」、
+  斷言只對特定輸入成立的假測試（`assert max_val == 5` 寫在函式內）。全數於重寫時清除。
