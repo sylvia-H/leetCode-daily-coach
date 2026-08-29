@@ -243,6 +243,36 @@ Phase 4 的 reviewer 確認該批 10 篇仍全面使用「明天」。
 兩課的依賴關係本身是正當的：`concepts/string/005-string-sliding-window-fixed.md` 的
 `prerequisite` 明列 `hash-table-sliding-window-frequency`。**問題不在 DAG，在配題與內容切分。**
 
+### 全庫量化（Phase 7 開跑前普查，2026-08-29）
+
+原本只記錄了一個案例，實際普查後規模大得多：**44 個題號被多個 Concept 共用**。
+
+| 類型 | 題號數 | 判定 |
+| --- | --- | --- |
+| **模組內重複** | 23 | **多數可接受**——同一題用逐步更好的技巧再解一次，是刻意的教學設計。例：34 在 binary-search 出現 5 次（001/002/004/005/006），Phase 6 的 reviewer 確認 007 的 Hint 與 009 的正文逐字一致，銜接良好 |
+| **跨模組重複** | **21** | **問題型**——學員在不同模組看到同一題配同一個觀念，而兩邊都不知道對方存在 |
+
+跨模組重複中最嚴重的幾個：
+
+| 題號 | 次數 | 模組 |
+| --- | --- | --- |
+| 3 | ×4 | hash-table / sliding-window / string（string 佔 2） |
+| 104 | ×4 | dfs-bfs / queue / tree（tree 佔 2） |
+| 438 | ×3 | hash-table / sliding-window / string |
+| 994 | ×3 | dfs-bfs / graph / queue |
+| 1 | ×3 | hash-table（×2）/ two-pointer |
+| 387 | ×3 | hash-table / string（string 佔 2） |
+
+**關鍵區分**：模組內重複 MUST NOT 一律視為缺陷——它可能正是「同一題、更好的解法」的教學安排。
+真正要處理的是**跨模組**那 21 個。判準是：**後一課有沒有誠實承認學員見過這題？**
+有承認並說明差異 ⇒ 可接受；當成第一次教 ⇒ 缺陷。
+
+### F12 期間的止血作法
+
+F12 無法改課綱，但可以要求教材**誠實定位**。Phase 7 起，orchestrator 在 agent prompt 中
+直接列出「你這題已被哪幾個 Concept 用過、它們是否已重生」，並要求：
+MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教得比先修課更粗**、MUST 誠實定位。
+
 ### 已做的止血（Phase 3）
 
 `string-sliding-window-fixed` 補上一句誠實定位：先修課的 matched 計數器是同一副骨架的常數優化，
