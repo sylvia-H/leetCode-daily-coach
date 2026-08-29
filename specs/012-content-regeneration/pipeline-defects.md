@@ -545,3 +545,138 @@ spec §10.2 已註明：**MUST NOT** 因為改中文就把單條上限調回 60�
 2. 改完 **MUST 跑 `npx tsc --noEmit`**——它會立刻抓到，比 `npm test` 快且訊號明確。
 3. 看 `npm test` 結果時，**MUST 同時核對測試總數**，不能只看 `failed` 是不是 0。
    「檔案載入失敗」會讓整批測試消失，卻不計入 failed。
+
+---
+
+## D14 · 授權 agent 執行驗算腳本 ⇒ 在 Windows 上會漏出吃滿 CPU 的孤兒行程
+
+**狀態**：🟡 已建立防護（三層），但**根因是平台行為，無法「修掉」**
+**嚴重度**：高——差點燒壞使用者的機器，且**完全沒有任何既有機制會發現**。
+
+### 事發經過（2026-08-29 23:45–23:57）
+
+Phase 7 的 Opus reviewer 被授權執行驗算腳本，它對 sliding-window 006–009 的程式碼區塊做突變測試。
+
+| 時間 | 事件 |
+| --- | --- |
+| 23:41 | reviewer 啟動 |
+| 23:45:35 | 第一個卡住的 `tsx` 行程 |
+| 23:45:35 → 23:51:43 | 每隔約 30 秒累積一個，共 **10 個**，全部沒退出 |
+| ≈ 23:56:45 | 使用者反映 CPU 快被吃爆，orchestrator 查證後強制終止 |
+
+**代價**：10 個行程累積 **約 4,636 秒 CPU ≈ 77 分鐘**，而牆鐘只過了 11 分鐘——
+等於持續壓滿約 **7 個核心**。
+
+### 根因：`execSync` 的 timeout 在 Windows 上殺不掉孫行程
+
+reviewer 的腳本**有寫 timeout**：
+
+```js
+cp.execSync(cmd, { cwd: REPO, stdio: 'pipe', timeout: 30000 })   // cmd = `npx tsx "<file>"`
+```
+
+**所以「agent 忘了加熔斷」不是原因——它加了。** 真正的問題是：
+
+1. `execSync` 傳**字串**時，Node 會先開一個 `cmd.exe /d /s /c "npx tsx …"`。
+2. 逾時只對**那層 shell** 發訊號。Windows 沒有 POSIX 的 process group，
+   **孫行程（`npx` → `node` → tsx）不會跟著死**。
+3. 突變體把 `while` 的比較運算子或視窗邊界數字改壞 ⇒ 滑動視窗**永不終止** ⇒
+   每逾時一次漏一個孤兒，30 秒一個，節奏完全吻合。
+4. **腳本把逾時的例外算成 `FAIL` = 突變被殺掉**（這在突變測試裡是標準慣例），
+   於是 `mutation-report.json` 看起來完全正常，**reviewer 沒有任何異常訊號**。
+
+### 為何沒有任何機制發現
+
+| 層級 | 為何沒擋下 |
+| --- | --- |
+| agent 自己 | 它的腳本「正常結束」、報告乾淨，沒有任何錯誤 |
+| orchestrator | **完全沒有檢查子行程的環節**——只等 agent 的完成通知，而通知不會提到它留下什麼 |
+| Gate / 測試 | 全部只驗 repo 內容，與行程無關 |
+| 前六個 Phase | 也跑過驗算腳本，**只是剛好沒事**，不是被擋下來 |
+
+**是使用者發現的，不是流程發現的。**
+
+### 三層防護（已實施）
+
+1. **預設不給 reviewer 執行權**（最有效）。Phase 7 改派純閱讀 reviewer 後，
+   仍查出 7 項 MINOR、並手算複核 25 條 Common Mistakes 全數成立——
+   **對照組**：Phase 2、4 的 reviewer 本來就沒有執行權，一樣抓到 MAJOR 並判定準確。
+   **執行權是 Phase 5 才加的，收益遠不如想像。**
+2. **需要實跑時由 orchestrator 自己做**：單一腳本、全域操作計數熔斷、
+   規模上限（長度 ≤ 8、總測資 ≤ 50k）、前景執行、用 `node` 直跑不經 `npx`／`tsx`、
+   **不開子行程**（要比對變體就在同一行程內用函式變體）。
+3. **每個 agent 結束後 MUST 檢查殘留行程**（這是唯一能接住「預防措施本身有 bug」的網）：
+   ```powershell
+   Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+     Where-Object { $_.CommandLine -like '*<repo-name>*' }
+   ```
+
+### 給 agent 的硬規則（若不得不授權執行）
+
+- **MUST NOT 用 `execSync` / `exec` 搭配字串指令跑子行程**——Windows 上逾時只殺 shell。
+  非用不可時 MUST 改 `spawn` 取得 PID，逾時以 `taskkill /PID <pid> /T /F` 殺整棵樹。
+- 所有 while／遞迴 MUST 有操作計數熔斷；「疑似不終止」本身就是有效結論。
+- 一次一個腳本、20 秒內結束、驗不了就回報「未能在資源限制內驗證」。
+
+### 教訓
+
+**「上一個 agent 自己想到要加防護」不等於有防護。** Phase 6 的 reviewer 主動用了熔斷計數器，
+orchestrator 看到了卻只當成「它表現好」，沒有把它變成規則——換一個 agent，同樣的任務就出事。
+**凡是靠 agent 自覺才成立的保障，MUST 寫成規則；規則擋不住的，MUST 有偵測層。**
+
+---
+
+## D15 · 時區測試的 sanity check 拿「現在」當基準，每天有 8 小時是紅的
+
+**狀態**：🟢 **已修復（2026-08-30）**
+**嚴重度**：中——潛伏至今，且**失敗窗口與本專案的推播時段重疊**。
+
+### 發現經過
+
+Phase 7 收批時 `npm test` 失敗，時間是台北 **00:39**。同一份測試在 Phase 6 收批（台北 23:0x）是通過的。
+與 Phase 7 的教材內容完全無關。
+
+`tests/e2e/guard-and-modes.test.ts` 的跨日邊界測試：
+
+```ts
+const boundaryISO = taipeiMidnightTodayISO();   // 台北今天午夜 → UTC 前一日 16:00
+// 確認此 fixture 真的落在 UTC 前一日
+expect(new Date(boundaryISO).getUTCDate()).not.toBe(new Date().getUTCDate());
+```
+
+### 根因
+
+台北是 UTC+8，**台北午夜恆等於 UTC 前一日 16:00**——所以 fixture 本身永遠是跨日的。
+但那行 sanity check 拿它跟**「現在」的 UTC 日期**比：
+
+| 台北當下時間 | 現在的 UTC 日期 | 斷言結果 |
+| --- | --- | --- |
+| 08:00–23:59 | 已跳到今日 | 兩者不同 ⇒ **通過** |
+| **00:00–07:59** | **仍停在前一日** | 兩者相同 ⇒ **失敗** |
+
+實測佐證（2026-08-30 00:39:36 台北 = 2026-08-29T16:39:36Z）：
+boundary 的 UTC 日期 29、現在的 UTC 日期 29 ⇒ 斷言失敗。
+
+**它比對的是兩個不同的東西**：fixture 的跨日性質，與「此刻 UTC 有沒有跨過午夜」。
+
+### 為何危險
+
+失敗窗口是**台北 00:00–08:00**，而本專案的每日推播排在 **台北 06:07 / 06:37**（`daily.yml` 雙 cron）。
+任何在那個時段觸發的 CI 都會踩到——**失敗窗口與產品的核心時段重疊**。
+
+### 修法
+
+改為比對**同一個時間點**的台北日期與 UTC 日期，這是恆真的不變式：
+
+```ts
+const boundaryTaipeiDay = toTaipeiDateString(new Date(boundaryISO));
+const boundaryUtcDay = new Date(boundaryISO).toISOString().slice(0, 10);
+expect(boundaryUtcDay).not.toBe(boundaryTaipeiDay);
+```
+
+### 通則
+
+**測試的 sanity check MUST NOT 以「現在」為基準**，除非該測試就是在驗時間流逝。
+凡是「確認這個 fixture 真的具備某性質」的檢查，MUST 只用 fixture 自身的資料推導——
+拿外部可變狀態當基準，等於把測試的通過與否交給執行時機決定。
+本專案是時區敏感系統（Asia/Taipei guard、UTC cron），這類錯誤 MUST 特別留意。

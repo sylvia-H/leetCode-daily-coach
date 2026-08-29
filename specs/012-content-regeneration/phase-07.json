@@ -2,7 +2,7 @@
   "phase": 7,
   "window": "sessionIndex 84-97",
   "model": "fable",
-  "status": "pending",
+  "status": "done",
   "concepts": [
     {
       "conceptId": "sliding-window-concept-intro",

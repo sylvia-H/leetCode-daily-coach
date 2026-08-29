@@ -34,6 +34,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 4 | idx 0–55 | 10 個（programming-mindset 001–005 + string 007–010 + two-pointer 001），quiz 76 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 76 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.7s） | subagent 計數 fable 1,060K + opus 173K ≈ 1,233K tokens。**reviewer 判定退修 0 篇**（F12 首次），僅順手修 3 項 MINOR |
 | 5 | idx 56–69 | 10 個（two-pointer 002–010 + binary-search 001），quiz 82 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 82 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（136.4s） | subagent 計數 fable 1,244K + opus 181K ≈ 1,425K tokens。**reviewer 判定退修 0 篇**（連續第二批），僅順手修 2 項 MINOR |
 | 6 | idx 70–83 | 9 個（binary-search 002–010），quiz 61 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 61 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.1s） | subagent 計數 fable 1,258K + opus 209K ≈ 1,467K tokens。**reviewer 判定 0 BLOCKER / 0 MAJOR**（連續第三批），修 2 項 MINOR。用量 39%→45%（0.67／Concept） |
+| 7 | idx 84–97 | 9 個（sliding-window 001–009），quiz 64 題 | fable ×4 + opus reviewer ×2（第一個因事故作廢） | （本批） | `verify:phase` 8 道全過：article 9/9 ✓、quiz 合併 64 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（145.0s） | **牆鐘 96 分鐘，其中約 40–45 分是 D14 事故損耗**（對照 Phase 6 約 48 分）。reviewer 判定 0 BLOCKER / 0 MAJOR，修 7 項 MINOR |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -392,3 +393,70 @@ spec §10.2 已註明 MUST NOT 因此把單條上限調回 60。
   **亂碼填充字串** `aspectpiicidv`（`aspect` 是 `quiz-aspects.ts` 的欄位名，研判為產線識別項洩漏）、
   **引述不存在的選項文字**。四種變體同指一個根因：`explanation` 各段職責從未被定義。
 - **簡體字與中國用語**：舊 002 quiz 選項含「空间」、item[0] 用「指針」。
+
+## Phase 7 — sliding-window 001–009（2026-08-29 ～ 08-30）
+
+**reviewer 判定：9 篇可收，0 BLOCKER、0 MAJOR**（連續第四批）；7 項 MINOR 全數修畢。
+事實面複核結果：**Common Mistakes 25 條逐條手算全部成立、8 條 Hint 全對、Tomorrow Preview 9/9**
+——D1 / D9 / D10 均無復發。
+
+### ⚠️ 本批發生 D14 事故（詳見 `pipeline-defects.md`）
+
+第一個 reviewer 被授權執行驗算腳本，其突變測試在 Windows 上漏出 **10 個孤兒行程**，
+11 分鐘內累積 **約 77 分鐘 CPU、壓滿約 7 個核心**。**由使用者發現並反映**，非任何既有機制攔下。
+處置：終止行程 → 停掉該 reviewer → 改派**純閱讀 reviewer**（零執行權）重做。
+
+**對照組證明執行權的收益遠不如想像**：純閱讀的 reviewer 仍查出 7 項 MINOR 並手算複核 25 條
+Common Mistakes；而 Phase 2、4 的 reviewer 本來就沒有執行權，一樣抓到 MAJOR 並判定準確。
+**執行權是 Phase 5 才加的，此後改為預設不給。**
+
+需要實跑的命題改由 **orchestrator 自己驗**（單一腳本、全域操作熔斷、規模上限、不開子行程）：
+
+| 命題 | 測資 | 結果 |
+| --- | --- | --- |
+| 攤銷 O(n)（內層 while 總步數 ≤ n） | 3,279 組 | 違反 **0**，最大比值 0.857 |
+| **最長型**用 `if` 取代 `while` | 9,837 組 | 不符 **0** ⇒ 是正確的 non-shrinking window 技巧 |
+| **最短型**（LC 209）用 `if` 取代 `while` | 21,840 組 | 不符 **8,784（40%）**；反例 `[1,3]` target=3 → 得 2、正解 1 |
+
+**結論：`if` vs `while` 取決於題型。** 兩個作者的相反宣稱其實互補、且都正確——
+B 批只把該誤區列在 004（最短型）、D 批在 007（最長型）主動避免誤指控，**兩邊處置都對**。
+這是防 D10 的正面案例：**不確定就實測，實測不了就不要寫**。
+
+### 7 項 MINOR 的處置
+
+| 篇章 | 問題 | 修法 |
+| --- | --- | --- |
+| 004 | CM2「回傳 4」只對「只在收縮過才記錄」成立；最字面寫法回傳 1 | 改為「會得到 1 或 4，都不是正解 5」，不綁死單一數字 |
+| 004 | Tomorrow Preview 說 005 用「頻率表＋逐格收縮」，實際是位置 map 一步跳 | 讀 005 後改正 |
+| 005 | 說 LC 3「解過兩次」實為三次；自稱的「第三種寫法」是 `string/002` 的 Hint 已點名者 | 改為「已見過三次」＋「把該 Hint 的想法完整實作並論證」 |
+| 006 | CM1 的「掛死」只對 TS 的 zeros 寫法成立 | 兩種失效形式並列（zeros 版掛死、ones 版安靜算錯），皆實測 |
+| 007 + 008 | 術語「變動視窗」與全批及先修課的「可變視窗」不一致（5 處） | 統一 |
+| 008 | TS `L9`、PY `L12`/`L15` 斷言覆蓋缺口 | 替換測資（TS Tip 786→783，**替換非新增**） |
+| 009 | TS Tip 僅一組退化測資，三個非等價突變體存活 | 換成 `findAnagrams("axbxab","ab") === [4]`，單組覆蓋四類突變（795→788） |
+
+### 跨模組定位（D7）
+
+**008（LC 567）與 009（LC 438）完全誠實**——開篇具名承認先修課教過、指出唯一增量，
+且**沒有一篇教得比先修課粗**。唯一破口是 005 把 LC 3 的前科少算一次，已修。
+本批開跑前另做了全庫配題普查（44 個共用題號，跨模組 21 個），結果併入 D7。
+
+### 課綱層新發現（F12 動不了，需另立任務）
+
+`string-sliding-window-variable`（**session 63**）的 Complexity 段已給出「每元素進出各一次 ⇒ 攤銷 O(n)」，
+而 `sliding-window-concept-intro`（**session 114**）才「首次引入」同一個論證——
+**模組開場課比它要教的東西晚了 51 個 session 出現**。這不是配題重複，是**模組排序**問題。
+
+## Phase 7 查證出的既有缺陷
+
+- **quiz 正解對本題不成立（最嚴重的一類）**：`max-consecutive-ones` 舊 item[0] 與 item[2]
+  教「長度 − maxFreq ≤ k」——那是「最多可替換 k 個字元」的通用判準，但本題只允許 0→1。
+  反例 `[0,0,0,1]`、k=0：該式得 3、正確 1。正確判準是 `zeros ≤ k`。
+  **這是把另一道題的解法搬來當本題正解**，前幾例都只是選項或理由寫錯。
+- **quiz 正解標錯（第六例）**：`variable-size-contraction` 舊 item[3] 標「必須在 while 結束後才更新」，
+  對最短型不成立（實測 `target=11, [2,3,1,2,4,3]` 回傳 4，長度 4 的達標視窗不存在，正解 5），
+  且與同課正文自相矛盾。
+- **攤銷複雜度被說反**：`longest-substring-no-repeat` 舊 item[2] 稱逐格收縮「最壞退化為平方級別」——
+  實際攤銷仍 O(n)。
+- **失效形式寫反（D10）再兩例**：`fixed-size` 舊版說 `n < k` 會「程式碼崩潰」（實測 Python 切片與
+  JS 索引都安靜算錯）；`fruit-into-baskets` 舊版說「不刪鍵」會「安靜誤判」（實際是收縮停不下來）。
+- **韓文亂碼**：`longest-substring-no-repeat` 舊 item[6] 的 explanation 混入「常수의」。

@@ -11,64 +11,83 @@ exit_criteria:
 ---
 ## Concept
 
-Sliding Window 核心觀念在於透過維護一個動態的資料視窗，將連續子陣列或子字串問題的時間複雜度從暴力解的 O(n^2) 優化至 O(n)。當我們在處理這類問題時，若每次移動邊界都重新計算整個視窗內的總和或頻率，會重複執行大量相同的計算。Sliding Window 的精髓在於重複利用重疊的計算量：當右端點擴展加入一個新元素、左端點收縮移除一個舊元素時，我們只需以 O(1) 的常數時間更新當前的視窗狀態，而不需要重新掃描整個視窗。這種藉由狀態轉移來消除冗餘計算的策略，是處理連續區間問題時極為高效的核心思維。
+處理「連續 subarray / substring」的統計問題時，暴力解對每個起點都重新計算整段區間：長度 n 的陣列有 O(n) 個起點，每段平均掃 O(n) 個元素，合計 O(n^2)。但相鄰兩段幾乎完全重疊——區間 `[0..3]` 與 `[1..4]` 共享三個元素，重算等於把同一個元素數了很多次。Sliding Window 的核心就是不重算重疊部分：把當前區間視為閉區間 `[left, right]` 的視窗（兩端元素都在窗內，長度為 `right - left + 1`），並維護一份能增量更新的狀態（總和、字元頻率等）。右端前進時把 `nums[right]` 納入狀態，左端前進時把 `nums[left]` 的貢獻從狀態中扣除，兩個動作各只花 O(1)，不必重新掃描窗內其餘元素。
 
 ## Thinking
 
-在著手設計 Sliding Window 演算法時，首要任務是明確界定視窗的範圍與狀態。思考過程通常包含三個關鍵步驟：第一，確認問題是否要求尋找連續的子陣列或子字串，並且區間的擴大與縮小具有單調性。第二，定義視窗內需要維護的狀態，例如總和、最大值、字元出現次數或特定條件的滿足數量。第三，設計指標的移動邏輯：通常使用右指標 (right pointer) 逐一將新元素納入視窗並更新狀態，當視窗狀態違反約束條件時，則移動左指標 (left pointer) 依序剔除舊元素直到恢復合法狀態。透過這種左右指針的交替推進，我們能夠完整走訪所有可能的最優解區間。
+為什麼整體是 O(n)？關鍵是攤銷論證：left 與 right 都只向右前進、從不回頭，所以每個元素至多被 right 納入一次、被 left 移出一次——全程的狀態更新至多 2n 次，每次 O(1)，總計 O(n)。就算某一輪左端連續移出好幾個元素（內層 while），那些成本記在「被移出的元素」頭上，而每個元素一生只能被移出一次，總帳仍不超過 2n。這就是攤銷分析：單輪最壞可能 O(n)，攤平到整趟執行後平均每輪 O(1)。設計時依序回答三個問題：一、答案能否由「以每個 right 結尾的視窗」覆蓋？二、視窗狀態是什麼？它必須同時支援 O(1) 的「加入一個元素」與「移除一個元素」。三、左端何時前進？固定長度的視窗在長度超過 k 時移出一格；可變長度的視窗在違反約束時收縮到恢復合法，合法後記錄 `right - left + 1`。
 
 ## Pattern Recognition
 
-辨識 Sliding Window Pattern 的關鍵線索在於題目的輸入型態與求解目標。當題目要求處理陣列 (array) 或字串 (string) 中的「連續子陣列 (contiguous subarray)」或「子字串 (substring)」，且其條件與區間長度、區間總和、特定元素頻率或最值相關時，極高機率適用此 Pattern。另一個強烈的辨識信號是：當暴力解需要使用雙重迴圈窮舉所有可能的起始與結束位置時，若內層迴圈的計算與外層迴圈具有高度重疊性，且當右邊界向右延伸時，左邊界也只需單向向右收縮而不需要回溯，這正是典型可以套用 Sliding Window 的情境。
+三個訊號同時出現時優先考慮 Sliding Window：題目問的是連續區間（subarray / substring，而非可跳著選的 subsequence）；要判斷的性質可用能增量維護的統計量表示（總和、計數、頻率）；期望複雜度是線性。反向檢查暴力解也有效：雙重迴圈裡內層計算與上一輪高度重疊、且 left 不需要回溯，就是可滑動的徵兆。它其實是 Linear Scan 的升級——同樣單趟由左往右，只是掃描時多帶著一段有狀態的區間。注意狀態必須「可逆」：總和移除元素只要減回去，但視窗最大值在移除元素後無法還原（見下方錯誤三），單一變數就不夠用。
 
 ## Common Mistakes
 
-在實作 Sliding Window 時最常見的錯誤，是遺漏了當左指標移動時，必須正確從執行狀態中移除舊元素的貢獻。開發者經常在右指標加入新元素時寫好對應的狀態更新邏輯，卻忘記在縮減視窗的迴圈中同步扣除或重置被移出視窗的舊元素數值，導致視窗狀態持續累積錯誤。另一個常見失誤是搞混了視窗長度的計算時機，未能在更新最大或最小解時準確對應當前的左右邊界範圍。此外，未妥善處理邊界條件（例如當陣列長度小於視窗大小，或目標條件無法達成時的例外情況）也經常引發執行階段錯誤。
+以下錯誤都不會拋錯，只會安靜給錯答案。一、右端加了、左端忘了扣：只加不減時「視窗總和」其實是前綴和——`nums = [1, 2, 3]`、k = 2，第二個視窗 `[2, 3]` 應得 5，卻得到 1 + 2 + 3 = 6。二、長度寫成 `right - left`：閉區間 `[0, 2]` 含三個元素，`right - left` 算出 2，所有答案都少 1。三、狀態不可逆卻硬滑：想用一個變數維護視窗最大值，窗 `[5, 1]` 的 max 是 5，滑到 `[1, 2]` 時寫 `max(5, 2)` 仍得 5，但真正的 max 是 2——移出的 5 扣不掉，得重掃視窗或改用更進階的結構。
 
 ## Complexity
 
-O(n) / O(1)
+O(n) / O(1)。時間：每個元素至多被納入一次、移出一次，狀態更新合計至多 2n 次，每次 O(1)。空間：以總和這類數值當狀態時只需常數個變數；若狀態是字元頻率表，空間隨字元集大小成長。
 
 ## Digest
 
-Sliding Window 核心觀念在於透過維護一個動態的資料視窗，將連續子陣列或子字串問題的時間複雜度從暴力解的 O(n^2) 優化至 O(n)。當我們在處理這類問題時，若每次移動邊界都重新計算整個視窗內的總和或頻率，會重複執行大量相同的計算。Sliding Window 的精髓在於重複利用重疊的計算量：當右端點擴展加入一個新元素、左端點收縮移除一個舊元素時，我們只需以 O(1) 的常數時間更新當前的視窗狀態，而不需要重新掃描整個視窗。這種藉由狀態轉移來消除冗餘計算的策略，是處理連續區間問題時極為高效的核心思維。在著手設計 Sliding Window 演算法時，首要任務是明確界定視窗的範圍與狀態。思考過程通常包含三個關鍵步驟：第一，確認問題是否要求尋找連續的子陣列或子字串，並且區間的擴大與縮小具有單調性。第二，定義視窗內需要維護的狀態，例如總和、最大值、字元出現次數或特定條件的滿足數量。第三，設計指標的移動邏輯：通常使用右指標逐一將新元素納入視窗並更新狀態，當視窗狀態違反約束條件時，則移動左指標依序剔除舊元素直到恢復合法狀態。辨識 Sliding Window Pattern 的關鍵線索在於題目的輸入型態與求解目標。當題目要求處理陣列或字串中的連續子陣列或子字串，且其條件與區間長度、區間總和、特定元素頻率或最值相關時，極高機率適用此 Pattern。在實作時常見的錯誤為遺漏了當左指標移動時，必須正確從執行狀態中移除舊元素的貢獻。
+Sliding Window 把「連續區間統計」的暴力 O(n^2) 壓到 O(n)：以閉區間 `[left, right]` 表示視窗，維護可增量更新的狀態——右端納入 `nums[right]`、左端扣除 `nums[left]`，各 O(1)，長度恆為 `right - left + 1`。正確性靠不重算重疊：`[0..3]` 滑到 `[1..4]` 只動兩端，中間共享的元素原封不動。效率靠攤銷論證：兩個指標只單向前進，每個元素至多進出視窗各一次，全程更新至多 2n 次。實例：`nums = [1, 2, 3]`、k = 2，初始窗 `[1, 2]` 和為 3，滑動時加 3 減 1 得 5，不必重加 `[2, 3]`；若忘記扣除左端貢獻，會得到前綴和 6 而安靜算錯。
 
 ## TypeScript Tip
 
+滑動更新與暴力重算必須逐窗相等；任何一行增量更新寫錯，`deepStrictEqual` 都會失敗：
+
 ```typescript
-function verifyWindow(): void {
-  const nums = [1, 2, 3, 4];
-  const k = 2;
-  let sum = nums[0] + nums[1];
-  if (sum !== 3) throw new Error("assertion failed");
-  sum = sum + nums[2] - nums[0];
-  if (sum !== 5) throw new Error("assertion failed");
+import assert from "node:assert";
+function windowSums(nums: number[], k: number): number[] {
+  const res: number[] = [];
+  let sum = 0;
+  for (let right = 0; right < nums.length; right++) {
+    sum += nums[right] ?? 0;
+    if (right >= k) sum -= nums[right - k] ?? 0;
+    if (right >= k - 1) res.push(sum);
+  }
+  return res;
 }
-verifyWindow();
+const nums = [3, -1, 4, 1, 5];
+const brute: number[] = [];
+for (let i = 0; i + 3 <= nums.length; i++)
+  brute.push(nums.slice(i, i + 3).reduce((a, b) => a + b, 0));
+assert.deepStrictEqual(windowSums(nums, 3), brute);
+assert.deepStrictEqual(windowSums([7], 1), [7]);
 ```
 
 ## Python Tip
 
-```python
-def verify_window() -> None:
-    nums = [1, 2, 3, 4]
-    k = 2
-    current_sum = nums[0] + nums[1]
-    assert current_sum == 3, "assertion failed"
-    current_sum = current_sum + nums[2] - nums[0]
-    assert current_sum == 5, "assertion failed"
+拿暴力重算當對照組驗證滑動版；`k = 1` 與「視窗大小等於陣列長度」是最容易差一的邊界：
 
-verify_window()
+```python
+def window_sums(nums: list[int], k: int) -> list[int]:
+    res = []
+    total = 0
+    for right, x in enumerate(nums):
+        total += x
+        if right >= k:
+            total -= nums[right - k]
+        if right >= k - 1:
+            res.append(total)
+    return res
+
+nums = [3, -1, 4, 1, 5]
+brute = [sum(nums[i:i + 3]) for i in range(len(nums) - 2)]
+assert window_sums(nums, 3) == brute
+assert window_sums([7], 1) == [7]
+assert window_sums([2, 4], 2) == [6]
 ```
 
 ## Takeaway
 
-運用 Sliding Window 透過加入右端元素並移除左端元素，以 O(1) 狀態轉移將連續區間問題從 O(n^2) 優化至 O(n)。
+視窗兩端指標只單向前進，每個元素至多納入一次、移出一次，O(1) 狀態轉移把連續區間問題壓到 O(n)。
 
 ## Tomorrow Preview
 
-明天我們將進一步探討 Fixed Size Sliding Window 的具體實作技巧與經典應用場景，學習如何在固定長度的限制下，高效追蹤區間內的極值與總和變化，並深入剖析指標控制的細節。
+明天進入 Fixed-Size Sliding Window：視窗長度固定為 k，先建好第一個完整視窗，再以「加入右端、移出左端」逐格滑過整個陣列。
 
 ## Today's Challenge
 
-本篇為觀念課，沒有對應的 LeetCode 練習題。請把時間花在把上面的觀念想透。
+本篇為觀念課，沒有對應的 LeetCode 練習題。請試著向自己重建攤銷論證：為什麼內層收縮迴圈不會讓整體複雜度退回 O(n^2)？

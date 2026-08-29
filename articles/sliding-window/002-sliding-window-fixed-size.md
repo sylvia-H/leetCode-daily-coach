@@ -11,77 +11,87 @@ exit_criteria:
 ---
 ## Concept
 
-Fixed-Size Sliding Window 是一種常見的陣列與字串處理技巧。其核心觀念在於維持一個長度固定為 k 的視窗，並在陣列上同步移動左、右邊界，以逐步計算子陣列或子字串的統計數據。相較於每次都重新計算整個視窗範圍的暴力解法，固定大小的滑動視窗利用前一次計算的結果，在移除視窗左端元素的同時加入視窗右端的新元素，將時間複雜度從 O(n * k) 顯著優化至 O(n)。
+Fixed-Size Sliding Window 處理「長度固定為 k 的連續 subarray」問題：維護一個長度恆為 k 的閉區間視窗，左右兩端同步前進。暴力解對 n - k + 1 個起點各掃 k 個元素，O(n * k)；固定視窗滑動時只做兩件事——把新進右端的元素加入狀態、把離開左端的元素從狀態扣除——每步 O(1)，整體 O(n)。邊界慣例與字串課的視窗完全一致：視窗是閉區間 `[left, right]`，兩端元素都在窗內，長度恆為 `right - left + 1 = k`；每輪先納入右端，再移出左端。
 
 ## Thinking
 
-當我們需要處理固定長度 k 的子陣列問題時，思考的邏輯通常分為兩個階段：首先是初始化第一個視窗，計算從索引 0 到 k - 1 的元素總和或其他指標；接著是進入迴圈，讓視窗向右滑動。在每次滑動時，我們將新進入視窗右側的元素加入統計值中，並將離開視窗左側的舊元素從統計值中扣除。這樣的增量更新機制能夠確保每個元素只被存取常數次，從而達到線性時間複雜度。
+程式分兩階段。第一階段初始化：用一個迴圈加總索引 0 到 k - 1，建出第一個完整視窗——這也是第一個可以記錄答案的時刻。第二階段滑動：讓 i 從 k 走到 n - 1，每輪 `sum += nums[i] - nums[i - k]`，更新後的視窗是 `[i - k + 1, i]`。正確性用迴圈不變式說清楚：「每輪更新後，sum 恰等於視窗 `[i - k + 1, i]` 內元素的總和」——初始迴圈建立它，之後每輪一加一減，改動的恰好是新舊視窗的差集，中間 k - 1 個共享元素的貢獻原封不動，不變式由歸納法維持成立。這個結構等價於字串課的單迴圈寫法（每輪先納入 `s[right]`，right >= k 時移出 `s[right - k]`，right == k - 1 起開始記錄），只是把「移出」的條件攤開成兩段迴圈。差一陷阱集中在移出的索引：該扣的是 `nums[i - k]`；`nums[i - k + 1]` 是新視窗的左端、還在窗內，扣它就錯了。
 
 ## Pattern Recognition
 
-辨識 Fixed-Size Sliding Window 的主要線索在於題目明確要求尋找「固定長度 k」的子陣列（Subarray）或子字串（Substring）。當問題牽涉到長度限制為定值的最大平均值、總和、計數或特定條件符合次數時，且資料結構為線性排列，便可高度懷疑應採用此 Pattern。
+題目把長度講死，就是固定視窗的訊號：「長度為 k 的子陣列」的最大平均值、總和、符合條件的個數；或「以每個位置為中心、半徑 k 的區間」——那其實是長度 2k + 1 的固定視窗。搭配的狀態必須能增量更新：總和、計數、頻率表都可以。若題目問的是「最長／最短」而長度不固定、收縮時機由條件決定，那是下一課可變視窗的守備範圍。
 
 ## Common Mistakes
 
-最常見的錯誤發生在處理初始視窗邊界索引時的 off-by-one 誤差，例如將迴圈的起始點或終點設定錯誤，導致漏掉部分元素或引發陣列索引超出範圍的例外。此外，未能在進入迴圈前妥善處理陣列長度小於 k 的邊界條件，也是導致程式碼崩潰的主因之一。
+以下錯誤都能跑、不拋錯，只會安靜給錯答案。一、移出索引差一：寫成 `sum += nums[i] - nums[i - k + 1]`，在 `nums = [1, 2, 3]`、k = 2 上第二個視窗算出 3 + 3 - 2 = 4（正確是 5）——被扣掉的 2 其實還在窗內。二、初始視窗少建一格：初始迴圈只跑到 k - 2，同一個例子初始 sum = 1，之後每個視窗都少算一個元素，得到 `[1, 3]` 而非 `[3, 5]`。三、沒擋 `n < k`：Python 的 `sum(nums[:k])` 在 `nums = [1, 2]`、k = 3 時不報錯、安靜加完整個陣列得 3，把不完整的視窗當成答案；TypeScript 則視寫法而定——`nums[i]` 讀到 `undefined` 使總和變成 NaN，或 `?? 0` 把缺格當 0——同樣不會拋錯。
 
 ## Complexity
 
-時間複雜度為 O(n)，因為每個元素最多被進出視窗各一次；空間複雜度為 O(1)，只需要常數額外的變數來儲存當前視窗的總和或統計狀態。
+時間 O(n)：初始迴圈做 k 次加法，滑動迴圈 n - k 輪、每輪一加一減——每個元素恰好被加入一次、至多被扣除一次，合計至多 2n 次 O(1) 運算。空間 O(1)：只需要總和與最佳值等常數個變數，與 n、k 無關。
 
 ## Digest
 
-Fixed-Size Sliding Window 是處理固定長度子陣列與子字串問題的標準解法。本單元深入解析如何透過維護一個長度為 k 的視窗，在 O(n) 時間內完成資料的滑動與統計。透過初始化第一個視窗並利用增量更新（加入右端、扣除左端），我們能有效避免重複計算。文章涵蓋了模式辨識線索、常見的邊界條件錯誤防範，以及複雜度分析，幫助你在面對各類定長區間最佳化問題時游刃有餘。
+固定視窗長度恆為 k：先用迴圈加總索引 0 到 k - 1 建出第一個視窗，再讓 i 從 k 走到尾，每輪 `sum += nums[i] - nums[i - k]`，視窗變成閉區間 `[i - k + 1, i]`。不變式「sum 恆等於當前視窗總和」由一加一減維持：中間 k - 1 個共享元素動都不動。實例：`nums = [1, 2, 3]`、k = 2，初始 sum = 3，滑動時加 3 減 1 得 5；扣錯成 `nums[i - k + 1]` 會得 4。三個必檢邊界：`n < k` 要先擋掉（Python 切片與 JS 索引都不報錯，只會安靜算錯）；移出的是 `nums[i - k]` 不是 `nums[i - k + 1]`；平均值判斷改寫成 `sum >= threshold * k` 的整數比較，連除法都省下。
 
 ## TypeScript Tip
 
+`noUncheckedIndexedAccess` 下索引存取用 `?? 0` 收斂型別；先擋 `n < k` 再初始化：
+
 ```typescript
-function countSubarrays(nums: number[], k: number, threshold: number): number {
-    let currentSum = 0;
-    let count = 0;
-    for (let i = 0; i < k; i++) {
-        currentSum += nums[i];
-    }
-    if (currentSum / k >= threshold) count++;
-    for (let i = k; i < nums.length; i++) {
-        currentSum += nums[i] - nums[i - k];
-        if (currentSum / k >= threshold) count++;
-    }
-    return count;
+import assert from "node:assert";
+function maxWindowSum(nums: number[], k: number): number | null {
+  if (nums.length < k) return null;
+  let sum = 0;
+  for (let i = 0; i < k; i++) sum += nums[i] ?? 0;
+  let best = sum;
+  for (let i = k; i < nums.length; i++) {
+    sum += (nums[i] ?? 0) - (nums[i - k] ?? 0);
+    best = Math.max(best, sum);
+  }
+  return best;
 }
-const ans = countSubarrays([2, 2, 2, 2, 5, 5, 2, 8], 3, 4);
-if (ans !== 3) throw new Error("assertion failed");
+assert(maxWindowSum([1, 12, -5, -6, 50, 3], 4) === 51);
+assert(maxWindowSum([2, 4], 2) === 6);
+assert(maxWindowSum([5], 1) === 5);
+assert(maxWindowSum([1, 2], 3) === null);
 ```
 
 ## Python Tip
 
+「平均 >= threshold」改寫成整數比較 `total >= threshold * k`，滑動時一加一減：
+
 ```python
-def count_subarrays(nums: list[int], k: int, threshold: int) -> int:
-    current_sum = sum(nums[:k])
-    count = 1 if current_sum / k >= threshold else 0
+def count_qualified(nums: list[int], k: int, threshold: int) -> int:
+    if len(nums) < k:
+        return 0
+    target = threshold * k
+    total = sum(nums[:k])
+    count = 1 if total >= target else 0
     for i in range(k, len(nums)):
-        current_sum += nums[i] - nums[i - k]
-        if current_sum / k >= threshold:
+        total += nums[i] - nums[i - k]
+        if total >= target:
             count += 1
     return count
 
-ans = count_subarrays([2, 2, 2, 2, 5, 5, 2, 8], 3, 4)
-assert ans == 3, "assertion failed"
+assert count_qualified([2, 2, 2, 2, 5, 5, 2, 8], 3, 4) == 3
+assert count_qualified([7, 7], 2, 7) == 1
+assert count_qualified([5], 1, 5) == 1
+assert count_qualified([1, 2], 3, 1) == 0
 ```
 
 ## Takeaway
 
-掌握固定長度滑動視窗的初始化與增量更新邏輯，以 O(n) 時間解決定長子陣列問題。
+先建好第一個大小為 k 的視窗，之後每輪加 `nums[i]`、減 `nums[i - k]`，O(n) 掃完所有定長子陣列。
 
 ## Tomorrow Preview
 
-明天我們將探討 Dynamic-Size Sliding Window（動態大小滑動視窗），學習當視窗長度不再固定、需根據條件動態擴展與收縮時的處理策略。
+明天進入 Variable-Size Sliding Window 的擴張階段：視窗長度不再固定，右端逐格納入新元素、狀態隨之成長，學會判斷視窗該擴張到何時。
 
 ## Today's Challenge
 
-- **643** · 要求尋找長度為 k 的連續子陣列的最大平均值，完全符合 Fixed-Size Sliding Window 的定義。
-  - Hint: 先計算前 k 個元素的總和作為初始視窗，然後逐一滑動並更新總和。
-- **1343** · 需要計算長度為 k 且平均值大於或等於閾值的子陣列數量。
-  - Hint: 可以透過比較視窗總和與閾值乘以 k 的大小，避免浮點數除法誤差。
-- **2090** · 計算半徑為 k 的子陣列平均值，實質上就是長度為 2k + 1 的固定視窗問題。
-  - Hint: 注意視窗總長度為 2k + 1，並妥善處理邊界中心無法形成完整半徑的元素。
+- **643** · 求長度恰為 k 的連續子陣列最大平均值：長度給死、狀態是可增量更新的總和，是固定視窗的原型題。
+  - Hint: 全程維護視窗總和取最大值，最後才除以 k；逐窗做除法既多餘又引入浮點。
+- **1343** · 計算長度為 k 且平均值大於等於門檻的子陣列個數，每滑一格做一次 O(1) 判斷。
+  - Hint: 把「平均 >= threshold」改寫成整數比較 `sum >= threshold * k`，滑動時一加一減即可。
+- **2090** · 求每個位置半徑為 k 的子陣列平均值，本質是長度 2k + 1 的固定視窗加上整數除法。
+  - Hint: 前 k 個與後 k 個位置沒有完整半徑，結果填 -1；其餘位置以視窗總和整除 2k + 1。
