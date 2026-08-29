@@ -1,0 +1,68 @@
+{
+  "phase": 11,
+  "window": "sessionIndex 140-153",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "linked-list-cycle-detection-floyd",
+      "skeleton": "concepts/linked-list/007-linked-list-cycle-detection-floyd.md",
+      "article": "articles/linked-list/007-linked-list-cycle-detection-floyd.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "linked-list-cycle-start-node",
+      "skeleton": "concepts/linked-list/008-linked-list-cycle-start-node.md",
+      "article": "articles/linked-list/008-linked-list-cycle-start-node.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "linked-list-merge-two-sorted",
+      "skeleton": "concepts/linked-list/011-linked-list-merge-two-sorted.md",
+      "article": "articles/linked-list/011-linked-list-merge-two-sorted.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "linked-list-palindrome-check",
+      "skeleton": "concepts/linked-list/012-linked-list-palindrome-check.md",
+      "article": "articles/linked-list/012-linked-list-palindrome-check.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "linked-list-reversal-iterative",
+      "skeleton": "concepts/linked-list/009-linked-list-reversal-iterative.md",
+      "article": "articles/linked-list/009-linked-list-reversal-iterative.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "linked-list-reversal-recursive",
+      "skeleton": "concepts/linked-list/010-linked-list-reversal-recursive.md",
+      "article": "articles/linked-list/010-linked-list-reversal-recursive.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "tree-binary-tree-node-representation",
+      "skeleton": "concepts/tree/002-tree-binary-tree-node-representation.md",
+      "article": "articles/tree/002-tree-binary-tree-node-representation.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "tree-core-concept-introduction",
+      "skeleton": "concepts/tree/001-tree-core-concept-introduction.md",
+      "article": "articles/tree/001-tree-core-concept-introduction.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "tree-dfs-inorder-traversal",
+      "skeleton": "concepts/tree/004-tree-dfs-inorder-traversal.md",
+      "article": "articles/tree/004-tree-dfs-inorder-traversal.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "tree-dfs-preorder-traversal",
+      "skeleton": "concepts/tree/003-tree-dfs-preorder-traversal.md",
+      "article": "articles/tree/003-tree-dfs-preorder-traversal.md",
+      "quizCount": 6
+    }
+  ]
+}

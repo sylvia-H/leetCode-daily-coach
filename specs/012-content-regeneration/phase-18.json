@@ -1,0 +1,20 @@
+{
+  "phase": 18,
+  "window": "sessionIndex 238-251",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "dp-string-edit-distance",
+      "skeleton": "concepts/dynamic-programming/011-dp-string-edit-distance.md",
+      "article": "articles/dynamic-programming/011-dp-string-edit-distance.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "dp-string-lcs-basic",
+      "skeleton": "concepts/dynamic-programming/010-dp-string-lcs-basic.md",
+      "article": "articles/dynamic-programming/010-dp-string-lcs-basic.md",
+      "quizCount": 7
+    }
+  ]
+}

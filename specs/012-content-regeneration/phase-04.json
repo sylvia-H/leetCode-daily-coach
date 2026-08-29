@@ -1,0 +1,68 @@
+{
+  "phase": 4,
+  "window": "sessionIndex 0-55",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "computational-thinking-basics",
+      "skeleton": "concepts/programming-mindset/001-computational-thinking-basics.md",
+      "article": "articles/programming-mindset/001-computational-thinking-basics.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "conditional-branching-logic",
+      "skeleton": "concepts/programming-mindset/005-conditional-branching-logic.md",
+      "article": "articles/programming-mindset/005-conditional-branching-logic.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "input-output-contract",
+      "skeleton": "concepts/programming-mindset/002-input-output-contract.md",
+      "article": "articles/programming-mindset/002-input-output-contract.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "mental-model-variables",
+      "skeleton": "concepts/programming-mindset/003-mental-model-variables.md",
+      "article": "articles/programming-mindset/003-mental-model-variables.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "string-anagram-grouping",
+      "skeleton": "concepts/string/007-string-anagram-grouping.md",
+      "article": "articles/string/007-string-anagram-grouping.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "string-palindrome-expansion",
+      "skeleton": "concepts/string/008-string-palindrome-expansion.md",
+      "article": "articles/string/008-string-palindrome-expansion.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "string-parsing-simulation",
+      "skeleton": "concepts/string/010-string-parsing-simulation.md",
+      "article": "articles/string/010-string-parsing-simulation.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "string-pattern-matching-basic",
+      "skeleton": "concepts/string/009-string-pattern-matching-basic.md",
+      "article": "articles/string/009-string-pattern-matching-basic.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "tracing-execution-flow",
+      "skeleton": "concepts/programming-mindset/004-tracing-execution-flow.md",
+      "article": "articles/programming-mindset/004-tracing-execution-flow.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "two-pointer-three-sum-basic",
+      "skeleton": "concepts/two-pointer/001-two-pointer-three-sum-basic.md",
+      "article": "articles/two-pointer/001-two-pointer-three-sum-basic.md",
+      "quizCount": 10
+    }
+  ]
+}

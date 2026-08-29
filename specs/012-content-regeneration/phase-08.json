@@ -1,0 +1,68 @@
+{
+  "phase": 8,
+  "window": "sessionIndex 98-111",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "sliding-window-minimum-window-substring",
+      "skeleton": "concepts/sliding-window/010-sliding-window-minimum-window-substring.md",
+      "article": "articles/sliding-window/010-sliding-window-minimum-window-substring.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "stack-array-implementation",
+      "skeleton": "concepts/stack/002-stack-array-implementation.md",
+      "article": "articles/stack/002-stack-array-implementation.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "stack-asteroid-collision",
+      "skeleton": "concepts/stack/004-stack-asteroid-collision.md",
+      "article": "articles/stack/004-stack-asteroid-collision.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "stack-core-concept-introduction",
+      "skeleton": "concepts/stack/001-stack-core-concept-introduction.md",
+      "article": "articles/stack/001-stack-core-concept-introduction.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "stack-daily-temperatures",
+      "skeleton": "concepts/stack/007-stack-daily-temperatures.md",
+      "article": "articles/stack/007-stack-daily-temperatures.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "stack-evaluate-reverse-polish-notation",
+      "skeleton": "concepts/stack/005-stack-evaluate-reverse-polish-notation.md",
+      "article": "articles/stack/005-stack-evaluate-reverse-polish-notation.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "stack-next-greater-element-ii",
+      "skeleton": "concepts/stack/008-stack-next-greater-element-ii.md",
+      "article": "articles/stack/008-stack-next-greater-element-ii.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "stack-online-stock-span",
+      "skeleton": "concepts/stack/009-stack-online-stock-span.md",
+      "article": "articles/stack/009-stack-online-stock-span.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "stack-remove-adjacent-duplicates",
+      "skeleton": "concepts/stack/006-stack-remove-adjacent-duplicates.md",
+      "article": "articles/stack/006-stack-remove-adjacent-duplicates.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "stack-valid-parentheses",
+      "skeleton": "concepts/stack/003-stack-valid-parentheses.md",
+      "article": "articles/stack/003-stack-valid-parentheses.md",
+      "quizCount": 6
+    }
+  ]
+}

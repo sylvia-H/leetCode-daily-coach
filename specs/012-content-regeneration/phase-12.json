@@ -1,0 +1,62 @@
+{
+  "phase": 12,
+  "window": "sessionIndex 154-167",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "graph-adjacency-list-representation",
+      "skeleton": "concepts/graph/002-graph-adjacency-list-representation.md",
+      "article": "articles/graph/002-graph-adjacency-list-representation.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "graph-core-concept-introduction",
+      "skeleton": "concepts/graph/001-graph-core-concept-introduction.md",
+      "article": "articles/graph/001-graph-core-concept-introduction.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "tree-balanced-binary-tree-check",
+      "skeleton": "concepts/tree/008-tree-balanced-binary-tree-check.md",
+      "article": "articles/tree/008-tree-balanced-binary-tree-check.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "tree-dfs-postorder-traversal",
+      "skeleton": "concepts/tree/005-tree-dfs-postorder-traversal.md",
+      "article": "articles/tree/005-tree-dfs-postorder-traversal.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "tree-invert-binary-tree",
+      "skeleton": "concepts/tree/011-tree-invert-binary-tree.md",
+      "article": "articles/tree/011-tree-invert-binary-tree.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "tree-maximum-depth-bottom-up",
+      "skeleton": "concepts/tree/006-tree-maximum-depth-bottom-up.md",
+      "article": "articles/tree/006-tree-maximum-depth-bottom-up.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "tree-maximum-depth-top-down",
+      "skeleton": "concepts/tree/007-tree-maximum-depth-top-down.md",
+      "article": "articles/tree/007-tree-maximum-depth-top-down.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "tree-same-tree-validation",
+      "skeleton": "concepts/tree/009-tree-same-tree-validation.md",
+      "article": "articles/tree/009-tree-same-tree-validation.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "tree-symmetric-tree-check",
+      "skeleton": "concepts/tree/010-tree-symmetric-tree-check.md",
+      "article": "articles/tree/010-tree-symmetric-tree-check.md",
+      "quizCount": 8
+    }
+  ]
+}

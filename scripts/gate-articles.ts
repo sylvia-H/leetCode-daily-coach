@@ -17,7 +17,8 @@ import { runPerArticleGate } from "./lib/article-gate.js";
 
 const QUIZ_PATH = join("data", "quiz-bank.json");
 
-function parseArgs(argv: string[]): { ids: string[]; all: boolean; skipQuiz: boolean } {
+/** 匯出供單測：純字串解析，無 I/O。 */
+export function parseArgs(argv: string[]): { ids: string[]; all: boolean; skipQuiz: boolean } {
   const ids: string[] = [];
   let all = false;
   let skipQuiz = false;
@@ -106,4 +107,7 @@ async function main(): Promise<void> {
   console.log(`\n✓ ${label}：全數通過`);
 }
 
-await main();
+// 執行守衛：MUST 有，否則單測 import 本檔即會真的跑起整個 Gate（並可能 process.exit）。
+if (process.argv[1]?.endsWith("gate-articles.ts")) {
+  await main();
+}

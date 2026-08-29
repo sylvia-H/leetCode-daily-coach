@@ -21,18 +21,25 @@ const QUIZ_BANK_PATH = join("data", "quiz-bank.json");
 /** 片段檔形狀：{ "items": QuizItem[] }。逐題 schema 借道 quizBankSchema，不另宣告一份。 */
 const fragmentSchema = z.object({ items: z.array(z.unknown()) }).strict();
 
-function parseFragment(path: string, conceptId: string): QuizItem[] {
-  const outer = fragmentSchema.safeParse(JSON.parse(readFileSync(path, "utf-8")));
+/**
+ * 片段內容 → QuizItem[]（純函式，匯出供單測）。schema 一律借道 quizBankSchema，
+ * MUST NOT 另宣告一份逐題 schema——那必然與產線和 CI 漂移（憲章 IX）。
+ */
+export function parseFragmentItems(raw: unknown, conceptId: string, label: string): QuizItem[] {
+  const outer = fragmentSchema.safeParse(raw);
   if (!outer.success) {
-    throw new Error(`${basename(path)}：片段外層形狀不符（需 { "items": [...] }）`);
+    throw new Error(`${label}：片段外層形狀不符（需 { "items": [...] }）`);
   }
-  // 借用 quizBankSchema 驗逐題內容：包成單一 Concept 的最小 bank 再解析，確保與產線同一套判準。
   const probe = quizBankSchema.safeParse({ version: 1, byConcept: { [conceptId]: outer.data.items } });
   if (!probe.success) {
     const issue = probe.error.issues[0];
-    throw new Error(`${basename(path)}：題目 schema 不符 — ${issue?.path.join(".")} ${issue?.message}`);
+    throw new Error(`${label}：題目 schema 不符 — ${issue?.path.join(".")} ${issue?.message}`);
   }
   return probe.data.byConcept[conceptId] as QuizItem[];
+}
+
+function parseFragment(path: string, conceptId: string): QuizItem[] {
+  return parseFragmentItems(JSON.parse(readFileSync(path, "utf-8")), conceptId, basename(path));
 }
 
 function main(): void {
@@ -103,4 +110,7 @@ function main(): void {
   console.log(`\n✓ 已併入 ${merged.length} 個 Concept 至 ${QUIZ_BANK_PATH}，品質 Gate 零違規。`);
 }
 
-main();
+// 執行守衛：MUST 有，否則單測 import 本檔即會真的合併並寫入 data/quiz-bank.json。
+if (process.argv[1]?.endsWith("merge-quiz-fragments.ts")) {
+  main();
+}

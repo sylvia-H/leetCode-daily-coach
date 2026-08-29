@@ -1,0 +1,68 @@
+{
+  "phase": 17,
+  "window": "sessionIndex 224-237",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "dp-core-concept-introduction",
+      "skeleton": "concepts/dynamic-programming/001-dp-core-concept-introduction.md",
+      "article": "articles/dynamic-programming/001-dp-core-concept-introduction.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "dp-grid-minimum-path-sum",
+      "skeleton": "concepts/dynamic-programming/007-dp-grid-minimum-path-sum.md",
+      "article": "articles/dynamic-programming/007-dp-grid-minimum-path-sum.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "dp-grid-path-counting",
+      "skeleton": "concepts/dynamic-programming/006-dp-grid-path-counting.md",
+      "article": "articles/dynamic-programming/006-dp-grid-path-counting.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "dp-knapsack-01-basic",
+      "skeleton": "concepts/dynamic-programming/008-dp-knapsack-01-basic.md",
+      "article": "articles/dynamic-programming/008-dp-knapsack-01-basic.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "dp-knapsack-unbounded",
+      "skeleton": "concepts/dynamic-programming/009-dp-knapsack-unbounded.md",
+      "article": "articles/dynamic-programming/009-dp-knapsack-unbounded.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "dp-linear-robber-pattern",
+      "skeleton": "concepts/dynamic-programming/005-dp-linear-robber-pattern.md",
+      "article": "articles/dynamic-programming/005-dp-linear-robber-pattern.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "dp-memoization-top-down",
+      "skeleton": "concepts/dynamic-programming/002-dp-memoization-top-down.md",
+      "article": "articles/dynamic-programming/002-dp-memoization-top-down.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "dp-space-optimization-rolling",
+      "skeleton": "concepts/dynamic-programming/004-dp-space-optimization-rolling.md",
+      "article": "articles/dynamic-programming/004-dp-space-optimization-rolling.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "dp-tabulation-bottom-up",
+      "skeleton": "concepts/dynamic-programming/003-dp-tabulation-bottom-up.md",
+      "article": "articles/dynamic-programming/003-dp-tabulation-bottom-up.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "graph-bipartite-check",
+      "skeleton": "concepts/dfs-bfs/010-graph-bipartite-check.md",
+      "article": "articles/dfs-bfs/010-graph-bipartite-check.md",
+      "quizCount": 8
+    }
+  ]
+}

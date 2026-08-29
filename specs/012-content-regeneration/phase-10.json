@@ -1,0 +1,62 @@
+{
+  "phase": 10,
+  "window": "sessionIndex 126-139",
+  "model": "fable",
+  "status": "pending",
+  "concepts": [
+    {
+      "conceptId": "linked-list-deletion-by-value-or-index",
+      "skeleton": "concepts/linked-list/004-linked-list-deletion-by-value-or-index.md",
+      "article": "articles/linked-list/004-linked-list-deletion-by-value-or-index.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "linked-list-dummy-head-pattern",
+      "skeleton": "concepts/linked-list/005-linked-list-dummy-head-pattern.md",
+      "article": "articles/linked-list/005-linked-list-dummy-head-pattern.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "linked-list-insertion-head-tail",
+      "skeleton": "concepts/linked-list/003-linked-list-insertion-head-tail.md",
+      "article": "articles/linked-list/003-linked-list-insertion-head-tail.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "linked-list-node-memory-model",
+      "skeleton": "concepts/linked-list/001-linked-list-node-memory-model.md",
+      "article": "articles/linked-list/001-linked-list-node-memory-model.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "linked-list-traversal-basics",
+      "skeleton": "concepts/linked-list/002-linked-list-traversal-basics.md",
+      "article": "articles/linked-list/002-linked-list-traversal-basics.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "linked-list-two-pointers-slow-fast",
+      "skeleton": "concepts/linked-list/006-linked-list-two-pointers-slow-fast.md",
+      "article": "articles/linked-list/006-linked-list-two-pointers-slow-fast.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "queue-matrix-multi-source-bfs",
+      "skeleton": "concepts/queue/009-queue-matrix-multi-source-bfs.md",
+      "article": "articles/queue/009-queue-matrix-multi-source-bfs.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "queue-shortest-path-unweighted",
+      "skeleton": "concepts/queue/008-queue-shortest-path-unweighted.md",
+      "article": "articles/queue/008-queue-shortest-path-unweighted.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "queue-sliding-window-maximum",
+      "skeleton": "concepts/queue/010-queue-sliding-window-maximum.md",
+      "article": "articles/queue/010-queue-sliding-window-maximum.md",
+      "quizCount": 6
+    }
+  ]
+}

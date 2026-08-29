@@ -2,6 +2,7 @@
   "phase": 1,
   "window": "sessionIndex 21-34",
   "model": "fable",
+  "status": "pending",
   "concepts": [
     {
       "conceptId": "array-in-place-deduplication",
