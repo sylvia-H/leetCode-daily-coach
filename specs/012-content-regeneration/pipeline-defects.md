@@ -10,7 +10,7 @@
 
 ## D1 · Stage 2 prompt 從未收到 `next`，Tomorrow Preview 全是模型編的
 
-**狀態**：🟢 已修復（2026-08-29）
+**狀態**：🟢 已修復（2026-08-29）／**Phase 2 實測有效**
 **嚴重度**：高——14 篇抽樣中 **13 篇** 的 Tomorrow Preview 與 Skeleton 的 `next` 不符。
 
 ### 證據
@@ -58,6 +58,14 @@
 約 **8% 的假陽性**會擋下正確教材並逼出無謂重生（額度是產線瓶頸）。故語意比對交給 self-check，
 **MUST NOT 上這條正則判準**。若日後要改為硬性 Gate，MUST 先改 prompt 強制英文 title 出現，
 再以同一份真值集重測命中率。
+
+### Phase 2 實測驗證（2026-08-29）
+
+修復後產出的第一批（Phase 2，8 篇）：Tomorrow Preview 對 Skeleton `next` **8/8 全數命中**，
+含 `next` 為空的 `hash-table-design-lru-cache` 正確寫成收尾語且未點名任何 Concept。
+對照 Phase 1 的 13/14 錯誤，D1 視為已關閉；後續批次仍由 reviewer 逐篇複查，不再另設機械 Gate。
+
+（註：本批 8 篇的**舊**教材另有 7 篇 Preview 錯誤，樣態與 Phase 1 一致，佐證根因判斷正確。）
 
 ### 原修復方向（存查）
 
@@ -110,3 +118,70 @@ Phase 1 有 agent 自評「正解非**顯著**最長」而放行，實際 7 題�
 **通則**：凡是「模型無法自我核算」的量（字元數、比例、長度關係），敘述性要求一律無效，
 MUST 給可執行的檢查腳本。此結論與 `generate-content.ts` 的 `BUDGET_RETRY_GUIDANCE`
 docblock 記載的實測教訓一致。
+
+---
+
+## D4 · quiz explanation 的產線洩漏與複製
+
+**狀態**：🔴 未修復
+**嚴重度**：中——`hash-table` 兩課合計 14 題受影響，且是**整卷一致**的樣態，非零星失誤。
+
+### 證據（Phase 2 查證）
+
+| Concept | 樣態 | 範圍 |
+| --- | --- | --- |
+| `hash-table-longest-consecutive-sequence` | `explanation[4]` 是**學習目標句**（產線輸入洩漏到輸出），不是該錯項的解釋 | items[2]–[7]，6 題 |
+| `hash-table-design-lru-cache` | `explanation[0]` 是**正解選項逐字複製**，不是「為何正確」的結論句 | 全部 8 題 |
+
+「整卷一致」是關鍵：這不是模型偶爾偷懶，是 prompt 對 `explanation` 各段職責的定義不足，
+模型在缺乏明確指示時退化為填充。
+
+### 根因假設（MUST 先驗證再動手）
+
+`scripts/generate-quiz-bank.ts` 的 prompt 未逐段定義 `explanation[0]`（正解結論）與
+`explanation[i]`（第 i 個錯項為何錯）的職責，且 Gate 只檢查段數與長度，**不檢查內容是否為
+選項或輸入的複製**。
+
+### 修復方向
+
+1. prompt 逐段定義 `explanation` 各元素的職責，並明示 MUST NOT 複製選項原文、
+   MUST NOT 出現 learning goal / exit criteria 的原句。
+2. Gate 可加**機械判準**（與 D1 不同，這裡的判準是可靠的）：
+   `explanation[i]` 與對應選項字串的正規化後相等或高度重疊 ⇒ 違規；
+   `explanation` 任一段與該 Concept 的 `learningGoal` / `exitCriteria` 原句相等 ⇒ 違規。
+   兩者都是字串比對，無語意猜測，假陽性風險低。
+
+---
+
+## D5 · `quiz-traditional-chinese` 對「划」誤報
+
+**狀態**：🟡 已知誤報，**刻意不修**
+**嚴重度**：低
+
+Phase 2 收批時，`array-prefix-sum-basic` item[3] 的「不划算」被判為簡體字而中止合併。
+「划算」「划船」在台灣正體本來就寫「划」，此為**假陽性**。
+
+**為何不放寬**：「划」在「计划 → 計劃」語境確實是簡體形。把「划」加進白名單，
+會讓「規划」「策划」這類真違規全數漏網——而那才是機器翻譯教材最常見的錯誤樣態。
+以一次改寫措辭的成本（1 個 agent 呼叫、16 秒）換取檢查的嚴格度，划得來。
+
+**處置慣例**：日後再遇此誤報，一律**改寫措辭**（如「得不償失」「不值得」），
+MUST NOT 放寬 `quiz-traditional-chinese` 的字元表。
+
+---
+
+## D6 · Tomorrow Preview 的「明天」在字面上不總是成立
+
+**狀態**：🟡 待處理（用語問題，非事實錯誤）
+**嚴重度**：低
+
+Phase 2 的 Opus reviewer 觀察到：foundation track 在 concept 課之間穿插
+challenge / review / practice 槽，因此「明天我們將…」的「明天」對該 Track 未必為真——
+下一個 concept 課可能在數日之後。三個 Track 的插槽密度不同，同一份教材正文卻共用
+（憲章：Shared Knowledge, Different Tracks），所以**無法靠 Track 分歧解決**。
+
+### 修復方向
+
+Stage 2 prompt 的 Tomorrow Preview 規則改為要求**不綁定時間的措辭**
+（「接下來」「下一課」而非「明天」）。此為純 prompt 措辭調整，
+不影響既有 Gate，亦不需要重跑已凍結的教材——待下次改動 `stage2-content.ts` 時順手納入。

@@ -13,67 +13,100 @@ exit_criteria:
 ---
 ## Concept
 
-Hash Map with Doubly Linked List for O(1) Cache 是一種結合雜湊表與雙向鏈結串列的進階資料結構設計模式。雜湊表提供 O(1) 時間複雜度的鍵值查找能力，而雙向鏈結串列則負責維護元素的相對順序（如最近最少使用原則）。透過將雜湊表的值指向鏈結串列中的節點，開發者能夠在常數時間內完成查找、插入、更新與刪除操作，是解決高效能快取設計問題的核心架構。
+LRU Cache 要求三件事同時成立：get 以 O(1) 取值、put 以 O(1) 寫入、容量滿時以 O(1) 淘汰「最久未使用」的資料。單一資料結構做不到——Hash Map 查找是 O(1)，卻不記錄使用順序，找不出誰最久沒被用；鏈結串列能以 O(1) 拆接已知節點，卻要 O(n) 才能找到某個 key 對應的節點。解法是讓兩者互補：Hash Map 存 key 到串列節點的參照，負責「瞬間定位」；Doubly Linked List 依使用時間排列節點，頭端是最近使用、尾端是最久未使用，負責「維持順序」。每次存取都把節點搬到頭端，淘汰永遠發生在尾端，兩個 O(1) 拼出完整的 O(1) 快取。
+
+必須用「雙向」串列的原因：把節點從串列中間拆下來，要同時改它前驅與後繼的指標；單向串列拿不到前驅，得從頭掃 O(n)，而雙向串列的節點自帶 prev 與 next，拆接只動四個指標。
 
 ## Thinking
 
-在設計需要 O(1) 時間複雜度進行 get 與 put 操作的快取時，單純使用陣列或雜湊表會面臨瓶頸：雜湊表無法有效率地維護元素的存取順序以供容量超載時進行淘汰；而雙向鏈結串列雖然可以在 O(1) 時間內完成節點的插拔，但搜尋特定鍵值卻需要 O(n) 的線性掃描。因此，必須將兩者結合，由雜湊表儲存鍵值到鏈結串列節點的參照指標，並由雙向鏈結串列維持資料的新舊排序，從而達成雙重優勢的互補。
+先想清楚三條操作路徑。get(key)：查 Map，未命中回傳 -1；命中則透過參照拿到節點，把它從原位置拆下、接回頭端（讀取也算「使用」，必須刷新新鮮度），再回傳值。put(key, value) 且 key 已存在：更新節點的值並搬到頭端，容量不變、不觸發淘汰。put 且 key 不存在：建新節點接上頭端、寫入 Map；若超過容量，拆下尾端節點，並用該節點記錄的 key 回頭刪除 Map 中的對應項目——這正是節點必須同時存 key 與 value 的原因，否則淘汰時無從得知該刪 Map 裡的哪個鍵。
+
+實作上建議放 dummy head 與 dummy tail 兩個哨兵節點：讓每個真實節點永遠有前後鄰居，插入與拆除就不必判斷「是否為頭尾」的特殊情況，空串列與單節點串列也走同一套邏輯。
 
 ## Pattern Recognition
 
-當題目要求設計一個資料結構，其 get 與 put 操作皆須達到 O(1) 時間複雜度，且具備容量限制與特定的淘汰機制（例如 LRU 或 LFU）時，即可明確辨識出應採用 Hash Map with Doubly Linked List 的 Pattern。此 Pattern 的明顯特徵在於需要同時維護『快速鍵值對應』與『動態順序調整』兩種需求。
+題目同時出現「設計一個資料結構」、「get 與 put 皆須 O(1)」、「容量上限與淘汰策略」三個條件，即為此 Pattern。核心特徵是同時需要「快速鍵值定位」與「動態順序維護」兩種能力，而任何單一結構只能滿足其一。LFU 是同型延伸：以頻率分層，每個頻率各掛一條 Doubly Linked List，再用 minFreq 追蹤最低頻率層，同層內部仍以 LRU 決定淘汰對象。
 
 ## Common Mistakes
 
-最常見的錯誤在於更新快取時，僅修改了雜湊表或僅調整了鏈結串列的指標，導致兩者資料不同步。另一個常見失誤是忽略了邊界條件的處理，例如當快取為空、快取達到容量上限需要淘汰尾端節點，或是更新已經存在的鍵值時，未正確調整 head 與 tail 指標，進而引發記憶體區段錯誤或邏輯崩潰。
+第一，兩個結構不同步：淘汰時只拆了串列節點、忘了刪 Map 項目，Map 就留下懸空參照，之後查同一個 key 會「命中」已淘汰的節點；反過來只刪 Map 不拆節點，串列則會越積越長。第二，節點只存 value 不存 key：淘汰尾端時無法反查 Map，該刪的鍵刪不掉。第三，get 忘了搬節點：讀取也是使用，不刷新順序會讓活躍資料被誤淘汰。第四，指標更新順序錯誤：拆接時應先把鄰居參照存好再改指標，順序一亂就會斷鏈或成環，之後的走訪會遺失節點或陷入無窮迴圈——JS 與 Python 不會因此當機，但邏輯已悄悄壞掉；這類錯誤用容量 1、重複 put 同一鍵這種邊界測試最容易抓出來。
 
 ## Complexity
 
-Time Complexity: get 和 put 操作均為 O(1)。Space Complexity: 需儲存所有快取項目，空間複雜度為 O(n)，其中 n 為快取的容量上限。
+時間複雜度：get 與 put 皆為 O(1)——Map 查找平均 O(1)，已知節點的拆除與插入只動固定數量的指標。空間複雜度 O(n)：Map 與串列各存一份節點參照，n 為快取的容量上限。
 
 ## Digest
 
-Hash Map with Doubly Linked List 是解決高效能快取設計的核心 Pattern。透過雜湊表對應鍵值與鏈結串列節點的指標，實現 O(1) 時間複雜度的存取與更新。雙向鏈結串列的優勢在於已知節點參照時，插拔操作僅需 O(1)，非常適合用來維護元素的訪問順序，如 LRU Cache 與 LFU Cache 的容量淘汰策略。
+LRU Cache 的答案是一對互補結構：Hash Map 存 key 到節點的參照，負責 O(1) 定位；Doubly Linked List 依使用順序排列節點，負責 O(1) 拆接與淘汰——頭端最新、尾端最舊，每次存取搬到頭端，容量滿時從尾端淘汰。三個關鍵細節：節點必須同時存 key 與 value（淘汰時要反查 Map 刪鍵）、get 命中也要搬節點（讀取算使用）、dummy 哨兵讓插拆免判邊界。兩個結構的每一步更新都必須同步，漏掉任一邊就會留下懸空參照或髒資料。
 
 ## TypeScript Tip
 
+容量上限 2；dummy 哨兵讓插拆免判邊界，prev/next 以 this 自指避開 null 聯集。
+
 ```typescript
-// TypeScript 提示：使用明確的介面與型別定義節點指標
-class CacheNode {
-  constructor(
-    public key: number,
-    public val: number,
-    public prev: CacheNode | null = null,
-    public next: CacheNode | null = null
-  ) {}
+class N {
+  prev: N = this;
+  next: N = this;
+  constructor(public key = 0, public val = 0) {}
 }
-const node = new CacheNode(1, 10);
-if (node.val !== 10) throw new Error("assertion failed");
+const map = new Map<number, N>();
+const head = new N(), tail = new N();
+head.next = tail; tail.prev = head;
+const cut = (n: N) => { n.prev.next = n.next; n.next.prev = n.prev; };
+const push = (n: N) => { n.prev = head; n.next = head.next; head.next.prev = n; head.next = n; };
+function put(key: number, val: number): void {
+  const n = new N(key, val);
+  map.set(key, n);
+  push(n);
+  if (map.size > 2) { const lru = tail.prev; cut(lru); map.delete(lru.key); }
+}
+put(1, 10); put(2, 20);
+const hot = map.get(1);
+if (hot) { cut(hot); push(hot); }
+put(3, 30);
+if (map.has(2) || !map.has(1)) throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
+拆接集中成 helper；tuple assignment 右側先求值，但 head.next 要在被改動前先讀到。
+
 ```python
-# Python 提示：善用虛擬頭尾節點（Dummy Head and Tail）簡化鏈結串列邊界判斷
-class DummyNode:
-    def __init__(self):
-        self.prev = None
-        self.next = None
-node = DummyNode()
-assert node.prev is None, "assertion failed"
+class Node:
+    def __init__(self, key=0, val=0):
+        self.key, self.val = key, val
+        self.prev = self.next = self
+
+head, tail = Node(), Node()
+head.next, tail.prev = tail, head
+
+def remove(n):
+    n.prev.next, n.next.prev = n.next, n.prev
+
+def add_front(n):
+    n.prev, n.next = head, head.next
+    head.next.prev = n
+    head.next = n
+
+a, b = Node(1, 10), Node(2, 20)
+add_front(a)
+add_front(b)
+remove(a)
+add_front(a)
+assert head.next.key == 1 and tail.prev.key == 2, "assertion failed"
 ```
 
 ## Takeaway
 
-結合 Hash Map 與 Doubly Linked List 可完美實現 O(1) 快取，關鍵在於同步維護雜湊對應與鏈結串列的指標。
+Hash Map 管 O(1) 定位、Doubly Linked List 管 O(1) 順序；節點要存 key、兩結構同步更新，快取才完整。
 
 ## Tomorrow Preview
 
-明天將探討 Heap 與 Priority Queue 的應用，學習如何有效率地處理動態排序與最值尋找問題。
+hash-table 模組到此收官——從存在性檢查、頻率統計、前綴和一路走到 O(1) 快取設計，雜湊思維已是你的基本功。明天起展開全新的模組，用同樣的節奏繼續推進。
 
 ## Today's Challenge
 
-- **146** · LRU Cache 需要在 O(1) 時間內完成資料的查找、更新以及容量超載時的最近最少使用淘汰，完全符合 Hash Map 與雙向鏈結串列結合的設計模式。
-  - Hint: 使用虛擬頭尾節點來避免邊界條件的額外檢查。
-- **460** · LFU Cache 進一步擴充了 LRU 的概念，需要依據存取頻率進行分層維護，透過多個雙向鏈結串列與雜湊表的結合來達到 O(1) 的頻率更新與淘汰操作。
-  - Hint: 除了記錄鍵值到節點的對應外，還需額外維護頻率到雙向鏈結串列的對應關係。
+- **146** · 設計題原型：get 與 put 皆須 O(1) 且容量滿時淘汰最久未使用者，Map 定位加雙向串列排序缺一不可。
+  - Hint: 節點同時存 key 與 value，並用 dummy 哨兵讓插拆免判邊界。
+- **460** · 把 LRU 升級為頻率淘汰：每個頻率各掛一條雙向串列，再以 minFreq 追蹤最低層，同層內仍按 LRU 排序。
+  - Hint: 需要兩張 Map——key 到節點、頻率到串列——並在每次存取後正確維護 minFreq。

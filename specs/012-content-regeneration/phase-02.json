@@ -2,7 +2,7 @@
   "phase": 2,
   "window": "sessionIndex 14-41",
   "model": "fable",
-  "status": "pending",
+  "status": "done",
   "concepts": [
     {
       "conceptId": "array-linear-scan",
