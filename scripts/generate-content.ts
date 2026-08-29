@@ -35,6 +35,7 @@ import {
   buildStage2ResponseSchema,
   REQUIRED_ARTICLE_TEXT_FIELDS,
   type DraftArticleResponse,
+  type Stage2NextConcept,
   type DraftChallengeEntry,
 } from "./lib/prompts/stage2-content.js";
 import {
@@ -287,13 +288,19 @@ function toSkeletonFrontmatter(node: ConceptNode): SkeletonFrontmatterForArticle
 }
 
 
-async function runSelfCheck(llmClient: LlmClient, node: ConceptNode, markdown: string): Promise<GateFailure | undefined> {
+async function runSelfCheck(
+  llmClient: LlmClient,
+  node: ConceptNode,
+  markdown: string,
+  nextConcepts: Stage2NextConcept[],
+): Promise<GateFailure | undefined> {
   const prompt = buildSelfCheckPrompt({
     conceptId: node.id,
     title: node.title,
     patternLabel: node.patternLabel,
     complexityLabel: node.complexityLabel,
     articleMarkdown: markdown,
+    nextTitles: nextConcepts.map((n) => n.title),
   });
 
   let response: SelfCheckResponse;
@@ -315,6 +322,7 @@ export async function generateOneConcept(
   node: ConceptNode,
   authorHints: string,
   bank: ProblemBank,
+  nextConcepts: Stage2NextConcept[],
 ): Promise<{ markdown?: string; failure?: GateFailure; attempts: number }> {
   const skeleton = toSkeletonFrontmatter(node);
   let lastFailure: GateFailure | undefined;
@@ -329,6 +337,7 @@ export async function generateOneConcept(
       exitCriteria: node.exitCriteria,
       authorHints,
       candidateProblems: node.leetcode.map((id) => ({ id })),
+      nextConcepts,
       // 首次無回饋；重生時帶上一次被 Gate 擋下的具名原因（俚語位置、缺失區塊、程式碼錯誤訊息…
       // 都已足夠具體，可直接作為修正指示）。少了這個，重生只是重擲同一顆骰子（見 Stage2PromptInput）。
       retryFeedback: lastFailure?.reason,
@@ -350,7 +359,7 @@ export async function generateOneConcept(
       continue;
     }
 
-    const selfCheckFailure = await runSelfCheck(llmClient, node, markdown);
+    const selfCheckFailure = await runSelfCheck(llmClient, node, markdown, nextConcepts);
     if (selfCheckFailure) {
       lastFailure = selfCheckFailure;
       continue;
@@ -452,7 +461,12 @@ async function main(): Promise<void> {
     }
 
     const authorHints = extractAuthorHints(skeletonRaw);
-    const { markdown, failure, attempts } = await generateOneConcept(llmClient, node, authorHints, bank);
+    // 後繼節點於此解析：generateOneConcept 是純生成邏輯，MUST NOT 自行讀 graph（維持可測性）。
+    const nextConcepts = node.next
+      .map((id) => graph.concepts.get(id))
+      .filter((n): n is ConceptNode => n !== undefined)
+      .map((n) => ({ id: n.id, title: n.title, patternLabel: n.patternLabel }));
+    const { markdown, failure, attempts } = await generateOneConcept(llmClient, node, authorHints, bank, nextConcepts);
 
     if (markdown) {
       mkdirSync(dirname(node.articlePath), { recursive: true });

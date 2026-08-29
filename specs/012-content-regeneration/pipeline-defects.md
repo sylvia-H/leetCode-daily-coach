@@ -10,7 +10,7 @@
 
 ## D1 · Stage 2 prompt 從未收到 `next`，Tomorrow Preview 全是模型編的
 
-**狀態**：🔴 未修復
+**狀態**：🟢 已修復（2026-08-29）
 **嚴重度**：高——14 篇抽樣中 **13 篇** 的 Tomorrow Preview 與 Skeleton 的 `next` 不符。
 
 ### 證據
@@ -37,7 +37,29 @@
 模型拿不到「下一課是什麼」，只能依上下文編一個聽起來合理的主題；而**沒有任何 Gate 判準
 檢查 Tomorrow Preview 的內容**——只要該區塊非空就過關。
 
-### 修復方向
+### 已實施的修復
+
+1. `Stage2PromptInput` 新增 `nextConcepts: Stage2NextConcept[]`（id / title / patternLabel），
+   `buildStage2Prompt` 於「候選題目」後列出「後繼 Concept（**tomorrowPreview 的唯一依據**）」。
+2. prompt 新增規則 6：後繼非空 ⇒ MUST 預告其中一門且敘述與其 title／Pattern 相符；
+   後繼為空 ⇒ MUST 寫成收尾語且 **MUST NOT 點名任何 Concept**；
+   MUST NOT 提及不在後繼清單內的主題（**含課程中更早出現過的**——實測最常見的錯誤樣態）。
+3. `generate-content.ts` 於呼叫端以 `graph.concepts.get()` 解析 `node.next` 後傳入
+   （`generateOneConcept` 維持不讀 graph，保住可測性）。
+4. `buildSelfCheckPrompt` 新增第 4 項檢查，帶入後繼 title 做語意比對。
+5. 迴歸測試 `tests/unit/stage2-tomorrow-preview.test.ts`（7 項）鎖住上述契約。
+
+### 為何 MUST NOT 加機械 Gate（實測後否決）
+
+以「Tomorrow Preview 是否含後繼 title 的顯著詞」對 Phase 1 那 14 篇人工核對過的教材實測：
+13 篇有後繼者命中 12 篇，**唯一未命中的 `array-in-place-removal` 其實寫對了**——它把後繼
+`array-in-place-deduplication` 整句以中文表達（「已排序陣列的原地去重」），未出現英文 title 詞。
+
+約 **8% 的假陽性**會擋下正確教材並逼出無謂重生（額度是產線瓶頸）。故語意比對交給 self-check，
+**MUST NOT 上這條正則判準**。若日後要改為硬性 Gate，MUST 先改 prompt 強制英文 title 出現，
+再以同一份真值集重測命中率。
+
+### 原修復方向（存查）
 
 1. `Stage2PromptInput` 加 `next`（至少 id + title + patternLabel）。
 2. `buildStage2Prompt` 明示：Tomorrow Preview MUST 只依 `next` 撰寫；`next` 為空時

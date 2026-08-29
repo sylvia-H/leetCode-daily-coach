@@ -69,7 +69,7 @@ describe("needs-human-review（FR-012：重生 3 次仍不過 → 標記、繼�
       { genAiFactory, throttle: new Throttle({ rpmLimit: Infinity }) },
     );
 
-    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank);
+    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank, []);
 
     expect(result.markdown).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);
@@ -115,7 +115,7 @@ describe("重生時把 Gate 失敗原因回饋進 prompt（避免重擲同一顆
       },
     );
 
-    await generateOneConcept(llmClient, fakeConceptNode(), "hints", fakeBank);
+    await generateOneConcept(llmClient, fakeConceptNode(), "hints", fakeBank, []);
 
     expect(prompts).toHaveLength(3);
     expect(prompts[0]).not.toContain("上一次產出未通過品質 Gate");
