@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 28,
-      "lastPushAt": "2026-08-29T03:39:52.487Z",
+      "currentSessionIndex": 29,
+      "lastPushAt": "2026-08-30T00:09:44.264Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -149,12 +149,16 @@
           "sessionIndex": 27,
           "pushedAt": "2026-08-29T03:39:52.487Z",
           "conceptId": "array-in-place-removal"
+        },
+        {
+          "sessionIndex": 28,
+          "pushedAt": "2026-08-30T00:09:44.264Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 28,
-      "lastPushAt": "2026-08-29T03:39:52.673Z",
+      "currentSessionIndex": 29,
+      "lastPushAt": "2026-08-30T00:09:44.568Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -305,12 +309,16 @@
         {
           "sessionIndex": 27,
           "pushedAt": "2026-08-29T03:39:52.673Z"
+        },
+        {
+          "sessionIndex": 28,
+          "pushedAt": "2026-08-30T00:09:44.568Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 28,
-      "lastPushAt": "2026-08-29T03:39:52.873Z",
+      "currentSessionIndex": 29,
+      "lastPushAt": "2026-08-30T00:09:44.783Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -333,7 +341,8 @@
         "array-in-place-deduplication",
         "array-move-zeroes",
         "hash-table-concept-introduction",
-        "hash-table-frequency-counting"
+        "hash-table-frequency-counting",
+        "hash-table-complement-lookup"
       ],
       "history": [
         {
@@ -465,6 +474,11 @@
           "sessionIndex": 27,
           "pushedAt": "2026-08-29T03:39:52.873Z",
           "conceptId": "hash-table-frequency-counting"
+        },
+        {
+          "sessionIndex": 28,
+          "pushedAt": "2026-08-30T00:09:44.783Z",
+          "conceptId": "hash-table-complement-lookup"
         }
       ]
     }
