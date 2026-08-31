@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 29,
-      "lastPushAt": "2026-08-30T00:09:44.264Z",
+      "currentSessionIndex": 30,
+      "lastPushAt": "2026-08-31T00:26:35.842Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -153,12 +153,16 @@
         {
           "sessionIndex": 28,
           "pushedAt": "2026-08-30T00:09:44.264Z"
+        },
+        {
+          "sessionIndex": 29,
+          "pushedAt": "2026-08-31T00:26:35.842Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 29,
-      "lastPushAt": "2026-08-30T00:09:44.568Z",
+      "currentSessionIndex": 30,
+      "lastPushAt": "2026-08-31T00:26:36.239Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -179,7 +183,8 @@
         "array-two-pointers-variable",
         "array-in-place-removal",
         "array-in-place-deduplication",
-        "array-move-zeroes"
+        "array-move-zeroes",
+        "hash-table-concept-introduction"
       ],
       "history": [
         {
@@ -313,12 +318,17 @@
         {
           "sessionIndex": 28,
           "pushedAt": "2026-08-30T00:09:44.568Z"
+        },
+        {
+          "sessionIndex": 29,
+          "pushedAt": "2026-08-31T00:26:36.239Z",
+          "conceptId": "hash-table-concept-introduction"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 29,
-      "lastPushAt": "2026-08-30T00:09:44.783Z",
+      "currentSessionIndex": 30,
+      "lastPushAt": "2026-08-31T00:26:36.518Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -342,7 +352,8 @@
         "array-move-zeroes",
         "hash-table-concept-introduction",
         "hash-table-frequency-counting",
-        "hash-table-complement-lookup"
+        "hash-table-complement-lookup",
+        "hash-table-existence-tracking"
       ],
       "history": [
         {
@@ -479,6 +490,11 @@
           "sessionIndex": 28,
           "pushedAt": "2026-08-30T00:09:44.783Z",
           "conceptId": "hash-table-complement-lookup"
+        },
+        {
+          "sessionIndex": 29,
+          "pushedAt": "2026-08-31T00:26:36.518Z",
+          "conceptId": "hash-table-existence-tracking"
         }
       ]
     }
