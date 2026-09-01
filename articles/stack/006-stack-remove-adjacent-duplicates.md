@@ -11,75 +11,80 @@ exit_criteria:
 ---
 ## Concept
 
-Stack Remove Adjacent Duplicates 是一種透過堆疊資料結構來動態過濾相鄰重複元素的核心演算法技巧。在處理字串或陣列時，當我們需要消除成對或連續出現的相同相鄰元素時，堆疊的後進先出（Last-In, First-Out, LIFO）特性使得我們能夠在單一線性掃描過程中，精確地比對當前元素與前一個尚未被消除的元素。這種方法避免了重複掃描整個序列，能有效維持時間複雜度在線性級別。
+給定一個字串，反覆刪除相鄰且相同的一對字元，直到再也刪不動為止。難點在於「消除會製造新的相鄰」：`abba` 刪掉中間的 `bb` 之後，原本隔著兩格的兩個 `a` 變成相鄰，還得再刪一次。若用字串反覆搜尋替換來模擬，每刪一輪就得重掃整個字串，最壞退化到 O(n^2)。stack 的觀點把問題翻轉過來：不去「刪除」原字串，而是由左至右「重建」結果——stack 裡隨時維護著已讀前綴消除完畢後的樣子，新字元只需要跟 stack 頂端（也就是它此刻真正的左鄰居）比較一次。
 
 ## Thinking
 
-在解決此類問題時，直覺的思考方式是維護一個堆疊（在程式實作中通常使用動態陣列或列表）。當我們依序迭代輸入字串的每一個字元時，我們將其與堆疊的頂部（top）元素進行比較。如果堆疊不為空且當前字元與堆疊頂部字元相符，則代表發現了相鄰重複項，此時應將堆疊頂部元素彈出（pop），同時不將當前字元壓入堆疊；如果不相符，則將當前字元壓入堆疊（push）。當整個序列遍歷完成後，堆疊中所剩餘的元素依序組合即為消除相鄰重複項之後的最終結果。
+規則只有一條分支：目前字元若與 stack 頂端相同，彈出頂端（一對相鄰重複就地抵銷），且目前字元不進 stack；否則推入目前字元。掃描結束後，stack 由底到頂就是答案。
+
+為什麼一趟就夠？看不變式：處理完前 i 個字元時，stack 的內容恆等於「前 i 個字元反覆消除到底」的結果，其中不存在任何相鄰重複。歸納論證：初始為空，成立。下一個字元進來時——若它與頂端不同，推入後仍無相鄰重複，不變式保持；若相同，彈出頂端等於消掉一對，而彈出後暴露的新頂端與再下一個字元的比較，正是「消除後產生的新相鄰對」的檢查。連鎖消除不需要任何回頭重掃，因為 stack 頂端永遠就是目前字元的實際左鄰居。
+
+擴充到「k 個連續相同才消除」時，只要把 stack 元素換成（字元, 連續計數）：與頂端同字元就把計數加一，加到 k 就整段彈出；不同就推入計數為 1 的新段。不變式同樣保持：stack 裡每一段的計數都小於 k。
 
 ## Pattern Recognition
 
-當題目描述中出現「消除相鄰重複字元」、「消除相鄰相同對」、「消除 K 個連續相鄰重複項」等關鍵字，且操作順序會影響後續相鄰關係時，即應立即聯想到 Stack Remove Adjacent Duplicates Pattern。這類問題的特徵在於元素被消除後，原本不相鄰的元素可能會變成相鄰並產生新的可消除對，而堆疊結構剛好能完美追蹤這種動態的相鄰狀態變化。
+訊號有三：操作是「相鄰元素配對抵銷」；抵銷之後兩側元素靠攏、可能形成新的可抵銷對；答案是消除到底的最終序列。看到這種連鎖抵銷的動態，就該想到用 stack 維護已化簡的前綴。同一家族還有退格字元處理、成對括號消除，以及昨天的 RPN 求值——共同點都是「目前元素只需要與最近一或兩個還活著的元素互動」。反過來，若配對不限相鄰（例如任意位置的同字元兩兩相消），stack 就派不上用場，那是單純的計數問題。
 
 ## Common Mistakes
 
-常見的錯誤之一是在將堆疊轉換回字串時，忽略了堆疊的 LIFO 順序而導致輸出結果順序顛倒。在大多數語言中，若直接從堆疊底部讀取或未正確處理陣列的左右方向，會產生相反的字串排列。另一個常見錯誤是未先檢查堆疊是否為空就去存取堆疊頂部元素，導致在執行階段發生索引越界或空指標異常。
+一、重建結果時畫蛇添足：用動態陣列實作 stack 時，由索引 0 往尾端直接串接就是正確順序（底部是最早留下的字元），多做一次反轉反而弄反；真的逐一 pop 出來串接才會得到顛倒的字串。二、空 stack 檢查的語言差異：Python 對空列表取 `stack[-1]` 會直接拋出 IndexError，必須先判空；TypeScript 讀空陣列頂端只會得到 `undefined`，與任何字元比較都是 false、剛好走進推入分支——行為碰巧正確，但仍建議顯式判空，把「空就推入」的意圖寫清楚。三、k 版本用單字元 stack 硬數：每讀一個字元就往回檢查頂端的 k - 1 個是否相同，最壞 O(nk)；改存（字元, 計數）才能維持 O(n)。四、試圖在原字串上原地刪除：每次刪除都要搬移後方所有字元，又回到平方級的成本。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 是輸入字串或陣列的長度。因為每個字元最多被推入堆疊一次並被彈出一次，整體迭代與堆疊操作皆為常數時間。空間複雜度亦為 O(n)，在最壞的情況下（即完全沒有相鄰重複字元可以消除），堆疊將儲存輸入序列中的所有元素。
+時間複雜度 O(n)：每個字元至多被推入、彈出各一次，每一步都是常數時間的頂端操作。空間複雜度 O(n)：完全沒有可消除對時（例如 `abcde`），stack 會存下整個字串；k 版本存（字元, 計數）段，最壞同為 O(n)。
 
 ## Digest
 
-本單元深入探討 Stack Remove Adjacent Duplicates 技巧，學習利用堆疊的 LIFO 特性在 O(n) 時間內動態消除相鄰重複元素。文章詳細說明了從比對堆疊頂部到重建結果的核心思考邏輯、識別此 Pattern 的線索，並點出轉換字串順序時的常見陷阱，幫助讀者在處理字串壓縮與消除類型的題目時建立穩固的架構。
+相鄰重複消除：由左至右掃描，目前字元與 stack 頂端相同就彈出（一對抵銷），不同就推入。stack 恆維護「已讀前綴消除到底」的不變式，頂端永遠是目前字元的實際左鄰居，連鎖消除因此免回頭重掃。以 `abbaca` 為例：推 a、推 b，遇 b 與頂端抵銷，遇 a 與新頂端 a 抵銷，再推 c、推 a，答案 `ca`。「k 個連續才消除」的版本改存（字元, 連續計數），計數達 k 整段彈出。O(n) 時間、O(n) 空間，比反覆字串替換的 O(n^2) 快一個量級。
 
 ## TypeScript Tip
+
+用陣列當 stack，`stack[stack.length - 1]` 讀頂端；結果直接 `join("")`，不需反轉。
 
 ```typescript
 function removeDuplicates(s: string): string {
   const stack: string[] = [];
-  for (const char of s) {
-    if (stack.length > 0 && stack[stack.length - 1] === char) {
-      stack.pop();
-    } else {
-      stack.push(char);
-    }
+  for (const ch of s) {
+    if (stack.length > 0 && stack[stack.length - 1] === ch) stack.pop();
+    else stack.push(ch);
   }
-  const result = stack.join("");
-  if (result !== "ca") throw new Error("assertion failed");
-  return result;
+  return stack.join("");
 }
-removeDuplicates("abbaca");
+if (removeDuplicates("abbaca") !== "ca") throw new Error("assertion failed");
+if (removeDuplicates("azxxzy") !== "ay") throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
-```python
-def remove_duplicates(s: str) -> str:
-    stack = []
-    for char in s:
-        if stack and stack[-1] == char:
-            stack.pop()
-        else:
-            stack.append(char)
-    result = "".join(stack)
-    assert result == "ca", "assertion failed"
-    return result
+k 版本把 stack 元素換成 [字元, 計數] 的小列表；最後用生成器把每段展開重建字串。
 
-remove_duplicates("abbaca")
+```python
+def remove_k_duplicates(s: str, k: int) -> str:
+    stack: list[list] = []  # 每個元素是 [字元, 連續計數]
+    for ch in s:
+        if stack and stack[-1][0] == ch:
+            stack[-1][1] += 1
+            if stack[-1][1] == k:
+                stack.pop()
+        else:
+            stack.append([ch, 1])
+    return "".join(c * n for c, n in stack)
+
+assert remove_k_duplicates("deeedbbcccbdaa", 3) == "aa", "assertion failed"
+assert remove_k_duplicates("abcd", 2) == "abcd", "assertion failed"
 ```
 
 ## Takeaway
 
-運用堆疊追蹤相鄰狀態，能在線性時間內完美解決相鄰重複消除問題。
+stack 頂端就是目前字元的實際左鄰居：相同就抵銷、不同就推入，連鎖消除因此一趟掃描就收工。
 
 ## Tomorrow Preview
 
-明天我們將探討堆疊結構在表達式求值與括號匹配中的進階應用，學習如何處理不同優先級與巢狀結構的運算。
+明天進入 Daily Temperatures，正式踏入 Monotonic Stack：頂端比較的條件從「相等就消除」變成「違反單調就彈出」，stack 從濾除重複進化成替每個元素找到下一個更大值。
 
 ## Today's Challenge
 
-- **1047** · 題目要求移除字串中相鄰且相同的兩個字元，且消除後可能產生新的相鄰重複項，完全符合 Stack Remove Adjacent Duplicates 的 LIFO 消除特性。
-  - Hint: 使用陣列作為堆疊，遍歷字元時檢查堆疊頂端是否與當前字元相同。
-- **1209** · 題目要求刪除 k 個相鄰且相同的字元，是相鄰重複消除 Pattern 的計數擴充版本，堆疊中需要同時記錄字元與其連續出現的次數。
-  - Hint: 在堆疊中儲存包含字元與計數的物件或陣列，當計數達到 k 時執行彈出操作。
+- **1047** · 原型題：一對相同相鄰字元抵銷後可能製造新的相鄰對，stack 頂端恰好追蹤這種動態的左鄰居關係。
+  - Hint: 目前字元等於頂端就 pop、否則 push；最後把陣列直接 join 就是答案。
+- **1209** · 計數擴充：k 個連續相同才消除，stack 元素改存字元與連續計數。
+  - Hint: 與頂端同字元就把計數加一，達 k 整段彈出；重建時把每段字元乘以計數展開。

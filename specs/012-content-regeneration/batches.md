@@ -35,6 +35,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 5 | idx 56–69 | 10 個（two-pointer 002–010 + binary-search 001），quiz 82 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 82 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（136.4s） | subagent 計數 fable 1,244K + opus 181K ≈ 1,425K tokens。**reviewer 判定退修 0 篇**（連續第二批），僅順手修 2 項 MINOR |
 | 6 | idx 70–83 | 9 個（binary-search 002–010），quiz 61 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 61 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.1s） | subagent 計數 fable 1,258K + opus 209K ≈ 1,467K tokens。**reviewer 判定 0 BLOCKER / 0 MAJOR**（連續第三批），修 2 項 MINOR。用量 39%→45%（0.67／Concept） |
 | 7 | idx 84–97 | 9 個（sliding-window 001–009），quiz 64 題 | fable ×4 + opus reviewer ×2（第一個因事故作廢） | （本批） | `verify:phase` 8 道全過：article 9/9 ✓、quiz 合併 64 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（145.0s） | **牆鐘 96 分鐘，其中約 40–45 分是 D14 事故損耗**（對照 Phase 6 約 48 分）。reviewer 判定 0 BLOCKER / 0 MAJOR，修 7 項 MINOR |
+| 8 | idx 98–111 | 10 個（sliding-window 010 收官 + stack 001–009），quiz 75 題 | **新制首批**：fable ×6 + opus reviewer ×2（隨交件輪派） | （本批） | `verify:phase` 8 道通過（第一輪在步驟 b 被 `quiz-option-prefix` 擋下 1 題——「A、B、D」型選項，重寫為數字標籤後全過）：article 10/10 ✓、quiz 合併 75 題、tests ✓、`validate:content` ✓、`gate:code` ✓（138.4s） | subagent 計數 fable ×6 ≈ 744K + opus ×2 ≈ 343K ≈ 1,087K tokens（fable 端 74K/Concept，低於舊制的 ~125K）。reviewer 判定 **2 MAJOR**（009 對先修課 008 的對照講反、010 失效形式寫反）＋ 10 餘項 MINOR，退修均一輪完成。**發生一次派件無聲卡關**（reviewer A 停機時佇列訊息不喚醒，靠使用者發現、手動補喚醒），據此改制為 1 對 1 即拋即審（見 runbook）。用量 56%→（收批後待問） |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -460,3 +461,28 @@ B 批只把該誤區列在 004（最短型）、D 批在 007（最長型）主�
 - **失效形式寫反（D10）再兩例**：`fixed-size` 舊版說 `n < k` 會「程式碼崩潰」（實測 Python 切片與
   JS 索引都安靜算錯）；`fruit-into-baskets` 舊版說「不刪鍵」會「安靜誤判」（實際是收縮停不下來）。
 - **韓文亂碼**：`longest-substring-no-repeat` 舊 item[6] 的 explanation 混入「常수의」。
+
+## Phase 8 查證出的既有缺陷
+
+- **Tomorrow Preview：10 篇中 9 篇錯或不當**（001/002/003/004/005/006/008/009/010 直接指向錯課或違反
+  `next`；007 籠統但未違規）。D1 樣態的又一次全面重演。
+- **既有 quiz 雙正解 3 起**：`stack-asteroid-collision` item[5]（「新元素為正且頂端非正」也是充分免碰撞
+  條件，explanation 的駁斥在事實上錯誤）、`stack-evaluate-reverse-polish-notation` item[0]、
+  `stack-remove-adjacent-duplicates` item[4]（「從堆疊底部依序取出串接」正是標準做法，與同課 Tip 矛盾）。
+- **詳解事實錯誤**：`stack-array-implementation` item[5] 把常數增量擴容的攤銷成本寫成「O(n平方)」
+  （正確：攤銷 O(n)，總量才是 O(n^2)）。
+- **不變式寫錯**：`stack-daily-temperatures` 舊版稱堆疊「嚴格遞減」——彈出條件是嚴格小於，相等溫度
+  可共存，實為非嚴格遞減。
+- **D4 樣態大面積存在**：001/005/006/009 等課的既有 quiz `explanation[0]` 逐字複製正解選項。
+- **Tip 與 pattern 脫鉤普遍**：003 只是泛用 Stack class 包裝、005 完全沒有 RPN 實作、007 是無關玩具碼、
+  009 斷言只驗前兩筆（從未觸發 span 累加路徑）。
+- **錯字**：「巡員」×2（002 quiz）、「演習」（009 quiz）、「更階層資料結構」（002 正文）、
+  「隕石」對 asteroid 的不精確譯名（004）。
+
+### 新制（6 Fable + 2 Opus 輪派）首批觀察
+
+- reviewer 與寫作重疊進行有效；但**派件依賴 SendMessage 續用 context 是卡關熱區**：訊息在對方停機
+  瞬間送出時只入佇列、不喚醒（回應顯示「queued for delivery」而非「Resuming」即為此況），
+  reviewer A 因此無聲閒置約 15 分鐘，由使用者發現。已改制為「每交件即開新 reviewer、審完即關」（1 對 1）。
+- reviewer 交辦主控的實跑命題，改由**退修時要求原作者附帶驗證**（含不終止變體 MUST 加步數熔斷的
+  D14 防護）運作良好——本批 6 項命題全數由作者實測回覆，主控僅補跑 quiz 腳本一次。
