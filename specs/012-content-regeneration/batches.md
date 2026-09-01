@@ -37,6 +37,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 7 | idx 84–97 | 9 個（sliding-window 001–009），quiz 64 題 | fable ×4 + opus reviewer ×2（第一個因事故作廢） | （本批） | `verify:phase` 8 道全過：article 9/9 ✓、quiz 合併 64 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（145.0s） | **牆鐘 96 分鐘，其中約 40–45 分是 D14 事故損耗**（對照 Phase 6 約 48 分）。reviewer 判定 0 BLOCKER / 0 MAJOR，修 7 項 MINOR |
 | 8 | idx 98–111 | 10 個（sliding-window 010 收官 + stack 001–009），quiz 75 題 | **新制首批**：fable ×6 + opus reviewer ×2（隨交件輪派） | （本批） | `verify:phase` 8 道通過（第一輪在步驟 b 被 `quiz-option-prefix` 擋下 1 題——「A、B、D」型選項，重寫為數字標籤後全過）：article 10/10 ✓、quiz 合併 75 題、tests ✓、`validate:content` ✓、`gate:code` ✓（138.4s） | subagent 計數 fable ×6 ≈ 744K + opus ×2 ≈ 343K ≈ 1,087K tokens（fable 端 74K/Concept，低於舊制的 ~125K）。reviewer 判定 **2 MAJOR**（009 對先修課 008 的對照講反、010 失效形式寫反）＋ 10 餘項 MINOR，退修均一輪完成。**發生一次派件無聲卡關**（reviewer A 停機時佇列訊息不喚醒，靠使用者發現、手動補喚醒），據此改制為 1 對 1 即拋即審（見 runbook）。用量 56%→67%（**1.1／Concept**，詳見 runbook 2026-09-01 校準） |
 | 9 | idx 112–125 | 9 個（queue 001–007 + stack 010–011），quiz 64 題 | **1 對 1 制首批**：fable ×6 + opus reviewer ×6（每交件即開、審完即關） | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 64 題、tests ✓、`validate:content` ✓、`gate:code` ✓（133.4s） | subagent 計數 fable ≈ 700K + opus ×6 ≈ 665K ≈ 1,365K tokens。reviewer 判定 **1 MAJOR**（010 兩處事實錯誤）＋ 5 件 MINOR，退修均一輪完成、突變全 KILLED。作者 E 曾被內容過濾中斷、恢復收尾成功。**零卡關**。用量 67%→75%（**0.89／Concept**） |
+| 10 | idx 126–139 | 9 個（linked-list 001–006 + queue 008–010），quiz 64 題 | fable ×6 + opus reviewer ×6（1 對 1 即拋即審） | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 64 題、tests ✓、`validate:content` ✓、`gate:code` ✓（132.5s） | subagent 計數 fable ≈ 796K + opus ≈ 597K ≈ 1,393K tokens。reviewer 判定 **4 MAJOR**（002 的 876 Hint 洩漏第 6 課、002 quiz 在 strict TS 下的假命題、004 因果錯置、009 的 994 收尾條件）＋ 18 項 MINOR，退修均一輪完成。**零卡關**。用量 75%→83%（**0.89／Concept**，與 Phase 9 同值） |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -519,3 +520,69 @@ B 批只把該誤區列在 004（最短型）、D 批在 007（最長型）主�
 - **零卡關**：每交件即 spawn 新 reviewer，全程無派件佇列、無需喚醒核實。
 - 作者 E 曾被 API 內容過濾中斷（Phase 3 後第二例），檔案已落地，依先例恢復收尾成功、未重跑。
 - Opus 用量實測：6 個 reviewer 合計約 665K tokens（估 600–780K 命中）；Fable 約 700K（78K/Concept）。
+
+## Phase 10 查證出的既有缺陷
+
+- **Tomorrow Preview：9 篇全錯（D1 樣態最高比例的一批）**。001/002 都預告快慢指標（實際 `next`
+  分別是 002、003）、003 預告一門**不存在的課**「Deletion at Head and Tail」、004 預告快慢指標／環偵測
+  （實際是 dummy head）、005 提環狀結構、006 寫「Reversal and In-place Manipulation」、
+  008 預告 Dijkstra + Priority Queue、009 預告 Topological Sort、010 在 `next: []` 下預告
+  Largest Rectangle in Histogram。
+- **D4 樣態擴及 linked-list 與 queue 全批（第 6、7 個模組樣本）**：008 全 6 題、009 全 7 題、
+  010 全 6 題、004 的 index 1/5/6 的 `explanation[0]` 為正解選項逐字複製；004 另有 index 2/4/8
+  的 `[0]` 是主題標籤而非結論句、index 6 的正解選項本身答非所問（名詞片語）。
+- **既有 quiz 正解標錯（本批唯一一組，但互相矛盾）**：`linked-list-two-pointers-slow-fast`
+  item[0] 標「偶數中點偏左」為錯（標準條件 `while (fast && fast.next)` 落在第二中點，
+  正解應為 index 0）；item[5] 標「奇數偏右＋偶數偏左」為錯，**正確答案是 index 1**
+  （reviewer 獨立推演 n=1..6 落點表後確認，並更正作者原本「四選項無一正確」的判斷）。
+- **既有 Tip 與主題脫鉤依然普遍**：009 的 TS Tip 完全沒有 BFS 邏輯、008 兩段是與最短路徑無關的
+  假 BFS、010 的 TS Tip 是玩具片段且註解的均攤論證本身就是錯的（宣稱 `shift()` 均攤 O(n)）。
+- **其他**：002 的既有 quiz item[4] 宣稱提早推進會「記憶體區段錯誤」（GC 語言不成立）；
+  008 item[1] 的正解命題不精確（提早終止只是最佳化，非最小步數的必要條件）、item[4] 超前考了
+  隔天才教的多源 BFS；008/010 有錯字（「演標」「一但」）。
+
+### 新版在審查中被抓的 4 個 MAJOR
+
+- **002**：Today's Challenge 876 的 Hint 把第 6 課（`linked-list-two-pointers-slow-fast`，
+  `leetcode: [876, 19]`、`exit_criteria` 第一條就是「單趟找中點」）的核心技巧整套先講掉，
+  且與同篇 Thinking「環偵測留待快慢指標課」自我矛盾。改回兩趟走訪，並補上真正的坑
+  （偶數長度要回傳第二個中點，`floor(n/2)` 對、`floor((n-1)/2)` 會 WA——作者實跑 n=1..6 驗證）。
+- **002 quiz item[5]**：`explanation[4]` 宣稱雙重推進「在型別與語法上完全合法、編譯器無從得知」，
+  但專案 strict + `noUncheckedIndexedAccess` 下實編為 **TS18047 possibly 'null' 編譯錯誤**，
+  它要駁的干擾項反而更接近事實，且與同篇 Common Mistakes #4 互打。改為三語言分別陳述
+  （strict TS 編譯期擋下／JS TypeError／Python AttributeError，偶數長度靜默漏半）。
+- **004**：`Common Mistakes` 第一句因果錯置（**D10 樣態**）——把「漏掉刪頭分支」的後果寫成拋例外，
+  實際是**安靜輸出錯誤結果**；會拋例外的是另一件事（刪頭迴圈漏 `head !== null` 收斂）。
+  同篇下一句才剛把「prev 前進」正確標為安靜錯誤，內部不一致，且與自己的 quiz item 3 矛盾。
+  拆成兩條並以 `[2,1,2]` / `[2,2,2]` 實跑確認例外類別後才下筆。
+- **009**：`Thinking` 第四步的收尾檢查寫成「仍有格子停留在 -1 就回報無法完成」，與同篇第一步的
+  「源點填 0、其餘填 -1」相衝——994 的空格（值 0，非橘子）永遠停在 -1，照字面實作任何含空格的網格
+  都會回 -1（反例 `[[2,1,1],[0,1,1],[1,0,1]]` 正解 4）。與同篇 Hint 及 quiz 第 6 題正面矛盾，
+  三處只有這處錯。
+
+### D8（斷言鑑別力）本批抓到 4 篇，全部實測突變確認
+
+- **010**：唯一測資 `[1,3,-1,-3,5,3,6,7], k=3` **完全不觸發前端過期**（`head++` 一次都不執行），
+  刪掉整行過期判斷斷言照樣通過——而 `<= i - k` 正是該篇 Common Mistakes、`exit_criteria` 與
+  quiz item[2] 的主軸。補 `[9,9,7,2,4,6,8,8,6]` 後實測三種突變（刪除、`< i-k`、`<= i-k+1`）全數 KILLED。
+- **009**：測資 `[[0,1],[1,1]]` 只有一個 0，等於在測單源 BFS，「一次全部入隊」改成「只入第一個源點」
+  照樣通過。改 `[[0,1,1],[1,1,1],[1,1,0]]` 後單源退化版被攔下。
+- **005**：測資 `7→1→7` 對「刪除後照樣前進」的 bug 版仍 PASS（實測確認 reviewer 指控成立）；
+  改為含連續目標值的 `7→7→1→7` 後 bug 版 FAIL。
+- **003**：Python Tip 把接線包進 `Node(val, head)` 建構式，**順序錯誤在該形式下無法表達**，
+  斷言抓不到本篇宣稱的「第一名錯誤」。改兩行賦值後，顛倒版實跑自我成環、被步數熔斷抓到。
+
+### 一項理論宣稱被 reviewer 證偽後由作者實測校準
+
+009 原寫「出隊才標記使入隊次數**最壞**放大近兩倍」，但 1.95 只是 200 個隨機 8×8 網格的**實測最大值**。
+reviewer 以二分圖 + degree 論證指出上界應為 2.5（棋盤式源點時每個非源格的四鄰皆為源點）。
+作者實跑該反例：8×8=2.25、20×20=2.40、50×50=2.46、100×100=2.48，趨近 2.5。教材與 quiz 兩處
+同步改為「隨機網格實測約兩倍；最壞每格被其每一個鄰居各推一次」。**「最壞」是全稱命題，
+MUST NOT 拿抽樣實測最大值充當**。
+
+### 1 對 1 制第二批觀察
+
+- **再次零卡關**。9 篇全部一輪退修完成，無需二輪。
+- 唯一一則「queued for delivery」（補送作者 C 的 D7 要求）在對方下一輪工具呼叫正常送達並處理，
+  未發生 Phase 8 的無聲閒置——差別在於對方當時正在跑退修而非停機。
+- Opus 用量：6 個 reviewer 合計約 597K（Phase 9 為 665K），仍落在 1 對 1 制的 600–780K 估計區間。

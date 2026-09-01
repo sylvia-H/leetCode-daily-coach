@@ -278,6 +278,13 @@ MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教�
 `string-sliding-window-fixed` 補上一句誠實定位：先修課的 matched 計數器是同一副骨架的常數優化，
 本課先用整表比對把不變式講清楚。這讓「倒退感」變成「刻意的鋪陳」，但**沒有解決重複本身**。
 
+### Phase 10 新登錄的重複配題（供該課重生時帶入）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 111 | `queue-shortest-path-unweighted`（queue，level 8） | `bfs-shortest-path-unweighted`（dfs-bfs/005，level 14） | 兩課主題幾乎相同（同為無權圖最短路、同 `complexity_label`）。dfs-bfs/005 重生時 MUST 誠實承認學員已在 queue/008 解過 111 且已學過同一套逐層擴散 |
+| 203 | `linked-list-deletion-by-value-or-index`（004） | `linked-list-dummy-head-pattern`（005） | **本批已止血**：004 誠實鋪梗「明天的 Dummy Head 會把這個特例收編」，005 誠實承認昨天已解過並明講差別（刪頭特判整段消失） |
+
 ### 修復方向（MUST NOT 在 F12 處理）
 
 1. Problem Bank 的 Concept ↔ Problem 對應加一條檢查：同一題號被多個 Concept 列為

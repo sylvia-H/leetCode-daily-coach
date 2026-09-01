@@ -2,7 +2,7 @@
   "phase": 10,
   "window": "sessionIndex 126-139",
   "model": "fable",
-  "status": "pending",
+  "status": "done",
   "concepts": [
     {
       "conceptId": "linked-list-deletion-by-value-or-index",

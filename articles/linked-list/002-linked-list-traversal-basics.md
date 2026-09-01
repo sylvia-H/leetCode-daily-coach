@@ -11,53 +11,54 @@ exit_criteria:
 ---
 ## Concept
 
-Linked List Traversal Basics 是指在單向鏈結串列中，從頭節點出發，依序訪問每一個節點的基本操作。與連續記憶體的陣列不同，鏈結串列的節點分散在記憶體中，必須透過每個節點內部的指標欄位（如 next）才能找到下一個節點。掌握這個基礎是解決所有 Linked List 題目的先決條件。
+走訪（Traversal）是從 head 出發、沿著 next 指標依序拜訪每一個節點的基本操作。標準模板只有三個動作：先讓暫時指標 current 指向 head；以 `while (current !== null)` 作為迴圈條件；迴圈內先處理 current 指到的節點，再以 `current = current.next` 前進一步。因為節點散落在非連續記憶體中、無法按索引直達，「看過每個節點」在鏈結串列上只有這一條路——計數、找值、印出、找中點，全是這個模板的變形。
 
 ## Thinking
 
-在處理 Linked List 題目時，首要步驟是初始化一個暫時指標，例如讓 current 停留在 head 的位置。接著，建立一個 while 迴圈，持續檢查 current 是否為 null 或 undefined。在迴圈內部，可以進行資料處理或狀態更新，最後務必將指標往前推進（current = current.next），直到遍歷完全部節點。
+這個模板的正確性可以用迴圈不變式（loop invariant）說清楚：每輪迴圈開始時，current 指向第一個尚未處理的節點，且 current 之前的所有節點都恰好被處理過一次。初始時 current = head、尚未處理任何節點，不變式成立；每輪處理完 current 再前進一步，不變式維持；結束時 current 為 null，代表「尚未處理的節點」已不存在——n 個節點恰好各處理一次。終止性同樣有保證：無環串列長度有限，current 每輪沿鏈前進一格，恰好 n 輪後抵達 null——五個節點就是五次迭代。但前提是「無環」——若串列成環，current 永遠遇不到 null，這個迴圈不會終止；環的偵測是之後快慢指標課的主題。再想清楚為什麼條件是 current 不為 null，而不是 current.next 不為 null：後者會在最後一個節點提前收工、漏掉它；而且空串列時 current 本身就是 null，取 current.next 會當場出錯。
 
 ## Pattern Recognition
 
-當題目要求尋找、統計、印出或檢驗 singly linked list 中的所有元素，且無法藉由索引直接存取時，即為典型的 Linear Scan 模式。看見需要走訪完整個鏈結串列的特徵，便應直接聯想到使用基礎的 traversal 迴圈。
+只要題目要求檢查、統計、搜尋或輸出 singly linked list 的全部元素，而結構又不支援隨機存取，就是 Linear Scan：計算長度、找特定值、找中點（先走一趟數出 n，再走 n/2 步）、比對兩條串列是否相等。更複雜的鏈結串列題往往也是「走訪骨架＋額外簿記」——先把骨架練到反射性正確，再往上疊操作。
 
 ## Common Mistakes
 
-常見錯誤包含在單次迴圈迭代中不小心寫了兩次 current = current.next，導致跳過部分節點；或者在遍歷過程中直接改動 head 指標，導致整條鏈結串列的開頭遺失而無法回溯。此外，忽略空串列（head 為 null）的邊界條件，也會引發型別錯誤。
+第一，單輪推進兩次（連寫兩句 `current = current.next`，或直接取 `current.next.next`）：必然跳過約一半節點——偶數長度不報任何錯、靜默漏看一半，更難察覺；奇數長度則在尾端對 null 取屬性，Python 拋 AttributeError、JavaScript 拋 TypeError，而本專案的 strict TypeScript 因為 next 型別含 null，這兩種寫法根本過不了編譯。第二，直接拿 head 當走訪指標：迴圈結束後 head 變成 null，串列入口遺失、無法再從頭操作——永遠另取暫時指標，讓 head 原地不動。第三，忽略空串列：head 為 null 是合法輸入，標準條件會讓迴圈一次都不執行、自然安全略過；但若在迴圈之外先取 head.val 或 head.next，就會當場出錯。第四，TypeScript 特有：走訪變數的型別要收斂為「節點或 null 的聯集」，若從非空節點推論而來，後續把可能為 null 的 next 指回去會被型別檢查擋下。
 
 ## Complexity
 
-Time Complexity: O(n)，因為需要拜訪鏈結串列中的每一個節點。Space Complexity: O(1)，只需要常數級別的額外指標變數來儲存當前位置。
+時間複雜度 O(n)：每個節點恰好拜訪一次、每次做常數量的工作。空間複雜度 O(1)：無論串列多長，只用到一個走訪指標與少量累計變數。
 
 ## Digest
 
-Linked List Traversal Basics 是掌握鏈結串列演算法的基石。不同於陣列，鏈結串列不具備隨機存取的特性，因此所有的操作幾乎都建立在線性掃描之上。透過維護一個安全的走訪指標，我們能夠在維持 O(1) 額外空間複雜度的前提下，完整檢查每一個節點的數值。在編寫程式碼時，必須特別注意迴圈終止條件以及防範對空指標進行屬性存取。只要熟練這套標準範本，面對各種複雜的鏈結串列架構，都能迎刃而解。
+走訪是鏈結串列一切操作的地基：current 從 head 出發，`while (current !== null)` 保護每次存取都落在真實節點上，處理完再以 `current = current.next` 前進。迴圈不變式保證每個節點恰好處理一次，無環前提下恰好 n 步終止；空串列則讓條件直接為偽、安全略過。三個紀律：用暫時指標而非 head 本身、先處理再前進、單輪只前進一次。把這個 O(n) 時間、O(1) 空間的骨架練熟，後續的插入、刪除、反轉都只是在骨架上加動作。
 
 ## TypeScript Tip
 
+`while (current !== null)` 不只是安全檢查，也讓 TS 在迴圈內把 current 收斂成非 null，存取 val 與 next 都不需要 `!` 斷言。
+
 ```typescript
 class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
+  next: ListNode | null = null;
+  constructor(public val: number) {}
 }
-function countNodes(head: ListNode | null): number {
-  let count = 0;
-  let current = head;
-  while (current !== null) {
-    count++;
-    current = current.next;
-  }
-  return count;
+
+const head = new ListNode(1);
+head.next = new ListNode(2);
+head.next.next = new ListNode(3);
+
+let total = 0;
+let current: ListNode | null = head;
+while (current !== null) {
+  total += current.val;
+  current = current.next;
 }
-const testHead = new ListNode(1, new ListNode(2, null));
-if (countNodes(testHead) !== 2) throw new Error("assertion failed");
+if (total !== 6) throw new Error("traversal sum assertion failed");
 ```
 
 ## Python Tip
+
+慣用寫法 `while curr:` 把 `None` 視為假值，空串列與走到鏈尾由同一個條件自然收束。
 
 ```python
 class ListNode:
@@ -65,29 +66,27 @@ class ListNode:
         self.val = val
         self.next = next
 
-def count_nodes(head: ListNode | None) -> int:
-    count = 0
-    current = head
-    while current is not None:
-        count += 1
-        current = current.next
-    return count
-
-test_head = ListNode(1, ListNode(2, None))
-assert count_nodes(test_head) == 2, "assertion failed"
+head = ListNode(1, ListNode(2, ListNode(3)))
+total = 0
+curr = head
+while curr:
+    total += curr.val
+    curr = curr.next
+assert total == 6, "traversal sum assertion failed"
+assert curr is None
 ```
 
 ## Takeaway
 
-以暫時指標代替 head 進行走訪，牢記 while (current !== null) 與 current = current.next，確保 O(n) 線性掃描的安全與正確性。
+用暫時指標從 head 出發，迴圈內先處理再 current = current.next，每個節點恰好一次，O(n) 時間、O(1) 空間。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 技巧在 Linked List 中的進階應用，學習如何利用快慢指標找出鏈結串列的中點或環狀結構。
+明天是 Linked List Insertion（Head 與 Tail）：在串列開頭與尾端接上新節點，第一次真正動手改寫指標——今天的走訪骨架會直接用來找到尾端。
 
 ## Today's Challenge
 
-- **876** · 必須透過完整的線性掃描來計算節點總數，或者利用快慢指標走訪整條鏈結串列以尋找中點。
-  - Hint: 可以先掃描一次計算長度，或者使用一快一慢兩個指標同時推進。
-- **430** · 涉及多層次的扁平化處理，核心依然需要透過節點逐一檢視與指標追蹤的線性掃描技巧。
-  - Hint: 遇到子鏈結串列時需要妥善保留接下來的節點參照，並將其與子串列串接。
+- **876** · 找中點最直觀的解法完全建立在標準走訪上：先走一趟數出長度 n，再從 head 走 floor(n/2) 步即是中點，兩趟都是今天的模板。
+  - Hint: 偶數長度時題目要的是第二個中點——走 floor(n/2) 步在奇偶兩種長度下都正好落在正確節點；寫成 (n-1)/2 會偏到第一個中點。
+- **430** · 多層雙向串列的攤平仍是「每個節點恰好拜訪一次」的線性掃描，只是節點多了 child 分支：深入子層前必須先保存原本的 next，是「前進前不遺失參照」紀律的加強版。
+  - Hint: 遇到 child 就先把 next 壓進堆疊，子層走完再取出接回；接回時記得同步修正 prev 並把 child 清成 null。
