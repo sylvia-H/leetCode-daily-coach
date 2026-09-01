@@ -14,14 +14,15 @@
 | `b0a91df` | 18 個 `phase-NN.json` + `phases.json`、執行守衛、單元測試、本 runbook |
 | （Phase 0 末批） | **移除 `TypeScript Corner` / `Python Corner`**：spec §10 契約、產線 prompt、Pages 版面、165 篇教材（詳見 `batches.md`）。⚠️ Phase 1 起的 Article **MUST NOT** 再含這兩段 |
 
-## 每批流程（2026-08-29 修訂，Phase 2 起適用）
+## 每批流程（2026-08-29 修訂，Phase 2 起適用；2026-09-01 再修訂為 6 Fable + 2 Opus，下一批起適用）
 
 ```
-4 個乾淨的 Fable agent 並行 ── 寫 article + quiz 片段；長篇 findings 寫檔，只回傳短摘要
-        │
+6 個乾淨的 Fable agent 並行 ── 寫 article + quiz 片段；長篇 findings 寫檔，只回傳短摘要
+        │  （每有一個交件，立即送審，不等全批交齊）
         ▼
-1 個 Opus reviewer agent ──── 讀該批全部新教材，做「機械 Gate 驗不到」的內容品質審查
-        │
+2 個 Opus reviewer agent ──── 依交件順序輪流收件（第 1 件啟動 reviewer A、第 2 件啟動
+        │                     reviewer B、第 3 件回到 A…），做「機械 Gate 驗不到」的
+        │                     內容品質審查
         ▼
 orchestrator ─────────────── npm run verify:phase（一個指令跑完全部機械驗證）
         │
@@ -44,14 +45,18 @@ orchestrator ─────────────── commit 凍結、更�
   理解語意，貴且容易改壞。故 Fable agent **在該批驗證通過前 MUST NOT 關閉**。
 - **Opus reviewer 補的是真正的盲點**：Phase 1 只跑了機械 Gate，**沒有任何人讀過那 14 篇的
   內容**。Gate 保證格式、字數、程式碼可執行，保證不了論證是否正確、是否好讀。
+- **reviewer 隨交件逐步啟動（2026-09-01 修訂）**：不等全批交齊——等全批再審會讓最早交件的
+  篇章白白閒置整段尾巴時間。改為 3 個 Fable agent 共用 1 個 Opus reviewer（共 2 個 reviewer），
+  依交件順序輪流收件，審查與寫作重疊進行，縮短整批 wall-clock。
 
 ### 1. 取本批清單
 
 讀 `specs/012-content-regeneration/phase-NN.json` 的 `concepts`（含 `article` 路徑與 `quizCount`）。
 
-### 2. 開 4 個乾淨的 Fable agent 並行
+### 2. 開 6 個乾淨的 Fable agent 並行
 
-- 模型 **MUST 為 `fable`**。每個分 2～4 個 Concept，**分配 MUST 互斥**。
+- 模型 **MUST 為 `fable`**。單批 Concept 總數照舊（一個 Phase），每個分 1～3 個 Concept，
+  **分配 MUST 互斥**。
 - prompt MUST 包含：`agent-brief.md` 絕對路徑、指派的 conceptId 與各自 `quizCount`、
   quiz 片段輸出目錄、「交件前 MUST 跑 `npm run gate:articles -- --only <id> --skip-quiz` 看到 ✓」、
   「MUST NOT 執行 git 指令」、「MUST NOT 碰其他 Concept」。
@@ -60,11 +65,19 @@ orchestrator ─────────────── commit 凍結、更�
 
 quiz 片段目錄慣例：`<scratchpad>/f12/phase-NN/quiz/<conceptId>.json`。
 
-### 3. 開 1 個 Opus reviewer agent
+### 3. 開 2 個 Opus reviewer agent（隨交件逐步啟動）
 
-四個 Fable agent 全部交件後啟動。模型 **MUST 為 `opus`**。職責是**讀內容**，不是跑腳本：
+模型 **MUST 為 `opus`**。**不等全批交齊**，依交件順序逐步啟動與派件：
 
-- 逐篇讀該批新教材，檢查論證是否成立、範例是否與敘述一致、程式碼是否真的示範了該 Concept。
+- 第 1 個 Fable agent 交件 → 啟動 reviewer A，審該份產出。
+- 第 2 個交件 → 啟動 reviewer B。
+- 第 3 個之後**依交件順序輪流派回既有 reviewer**（第 3 件 → A、第 4 件 → B…），
+  用 SendMessage 續用同一個 reviewer 的 context，**MUST NOT 開第 3 個 reviewer**。
+  每個 reviewer 最終各負責 3 個 Fable agent 的產出。
+
+職責是**讀內容**，不是跑腳本：
+
+- 逐篇讀分派到的新教材，檢查論證是否成立、範例是否與敘述一致、程式碼是否真的示範了該 Concept。
 - 對照 `pipeline-defects.md` 的已知樣態複查（Tomorrow Preview vs `next`、教材與 quiz 是否互相矛盾）。
 - **MUST NOT 修改任何檔案**，只回報：哪幾篇有疑慮、具體問題、建議退回哪個 Fable agent 重修。
 - 有疑慮者由 orchestrator 送回**原作者 Fable agent** 修正，再重跑 `verify:phase`。
@@ -96,7 +109,8 @@ reviewer 的結論、以及 agent 查證出的既有缺陷。
 
 - `phase-NN.json` 與 `phases.json` 的 `status` 由 `pending` 改為 `done`。
 - `batches.md` 補一列；新發現的**產線**缺陷寫進 `pipeline-defects.md`。
-- **關閉該批全部 agent**（Fable × 4 與 Opus reviewer），下一批開新的。
+- **關閉該批全部 agent**（Fable × 6 與 Opus reviewer × 2），下一批開新的。
+  關閉時機照舊：**該批 `verify:phase` 通過前，任何 Fable agent MUST NOT 關閉**（退修回原作者）。
 
 ## 用量守則
 
@@ -157,4 +171,5 @@ Phase 3 退修 8/9 篇，每次退修都是一次完整的 agent 回合）與 **
 **MUST NOT 拿它當精確預算**，更 MUST NOT 用它取代開跑前向使用者問實際數字。
 
 - 主控**看不到訂閱用量儀表**，MUST NOT 自行宣稱剩餘額度或「還夠跑幾批」。
-- token 側的實測基準：Fable 約 **93K subagent tokens / Concept**；Opus reviewer 每批約 **150～170K**。
+- token 側的實測基準：Fable 約 **93K subagent tokens / Concept**；Opus reviewer 每批約 **150～170K**
+  （4 Fable + 1 reviewer 舊制實測；6 + 2 新制下兩個 reviewer 合計預期同量級，首批收批後 MUST 重新校準）。
