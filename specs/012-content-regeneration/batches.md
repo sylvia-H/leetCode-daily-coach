@@ -35,7 +35,8 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 5 | idx 56–69 | 10 個（two-pointer 002–010 + binary-search 001），quiz 82 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 82 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（136.4s） | subagent 計數 fable 1,244K + opus 181K ≈ 1,425K tokens。**reviewer 判定退修 0 篇**（連續第二批），僅順手修 2 項 MINOR |
 | 6 | idx 70–83 | 9 個（binary-search 002–010），quiz 61 題 | fable ×4 + opus reviewer ×1 | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 61 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（137.1s） | subagent 計數 fable 1,258K + opus 209K ≈ 1,467K tokens。**reviewer 判定 0 BLOCKER / 0 MAJOR**（連續第三批），修 2 項 MINOR。用量 39%→45%（0.67／Concept） |
 | 7 | idx 84–97 | 9 個（sliding-window 001–009），quiz 64 題 | fable ×4 + opus reviewer ×2（第一個因事故作廢） | （本批） | `verify:phase` 8 道全過：article 9/9 ✓、quiz 合併 64 題、962 tests ✓、`validate:content` 641 筆 ✓、`gate:code` 330 區塊 ✓（145.0s） | **牆鐘 96 分鐘，其中約 40–45 分是 D14 事故損耗**（對照 Phase 6 約 48 分）。reviewer 判定 0 BLOCKER / 0 MAJOR，修 7 項 MINOR |
-| 8 | idx 98–111 | 10 個（sliding-window 010 收官 + stack 001–009），quiz 75 題 | **新制首批**：fable ×6 + opus reviewer ×2（隨交件輪派） | （本批） | `verify:phase` 8 道通過（第一輪在步驟 b 被 `quiz-option-prefix` 擋下 1 題——「A、B、D」型選項，重寫為數字標籤後全過）：article 10/10 ✓、quiz 合併 75 題、tests ✓、`validate:content` ✓、`gate:code` ✓（138.4s） | subagent 計數 fable ×6 ≈ 744K + opus ×2 ≈ 343K ≈ 1,087K tokens（fable 端 74K/Concept，低於舊制的 ~125K）。reviewer 判定 **2 MAJOR**（009 對先修課 008 的對照講反、010 失效形式寫反）＋ 10 餘項 MINOR，退修均一輪完成。**發生一次派件無聲卡關**（reviewer A 停機時佇列訊息不喚醒，靠使用者發現、手動補喚醒），據此改制為 1 對 1 即拋即審（見 runbook）。用量 56%→（收批後待問） |
+| 8 | idx 98–111 | 10 個（sliding-window 010 收官 + stack 001–009），quiz 75 題 | **新制首批**：fable ×6 + opus reviewer ×2（隨交件輪派） | （本批） | `verify:phase` 8 道通過（第一輪在步驟 b 被 `quiz-option-prefix` 擋下 1 題——「A、B、D」型選項，重寫為數字標籤後全過）：article 10/10 ✓、quiz 合併 75 題、tests ✓、`validate:content` ✓、`gate:code` ✓（138.4s） | subagent 計數 fable ×6 ≈ 744K + opus ×2 ≈ 343K ≈ 1,087K tokens（fable 端 74K/Concept，低於舊制的 ~125K）。reviewer 判定 **2 MAJOR**（009 對先修課 008 的對照講反、010 失效形式寫反）＋ 10 餘項 MINOR，退修均一輪完成。**發生一次派件無聲卡關**（reviewer A 停機時佇列訊息不喚醒，靠使用者發現、手動補喚醒），據此改制為 1 對 1 即拋即審（見 runbook）。用量 56%→67%（**1.1／Concept**，詳見 runbook 2026-09-01 校準） |
+| 9 | idx 112–125 | 9 個（queue 001–007 + stack 010–011），quiz 64 題 | **1 對 1 制首批**：fable ×6 + opus reviewer ×6（每交件即開、審完即關） | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 64 題、tests ✓、`validate:content` ✓、`gate:code` ✓（133.4s） | subagent 計數 fable ≈ 700K + opus ×6 ≈ 665K ≈ 1,365K tokens。reviewer 判定 **1 MAJOR**（010 兩處事實錯誤）＋ 5 件 MINOR，退修均一輪完成、突變全 KILLED。作者 E 曾被內容過濾中斷、恢復收尾成功。**零卡關**。用量 67%→（收批後待問） |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -486,3 +487,35 @@ B 批只把該誤區列在 004（最短型）、D 批在 007（最長型）主�
   reviewer A 因此無聲閒置約 15 分鐘，由使用者發現。已改制為「每交件即開新 reviewer、審完即關」（1 對 1）。
 - reviewer 交辦主控的實跑命題，改由**退修時要求原作者附帶驗證**（含不終止變體 MUST 加步數熔斷的
   D14 防護）運作良好——本批 6 項命題全數由作者實測回覆，主控僅補跑 quiz 腳本一次。
+
+## Phase 9 查證出的既有缺陷
+
+- **Tomorrow Preview：9 篇中 8 篇錯**（001 跳課預告 BFS、002 預告不在 `next` 的環形緩衝區、003/004/007
+  指錯課、006 方向整個顛倒指回昨天、010 預告課綱不存在的「Subarray Ranges」、011 `next: []` 卻預告
+  LC 85；僅 005 原本正確）。
+- **既有 quiz 重大缺陷**：005 item[0] 四選項無一無條件成立（標定正解描述的是「每次出隊都搬移」的錯誤
+  演算法，缺「僅當 outStack 為空」要件）；006 item[5] 整題站不住（把最壞與攤銷混為一談、比較對象錯置），
+  新版整題汰換；002 item[1] 選項含簡體「先进先出」；010 item[1]/[2] 正解選項機制寫反／自相矛盾；
+  011 item[2] 詳解「每根等高柱都能正確計算最大寬度」為事實錯誤。
+- **D4 樣態擴及 queue 模組（第 5 個模組樣本）**：003 全 8 題、004 幾乎每題的 explanation[0]
+  為正解選項逐字複製。
+- **Tip 與主題脫鉤依然普遍**：003 未示範 enqueue/dequeue 本體、004 只斷言陣列長度為 3 的佔位碼、
+  005 無關 helper、007 的 sumQueue 與層長快照無關、010/011 玩具碼。003 的 Concept 段更是只有
+  一行英文標題、零內容。
+- **D7 備忘**：LC 102/104 與本批 007 重疊的「誠實定位」義務落在課序更晚的 `bfs-queue-level-order`
+  （session 214），屆時 MUST 具名承認 007 已教過層序走訪。
+
+### 新版在審查中被抓的（證明 1 對 1 審查有效）
+
+- 010 兩處 MAJOR 事實錯誤：最壞空間的輸入方向寫反（遞增堆疊誤寫「嚴格遞減零彈出」）、
+  LC 907 約束下不成立的 2^53 溢位偽命題（與同篇 TS Tip 自相矛盾）——修正皆先實測後改寫。
+- 005/006 三處 D10 假知識（「退化成每次 O(n)」偽命題及其 quiz 傳染、無反例的「無窮迴圈」宣稱——
+  後者被作者自己的 Tip 程式碼與 quiz 否證）。
+- 007 quiz 一段詳解「用假命題駁假命題」（失效方向只寫一半，漏了葉節點層長縮短的拆層錯法）。
+- 002/004 各一處 D8 斷言缺口（邊界 off-by-one 突變、wrap-around 突變存活），修正後突變全數 KILLED。
+
+### 1 對 1 即拋即審制首批觀察
+
+- **零卡關**：每交件即 spawn 新 reviewer，全程無派件佇列、無需喚醒核實。
+- 作者 E 曾被 API 內容過濾中斷（Phase 3 後第二例），檔案已落地，依先例恢復收尾成功、未重跑。
+- Opus 用量實測：6 個 reviewer 合計約 665K tokens（估 600–780K 命中）；Fable 約 700K（78K/Concept）。
