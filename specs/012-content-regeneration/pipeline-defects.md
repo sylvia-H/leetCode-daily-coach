@@ -294,6 +294,14 @@ MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教�
 
 ---
 
+### 新登錄（Phase 11 reviewer 查出）
+
+| 題號 | 兩課 | 舉證責任 |
+| --- | --- | --- |
+| 23 | `linked-list-merge-two-sorted`（linked-list，第 10 模組）／`heap-merge-k-sorted-lists`（heap，第 13 模組） | 落在課序較晚的 **heap/008**：重生時 MUST 具名承認 linked-list 已用 23 教過兩條串列的合併，並說明 Min-Heap／分治的差異 |
+
+本次重生的 011 已誠實鋪梗「k 條時交給 Min-Heap 或分治」，銜接良好，不需再改。
+
 ## D8 · `gate:code` 擋不住死斷言：能跑且不拋錯的假測試完美通過
 
 **狀態**：🔴 未修復
@@ -631,6 +639,22 @@ cp.execSync(cmd, { cwd: REPO, stdio: 'pipe', timeout: 30000 })   // cmd = `npx t
 orchestrator 看到了卻只當成「它表現好」，沒有把它變成規則——換一個 agent，同樣的任務就出事。
 **凡是靠 agent 自覺才成立的保障，MUST 寫成規則；規則擋不住的，MUST 有偵測層。**
 
+
+### Phase 11 觀察：reviewer 取得改檔權後，紅線仍守住，但**提示層有反向壓力**
+
+2026-09-02 改制後 reviewer 可讀可改、仍 MUST NOT 執行任何指令。首批 6 個 reviewer 中有 1 個
+**自陳誤發了 2 次唯讀 Bash**（`node -e` 讀 `problem-bank.json`、一次 `echo`），皆瞬間結束、
+未開背景行程，之後自行切回唯讀模式並在回報中主動揭露。
+
+值得記的是它給的原因：**harness 的 auto 模式提示要求「盡量用 Bash 完成工作」**，與 prompt 的
+零執行權紅線方向相反。這不是 agent 擅自越線，是兩層指示衝突。
+
+**處置**：後續 reviewer 的 prompt MUST 把紅線寫成「包含 `node -e`／`cat`／`ls`／`echo` 在內的
+任何一次 Bash 呼叫」，不能只寫「不要跑驗算腳本」——Phase 11 最後一個 reviewer 的 prompt 已改用
+此措辭，該 reviewer 全程零 Bash。
+收批時 orchestrator 仍 MUST 依第三層防護清點 `node.exe`（本批清點 20 個，累計 CPU 最高 39 秒，
+全為 Claude Code／VSCode 常駐行程，無孤兒）。
+
 ---
 
 ## D15 · 時區測試的 sanity check 拿「現在」當基準，每天有 8 小時是紅的
@@ -687,3 +711,60 @@ expect(boundaryUtcDay).not.toBe(boundaryTaipeiDay);
 凡是「確認這個 fixture 真的具備某性質」的檢查，MUST 只用 fixture 自身的資料推導——
 拿外部可變狀態當基準，等於把測試的通過與否交給執行時機決定。
 本專案是時區敏感系統（Asia/Taipei guard、UTC cron），這類錯誤 MUST 特別留意。
+
+---
+
+## D16 · Skeleton 的 Author Hints 內含**未經驗證的錯誤程式碼**，照抄即壞
+
+**狀態**：🔴 未修復（Skeleton 屬 F12 結構凍結範圍，MUST NOT 在教材批次中修改）
+**嚴重度**：中——Author Hints 是作者的權威輸入，錯誤會被直接抄進教材。
+
+### 證據（Phase 11 reviewer B 查出）
+
+`concepts/linked-list/009-linked-list-reversal-iterative.md` 的 Author Hints 給的 Python 一行反轉：
+
+```python
+(prev, curr, curr.next) = (curr, curr.next, prev)   # 壞的
+```
+
+Python 的 tuple assignment **右式先整體求值，左式再由左至右逐一指派**。第二個位置把 `curr` 改寫成
+原本的 `curr.next` 之後，第三個位置的 `curr.next` 就寫到了**新的** curr 身上，原節點的 `next` 從未被反轉。
+正確寫法 MUST 讓 `curr.next` 先於 `curr` 被指派。
+
+作者（Fable）的教材版本順序是對的——但那是它**自己重寫**的結果，不是照 Hints 抄的。
+換一個較被動的作者就會照抄，而 `gate:code` 只掃 `articles/**`、不掃 `concepts/**`，抄了也不會被擋。
+
+### 通則
+
+**Author Hints 的程式碼 MUST NOT 被視為已驗證**。F7 Stage 1 產 Skeleton 時未對 Hints 內的
+fenced code block 跑任何實測，至今也沒有任何 Gate 覆蓋它。
+
+### 處置
+
+F12 不得改 Skeleton，本項登錄待 Skeleton 層另立任務時處理；屆時 SHOULD 一併把 `gate:code`
+的掃描範圍擴及 `concepts/**` 的 fenced code block。
+
+---
+
+## D17 · Tip 的 800 字元預算與 D8 的斷言鑑別力互相排擠
+
+**狀態**：🟡 已知限制，未處置
+**嚴重度**：低——不產生錯誤內容，但會讓「補上具鑑別力的測資」在預算滿的篇章變成做不到。
+
+### 證據（Phase 11 reviewer A 查出）
+
+`linked-list-cycle-start-node` 的 TS Tip 已達 **798/800**、PY Tip 742/800。其測資 `a→b→c→b`（F=1）
+**無法鑑別「先前進再比較」的錯誤寫法**——該錯法在此測資下同樣回傳正確答案；要抓它必須補一組
+**F = 0**（head 即環起點）的案例，但字元餘裕不足以再放一組建構與斷言。reviewer 因此判定不改並具名回報。
+
+同一批的 `linked-list-palindrome-check` 是相反的幸運案例：TS Tip 785/800 時，把既有偶數反例
+`[1,2,2,1]` 改成 `[1,2,3,1]` 只花 +3 字元就補上了鑑別力（PY Tip 預算寬裕則用新增一行的方式補）。
+
+### 通則
+
+**D8 的「斷言要能殺掉突變」與 Tip 的 800 字元上限是同一份預算的競爭者**。預算緊時，
+reviewer MUST 優先選擇「改測資」而非「加測資」（如上例 +3 字元）；真的補不上時
+MUST 具名回報，MUST NOT 為了塞測資而砍掉示範碼本身。
+
+若日後這類案例累積，SHOULD 檢討 Tip 預算（spec §14.5 的 450 是 Discord 側，
+`agent-brief.md` §5 的 800 是 Pages 全文側，兩者可分開評估）。
