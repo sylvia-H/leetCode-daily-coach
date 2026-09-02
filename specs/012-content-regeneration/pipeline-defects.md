@@ -302,7 +302,14 @@ MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教�
 
 本次重生的 011 已誠實鋪梗「k 條時交給 Min-Heap 或分治」，銜接良好，不需再改。
 
-## D8 · `gate:code` 擋不住死斷言：能跑且不拋錯的假測試完美通過
+### 新登錄（Phase 12 reviewer 查出）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 104 | `queue-bfs-level-order-traversal`（queue，level 8，三個 track 皆有） | `tree-maximum-depth-bottom-up`（tree/006，level 10）、`tree-maximum-depth-top-down`（tree/007，同批）、`dfs-recursive-implementation`（dfs-bfs/002，level 14，**最晚，舉證責任在它**） | **tree/006、007 本批已止血**：006 於 Concept 段承認 Queue BFS 已解過同一題（逐層擴散 vs 回溯聚合）；007 的 Challenge why 改寫為「此題你已見過兩次」。dfs-bfs/002 重生時 MUST 帶入本清單並誠實定位 |
+
+Phase 12 作者的 prompt 未帶重複配題清單，作者無從得知——後續批次派件時 SHOULD 把本節
+相關列一併帶入該 Concept 的 prompt。
 
 **狀態**：🔴 未修復
 **嚴重度**：中高——這是機械 Gate 的**結構性盲區**，不是零星漏網。

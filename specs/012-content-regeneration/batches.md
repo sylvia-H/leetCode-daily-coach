@@ -660,3 +660,59 @@ tree 001 複雜度主句對高分支節點不成立（改以邊計數論證）�
   在內的任何一次 Bash 呼叫」措辭後，全程零 Bash。
 - **用量實測**：Fable 6 個作者合計 630K subagent tokens（63K／Concept，低於 6 agent 制基準的 74～78K）；
   Opus 6 個 reviewer 合計 700K（每個 105～132K，落在就地修制的估計區間 120–160K 下緣）。
+
+## Phase 12 — graph 001–002 + tree 005–011（2026-09-02）
+
+sessionIndex 視窗 154–167，9 個 Concept、57 題 quiz。「reviewer 就地修、Fable 交件即關」制第二批。
+6 個 Fable 作者並行（A1：graph 001/002、A2：tree 005/006、A3：tree 007、A4：tree 008、
+A5：tree 009/010、A6：tree 011），每交件即 spawn 1 對 1 Opus reviewer 就地修，
+orchestrator 代跑逐篇 `gate:articles` 全數一次 ✓ 後關閉 reviewer。
+
+## Phase 12 查證出的既有缺陷
+
+- **Tomorrow Preview：9 篇中 7 篇錯（D1 樣態持續）**。graph 001 漏列 `next` 裡的 adjacency list、
+  graph 002 預告不在 `next` 的 BFS、tree 005 預告 Level-order（BFS）、tree 007 預告 Bottom-Up
+  （**是前一課，方向倒退**）、tree 008 預告課綱外的「前序＋中序重建二元樹」、tree 010 預告
+  Level Order Traversal、tree 011 在 `next: []` 的收官課預告不存在的 Valid BST。
+  正確的只有 tree 006、009。
+- **Challenge 描述失實**：tree 005 的 1245（edge list 一般樹）硬寫「左右子樹的高度」。
+- **Tip 與主題脫鉤**：tree 005 的 Tip 放的是下一課的 `maxDepth`；tree 007 是與樹無關的 counter
+  空殼；tree 008 只 `return 0/1` 未示範 sentinel；tree 010 只比較兩個純量、與鏡像遞迴無關。
+- **既有 quiz：9 篇全數逐題驗過，無 answerIndex 標錯**；但 tree 009 item[5] 詳解理由錯誤
+  （把 Same Tree 說成「交叉比對」——那是 Symmetric 的做法）；graph 002 item[1] 整題用 C++；
+  D4 樣態多篇（`explanation[0]` 為正解逐字複製）；tree 006 全 7 題各漏解釋一個錯項；
+  tree 011 item[1] 命題不良（詳解自承前後皆可）。
+- **錯字與用語**：「左電子樹」「分辦」「閥值」、中國用語「調用堆疊」「全局」、graph 002 的
+  Takeaway 是英文、graph 001 通篇翻譯腔。
+
+### 新版在審查中被抓的 7 MAJOR（0 BLOCKER）＋14 MINOR，全部 reviewer 就地修
+
+- **MAJOR（005）**：Thinking 以「算子樹高度」走流程，把 006 的 learning_goal 全文講完、
+  且與自己的 Tomorrow Preview 矛盾；示範指標改為子樹節點總數。
+- **MAJOR（006，D7）**：LC 104 已在 queue 模組（level 8、三 track 皆有）解過，原文當第一次見；
+  已補誠實定位句。**MAJOR（006，D8）**：TS Tip 全斜樹測資殺不掉「左右深度相加」突變，
+  已補分叉樹斷言。
+- **MAJOR（007，D7）**：同 104 問題，Challenge why 改寫為「此題你已見過兩次」。
+- **MAJOR（008，D8 ×2）**：TS/PY Tip 皆為死斷言——TS 測資從無子樹回傳過 -1（刪早退照樣過）、
+  PY「只驗根節點」的錯誤實作照樣給對答案；皆換測資實殺突變（TS 748/800、PY 676/800 未破預算）。
+- **MAJOR（011）**：Thinking「交換與遞迴順序都可以」的論證不成立（中序式會壞），
+  且 **quiz item[2] 的正解正是「中序式不行」**——教材論述會讓學員答錯自己的題目；已改寫並
+  同步修 Digest 的同一過度概括。
+- **MINOR 14 項**：graph 001 Complexity 空間記帳（E→無向兩側各一筆）、graph 001 quiz D4 複述、
+  graph 002 Pattern Recognition「處理手法完全相同」與自家 133 Hint 矛盾、007 quiz「路徑長度」
+  與教材節點數約定衝突、007 Tip 測資鑑別力提升、008 quiz「閥值→閾值」、009 Complexity 計數
+  宣稱（走訪對數上限 2·min+1）、009 Concept 變形概括、009 PY Tip 補殺「移除數值比較」突變、
+  009 quiz 鏡像措辭、010 Common Mistakes 誤判方向補雙向、011 迭代段表述、011 PY tuple
+  assignment 語意誤述（D16 同款知識點）等。
+
+### 就地修制第二批觀察
+
+- **再次零卡關、零退修回合**：6 個作者全部一次交件即過 Gate；reviewer 修完由 orchestrator
+  代跑逐篇 Gate，9 篇全部一次 ✓。
+- **D17 取捨兩例**：008 TS Tip 的「門檻放寬」面向與「-1 傳遞」互斥不可兼得（預算 800 補不下
+  第三個斷言），由 PY 側承接；009 TS Tip 殺不掉「移除數值比較」突變、預算 762/800 補不上，
+  依 D17 具名回報不砍示範碼。
+- **D7 新登錄**：題號 104（詳見 pipeline-defects.md D7 Phase 12 新登錄）；作者 prompt 未帶
+  重複配題清單，後續批次派件 SHOULD 帶入。
+- **用量實測**：Fable 6 個作者合計 531K subagent tokens（59K／Concept）；
+  Opus 6 個 reviewer 合計 719K（每個 102～147K）。

@@ -10,64 +10,83 @@ exit_criteria:
 ---
 ## Concept
 
-Graph Adjacency List Representation 是一種用於在電腦記憶體中表達圖結構（Graph）的核心資料結構。圖由頂點（Vertices, V）與邊（Edges, E）組成，而 Adjacency List 的核心精神是將每一個頂點映射至一個包含其所有相鄰頂點的集合（Collection）。相較於使用二維陣列的 Adjacency Matrix，Adjacency List 僅儲存實際存在的邊，因此在邊數遠小於頂點平方數的 Sparse Graphs（稀疏圖）中，能大幅節省記憶體空間。在建構此結構時，通常會使用雜湊表（Hash Map）或動態陣列，以達到高效的節點查詢與鄰居遍歷。
+Adjacency list（相鄰串列）是把圖存進記憶體最常用的方式：為每個頂點準備一個容器，裡面放所有與它直接相連的鄰居。整個結構就是一個「頂點 → 鄰居集合」的映射，頂點編號是 0 到 V-1 的連續整數時用陣列實作，編號不連續或以字串命名時用雜湊表實作。
+
+它的關鍵性質是「只存實際存在的邊」。對照 adjacency matrix：矩陣不管圖裡有幾條邊，一律配置 V*V 個格子；當 V 是十萬時就是一百億格，記憶體根本放不下。而多數題目的圖是稀疏的（E 遠小於 V^2），adjacency list 只需要 V 個表頭加上 E 筆鄰居紀錄（無向圖每條邊存兩筆），空間 O(V + E)，這正是它成為預設選擇的原因。代價是「查任兩點之間有無邊」必須掃描鄰居清單，不像矩陣是 O(1)——但走訪類演算法要的是「列舉某頂點的所有鄰居」，這件事 adjacency list 恰好最快。
 
 ## Thinking
 
-當我們面對圖論相關問題時，首要任務是將題目給定的邊界條件轉換為程式碼可以操作的資料結構。思考的切入點在於識別圖的類型：首先確認圖是有向圖（Directed Graph）抑或無向圖（Undirected Graph）。若為無向圖，每當讀取到一條連接節點 A 與節點 B 的邊時，必須同時在 A 的鄰居列表加入 B，以及在 B 的鄰居列表加入 A。接著，確認節點的識別方式是用整數編號還是字串名稱，這決定了要使用陣列還是 Map 來作為主要的容器。最後，初始化一個空的容器，走訪輸入的邊列表（Edge List），並逐一將對應的鄰居關係寫入結構中。
+題目給的圖幾乎都是邊清單（edge list）形式：一組 (u, v) 配對。轉成 adjacency list 的流程固定三步。第一步，確認圖的性質：有向還是無向？這決定每條邊要寫入一側還是兩側。第二步，選容器：連續整數編號用「長度為 V 的陣列，每格放一個清單」；編號稀疏或是字串就用 Map 或 dict。第三步，先為所有頂點建立空清單，再走訪邊清單逐條寫入——無向圖的每條邊 (u, v) 要同時執行「u 的清單加入 v」與「v 的清單加入 u」。
+
+為什麼要「先建空清單」而不是邊讀邊建？因為圖裡可能有度數為零的孤立頂點，它不會出現在任何一條邊裡；若只在讀到邊時才建立表項，這些頂點就從結構中消失了，之後統計連通元件或列舉全部頂點時就會少算。
 
 ## Pattern Recognition
 
-識別 Graph Adjacency List Representation 的關鍵線索在於題目的輸入格式通常為一組邊的清單（Edge List），且圖的規模可能相當大、邊相對稀疏（Sparse）。當題目要求進行圖的走訪（如 Breadth-First Search 或 Depth-First Search）、路徑尋找、或是需要複製整個圖結構時，將原始的 Edge List 轉換為 Adjacency List 幾乎是標準的第一步。如果題目涉及頻繁地查詢某個頂點的鄰居，且記憶體空間有限，Adjacency List 往往是最佳的資料結構選擇。
+看到這些訊號，就先把輸入轉成 adjacency list：輸入是邊清單，而接下來要走訪（DFS／BFS）、找路徑、數連通元件；圖的規模大而邊相對稀疏；需要反覆查詢「某個頂點的所有鄰居」。也有題目直接以鄰居指標的形式給圖——節點物件內含 neighbors 清單——那就是 adjacency list 的物件版，列舉鄰居的手法完全相同，差別只在索引鍵從整數編號換成節點本身。
 
 ## Common Mistakes
 
-最常見的錯誤是在處理無向圖（Undirected Graph）時，遺漏了反向邊（Reverse Edge）的加入。開發者經常只寫了 `adj.get(u).push(v)`，卻忘記對稱地寫入 `adj.get(v).push(u)`，導致後續的圖遍歷無法完整走訪所有連通元件。另一個常見錯誤是未能在新增鄰居前，先檢查該頂點的儲存容器是否已經初始化，這在動態新增頂點時容易引發 Null Pointer 或 Undefined 相關的執行階段錯誤。
+第一名的錯誤是無向圖漏掉反向邊：只寫了「u 的清單加 v」，忘了對稱地在 v 的清單加 u。走訪時只會查「目前頂點自己的清單」，少了那一筆，從 v 出發就看不到 u，連通的圖會被誤判成斷裂。第二是對還沒初始化的容器直接寫入：JavaScript 對 `map.get(u)` 取回的 undefined 呼叫 push 會拋 TypeError，Python 對一般 dict 不存在的鍵取值會拋 KeyError——解法是先建好空清單，或改用 defaultdict(list) 這類預設容器。第三是前面說過的孤立頂點消失問題。最後提醒：adjacency list 不會替你過濾重複邊或自環，若題目允許它們出現，寫入前要想清楚是否需要去重。
 
 ## Complexity
 
-時間複雜度為 O(V + E)，其中 V 代表頂點數量，E 代表邊的數量。我們需要走訪每一個頂點進行初始化，並走訪每一個邊將其加入對應的列表中。空間複雜度同為 O(V + E)，因為我們需要儲存所有的頂點以及它們之間的所有邊連接關係。
+時間複雜度 O(V + E)：初始化 V 個空清單花 O(V)；走訪邊清單，每條邊在端點的清單尾端寫入一到兩次，每次均攤 O(1)，共 O(E)。空間複雜度 O(V + E)：V 個表頭加上每條邊的一到兩筆紀錄。對照組 adjacency matrix 的空間與初始化都是 O(V^2)，只有在圖很稠密、或需要 O(1) 查詢兩點間有無邊時才值得。
 
 ## Digest
 
-今日重點摘要：Graph Adjacency List Representation 是處理稀疏圖的標準資料結構，透過 Map 或串列將每個頂點對應至其鄰居集合。建構時需特別注意有向圖與無向圖的邊處理差異。時間與空間複雜度均為 O(V + E)。掌握此結構是解開多數圖論演算法題目的穩固基石。
+Adjacency list 把每個頂點對應到它的鄰居清單，只存實際存在的邊，空間 O(V + E)，是稀疏圖的預設表示法。從邊清單建表三步驟：判斷有向或無向、依編號型態選陣列或 Map 當容器、先建空清單再逐邊寫入。無向圖每條邊必須寫入兩側，漏掉反向邊是最常見的 bug；孤立頂點要靠預先初始化才不會消失。建表時間 O(V + E)；它換走的是 O(1) 查邊能力，換來最快的鄰居列舉。
 
 ## TypeScript Tip
+
+頂點是 0 到 n-1 時，用 `Array.from` 一次建好 n 個空清單，孤立頂點自然保留。
 
 ```typescript
 import { strict as assert } from 'node:assert';
 
-function getNeighbors(adj: Map<number, number[]>, node: number): number[] {
-  return adj.get(node) ?? [];
+function buildAdj(n: number, edges: [number, number][]): number[][] {
+  const adj: number[][] = Array.from({ length: n }, () => []);
+  for (const [u, v] of edges) {
+    adj[u]!.push(v);
+    adj[v]!.push(u); // 無向圖：反向邊不可漏
+  }
+  return adj;
 }
 
-const adj = new Map<number, number[]>([[1, [2, 3]]]);
-assert.deepEqual(getNeighbors(adj, 1), [2, 3]);
-assert.deepEqual(getNeighbors(adj, 99), []);
+const adj = buildAdj(4, [[0, 1], [0, 2]]);
+assert.deepEqual(adj[0], [1, 2]);
+assert.deepEqual(adj[1], [0]);
+assert.deepEqual(adj[3], []); // 孤立頂點仍有自己的空清單
 ```
 
 ## Python Tip
 
+`defaultdict(list)` 免去初始化判斷；但列舉所有頂點時，記得孤立頂點不在其中。
+
 ```python
 from collections import defaultdict
 
-def get_neighbors(adj: dict[int, list[int]], node: int) -> list[int]:
-    return adj.get(node, [])
+def build_adj(edges: list[tuple[int, int]]) -> dict[int, list[int]]:
+    adj: dict[int, list[int]] = defaultdict(list)
+    for u, v in edges:
+        adj[u].append(v)
+        adj[v].append(u)  # 無向圖：反向邊不可漏
+    return adj
 
-adj = defaultdict(list, {1: [2, 3]})
-assert get_neighbors(adj, 1) == [2, 3]
-assert get_neighbors(adj, 99) == []
+adj = build_adj([(0, 1), (0, 2)])
+assert adj[0] == [1, 2]
+assert adj[1] == [0]
+assert 3 not in adj  # 孤立頂點不會自動出現在 defaultdict 裡
 ```
 
 ## Takeaway
 
-Adjacency list maps vertices to neighbors, optimizing sparse graph memory and traversal with O(V + E) complexity.
+Adjacency list＝頂點到鄰居清單的映射；無向邊寫兩側、先建空清單保住孤立頂點，空間 O(V + E)。
 
 ## Tomorrow Preview
 
-明天我們將探討 Graph Traversal 的核心技術：Breadth-First Search (BFS) 與 Depth-First Search (DFS)，並學習如何利用今天建立的 Adjacency List 在圖中進行系統性的走訪與搜尋。
+明天我們將認識另一種表示法 adjacency matrix，比較它與 adjacency list 在空間與查詢上的取捨，接著用今天建好的結構實作圖的 DFS 走訪。
 
 ## Today's Challenge
 
-- **133** · Clone Graph 題目中的節點是以鄰居指標的圖結構呈現，必須透過走訪原圖並建立對應的 Adjacency 映射與複製節點，才能正確重建整張圖。
-  - Hint: 使用雜湊表（Hash Map）記錄原圖節點到新圖複製節點的對應關係，避免在處理環狀結構時陷入無限迴圈。
+- **133** · 題目直接以「節點物件＋neighbors 清單」的形式給圖，正是 adjacency list 的物件版；複製整張圖必須沿著鄰居關係走訪，並為每個節點重建對應的鄰接結構。
+  - Hint: 用 Hash Map 記錄「原節點 → 複製節點」的對應，遇到已複製過的節點直接取用，環才不會讓你無限複製下去。
