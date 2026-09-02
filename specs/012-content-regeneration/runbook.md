@@ -98,7 +98,14 @@ orchestrator ─────────────── commit 凍結、更�
   **分配 MUST 互斥**。
 - prompt MUST 包含：`agent-brief.md` 絕對路徑、指派的 conceptId 與各自 `quizCount`、
   quiz 片段輸出目錄、「交件前 MUST 跑 `npm run gate:articles -- --only <id> --skip-quiz` 看到 ✓」、
-  「MUST NOT 執行 git 指令」、「MUST NOT 碰其他 Concept」。
+  「MUST NOT 執行 git 指令（**含唯讀的 status／log／show**）」、「MUST NOT 碰其他 Concept」。
+- **prompt MUST 帶入 D7 重複配題清單**（Phase 13 起）：開批前以腳本掃 `concepts/**` 的 `leetcode`，
+  列出每題被哪些 Concept 共用、誰先誰後、先課是否已重生與其 article 路徑；舉證責任在課序較晚者。
+- **prompt 裡的演算法命題 MUST 先驗證**（Phase 14 教訓，見 pipeline-defects.md D2 的派件層傳染）：
+  orchestrator 從舊教材／舊題庫讀到的「常見錯誤」MUST NOT 未經證實就轉述給作者當前提；寫不出具體
+  反例的命題不要寫進 prompt。
+- **作者實測 MUST 用 Tip 的同一份程式碼**（Phase 14 教訓）：heap 003 的作者用 swap-form 驗證
+  Common Mistakes、Tip 卻是 break-form，兩條 MAJOR 由此而來。
 - **長篇 findings MUST 寫入 `<scratchpad>/f12/phase-NN/findings/<conceptId>.md`**，
   回傳只給短摘要（Gate 結果、字數、發現幾項缺陷）。長敘述進 orchestrator 的 context 是浪費。
 - **交件並經 orchestrator 收下後即可關閉**（2026-09-02 起）：退修不再回到原作者（見 §3），

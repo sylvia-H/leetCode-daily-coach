@@ -10,68 +10,88 @@ exit_criteria:
 ---
 ## Concept
 
-Top K Frequent Elements (id: heap-top-k-frequent-elements) 是一個結合雜湊表 (Hash Map) 與優先佇列 (Priority Queue) 的經典演算法模式。當我們需要在一組資料中找出出現頻率最高的前 K 個元素時，若直接進行全域排序 (Global Sorting)，其時間複雜度為 O(N log N)。然而，透過大小限制為 K 的最小堆積 (Min-Heap)，我們能將時間複雜度優化至 O(N log K)。此模式的核心精神在於利用雜湊表在 O(1) 時間內統計頻率，再利用最小堆積動態維護當前頻率最高的 K 個元素，當堆積大小超過 K 時即拋棄頻率最小的元素，從而達到高效過濾的效果。
+Top K Frequent 是先修課「第 k 大」的直接延伸，只是比較的量從元素值換成出現次數，所以多了一個前置步驟：先用 hash map 掃一遍陣列，統計每個相異值出現幾次，O(n)。統計完手上是 m 組 (次數, 值)，m 是相異值的個數，m ≤ n；問題就變成「在 m 組裡找次數最大的前 k 組」——套用同一副骨架：維護大小 k 的 Min-Heap，比較鍵是次數，root 是保留 k 組裡次數最少的，也就是入選門檻；新的一組次數大於 root 才進來並踢掉 root。走完 m 組，heap 裡的 k 組就是答案，輸出它們的「值」，順序不限。
+
+要留意複雜度裡的 n 和 m 是兩個量：計數階段掃 n 個元素；heap 階段只走 m 組，每組 O(log k)，合計 O(n + m log k)。因為 m ≤ n，寫成 O(n log k) 是它的上界：m 接近 n 時兩者相同，重複很多時 heap 階段幾乎免費。另一條路是依次數做 bucket sort：次數最多是 n，開 n + 1 個桶，從高次數往低掃到收滿 k 個，O(n)——一句話對照即可，今天練 heap。
 
 ## Thinking
 
-在思考此類問題時，首要任務是釐清資料的結構與目標。資料本身是無序的陣列，且我們關心的是「頻率 (Frequency)」，而非元素本身的數值大小。因此，步驟一必須建立頻率對照表，將每個元素映射到其出現的次數。步驟二則是挑選前 K 個高頻元素。如果使用完整排序會浪費時間在處理不需要的資料上。此時「最小堆積 (Min-Heap)」即為最佳選擇：我們讓堆積的大小維持在 K，堆積頂端 (Top) 永遠是這 K 個元素中頻率最小的那一個。當我們遍歷新的元素及其頻率時，若其頻率大於堆積頂端的頻率，就將其放入堆積並彈出頂端元素。這樣一來，遍歷結束後，堆積內剩下的剛好就是頻率最高的前 K 個元素。
+用 `[3, 1, 1, 1, 2, 2]`、k = 2 走一遍。計數得到 3 出現 1 次、1 出現 3 次、2 出現 2 次，m = 3。依 map 的順序處理：(1, 3) 進入，heap 未滿；(3, 1) 進入，heap 滿，root 是 (1, 3)；(2, 2) 的次數 2 > 1，pop (1, 3)、push (2, 2)，root 變成 (2, 2)。走完，heap 裡是 (2, 2) 與 (3, 1)，輸出值 [2, 1]，任意順序皆可。
+
+不變式與「第 k 大」一模一樣：處理完前 i 組後，heap 裡恰好是這 i 組中次數最高的 min(i, k) 組；淘汰 root 是安全的，因為 heap 裡已有 k 組次數都不低於它，再加上新來這組更高，它至少已被 k 組壓過。題目保證答案唯一，所以次數相等的組不會恰好卡在第 k 名的邊界上，門檻用「大於才進」即可。
+
+實作上 heap 裡放 (次數, 值) 這樣的組合，讓比較先看次數。Python 的 tuple 在次數相同時會接著比第二個元素，值是整數時無妨，若元素是不可比較的物件就得改用 key 或以索引代替。TypeScript 沒有內建 heap，面試時可以自己寫一個小的 Min-Heap，或先用 Array 排序模擬並誠實說明它不是 O(log k)。
 
 ## Pattern Recognition
 
-當題目出現以下特徵時，即可高度懷疑適用 Frequency Heap 模式：1. 尋找「前 K 個 (Top K)」或「最頻繁 (Most Frequent)」的元素。2. K 的數值通常小於或等於相異元素的總數。3. 需要在串流資料或大規模未排序資料中動態維護局部極值。辨識的關鍵在於將「排序所有元素」的思維轉換為「維護固定大小 K 的優先佇列」。與完全排序的 O(N log N) 相比，當 K 遠小於 N 時，O(N log K) 能夠帶來顯著的效能提升。
+訊號是兩層結構：先對每個元素算出一個分數（這裡是次數，也可能是距離、權重、得分），再取分數最高的前 k 個，且 k 明顯小於相異值數 m。看到「最常出現」「出現次數最多的 k 個」「前 k 個最……」就先想 hash map 計分、再想大小 k 的 heap。若 k 接近 m，heap 的 log k 與排序的 log m 差不多，直接對 m 組排序更省事；若分數是有上界的整數（次數 ≤ n），bucket sort 能做到 O(n)；若題目要求依次數由高到低輸出，heap 逐一 pop 出來是由低到高，最後反轉即可。
 
 ## Common Mistakes
 
-此模式最常見的錯誤包含：第一，直接將原始元素放入堆積中進行排序，而沒有將「頻率 (Frequency)」作為排序的依據或主要權重，導致堆積根據元素數值而非出現次數來進行排序。第二，誤用最大堆積 (Max-Heap) 來尋找 Top K。雖然直覺上最大堆積能直接吐出最大值，但如果要維護前 K 大的元素，使用大小為 K 的最小堆積，每次踢掉最小值，反而是記憶體與效能最佳化的標準作法。第三，忽略了當頻率相同時的邊界條件處理，導致型別推斷錯誤或陣列解構異常。
+反例皆用 `[3, 1, 1, 1, 2, 2]`、k = 2，正解是 {1, 2}。第一，直接把元素值放進 heap：比較的是值不是次數，大小 2 的 Min-Heap 留下最大的兩個值 {2, 3}。第二，走訪原陣列而非相異值：每出現一次就 push 一次 (次數, 值)，值 1 的三筆 (3, 1) 會把 heap 塞滿，輸出 [1, 1]，同一個值重複出現在答案裡。第三，回傳次數而非值：輸出 [2, 3]，恰好長得像合法答案，容易看走眼。第四，全部 m 組放進 Min-Heap 再 pop k 次：pop 出來的是次數最少的兩組，得到 {3, 2}；要從整個 heap 裡 pop 出高頻者得用 Max-Heap，O(m + k log m)。第五，heap 排成遞減（Max 方向）卻沿用「大於 root 才進」的門檻：先進 (1, 3)、(3, 1) 後 root 是 (3, 1)，(2, 2) 因為 2 < 3 被擋在外面，答案變成 {1, 3}——門檻與 root 的方向必須一致。
 
 ## Complexity
 
-O(n log k) time / O(n) space
+計數 O(n) 時間、O(m) 空間；heap 階段 O(m log k) 時間、O(k) 空間；合計 O(n + m log k) 時間、O(m) 空間，m ≤ n，故寫成 O(n log k) / O(n) 是上界。對照：對 m 組排序 O(m log m)；bucket sort O(n) 時間、O(n) 空間；全部放進 Max-Heap 再 pop k 次 O(m + k log m)。
 
 ## Digest
 
-本篇探討 Top K Frequent Elements 的核心概念。我們學習了結合 Hash Map 進行頻率統計，並透過最小堆積在 O(N log K) 時間內選出最高頻的 K 個元素。透過辨識 Frequency Heap 的特徵，能有效避免全面排序帶來的效能浪費。
+Top K Frequent 是「第 k 大」骨架的延伸：先用 hash map 掃一遍陣列統計每個相異值的次數（O(n)，得到 m 組，m ≤ n），再對這 m 組維護大小 k 的 Min-Heap，比較鍵是次數，root 是保留 k 組裡次數最少的入選門檻；次數大於 root 才 push 並 pop 掉 root。走完 heap 裡的 k 組就是答案，輸出它們的值、順序不限。複雜度要分清 n 與 m：O(n + m log k) 時間、O(m) 空間，寫成 O(n log k) / O(n) 是上界；依次數 bucket sort 可做到 O(n)。常見錯法：把值而非 (次數, 值) 放進 heap、走原陣列讓同一值重複入選、回傳次數而非值、把全部組放進 Min-Heap 再 pop k 次（拿到的是最不常出現的）。
 
 ## TypeScript Tip
 
+TS 沒有內建 heap，此處以排序陣列模擬大小 k 的 Min-Heap（`h[0]` 即 root），每次插入 O(k log k)，僅示範 Pattern。測資把低頻值放在最前面，能抓出「heap 方向與門檻不一致」；`k = m` 的案例確認不會多踢。
+
 ```typescript
-import assert from 'node:assert';
-
-// TypeScript 中若無原生 Heap，常使用 Map 統計後透過排序或實作 MinPriorityQueue
-function quickTest(): void {
-    const map = new Map<string, number>();
-    map.set('apple', 5);
-    assert.strictEqual(map.get('apple'), 5);
+function topKFrequent(nums: number[], k: number): number[] {
+  const cnt = new Map<number, number>();
+  for (const x of nums) cnt.set(x, (cnt.get(x) ?? 0) + 1);
+  const h: [number, number][] = []; // [次數, 值]
+  for (const [v, c] of cnt) {
+    if (h.length < k || c > h[0]![0]) {
+      h.push([c, v]);
+      h.sort((a, b) => a[0] - b[0]);
+      if (h.length > k) h.shift();
+    }
+  }
+  return h.map(([, v]) => v);
 }
-
-quickTest();
+const r = topKFrequent([3, 1, 1, 1, 2, 2], 2);
+if ([...r].sort((a, b) => a - b).join() !== "1,2") throw new Error(`got ${r}`);
+if (topKFrequent([9, 4, 4], 2).sort((a, b) => a - b).join() !== "4,9") throw new Error("k = m");
 ```
 
 ## Python Tip
 
+`Counter` 一行完成計數；`heappushpop` 先 push 再 pop 最小者，比分開兩步少一次修復。斷言比對的是「值的集合」而非次數，能殺掉回傳次數、走原陣列重複 push、方向反了三種寫法。
+
 ```python
-import heapq
 from collections import Counter
+from heapq import heappush, heappushpop
 
-# Python 的 heapq 預設為 Min-Heap，使用 Counter 可以極大幅度簡化頻率統計的程式碼
-def py_tip_example():
-    nums = [1, 2, 2, 3, 3, 3]
-    counts = Counter(nums)
-    top_two = counts.most_common(2)
-    assert len(top_two) == 2
+def top_k_frequent(nums: list[int], k: int) -> list[int]:
+    cnt = Counter(nums)            # O(n)，得到 m 個相異值
+    h: list[tuple[int, int]] = []  # (次數, 值)，大小維持 k
+    for v, c in cnt.items():       # 走 m 組，不是 n 個元素
+        if len(h) < k:
+            heappush(h, (c, v))
+        elif c > h[0][0]:
+            heappushpop(h, (c, v))
+    return [v for _, v in h]
 
-py_tip_example()
+assert sorted(top_k_frequent([3, 1, 1, 1, 2, 2], 2)) == [1, 2]
+assert sorted(top_k_frequent([9, 4, 4], 2)) == [4, 9]
 ```
 
 ## Takeaway
 
-運用 Hash Map 統計頻率，搭配大小為 K 的最小堆積，能將 Top K 問題的時間複雜度從 O(N log N) 壓低至 O(N log K)。
+先 hash map 計數得 m 組，再對次數維護大小 k 的 Min-Heap；O(n + m log k)，輸出的是值不是次數。
 
 ## Tomorrow Preview
 
-明天我們將探討「Kth Largest Element in an Array」，深入解析如何利用 Quickselect 演算法在平均 O(N) 的時間內找出陣列中的第 K 大元素，並比較其與 Heap 模式在空間與時間複雜度上的權衡。
+明天換一種用法：用 Min-Heap 合併 k 條已排序串列，heap 裡放的是每條串列目前的頭，而不是候選答案。
 
 ## Today's Challenge
 
-- **347** · 本題直接對應 Frequency Heap 核心模式，要求在未排序陣列中找出出現頻率最高的前 K 個元素，非常適合使用雜湊表統計頻率後透過最小堆積維護。
-  - Hint: 先使用雜湊表計算每個數字的出現次數，再建立一個大小為 k 的最小堆積來保留前 k 個高頻元素。
+- **347** · 核心 Pattern 本尊：hash map 計數把「最常出現」轉成「次數最大的前 k 組」，再套先修課的大小 k Min-Heap；題目保證答案唯一，門檻不必處理平手。
+  - Hint: 先計數得到 (次數, 值)，只走相異值、不要走原陣列；heap 以次數比較、大小維持 k；最後輸出 heap 裡每組的「值」，任意順序，不是次數。

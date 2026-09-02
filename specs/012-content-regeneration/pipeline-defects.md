@@ -106,6 +106,20 @@ Phase 1 查證出 3 起 quiz 缺陷，其中兩起顯示錯誤的傳播路徑：
 
 ---
 
+### Phase 14 新傳染路徑：舊題庫 → orchestrator 派件 prompt → 新教材
+
+orchestrator 派件給 `heap-find-median-from-data-stream` 的作者時寫「直接依大小分邊會壞——給具體序列
+反例」。這句話的來源正是該課**舊 quiz item[2] `explanation[3]`** 的偽命題（「依數值分流會使兩側數量
+失去控制」）——orchestrator 讀舊題庫建立脈絡時把它當成事實吸收，再寫進 prompt。作者 B4 實測 3,000 組
+（依值分邊 + 依大小搬頂 = 0 錯）後主動更正，reviewer S4 手推證實「依值分邊再依個數搬頂」是**正確**寫法，
+壞的是「只看個數不看值」或「不做再平衡」的版本。
+
+**教訓**：派件 prompt 裡的演算法命題 MUST 與 Common Mistakes 同等對待——寫不出具體反例就不要寫進 prompt；
+orchestrator 從舊教材／舊題庫讀到的「常見錯誤」在證實之前 MUST 視為待驗證，MUST NOT 轉述給作者當前提。
+若作者沒有實測的習慣，這條偽命題會原封不動進入新教材、再流入新 quiz，完成一次跨代傳染。
+
+---
+
 ## D3 · quiz `longest-option-bias` 的敘述性要求對 agent 無效
 
 **狀態**：🟢 已於 Phase 1 收尾修正（`agent-brief.md`）
@@ -159,6 +173,12 @@ docblock 記載的實測教訓一致。
 解釋，**全部**是「〈選項原文〉的說法錯誤，因為…」模板——把選項原文貼進來當主詞、後半才是一句
 通用理由。同批 `graph-detect-cycle-directed` 舊卷 8/8、`graph-adjacency-matrix-representation`
 舊卷 10/10 的 `explanation[0]` 逐字等於正解（graph 模組 +1）。
+
+**Phase 14 再擴大（backtracking、heap 兩模組）**：`backtracking-core-concept-introduction` 舊卷
+`explanation[0]` 5/5「正解為＋正解選項原文」、`[2]`–`[4]` 15/15 第五變體模板（跨模組再現）；
+`heap-merge-k-sorted-lists` 6/6、`heap-find-median-from-data-stream` 7/7 複製正解；
+`heap-array-representation` `[2]`–`[4]` 用「針對……的選項」模板；heap 006／010 多題。
+累計樣本已涵蓋 **9 個模組**。
 
 五種變體（複製正解／洩漏學習目標／亂碼填充／引述不存在的選項／選項原文當模板主詞）指向同一件事：
 **`explanation` 各段的職責在產線 prompt 裡從未被定義**，模型在缺乏指示時各自退化成不同的填充策略。
@@ -327,6 +347,14 @@ Phase 12 作者的 prompt 未帶重複配題清單，作者無從得知——後
 
 派件帶清單的作法自本批起為常態：orchestrator 於開批前以腳本掃 `concepts/**` 的 `leetcode`
 交叉列出重複，寫進各作者 prompt。
+
+### 新登錄（Phase 14）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 215（模組內） | `heap-sift-down-extraction`（heap/004）——Skeleton 指派 215 且 Author Hints 明寫 size-k min-heap，本課只能教滿 | `heap-kth-largest-element`（heap/006，同批） | **本批已止血**：006 的 Concept 與 Challenge why 具名承認 004 已解過，今日抽象成「第 k 大 ⇒ 反向 k 元素 heap」Pattern 並延伸到串流版 703。課綱層問題：004 被迫把 006 的 learning_goal 教完 |
+| 23 | `linked-list-merge-two-sorted`（linked-list/011，已重生） | `heap-merge-k-sorted-lists`（heap/008） | **本批已履行**（Phase 11 登錄的舉證責任）：008 具名承認、逐字沿用 011 的迴圈不變式與 dummy／tail 術語，只加 heap 專屬不變式與三種解法的複雜度推導，嚴格增量 |
+| 78（模組內） | `backtracking-core-concept-introduction`（backtracking/001）——已用 `start` 模板教滿完整輸出與不重複論證 | `backtracking-subset-generation`（backtracking/002） | 002 重生時 MUST 帶入本篇路徑並誠實定位（差別只能是變形：去重、剪枝、迭代版） |
 
 **狀態**：🔴 未修復
 **嚴重度**：中高——這是機械 Gate 的**結構性盲區**，不是零星漏網。

@@ -41,6 +41,7 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 11 | idx 140–153 | 10 個（linked-list 007–012 + tree 001–004），quiz 69 題 | **就地修制首批**：fable ×6 + opus reviewer ×6（1 對 1，findings 就地修，Fable 交件即關） | `8a249b8` | `verify:phase` 8 道全過（`gate:code` 310s） | subagent 計數 fable ≈ 630K + opus ≈ 700K ≈ 1,330K tokens。reviewer 判定 **1 BLOCKER + 3 MAJOR** + 9 MINOR，全部就地修。零卡關、零退修回合。用量 0%→6%（**0.60／Concept**） |
 | 12 | idx 154–167 | 9 個（graph 001–002 + tree 005–011），quiz 57 題 | fable ×6 + opus reviewer ×6（就地修） | `d9fb233` | `verify:phase` 8 道**一次全過**（`gate:code` 137.9s） | subagent 計數 fable ≈ 531K + opus ≈ 719K ≈ 1,250K tokens。reviewer 判定 **7 MAJOR**（0 BLOCKER）+ 14 MINOR，全部就地修。用量 6%→12%（**≤0.67／Concept**，含跨專案污染） |
 | 13 | idx 168–181 | 9 個（graph 003–010 + heap 001），quiz 66 題 | fable ×6 + opus reviewer ×6（就地修；派件首次帶 D7 清單） | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 66 題、tests ✓、`validate:content` ✓、`gate:code` ✓（135.5s） | subagent 計數 fable ≈ 914K + opus ≈ 960K ≈ 1,874K tokens。reviewer 判定 **1 MAJOR**（0 BLOCKER）+ 19 MINOR，就地修 16 項。零卡關、零退修回合 |
+| 14 | idx 182–195 | 10 個（heap 002–010 + backtracking 001），quiz 69 題 | fable ×6 + opus reviewer ×6（就地修；派件帶 D7 清單） | （本批） | `verify:phase` 8 道**一次全過**：article 10/10 ✓、quiz 合併 69 題、tests ✓、`validate:content` ✓、`gate:code` ✓（133.8s） | subagent 計數 fable ≈ 997K + opus ≈ 1,099K ≈ 2,096K tokens。reviewer 判定 **6 MAJOR**（0 BLOCKER）+ 19 MINOR，就地修 21 項。reviewer 階段被使用者中斷，產物保全於 `.f12-wip/` 後續跑收批 |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -789,3 +790,81 @@ A5：graph 010、A6：heap 001），每交件即 spawn 1 對 1 Opus reviewer 就
   63K／59K 高七成——本批作者普遍做了大規模窮舉實測：A3 跑 n≤4 全 4,165 張有向圖、A4 跑 4,000 張
   隨機圖 × 9 變體）；Opus 6 個 reviewer 合計 **960K**（每個 138～181K，較 Phase 12 的 102～147K 高）。
   牆鐘：作者最長 20 分（A3）、reviewer 最長 16 分（R3），整批約 55 分。
+
+## Phase 14 — heap 002–010 + backtracking 001（2026-09-02）
+
+sessionIndex 視窗 182–195，10 個 Concept、69 題 quiz。「reviewer 就地修、Fable 交件即關」制第四批。
+6 個 Fable 作者並行（B1：heap 002/003、B2：heap 004/005、B3：heap 006/007、B4：heap 008/009、
+B5：heap 010、B6：backtracking 001），每交件即 spawn 1 對 1 Opus reviewer 就地修。
+**本批在 reviewer 階段被使用者中斷**（token 用罄）：作者與 reviewer 皆已自然跑完，orchestrator 於中斷點
+把 scratchpad 產物複製到 repo 內未追蹤目錄 `.f12-wip/` 並寫 HANDOFF，續跑後代跑逐篇 `gate:articles`
+（8 篇一次 ✓）、`verify:phase` 8 道一次全過（`gate:code` 133.8s）。
+
+## Phase 14 查證出的既有缺陷
+
+- **Tomorrow Preview：10 篇中 9 篇錯（D1 樣態持續，本批最嚴重）**。heap 002 預告 Heapify 而非 `next` 的
+  sift-up、003 把 Heapify 當 sift-down 同義詞、005 預告 Merge k Sorted Lists（`next` 是 kth-largest）、
+  006 跨模組指向 Two Pointers、007 指向前一課並教 Quickselect、008 指向 Graph/BFS、009 指向 Sliding
+  Window Maximum、010 捏造、backtracking 001 不在 `next`。正確的只有 004。
+- **Tip 死斷言（D8）全批 10 篇**：無一例外，且多篇 Tip 教的是隔壁課的東西（002 教下一課的 `siftUp`、
+  004 無 sift-down 實作）。
+- **Common Mistakes 偽命題（D10）**：003 兩條經本機證偽（「索引 <0 會拋錯」在 TS／PY 都不拋、Python
+  反而錯誤交換；「忘記更新索引會無窮迴圈」實際兩步即停）；005「破壞複雜度分析基礎」捏造；006「完整
+  Max-Heap 會過早丟棄第 K 大」；007 第三條捏造；010 Complexity 誤稱排序法 O(N²)。
+- **既有 quiz：10 篇 69 題逐題驗過，無 answerIndex 標錯**；但「四選項無一正確／雙正解」多題：
+  005 item[1]（`floor((n-2)/2)` 與 `floor(n/2)-1` 恆等卻判其一為錯）、005 item[6]（正著做 sift-down
+  是建不出 heap 而非複雜度退化）、007 item[4]、010 item[0]／[4]／[5]（[4]「heap 對 tie 依字典序」
+  為事實錯誤）。**009 舊 item[2] `explanation[3]`「依數值分流無法維持均等」為偽**（B4 實測 3,000 組
+  0 錯，S4 手推證實）——見下方「派件層被舊題庫污染」。D4 再擴大：backtracking 001 舊卷 5/5 複製正解
+  ＋15/15 第五變體模板；heap 008 6/6、009 7/7、006／010 多題。
+- **正文洩漏產線術語**：007 正文出現 conceptId。**錯字與用語**：「堆／堆頂」「指針」「鍊結」。
+
+### 新版在審查中被抓的 6 MAJOR（0 BLOCKER）＋19 MINOR，就地修 21 項
+
+- **MAJOR（heap 004 ×3，S2）**：Thinking 的核心反例算錯——「拿 3 跟 5 換會得到 [3,2,5]」，真的交換
+  得 [5,2,3]，[3,2,5] 是「不交換」的結果；**同一錯誤複製進 Digest**（會單獨推 Discord）；quiz item[5]
+  option[2]「先換再 pop 再對空陣列 sift-down」在自家程式碼下可行＝第二正解，且 explanation[3]
+  「空陣列讀 h[0] 會出錯」與程式碼矛盾（D10）。三處皆改。
+- **MAJOR（heap 003 ×2，S1）**：Common Mistakes 第三、四條宣稱「[5,10] 插 3 會停在原地」「TS 碰巧
+  安靜停下」，但本篇 Tip 是 `if (a[p] <= a[i]) break`，`undefined <= 3` 為 false ⇒ 不停、把 a[2]／root
+  洗成 `undefined`。**根因：作者實測用的迴圈寫法與自家 Tip 相反**，「五條都實測過」的宣稱部分不成立。
+  orchestrator 續跑時以 20 行前景腳本複驗：break-form 得 `[5,10,undefined]`，swap-form 才停在原地。
+- **MAJOR（heap 006，S3）**：quiz item[5] explanation[4] 名次恆等式錯——大小 n−k 的 min-heap root 是
+  第 n−k 大＝第 k+1 小，不是第 n−k 小（n=6、k=2 即破）。
+- **D10 紅線兩例**：heap 009 Common Mistakes「依大小分邊」（指個數）緊鄰 Thinking 的「依值分邊是正確
+  寫法」，易被讀成教材自打——改「只看個數分邊」；heap 006 Concept「x ≤ root 可略過」在等值時為偽
+  （[5,5,5]、k=2）——補等值說明。
+- **教材自相矛盾**：heap 002 CM「除法沒取整→提早停」只在 swap-form 成立、與下一課 break-form Tip 相反；
+  heap 003 Thinking 配對列舉含交換後不存在的兄弟；heap 010 Challenge why「最高頻任務是唯一瓶頸」與自家
+  `AAABBBCCCDDD`／n=2 反例矛盾；heap 008 TS Tip 改回傳值序列卻未標示（作者自稱已註明不實）——補標示並以
+  `throw Error` 騰字元（795→797）；backtracking 001 稱先修 graph/004 為「昨天」（實隔 16 個 Concept）
+  ＋遞迴深度 off-by-one。
+- **quiz 正解有瑕疵**：heap 005 item[2] 干擾項 `(n/2)·log n` 也是真上界（stem 改「上界 n 如何推出」）；
+  backtracking 001 item[1]「最多 n 層」與同卷 item[3] 正解 n+1 矛盾；heap 003 item[2]「每個都比 x 大」
+  在重複值下不成立。
+- **未修（裁決）**：D6「昨天／今天／明天」全批依規不動；heap 005 正文「隨機資料逐一插入平均約 1.2 次
+  交換」（作者實測 1,261／1,023）reviewer 無法複核但質性結論正確，保留；heap 008 引述 linked-list/011
+  非逐字（語意一致）不改；heap 009 CM#2 分支敘述與 quiz item[1] 較寬鬆的不變式皆為真，不改。
+
+### 就地修制第四批觀察
+
+- **零卡關、零退修回合**；使用者中途喊停後 12 個 agent 皆自然結束，無孤兒行程。中斷點的產物保全靠
+  「scratchpad → repo 內未追蹤目錄 + HANDOFF」一次複製完成，續跑只需重跑 8 篇 Gate。
+- **派件層被舊題庫污染（D2 新傳染路徑）**：orchestrator 派件給 B4 時寫「直接依大小分邊會壞——給具體
+  反例」，這句話的來源正是 heap 009 舊 quiz item[2] 的偽命題。作者 B4 實測 3,000 組後主動更正，
+  S4 手推證實。教訓：**派件 prompt 裡的演算法命題 MUST 與 Common Mistakes 同等對待——寫不出反例就
+  不要寫進 prompt**；已登錄 pipeline-defects.md D2。
+- **作者實測與自家 Tip 寫法脫鉤**（heap 003）：作者用 swap-form 驗證 Common Mistakes，教材 Tip 卻是
+  break-form，兩條 MAJOR 由此而來。addendum 已要求「若某條與你自己的示範程式碼衝突，先弄清楚哪一邊錯」，
+  但沒要求「實測 MUST 用 Tip 的同一份程式碼」，SHOULD 補。
+- **兩位作者用了唯讀 git 指令**（B4 `git status`、B5 `git log/show/status`）：無狀態影響，但違反字面
+  規則；後續 prompt 的「MUST NOT 執行 git」SHOULD 明寫「含唯讀」（reviewer prompt 自本批起已加）。
+- **D17 全批貼上限**：heap 006 TS 796／PY 798、008 TS 797／PY 793、009 TS 798、010 TS 793；TS 無內建
+  heap 是主因。三篇 TS Tip 以「排序陣列模擬」「計數＋每輪排序」「換頂再 sift-down + END 哨兵」替代，
+  皆誠實標示。
+- **D7 派件清單第二批**：215（004 先、006 後）由 B3 誠實定位；23（linked-list/011 → heap/008）由 B4
+  嚴格增量、逐字沿用先修課術語；78（backtracking 001 先、002 後）舉證在 002，本課已教滿 start 模板。
+- **用量實測**：Fable 6 個作者合計 **997K** subagent tokens（**100K／Concept**，與 Phase 13 的 102K 同級，
+  作者實測規模：B2 145,636 組窮舉、B4 3,000 組隨機、B5 1,344 組暴力對照）；Opus 6 個 reviewer 合計
+  **1,099K**（每個 140～209K，本批 MAJOR 密度最高的 S2 最貴）。牆鐘：作者最長 26 分（B4）、
+  reviewer 最長 20 分（S2）。
