@@ -155,7 +155,12 @@ docblock 記載的實測教訓一致。
 | **亂碼填充字串** | `binary-search-lower-bound` 舊卷 4 題的 `explanation[4]` 是 `aspectpiicidv`——`aspect` 正是 `quiz-aspects.ts` 裡「出題面向」的欄位名，研判為**產線內部識別項洩漏並被截斷** |
 | **引述不存在的選項文字** | `binary-search-find-minimum-rotated` item[1]、`binary-search-matrix-search` item[4] 的 explanation 引述了選項裡根本沒有的敘述 |
 
-四種變體（複製正解／洩漏學習目標／亂碼填充／引述不存在的選項）指向同一件事：
+**Phase 13 發現第五種變體（reviewer R4 查出）**：`graph-topological-sort-dfs` 舊卷 7 題共 21 段錯項
+解釋，**全部**是「〈選項原文〉的說法錯誤，因為…」模板——把選項原文貼進來當主詞、後半才是一句
+通用理由。同批 `graph-detect-cycle-directed` 舊卷 8/8、`graph-adjacency-matrix-representation`
+舊卷 10/10 的 `explanation[0]` 逐字等於正解（graph 模組 +1）。
+
+五種變體（複製正解／洩漏學習目標／亂碼填充／引述不存在的選項／選項原文當模板主詞）指向同一件事：
 **`explanation` 各段的職責在產線 prompt 裡從未被定義**，模型在缺乏指示時各自退化成不同的填充策略。
 累計樣本 **14 個 Concept / 4 模組 / 3 個 Phase**，無一例外。確定性判定完全坐實。
 
@@ -310,6 +315,18 @@ MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教�
 
 Phase 12 作者的 prompt 未帶重複配題清單，作者無從得知——後續批次派件時 SHOULD 把本節
 相關列一併帶入該 Concept 的 prompt。
+
+### 新登錄（Phase 13 reviewer 查出；本批派件已首次帶入清單，實測有效）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 200 | `graph-dfs-traversal`（graph/004，level 11） | `dfs-recursive-implementation`（dfs-bfs/002，level 14） | graph/004 本批已把 200 教滿（格子圖當隱式圖、visited 時機、四方向邊界）；dfs-bfs/002 重生時 MUST 帶入本篇路徑並誠實定位 |
+| 323 | `graph-connected-components`（graph/006，level 11） | `graph-connected-components-count`（dfs-bfs/008，level 14） | graph/006 本批首次；dfs-bfs/008 重生時 MUST 誠實定位 |
+| 994（第三次） | `queue-matrix-multi-source-bfs`（queue/009）→ `graph-bfs-traversal`（graph/005，**本批已止血**：why 具名承認 queue 模組已解過，並補其未展開的不變式論證） | `matrix-bfs-multi-directional`（dfs-bfs/007，level 14） | dfs-bfs/007 重生時 MUST 帶入前兩篇路徑 |
+| 207（模組內） | `graph-detect-cycle-directed`（graph/008） | `graph-topological-sort-bfs-kahns`（graph/010，同批） | **本批已止血**：010 的 Challenge why 具名承認 008 已用三色法判過環，說明 Kahn 順便產出順序、以彈出計數判環 |
+
+派件帶清單的作法自本批起為常態：orchestrator 於開批前以腳本掃 `concepts/**` 的 `leetcode`
+交叉列出重複，寫進各作者 prompt。
 
 **狀態**：🔴 未修復
 **嚴重度**：中高——這是機械 Gate 的**結構性盲區**，不是零星漏網。

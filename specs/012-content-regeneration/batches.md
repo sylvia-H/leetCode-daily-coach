@@ -38,6 +38,9 @@ GitHub Pages **共用同一份 Tip**；Pages 全文閱讀頁改為呈現 Tip（�
 | 8 | idx 98–111 | 10 個（sliding-window 010 收官 + stack 001–009），quiz 75 題 | **新制首批**：fable ×6 + opus reviewer ×2（隨交件輪派） | （本批） | `verify:phase` 8 道通過（第一輪在步驟 b 被 `quiz-option-prefix` 擋下 1 題——「A、B、D」型選項，重寫為數字標籤後全過）：article 10/10 ✓、quiz 合併 75 題、tests ✓、`validate:content` ✓、`gate:code` ✓（138.4s） | subagent 計數 fable ×6 ≈ 744K + opus ×2 ≈ 343K ≈ 1,087K tokens（fable 端 74K/Concept，低於舊制的 ~125K）。reviewer 判定 **2 MAJOR**（009 對先修課 008 的對照講反、010 失效形式寫反）＋ 10 餘項 MINOR，退修均一輪完成。**發生一次派件無聲卡關**（reviewer A 停機時佇列訊息不喚醒，靠使用者發現、手動補喚醒），據此改制為 1 對 1 即拋即審（見 runbook）。用量 56%→67%（**1.1／Concept**，詳見 runbook 2026-09-01 校準） |
 | 9 | idx 112–125 | 9 個（queue 001–007 + stack 010–011），quiz 64 題 | **1 對 1 制首批**：fable ×6 + opus reviewer ×6（每交件即開、審完即關） | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 64 題、tests ✓、`validate:content` ✓、`gate:code` ✓（133.4s） | subagent 計數 fable ≈ 700K + opus ×6 ≈ 665K ≈ 1,365K tokens。reviewer 判定 **1 MAJOR**（010 兩處事實錯誤）＋ 5 件 MINOR，退修均一輪完成、突變全 KILLED。作者 E 曾被內容過濾中斷、恢復收尾成功。**零卡關**。用量 67%→75%（**0.89／Concept**） |
 | 10 | idx 126–139 | 9 個（linked-list 001–006 + queue 008–010），quiz 64 題 | fable ×6 + opus reviewer ×6（1 對 1 即拋即審） | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 64 題、tests ✓、`validate:content` ✓、`gate:code` ✓（132.5s） | subagent 計數 fable ≈ 796K + opus ≈ 597K ≈ 1,393K tokens。reviewer 判定 **4 MAJOR**（002 的 876 Hint 洩漏第 6 課、002 quiz 在 strict TS 下的假命題、004 因果錯置、009 的 994 收尾條件）＋ 18 項 MINOR，退修均一輪完成。**零卡關**。用量 75%→83%（**0.89／Concept**，與 Phase 9 同值） |
+| 11 | idx 140–153 | 10 個（linked-list 007–012 + tree 001–004），quiz 69 題 | **就地修制首批**：fable ×6 + opus reviewer ×6（1 對 1，findings 就地修，Fable 交件即關） | `8a249b8` | `verify:phase` 8 道全過（`gate:code` 310s） | subagent 計數 fable ≈ 630K + opus ≈ 700K ≈ 1,330K tokens。reviewer 判定 **1 BLOCKER + 3 MAJOR** + 9 MINOR，全部就地修。零卡關、零退修回合。用量 0%→6%（**0.60／Concept**） |
+| 12 | idx 154–167 | 9 個（graph 001–002 + tree 005–011），quiz 57 題 | fable ×6 + opus reviewer ×6（就地修） | `d9fb233` | `verify:phase` 8 道**一次全過**（`gate:code` 137.9s） | subagent 計數 fable ≈ 531K + opus ≈ 719K ≈ 1,250K tokens。reviewer 判定 **7 MAJOR**（0 BLOCKER）+ 14 MINOR，全部就地修。用量 6%→12%（**≤0.67／Concept**，含跨專案污染） |
+| 13 | idx 168–181 | 9 個（graph 003–010 + heap 001），quiz 66 題 | fable ×6 + opus reviewer ×6（就地修；派件首次帶 D7 清單） | （本批） | `verify:phase` 8 道**一次全過**：article 9/9 ✓、quiz 合併 66 題、tests ✓、`validate:content` ✓、`gate:code` ✓（135.5s） | subagent 計數 fable ≈ 914K + opus ≈ 960K ≈ 1,874K tokens。reviewer 判定 **1 MAJOR**（0 BLOCKER）+ 19 MINOR，就地修 16 項。零卡關、零退修回合 |
 
 ## Phase 1 查證出的既有缺陷（逐項經主控獨立驗證）
 
@@ -716,3 +719,73 @@ orchestrator 代跑逐篇 `gate:articles` 全數一次 ✓ 後關閉 reviewer。
   重複配題清單，後續批次派件 SHOULD 帶入。
 - **用量實測**：Fable 6 個作者合計 531K subagent tokens（59K／Concept）；
   Opus 6 個 reviewer 合計 719K（每個 102～147K）。
+
+## Phase 13 — graph 003–010 + heap 001（2026-09-02）
+
+sessionIndex 視窗 168–181，9 個 Concept、66 題 quiz。「reviewer 就地修、Fable 交件即關」制第三批。
+6 個 Fable 作者並行（A1：graph 003/004、A2：graph 005/006、A3：graph 007/008、A4：graph 009、
+A5：graph 010、A6：heap 001），每交件即 spawn 1 對 1 Opus reviewer 就地修，orchestrator 代跑逐篇
+`gate:articles` 全數一次 ✓ 後關閉 reviewer。**本批派件首次帶入 D7 重複配題清單**（Phase 12 的建議）。
+`verify:phase` 8 道一次全過（`gate:code` 135.5s）。
+
+## Phase 13 查證出的既有缺陷
+
+- **Tomorrow Preview：9 篇中 6 篇錯（D1 樣態持續）**。graph 003 預告的是先修課 adjacency list、
+  graph 005 指向昨天的 DFS、graph 006 誤指四課後的拓樸排序、graph 010 預告昨天的課、heap 001 預告
+  非 `next` 的課；graph 004／007／008／009 正確。
+- **Tip 死斷言（D8）幾乎全批**：graph 003／005／006／007／008／009／010、heap 001 的 TS 或 PY Tip
+  皆為死斷言或與主題無關的空殼——graph 007 的三角形測資連「忘記排除 parent」版都過；graph 008 單布林
+  visited 版同樣通過；graph 004 TS Tip 斷言硬編在函式本體且測資無環。
+- **Common Mistakes 無反例（D10）**：graph 004／005／007／008／009／010、heap 001 皆有；graph 003
+  誤稱列別名為「淺拷貝」；graph 007 舊 Tip 只判環不驗連通、與自家 Hint 矛盾。
+- **Thinking 洩漏下一課**：heap 001 把陣列表示法的索引公式整個講完（`next` 才教）。
+- **既有 quiz：9 篇 66 題逐題驗過，無 answerIndex 標錯**；但 R4 與 R6 各查出一題「四個選項無一無條件
+  成立」（graph 009 舊 item[2] 的「無限迴圈」只在完全無 visited 時為真；heap 001 舊 item[1] 的
+  「任意相鄰索引無序」被 `a[0] <= a[1]` 證偽），屬 D10 同型。**D4 再擴大**：graph 008 舊卷 8/8、
+  graph 003 舊卷 10/10 的 `explanation[0]` 逐字等於正解；graph 009 舊卷 21/21 段錯項解釋為
+  「〈選項原文〉的說法錯誤，因為…」模板（D4 第五種變體）。heap 001 item[3]/[4] 含 LaTeX；
+  graph 005 item[3] 簡體「将」（R2 更正：不在 `SIMPLIFIED_ONLY_CHARS` 表內，Gate 實際不會擋）；
+  graph 008 item[7]、graph 009 item[6] 提前教 Kahn。
+- **錯字與用語**：「遍布」×4、「遞本」、「結東」、「顯示堆疊」、「拓撲」（graph 008 舊卷至少 5 處）、
+  「遞歸」「調用」「函數」「記憶體地址」。
+
+### 新版在審查中被抓的 1 MAJOR（0 BLOCKER）＋19 MINOR，就地修 16 項
+
+- **MAJOR（graph 004，D10）**：Common Mistakes 第二條把 Python 的病因誤植為「檢查順序」——順序倒置
+  實際拋 IndexError 而非安靜少算，「頂端與底端相連、島嶼少算」只發生在**漏寫** `r < 0` 時；且同一
+  錯誤因果已流入 quiz item[5] 當正解（D2 傳染路徑）。教材兩語言病因分開講並補反例、quiz stem 改為
+  「漏寫 `r < 0`」、PY Tip 測資 `"100"→"101"` 補殺「漏寫 `c < 0`」突變（782→781/800）。
+- **D8 補鑑別力三例（皆依 D17 改測資不加測資）**：heap 001 TS Tip 測資補等值 parent／child 殺
+  `<`→`<=` 突變（776→780）；graph 008 PY Tip 第 2 組測資改為環不含節點 0 的 `(3, [[2,1],[1,2]])`
+  殺「只從 0 出發」突變（等長 794 不變）；graph 004 見上。
+- **教材自相矛盾**：graph 005 Thinking 教「size = queue.length 當層界線」但自家 Tip 用 head 指標
+  且永不彈出（`q.length` 是歷來推入總數）→ 改「佇列當下的節點數（head 指標寫法是 `q.length - head`）」；
+  graph 007 Pattern Recognition 說「每個未造訪節點各發起 DFS」但 Tip 只從 0 出發 → Thinking 補
+  「造訪數 ≠ n 已非樹，261 只從 0 出發就夠」論證；graph 009 Concept「v 尚未完成就被 u 指到」
+  涵蓋白點、照字面是偽命題 → 改「v 正在造訪中」。
+- **quiz 正解有瑕疵**：graph 010 item[2]「遇到環時入度轉負、迴圈不終止」對「環不從任何源頭可達」
+  的圖不成立（n=2 的 0↔1）→ 加作用域；同題 options[2]「把所有 DAG 誤判為無環」語意矛盾 → 改寫；
+  heap 001 item[3]「取最小值 O(1)」與教材 peek／extract 區分衝突 → 「讀最小值」。
+- **其餘 MINOR**：graph 003 Challenge 洩漏產線術語「Skeleton」、graph 003 quiz 兩處 explanation
+  自相矛盾、graph 005 Digest 洩漏 spec 語彙「MUST」（全庫唯一）、graph 009 Tip「訪問中」與全篇
+  「造訪中」不一致、graph 010 的 `n` 未定義、graph 010 quiz「兩種狀態」與先修課三色不一致。
+- **未修（裁決）**：D6「昨天／今天／明天」措辭全批依規不動；graph 008「菱形」實為遞移三角形
+  （非事實錯誤、改需動 10 處而 Tip 只剩 3／6 字元餘裕）不改；heap 001「退化成鏈高度 n」與先修
+  tree/001 一致不改；graph 010「每條邊恰好減 1」NIT 不改。
+
+### 就地修制第三批觀察
+
+- **零卡關、零退修回合**：6 個作者一次交件即過 Gate；reviewer 修完由 orchestrator 代跑逐篇 Gate，
+  9 篇全部一次 ✓。
+- **D7 派件帶清單首次實測有效**：graph 005 對 994 的定位與 queue/009 六項邊界慣例逐條對上、且補了
+  queue/009 未展開的不變式；graph 010 的 Challenge why 具名承認 207 已在 graph 008 用三色法解過。
+  同批兩課共用 207（008 先、010 後）由兩位作者各自依對方 Skeleton 定位，銜接無矛盾。
+- **D7 新登錄三筆**（舉證責任皆在 dfs-bfs 模組，level 14）：200（graph/004 先、dfs-bfs/002 後）、
+  323（graph/006 先、dfs-bfs/008 後）、994 第三次（dfs-bfs/007）。詳 pipeline-defects.md D7。
+- **D17 警示**：graph 006 TS 779／PY 770，第二組測資 `[[2,1],[1,0]]` 是唯一能殺單向建圖突變的，
+  日後動 Tip MUST 保留；graph 008 TS 797／PY 794、graph 009 TS 794／PY 794、graph 010 TS 793／
+  PY 795 皆貼上限。
+- **用量實測**：Fable 6 個作者合計 **914K** subagent tokens（**102K／Concept**，比 Phase 11／12 的
+  63K／59K 高七成——本批作者普遍做了大規模窮舉實測：A3 跑 n≤4 全 4,165 張有向圖、A4 跑 4,000 張
+  隨機圖 × 9 變體）；Opus 6 個 reviewer 合計 **960K**（每個 138～181K，較 Phase 12 的 102～147K 高）。
+  牆鐘：作者最長 20 分（A3）、reviewer 最長 16 分（R3），整批約 55 分。
