@@ -356,6 +356,36 @@ Phase 12 作者的 prompt 未帶重複配題清單，作者無從得知——後
 | 23 | `linked-list-merge-two-sorted`（linked-list/011，已重生） | `heap-merge-k-sorted-lists`（heap/008） | **本批已履行**（Phase 11 登錄的舉證責任）：008 具名承認、逐字沿用 011 的迴圈不變式與 dummy／tail 術語，只加 heap 專屬不變式與三種解法的複雜度推導，嚴格增量 |
 | 78（模組內） | `backtracking-core-concept-introduction`（backtracking/001）——已用 `start` 模板教滿完整輸出與不重複論證 | `backtracking-subset-generation`（backtracking/002） | 002 重生時 MUST 帶入本篇路徑並誠實定位（差別只能是變形：去重、剪枝、迭代版） |
 
+### 新登錄（Phase 16；本批 7 筆，是 F12 至今最密的一批）
+
+dfs-bfs 模組排在 queue（166–169）與 graph（174–179）之後，**舉證責任全在本模組的 9 課**。
+7 筆全部已具名承認並寫出真增量：
+
+| 題號 | 先課（皆已重生） | 後課（舉證責任） | 履行狀況 |
+| --- | --- | --- | --- |
+| **104**（第四次） | `queue-bfs-level-order-traversal`（queue/007）、`tree-maximum-depth-bottom-up`（tree/006）、`tree-maximum-depth-top-down`（tree/007） | `dfs-recursive-implementation`（dfs-bfs/002） | why 具名「第四次見到」並列出三種寫法，增量＝對照三者「狀態放在哪」。⚠️ 但 104 是 Easy、被難度帶濾掉，見 D19 |
+| 200 | `graph-dfs-traversal`（graph/004） | 同上 dfs-bfs/002 | 具名沿用「進入即標記、先查邊界再讀格子」，增量＝量最深層數＋改寫顯式堆疊 |
+| 102 | `queue-bfs-level-order-traversal`（queue/007） | `bfs-queue-level-order`（dfs-bfs/004） | 具名承認，增量＝不變式從樹搬到一般圖、FIFO 換堆疊的實測對照、「邊兩端最多差一層」引理 |
+| **111** | `queue-shortest-path-unweighted`（queue/008） | `bfs-shortest-path-unweighted`（dfs-bfs/005） | **兩課主題幾乎完全相同**（同為無權圖最短路、同 `complexity_label`）。誠實寫「今天是換一個角度把同一件事講透」，真增量＝**補上先課缺的那一半證明**（見 D19） |
+| **994**（第三次） | `queue-matrix-multi-source-bfs`（queue/009）、`graph-bfs-traversal`（graph/005） | `matrix-bfs-multi-directional`（dfs-bfs/007） | 標題逐字具名兩課，增量＝把先課用散文帶過的殘留與多算一輪寫成 `fresh > 0` 終止條件＋三個具體反例 |
+| 323 | `graph-connected-components`（graph/006） | `graph-connected-components-count`（dfs-bfs/008） | **兩課幾乎同名**。增量＝把先課依賴「編號最小節點」的論證換成迴圈不變式（因此可脫離整數編號、搬到網格）＋邊界情形 |
+| **261**（本次掃描新查出，先前未登錄） | `graph-detect-cycle-undirected`（graph/007） | `graph-cycle-detection-undirected`（dfs-bfs/009） | **兩課幾乎同名**。增量＝「無環 ⇔ 分量數 = n − E」（先課的 n−1 捷徑是 c=1 的特例）、環長公式、重邊行為 |
+
+### Phase 16 新樣態一：**承認了先修課，但把次數寫死且數錯**
+
+前 14 批的 D7 缺陷都是「不承認先修課」。Phase 16 出現新形態：作者在誠實定位段落寫
+「遞迴式 DFS 你其實已經寫過**三次**」，只數了自己引用的那三課，**沒有回頭核對課表**——
+同模組的前一課 001 自己就列了更多，而課表 sessionIndex 212 之前尚有 tree 五課、graph 的
+連通塊／環偵測／拓樸排序，以及整個 backtracking 模組。
+
+**規則（MUST）**：D7 定位**除非核對過該 Track 的課表，否則 MUST NOT 寫死次數**；
+用「很多次／已經寫過好幾輪」並列舉代表課即可。硬數字比含糊的說法更傷——它可被證偽。
+
+### Phase 16 新樣態二：**定位只寫在 Challenge 的 `why` 裡，可能永遠不被 render**
+
+見 **D19**。**規則（MUST）**：D7 誠實定位 MUST 寫進正文（`Concept` 或 `Thinking`），
+**MUST NOT 只寫在某一題的 `why`**——那一題可能根本不會出現在該 Track 的推播裡。
+
 **狀態**：🔴 未修復
 **嚴重度**：中高——這是機械 Gate 的**結構性盲區**，不是零星漏網。
 
@@ -905,3 +935,101 @@ MUST 具名回報，MUST NOT 為了塞測資而砍掉示範碼本身。
 4. **審查層（已實施）**：Phase 15 起列入 Opus reviewer 的必查清單
    （「自己把每個『因為…所以…』重推一次，特別檢查有沒有把必要條件寫成充分條件」），
    本批三例全數由 reviewer 抓出並就地補上前提。
+
+---
+
+## D19 · Track 難度帶會濾掉 Skeleton 的部分題目，寫在該題 `why` 的內容**永遠不被 render**
+
+**狀態**：🔴 未修復（跨層：課表生成 × 教材撰寫慣例）
+**嚴重度**：中——不產生錯誤內容，但會讓「已寫好且經審查的內容」對學員完全隱形。
+
+### 證據（Phase 16，S2 查出，orchestrator 查證）
+
+- `curriculum/track-params.json`：`interviewMastery.problemDifficulties` = `["Medium", "Hard"]`。
+- `concepts/dfs-bfs/002` 的 `leetcode` 是 `[200, 104]`、`003` 是 `[733, 130]`，
+  而 **104 與 733 都是 Easy**（`data/problem-bank.json`）。
+- `schedule-generator.ts` 的 `selectConceptProblems(concept, param.problemDifficulties, …)`
+  依難度帶過濾，因此 `schedules/interview-mastery.json` 的 session 212 `problemIds` 只有 `[200]`、
+  213 只有 `[130]`。
+- **dfs-bfs 模組只排在 interview-mastery 這一條 Track**（level 14 > 其餘兩軌的 maxLevel）。
+
+⇒ 作者寫在 104 `why` 裡、經 reviewer 逐項複核過的「第四次見到」D7 定位，**沒有任何學員看得到**。
+
+**這不是課表的 bug**：難度帶過濾正是 spec §4-6「Track 差異只發生在課表＋題目難度帶」的設計。
+問題在**教材撰寫慣例**假設了「Skeleton 的每一題都會被 render」。
+
+### 為何 Gate 抓不到
+
+`gate:articles` 要求 Article 的 Today's Challenge **涵蓋 Skeleton `leetcode` 的每一個題號**
+（教材三軌共用，本來就該寫齊）；而 Lesson Compiler 只 render 課表的 `problemIds`。
+兩邊各自正確，**沒有任何檢查比對「哪些 why 在任何 Track 上都不會出現」**。
+
+### 修復方向
+
+1. **教材撰寫慣例（已寫入 D7，MUST）**：D7 誠實定位 MUST 寫進正文（`Concept` / `Thinking`），
+   MUST NOT 只寫在某一題的 `why`。
+2. **Gate 層（可做，成本低）**：新增一道報告式檢查——列出「Skeleton 有、但在**所有**啟用 Track 的
+   課表上都不出現」的題號，供人判斷。無需擋下，但不該無聲發生。
+3. **課綱層**：若某 Concept 的題目在唯一承載它的 Track 上被濾掉大半，那是配題與難度帶不匹配的訊號。
+
+---
+
+## D20 · Problem Bank 把**資料庫題**標成演算法 pattern，Skeleton 照單全收（Author Hint 自承 Placeholder）
+
+**狀態**：🔴 未修復（`concepts/**` 與 `data/problem-bank.json` 皆屬 F12 結構凍結範圍）
+**嚴重度**：中——會把一題與本課完全無關的 SQL 題推播給學員。
+
+### 證據（Phase 16，B5 回報，S5 與 orchestrator 各自查證）
+
+- `data/problem-bank.json`：`2668 / find-latest-salaries / "Find Latest Salaries" / Easy`，
+  卻掛著 `patterns: ["dfs-bfs"]`。**LeetCode 2668 是資料庫（SQL）題**。
+- `concepts/dfs-bfs/008-graph-connected-components-count.md` 的 `leetcode` 列了 2668，
+  且 Author Hints 自己寫著：
+  `- 題號 2668 為何適合此 Pattern：Note: Placeholder for graph connected components easy level.`
+- **全庫掃描 `Placeholder` 只有這一處**（孤例，非系統性）。
+
+### 根因
+
+補題階段為了填「該 Concept 缺一題 easy」的配額而塞了一題湊數，`patterns` 欄位跟著被寫成該 pattern；
+**沒有任何 Gate 檢查「這題是不是演算法題」**，Skeleton 產線也沒有攔下自己寫出的 Placeholder 字樣。
+
+### F12 期間的處置（已做）
+
+教材誠實標明它是資料庫題、與連通分量無關、配題錯置，重心放在 323，並給真的解得了該題的 SQL 方向
+Hint。S5 複核後判定「在不能改 Skeleton／Problem Bank 的前提下，這是唯一誠實的選項」。
+
+### 修復方向（MUST NOT 在 F12 處理）
+
+1. **兩層都要改**：`concepts/dfs-bfs/008` 的 `leetcode` 換題（例如 200 / 695 / 1254）或移除，
+   且 `data/problem-bank.json` 的 `2668.patterns` 一併修正。
+2. **Gate 層**：Skeleton 的 Author Hints 出現 `Placeholder`／`TODO`／`TBD` 等字樣 MUST 直接擋下。
+3. 補題腳本 SHOULD 排除 LeetCode 的 Database／Shell／Concurrency 分類。
+
+---
+
+### Phase 16 補充：D14 第三層防護的**偵測指令本身有缺口**
+
+runbook 的殘留行程清點寫的是：
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+  Where-Object { $_.CommandLine -like '*<repo-name>*' }
+```
+
+**`node -e "..."` 從 repo 目錄啟動時，命令列裡不含 repo 路徑**——這型孤兒會被過濾掉。
+
+**實例（Phase 15）**：作者 A5 有一個反引號跳脫寫壞的 `node -e` 計數指令**掛了約 72 分鐘**
+（agent 總時長 4,353s，而它首次回報時是 1,070s），而收批時依上述指令清點**沒有看到它**。
+本次無實害（該行程最終自行結束，且 Phase 16 收批前的全量清點確認本專案零殘留），
+但偵測層確實漏了它，且那 72 分鐘是**計費卻零產出**的時間。
+
+**修法（MUST）**：清點時**不要用 repo 名過濾**，改列出全部 `node.exe` 逐一判斷：
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+  Select-Object ProcessId, CreationDate,
+    @{n='CPU_s';e={[math]::Round(($_.KernelModeTime+$_.UserModeTime)/1e7,1)}}, CommandLine |
+  Sort-Object CreationDate
+```
+
+常駐項（CodeGraph watcher、編輯器）與**其他專案**的行程要人眼排除，但這是唯一不會漏的做法。
