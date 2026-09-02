@@ -14,15 +14,22 @@
 | `b0a91df` | 18 個 `phase-NN.json` + `phases.json`、執行守衛、單元測試、本 runbook |
 | （Phase 0 末批） | **移除 `TypeScript Corner` / `Python Corner`**：spec §10 契約、產線 prompt、Pages 版面、165 篇教材（詳見 `batches.md`）。⚠️ Phase 1 起的 Article **MUST NOT** 再含這兩段 |
 
-## 每批流程（2026-08-29 修訂；2026-09-01 改 6 Fable + 2 Opus 輪派，Phase 8 實測後**同日再改為
-reviewer 1 對 1 即拋即審**，Phase 9 起適用）
+## 每批流程（2026-08-29 修訂；2026-09-01 改 6 Fable + 2 Opus 輪派，Phase 8 實測後同日再改為
+reviewer 1 對 1 即拋即審；**2026-09-02 再改為 reviewer 就地修、Fable 交件即關**，Phase 11 起適用）
 
 ```
 6 個乾淨的 Fable agent 並行 ── 寫 article + quiz 片段；長篇 findings 寫檔，只回傳短摘要
         │  （每有一個交件，立即開一個新 reviewer 送審，不等全批交齊）
         ▼
-Opus reviewer ×6（1 對 1）─── 每交件即 spawn 一個新 reviewer，只審該作者的產出，
-        │                     做「機械 Gate 驗不到」的內容品質審查；審完回報即關閉
+Fable agent ──────────────── 交件並經 orchestrator 收下後即關閉，不留待退修
+        │
+        ▼
+Opus reviewer ×6（1 對 1）─── 每交件即 spawn 一個新 reviewer，只審該作者的產出，做「機械
+        │                     Gate 驗不到」的內容品質審查；**findings 就地修到好**
+        │                     （只讀＋改檔，MUST NOT 執行任何指令）
+        ▼
+orchestrator ─────────────── 代跑該篇 gate:articles --only <id> --skip-quiz 看到 ✓
+        │                     → 才關掉這個 reviewer
         ▼
 orchestrator ─────────────── npm run verify:phase（一個指令跑完全部機械驗證）
         │
@@ -30,19 +37,35 @@ orchestrator ─────────────── npm run verify:phase�
 orchestrator ─────────────── commit 凍結、更新 batches.md / phases.json
         │
         ▼
-關掉這批全部 agent，下一批開新的（維持 context 乾淨）
+全部 agent 皆已在各自環節關閉，下一批開新的（維持 context 乾淨）
 ```
 
-**設計理由**（Phase 1 實測後定案）：
+**設計理由**（Phase 1 實測後定案，其後隨各次改制增補）：
 
 - **驗證留在 orchestrator，MUST NOT 外包**：`verify:phase` 的每一步都是失敗即非零 exit 的
   腳本，不需要判斷力。派 agent 去跑 shell 指令成本高而附加價值低。context 的大宗是那些
   冗長輸出，`verify:phase` 只印一行摘要即已解決。
 - **commit 留在 orchestrator**：commit 訊息與 `batches.md` 是寫給人看的，需要理解整批發生
   什麼；CLAUDE.md 對 commit 規範亦訂得很細。
-- **修正迴路 MUST 回到原作者 agent**：Phase 1 實測，`quiz-longest-option-bias` 退回原
-  Fable agent 修正只花 4 次工具呼叫、102 秒——它還帶著寫那些選項的完整脈絡。換人改要重新
-  理解語意，貴且容易改壞。故 Fable agent **在該批驗證通過前 MUST NOT 關閉**。
+- **修正迴路改為 reviewer 就地修（2026-09-02 修訂，取代原「MUST 回到原作者」）**：
+  舊規則的論據是「作者帶著寫那些選項的完整脈絡，換人改要重新理解語意」（Phase 1 實測退修
+  只花 4 次工具呼叫、102 秒）。改制的三個理由：
+  1. **1 對 1 的 reviewer 正是剛逐字讀完該篇的人**，對「錯在哪」的掌握不亞於作者。
+     Phase 9／10 的 5 個 MAJOR（Hint 洩漏後續課、strict TS 下的假命題、因果錯置、
+     收尾條件寫反）**全是作者自己寫錯又沒看出來**的——退回同一個腦袋，等於要求它重想一次
+     它本來就沒想清楚的事。
+  2. **模型分工**：Fable 強在大量產出便宜，Opus 強在低量高精度；退修屬於後者。
+  3. **少一次語意轉手**：省掉「reviewer 報告 → orchestrator 讀懂 → 轉寫退修指令 → 作者
+     理解」三跳，也省 orchestrator 的 context；且 Fable 交件即關，不再需要喚醒既有 agent，
+     Phase 8 無聲卡關那條風險面直接消失。
+  **⚠️ MUST NOT 期待它省下多少 Fable 用量**：閒置 agent 不計費，省的只有退修回合的 Fable
+  token，而本檔已實測「退修率不是主要成本因子，Concept 數才是」（Phase 4、5 退修 0 篇仍是
+  0.65／Concept）。真正的收益是把成本從瓶頸資源（Fable 週額度）移到非瓶頸（Opus），
+  以及 wall-clock 與零卡關。
+- **不採「MINOR 就地修、MAJOR 退回原作者」的分流**（2026-09-02 評估後否決）：那會讓
+  「Fable 能否關閉」變成條件式（要等 reviewer 判完等級才知道），交件即關與零喚醒風險這兩個
+  最大的好處全沒了；而 MAJOR 的量是 Phase 9 一件、Phase 10 四件，少到不值得為它保留
+  一整套機制。
 - **Opus reviewer 補的是真正的盲點**：Phase 1 只跑了機械 Gate，**沒有任何人讀過那 14 篇的
   內容**。Gate 保證格式、字數、程式碼可執行，保證不了論證是否正確、是否好讀。
 - **reviewer 隨交件逐步啟動（2026-09-01 修訂）**：不等全批交齊——等全批再審會讓最早交件的
@@ -54,6 +77,16 @@ orchestrator ─────────────── commit 凍結、更�
   即無此時序風險。**代價（已知並接受）**：每個 reviewer 各自重讀 brief 與 pipeline-defects，
   Opus 用量升約一倍（2 共用制實測每批合計 ~343K；1 對 1 估每個 ~100–130K、單批 6 個合計
   ~600–780K）——換零卡關與更高的審查並行度，Opus 額度非目前瓶頸。
+- **reviewer 有改檔權、但仍 MUST 維持零執行權（D14 紅線不鬆）**：D14 出事的是**執行子行程**
+  （Windows 上 `execSync` 的 timeout 殺不掉孫行程，漏出 10 個吃滿約 7 核的孤兒），不是寫檔。
+  故 reviewer MAY 讀檔與改檔，MUST NOT 執行任何指令或開子行程。
+- **改完的逐篇 Gate 由 orchestrator 代跑（補上新制的自檢缺口）**：舊制每次「改完」都有一道
+  作者自跑 `gate:articles` 至 ✓ 的關（`agent-brief.md` §7 規定的是「改完每一個 Concept 後」，
+  退修亦適用）；reviewer 無執行權，這格會空掉。而手改文章踩到的正是逐區塊預算、繁中、
+  程式碼實測這些項目——若拖到收批才由 `verify:phase` 發現，改的人已關、且該指令**失敗即中止**
+  會擋住整批、要從頭重跑。故 orchestrator MUST 在關掉 reviewer 前代跑該篇 Gate。
+- **就地修 MUST 是最小外科手術**：reviewer 是拿 Opus 的筆改 Fable 寫的文章，容易順手把口吻
+  改成自己的。只改 finding 指名之處，MUST NOT 順手潤稿、MUST NOT 調整固定區塊結構。
 
 ### 1. 取本批清單
 
@@ -68,29 +101,43 @@ orchestrator ─────────────── commit 凍結、更�
   「MUST NOT 執行 git 指令」、「MUST NOT 碰其他 Concept」。
 - **長篇 findings MUST 寫入 `<scratchpad>/f12/phase-NN/findings/<conceptId>.md`**，
   回傳只給短摘要（Gate 結果、字數、發現幾項缺陷）。長敘述進 orchestrator 的 context 是浪費。
+- **交件並經 orchestrator 收下後即可關閉**（2026-09-02 起）：退修不再回到原作者（見 §3），
+  不需等 `verify:phase`。關閉後 MUST 依 D14 第三層防護檢查殘留的 `node.exe` 行程。
 
 quiz 片段目錄慣例：`<scratchpad>/f12/phase-NN/quiz/<conceptId>.json`。
 
-### 3. Opus reviewer：1 對 1 即拋即審
+### 3. Opus reviewer：1 對 1 即拋即審、findings 就地修
 
 模型 **MUST 為 `opus`**。**不等全批交齊**：
 
 - 每有一個 Fable agent 交件，**立即 spawn 一個全新的 reviewer agent**，只審該作者的產出
-  （1 對 1）；審完回報（含退修建議）後**即可關閉**，不留待命、不接第二件。單批最多 6 個。
+  （1 對 1）；**審完並就地修完**再回報，之後即關閉，不留待命、不接第二件。單批最多 6 個。
 - **MUST NOT 用 SendMessage 對既有 reviewer 追加派件**（Phase 8 卡關教訓，見設計理由）。
-- reviewer **純閱讀、零執行權**（D14 事故後定案）：MUST NOT 執行任何指令或開子行程，
-  只允許讀檔；需要實跑驗證的命題具名列出，由退修時要求**原作者附帶驗證**
+- **MUST NOT 執行任何指令或開子行程**（D14 紅線，改制後不變）：只允許**讀檔與改檔**。
+  需要實跑驗證的命題具名列在回報裡，由 orchestrator 決定是否自行驗
   （不終止變體 MUST 加步數熔斷）。
-- 對任何既有 agent 的喚醒訊息（如退修回原作者）送出後 MUST 檢查工具回應：
-  「Resuming」才是喚醒成功；「queued for delivery」代表對方可能正在跑、也可能剛停機
-  （後者不會送達），若其後遲未回報 MUST 用 ListAgents 核實。
 
-職責是**讀內容**，不是跑腳本：
+職責是**讀內容並把它修好**：
 
 - 逐篇讀分派到的新教材，檢查論證是否成立、範例是否與敘述一致、程式碼是否真的示範了該 Concept。
 - 對照 `pipeline-defects.md` 的已知樣態複查（Tomorrow Preview vs `next`、教材與 quiz 是否互相矛盾）。
-- **MUST NOT 修改任何檔案**，只回報：哪幾篇有疑慮、具體問題、建議退回哪個 Fable agent 重修。
-- 有疑慮者由 orchestrator 送回**原作者 Fable agent** 修正，再重跑 `verify:phase`。
+- **自己動手把 findings 修到好**，涵蓋該 Concept 的 `articles/**` 與其 quiz 片段
+  （`<scratchpad>/f12/phase-NN/quiz/<conceptId>.json`）。
+- **修改幅度 MUST 是最小外科手術**：只動 finding 指名之處；MUST NOT 順手潤稿、
+  MUST NOT 改寫沒問題的段落、MUST NOT 調整固定區塊結構或區塊順序。
+- **MUST NOT 碰其他 Concept 的檔案**，更 MUST NOT 動 `concepts/`、`schedules/`、
+  `curriculum/`、`data/problem-bank.json`（結構凍結範圍）。
+- 回報 MUST 具名列出：發現幾項（BLOCKER / MAJOR / MINOR）、**每一項改了什麼、改在哪個檔案的
+  哪一段**、以及未修而需 orchestrator 處置的項目。
+
+**orchestrator 的收關步驟**（MUST，補 reviewer 無執行權造成的自檢缺口）：
+
+```bash
+npm run gate:articles -- --only <conceptId> --skip-quiz
+```
+
+看到 `✓ <conceptId>` **才可關閉該 reviewer**；失敗則把具名原因回送同一個 reviewer 續修
+（它此時仍開著，喚醒後 MUST 檢查工具回應是「Resuming」而非「queued for delivery」）。
 
 ### 4. 驗證（orchestrator，一個指令）
 
@@ -119,8 +166,9 @@ reviewer 的結論、以及 agent 查證出的既有缺陷。
 
 - `phase-NN.json` 與 `phases.json` 的 `status` 由 `pending` 改為 `done`。
 - `batches.md` 補一列；新發現的**產線**缺陷寫進 `pipeline-defects.md`。
-- **關閉該批全部 agent**（Fable × 6；reviewer 已各自審完即關），下一批開新的。
-  關閉時機照舊：**該批 `verify:phase` 通過前，任何 Fable agent MUST NOT 關閉**（退修回原作者）。
+- **確認該批已無存活 agent**：Fable 於交件收下後即關、reviewer 於逐篇 Gate ✓ 後即關，
+  正常情況下走到這裡應已全數關閉；MUST 用 ListAgents 核實一次，並依 D14 第三層防護
+  檢查殘留的 `node.exe` 行程。下一批開全新的 agent（維持 context 乾淨）。
 
 ## 用量守則
 
@@ -197,3 +245,6 @@ Phase 3 退修 8/9 篇，每次退修都是一次完整的 agent 回合）與 **
 - token 側的實測基準：Fable 端 6 agent 制實測 **74～78K subagent tokens / Concept**
   （舊 4 agent 制約 93～125K）；Opus reviewer：2 共用制實測每批合計 **343K**，
   1 對 1 制 Phase 9 實測每個 **95～136K**、單批 6 個合計 **665K**（先前估 600–780K 命中）。
+- **2026-09-02 就地修改制後的預期**（Phase 11 首次實測前僅為估計，**收批後 MUST 以實數取代**）：
+  Fable 端少掉退修回合，估微降；Opus 端多出編輯工作，估每個 reviewer 升至 ~120–160K。
+  **MUST NOT 假設 Fable 額度會明顯下降**——閒置不計費、退修非主要成本因子，且 token 省 ≠ 額度省。
