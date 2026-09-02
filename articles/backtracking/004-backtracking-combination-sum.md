@@ -11,89 +11,93 @@ exit_criteria:
 ---
 ## Concept
 
-Backtracking Combination Sum 屬於組合問題的延伸，核心在於處理元素可以被「無限次重複使用」以達到特定目標總和（Target Sum）的情境。在一般的組合或子集問題中，為了避免重複排列，我們在遞迴時通常會將索引加一（i + 1）；然而，在此 Pattern 中，由於允許重複選取同一個元素，我們在向下遞迴時會將當前索引（i）原封不動地傳遞下去，並在每次選擇時從目標值中扣除該元素的大小。
+子集生成給了我們一棵「只能往後選」的決策樹：`dfs(start, path)` 在 `start..n-1` 之間挑下一個元素，挑了索引 i 就用 `i + 1` 往下走。Combination Sum 在這棵樹上只改兩件事。第一，多帶一個剩餘目標 `rem`：每挑一個數就從 `rem` 扣掉它，`rem === 0` 才收集，不再像子集那樣在每個節點都收集。第二，同一個數可以無限次使用，所以往下遞迴時傳的是 i 而不是 i + 1——「下一個可以挑的仍然包含自己」。其餘完全沿用：迴圈起點由 `start` 決定，路徑用 push / pop 維護，答案在葉端複製一份。
 
 ## Thinking
 
-當我們著手處理這類問題時，思考的起點在於決策樹（Decision Tree）的建立。對於候選陣列中的每一個元素，我們都有兩種主要選擇：第一，選擇該元素並繼續在同一個或後續元素中進行組合（允許重複使用）；第二，跳過該元素，考慮下一個不同的元素以尋找其他組合。在寫程式時，我們通常會維護一個暫時的路徑陣列（Path）來記錄目前的選擇。當剩餘的目標值（Target）歸零時，代表我們找到了一組有效解，應将其加入結果集中。若剩餘目標值小於零，則代表目前的遞迴路徑超過了目標，應立即進行剪枝（Pruning）以節省計算資源。
+先弄清楚傳 i 為什麼不會產生重複。一個組合本質上是多重集合，例如 {2, 2, 3}；在已排序、且候選彼此相異的前提下（本題正是如此），每個多重集合恰好對應一條「索引不遞減」的挑選序列 [0, 0, 1]——候選若含重複值，同一個多重集合會對應到多條序列，去重就得另外靠明天的同層跳過。傳 i 讓序列可以停在同一個索引，而 start 不會後退，所以序列永遠不遞減——[3, 2, 2] 這種順序根本走不到，因為挑了索引 1 之後迴圈起點就是 1，回不去索引 0。每個多重集合恰好被枚舉一次：不重複、也不漏。
+接著是迴圈不變式。進入 `dfs(start, rem, path)` 時恆有三件事成立：path 的索引序列不遞減，且 path 非空時最後一個索引等於 start；`sum(path) + rem === target`；所有以 path 為前綴、之後只用索引 ≥ start 的元素湊出 target 的組合，都會在這棵子樹被找到。`rem === 0` 時 path 本身就是一組解，收集後直接返回——繼續往下只會讓總和超過目標，因為候選都是正整數。終止性也來自「正整數」：每往下一層 rem 至少減少 min(candidates)，深度不會超過 target / min。
+剪枝：先把候選排序，迴圈裡遇到 `cand[i] > rem` 就 break。這是安全的，因為後面的候選只會更大，全都放不進去。用 `[2, 3, 6, 7]`、target 7 走一遍：挑 2（rem 5）→ 挑 2（rem 3）→ 挑 2（rem 1）→ 2 > 1 break；退回 rem 3 挑 3（rem 0）收集 [2, 2, 3]；一路退回頂層，start = 3 挑 7（rem 0）收集 [7]。整棵樹只呼叫 10 次 dfs。
 
 ## Pattern Recognition
 
-辨識此 Pattern 的關鍵線索在於題目的敘述中是否明確指出「元素可以被使用無限次」或「同一個數字可以被重複選取」，且最終目標是找出所有相加等於特定目標值的組合（Combinations）。若題目要求的結果是不重複的組合，且候選陣列包含正整數，通常這就是典型的 Reusable Elements Sum Pattern。透過將遞迴指針維持在當前位置而非推進到下一個位置，即可實現元素的重複選取。
+線索是「每個數可以用無限多次」加上「列出所有總和等於 target 的組合」，且候選皆為正整數、彼此相異。看到「無限次」就把遞迴傳的索引從 i + 1 改成 i；看到「組合而非序列」就保留 start 只往後選。兩個反方向的線索要分清楚：若題目只問「有幾種」而不要求列出，那是 DP 的範圍（換零錢式的計數）；若順序不同就算不同答案，那是排列計數，也走 DP。回溯的價值在於「要列出每一組」——輸出本身就是指數級，枚舉才是正解。
 
 ## Common Mistakes
 
-最常見的錯誤是未能正確處理遞迴的終止條件，導致程式進入無窮迴合或引發 Stack Overflow。另一個常見問題是忘記在剩餘目標值小於零時進行早期剪枝（Early Pruning），這會導致遞迴深度過深、運算時間複雜度暴增。此外，如果在組合過程中沒有妥善排序候選陣列，或是在遞迴傳遞索引時寫成了 i + 1，將會導致無法重複選取元素，進而漏掉正確的解答。
+以下每一條都用本篇 Tip 的程式碼實測。第一，遞迴傳 `i + 1`：對 `[2, 3, 6, 7]`、target 7 只得到 [[7]]，[2, 2, 3] 消失，因為 2 用過一次就再也挑不到。第二，每層都從索引 0 開始挑：對 `[2, 3]`、target 5 會同時得到 [2, 3] 與 [3, 2]，組合變成排列。第三，沒排序卻用 break 剪枝：對 `[3, 2]`、target 2，第一個候選 3 > 2 立刻 break，連 2 都沒看，輸出空陣列而正解是 [[2]]；不排序就只能用 continue，但 continue 得掃完整個陣列。第四，完全沒有超額檢查（既不 break 也不判 `rem < 0`）：對 `[2]`、target 3，rem 走 3 → 1 → -1 → -3 永遠碰不到 0，直到堆疊溢位。第五，收集時寫 `res.push(path)` 而非複製：所有答案共用同一個陣列，回溯 pop 完後結果變成 [[], []]。
 
 ## Complexity
 
-時間空間複雜度分析：時間複雜度在最壞情況下為 O(2^(t/min))，其中 t 代表目標值（Target），min 代表候選陣列中的最小值。這是因為每個元素都可以被重複選取直到目標達成，產生類似二元或多元的決策樹。空間複雜度為 O(t/min)，主要取決於遞迴呼叫堆疊的最大深度以及儲存當前路徑所需的記憶體空間。
+時間上界 O(2^(t/min))：t 是 target、min 是最小候選，每往下一層 rem 至少減 min，所以遞迴深度最多 t/min；每個節點的分支數不超過 n，粗略上界寫成指數形式。實際節點數遠小於上界，因為排序後的 break 會砍掉整段迴圈。空間 O(t/min)：遞迴堆疊與 path 的長度都不超過最大深度，結果集另計。
 
 ## Digest
 
-Backtracking Combination Sum 核心在於允許元素重複選取。透過傳遞當前索引 i 而非 i + 1，遞迴能夠再次使用相同的數字。必須注意 target < 0 的剪枝條件，以防無窮遞迴。
+Combination Sum 是子集生成的兩處改動：帶一個剩餘目標 `rem`，挑一個數就扣掉它，`rem === 0` 才收集；遞迴傳 i 而非 i + 1，讓同一個數可以無限次重用。正確性來自「索引序列不遞減」：候選彼此相異時，每個組合（多重集合）恰好對應一條不遞減的索引序列，start 不會後退，所以 [3, 2, 2] 這種順序走不到，不重複也不漏。終止性來自候選為正整數：每層 rem 至少減 min，深度最多 t/min。排序後遇到 `cand[i] > rem` 就 break，因為後面的候選只會更大；未排序就不能 break。收集時複製 path，否則所有答案共用同一個被 pop 空的陣列。時間 O(2^(t/min))、空間 O(t/min)。
 
 ## TypeScript Tip
 
+輸入刻意不排序，斷言比對每組的元素順序：拿掉 `sort` 會得到 `3+2+2`，改傳 `i + 1` 只剩 `7`，忘記複製 path 會得到空字串。
+
 ```typescript
-// TypeScript 效能優化建議：先排序再剪枝
-function optimizedSum(candidates: number[], target: number): number[][] {
+function combinationSum(c: number[], target: number): number[][] {
+  const cand = [...c].sort((a, b) => a - b);
   const res: number[][] = [];
-  candidates.sort((a, b) => a - b);
-  
-  const dfs = (idx: number, rem: number, path: number[]) => {
-    if (rem === 0) {
-      res.push([...path]);
-      return;
-    }
-    for (let i = idx; i < candidates.length; i++) {
-      if (candidates[i] > rem) break; // 提前中斷迴圈
-      path.push(candidates[i]);
-      dfs(i, rem - candidates[i], path);
+  const dfs = (start: number, rem: number, path: number[]): void => {
+    if (rem === 0) { res.push([...path]); return; }
+    for (let i = start; i < cand.length; i++) {
+      const v = cand[i]!;
+      if (v > rem) break;
+      path.push(v);
+      dfs(i, rem - v, path);
       path.pop();
     }
   };
-  
   dfs(0, target, []);
   return res;
 }
-if (optimizedSum([2], 1).length !== 0) throw new Error("assertion failed");
+const got = combinationSum([7, 3, 2], 7).map((p) => p.join("+")).sort();
+if (got.join(" ") !== "2+2+3 7") throw new Error(got.join(" "));
+if (combinationSum([2], 1).length !== 0) throw new Error("expected no solution");
 ```
 
 ## Python Tip
 
+輸入刻意不排序：`[3, 2, 5]`、target 8 的三組解各用了不同次數的重用（2 用四次、3 用兩次、5 用一次）；把 `dfs(i, ...)` 改成 `dfs(i + 1, ...)` 就只剩 `[3, 5]`，拿掉 `sorted` 則會漏掉 `[2, 3, 3]`。
+
 ```python
-# Python 效能優化建議：利用排序與條件判斷進行早退（Early Exit）
-def optimized_sum(candidates: list[int], target: int) -> list[list[int]]:
-    res = []
-    candidates.sort()
-    
-    def dfs(idx: int, rem: int, path: list[int]):
+def combination_sum(c: list[int], target: int) -> list[list[int]]:
+    cand = sorted(c)
+    res: list[list[int]] = []
+
+    def dfs(start: int, rem: int, path: list[int]) -> None:
         if rem == 0:
-            res.append(list(path))
+            res.append(path[:])
             return
-        for i in range(idx, len(candidates)):
-            if candidates[i] > rem:
+        for i in range(start, len(cand)):
+            v = cand[i]
+            if v > rem:
                 break
-            path.append(candidates[i])
-            dfs(i, rem - candidates[i], path)
+            path.append(v)
+            dfs(i, rem - v, path)
             path.pop()
-            
+
     dfs(0, target, [])
     return res
 
-assert len(optimized_sum([2], 1)) == 0, "assertion failed"
+assert combination_sum([3, 2, 5], 8) == [[2, 2, 2, 2], [2, 3, 3], [3, 5]]
+assert combination_sum([2], 1) == []
 ```
 
 ## Takeaway
 
-掌握 Backtracking 時的索引傳遞（i 而非 i + 1）與 target 扣減剪枝，是解決元素無限重複選取組合題目的核心關鍵。
+挑一個數就從 rem 扣掉、歸零才收集；遞迴傳 i 讓數字可重用，start 不後退保證不重複，正整數保證會終止。
 
 ## Tomorrow Preview
 
-明天我們將探討 Combination Sum 系列的延伸題型，重點在於限制每個元素只能使用一次且組合不能重複的處理方式。
+明天是 Backtracking Combination Sum II：每個索引只能用一次、候選陣列又含重複值，要把今天的 rem 扣減、子集生成的 i + 1，以及含重複元素子集那一課的排序加同層跳過，三件事疊在一起，並確保每個組合都唯一。
 
 ## Today's Challenge
 
-- **39** · 此題為 Reusable Elements Sum Pattern 的標準範本，候選陣列中的數字可以被無限次選取以達到目標值。
-  - Hint: 在遞迴呼叫時傳入當前索引 i 以允許重複選取，並在剩餘目標值小於零時終止遞迴。
+- **39** · 候選彼此相異且可無限次重用，是「遞迴傳 i」與「rem 扣減、歸零收集」的最純粹範本，沒有任何去重干擾。
+  - Hint: 先排序；`dfs(start, rem, path)` 從 start 往後挑，挑了索引 i 就以 `rem - cand[i]` 遞迴到 `dfs(i, ...)`；`cand[i] > rem` 就 break；rem 歸零時複製 path 收集。
