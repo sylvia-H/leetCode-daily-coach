@@ -153,6 +153,11 @@ article+quiz 複驗 → **結構凍結檢查** → `npm test` → `validate:cont
 **結構凍結檢查**（`git status --porcelain -- concepts schedules curriculum data/problem-bank.json`
 MUST 為空）是 `state.json` 不受影響的唯一保證，已內建為第 e 步，無法略過。
 
+**這一步 SHOULD 背景執行，並與 §6 的收尾文件撰寫重疊**（2026-09-02 新增）：本指令約需 6 分鐘
+（Phase 11 實測 374s，其中 `gate:code` 一步就佔 310s），而 §6 的 `batches.md` / `pipeline-defects.md`
+內容**完全來自 reviewer 回報，不依賴 verify 結果**，乾等是純空轉。MUST NOT 重疊的只有 §5 的 commit——
+它 MUST 等 `verify:phase` 全綠才執行。若 verify 失敗，已寫好的收尾文件原地修即可，不會白做。
+
 ### 5. commit 凍結
 
 ```
@@ -163,6 +168,10 @@ feat(012-content-regeneration): Phase NN 重生 <n> 個 Concept 教材與題庫
 reviewer 的結論、以及 agent 查證出的既有缺陷。
 
 ### 6. 收尾
+
+**撰寫時機**：`batches.md` 與 `pipeline-defects.md` 的內容只依賴 reviewer 回報，
+SHOULD 在 §4 的 `verify:phase` 背景執行期間就寫完（見 §4），不要等它跑完才動筆。
+`status` 的 `pending` → `done` 與 §5 的 commit 則 MUST 等 verify 全綠。
 
 - `phase-NN.json` 與 `phases.json` 的 `status` 由 `pending` 改為 `done`。
 - `batches.md` 補一列；新發現的**產線**缺陷寫進 `pipeline-defects.md`。
