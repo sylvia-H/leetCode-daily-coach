@@ -1,0 +1,62 @@
+{
+  "phase": 9,
+  "window": "sessionIndex 112-125",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "queue-array-implementation",
+      "skeleton": "concepts/queue/002-queue-array-implementation.md",
+      "article": "articles/queue/002-queue-array-implementation.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "queue-bfs-level-order-traversal",
+      "skeleton": "concepts/queue/007-queue-bfs-level-order-traversal.md",
+      "article": "articles/queue/007-queue-bfs-level-order-traversal.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "queue-circular-buffer",
+      "skeleton": "concepts/queue/004-queue-circular-buffer.md",
+      "article": "articles/queue/004-queue-circular-buffer.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "queue-core-concept-introduction",
+      "skeleton": "concepts/queue/001-queue-core-concept-introduction.md",
+      "article": "articles/queue/001-queue-core-concept-introduction.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "queue-linked-list-implementation",
+      "skeleton": "concepts/queue/003-queue-linked-list-implementation.md",
+      "article": "articles/queue/003-queue-linked-list-implementation.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "queue-using-stacks",
+      "skeleton": "concepts/queue/005-queue-using-stacks.md",
+      "article": "articles/queue/005-queue-using-stacks.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "stack-maximal-rectangle-foundation",
+      "skeleton": "concepts/stack/011-stack-maximal-rectangle-foundation.md",
+      "article": "articles/stack/011-stack-maximal-rectangle-foundation.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "stack-sum-of-subarray-minimums",
+      "skeleton": "concepts/stack/010-stack-sum-of-subarray-minimums.md",
+      "article": "articles/stack/010-stack-sum-of-subarray-minimums.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "stack-using-queues",
+      "skeleton": "concepts/queue/006-stack-using-queues.md",
+      "article": "articles/queue/006-stack-using-queues.md",
+      "quizCount": 7
+    }
+  ]
+}

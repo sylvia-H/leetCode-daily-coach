@@ -13,12 +13,10 @@ prerequisite:
 next:
   - backtracking-permutation-basics
 learning_goal:
-  - >-
-    Combine target-sum tracking with duplicate skipping when elements can only
-    be used once.
+  - '在元素只能使用一次的情況下，結合目標總和追蹤與重複跳過。'
 exit_criteria:
-  - 'Can combine sorting, level-skip duplicate checks, and target subtraction.'
-  - Can ensure each combination is unique.
+  - '能結合排序、同層跳過的重複檢查與目標值扣減。'
+  - '能確保每個組合都是唯一的。'
 leetcode:
   - 40
 tags:

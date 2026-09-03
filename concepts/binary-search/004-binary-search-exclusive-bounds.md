@@ -12,12 +12,10 @@ prerequisite:
 next:
   - binary-search-lower-bound
 learning_goal:
-  - >-
-    Understand the [left, right) exclusive right bound pattern and while (left <
-    right).
+  - '理解右邊界開放的半開區間 [left, right) 模式與 while (left < right)。'
 exit_criteria:
-  - Configure pointers with right = n.
-  - Update bounds correctly using right = mid.
+  - '能以 right = n 設定指標。'
+  - '能用 right = mid 正確更新邊界。'
 leetcode:
   - 35
   - 34

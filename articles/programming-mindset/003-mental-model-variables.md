@@ -10,92 +10,74 @@ exit_criteria:
 ---
 ## Concept
 
-建立變數是記憶體容器的正確心智模型。在編程的世界中，變數並非數學代數中的未知數，而是一個個具備時序性的狀態記錄器（State Recorder）。理解變數的本質在於掌握記憶體配置與參考指向的動態變化。
+變數最容易被誤解的地方，是把它當成數學方程式裡的未知數。數學裡的 `x = x + 1` 是一條無解的等式；程式裡它卻是再平常不過的指令：「取出 x 目前的值，加一，再存回 x」。正確的心智模型是：變數是一個具名的記憶體容器，賦值（assignment）不是宣告等式成立，而是把新值放進容器、覆蓋掉舊值。昨天的合約定義了資料在函式邊界的規格；資料進到函式內部後，就住在一個個這樣的容器裡。這個模型帶來兩個重要性質。其一是時序性：變數的值取決於「最後一次賦值」，讀取拿到的是當下的內容，先前的歷史不會保留。其二是獨立性（就基本型別而言）：`b = a` 複製的是當時的值，之後改動 a 不會回頭影響 b。用紙筆畫圖最能鞏固模型：每個變數畫一個盒子，每次賦值就把舊值劃掉、寫上新值；日後遇到物件與陣列，盒子裡放的則是「指向物件的箭頭」，同一套畫法仍然適用。
 
 ## Thinking
 
-在追蹤狀態時，必須在腦海中模擬記憶體的配置狀態。每當執行賦值運算子（Assignment Operator）時，就是將一個運算結果的記憶體參考（Reference）綁定到變數名稱上。開發者必須隨時釐清當前變數所代表的數值或狀態在演算法的哪個階段。
+追蹤變數的方法是逐行模擬記憶體狀態：每執行一行就問「哪個盒子的內容變了？現在各是什麼？」以 `x = 2`、`x = x * 3`、`x = x - 4` 為例，x 依序是 2、6、2——第二行讀到的是「當時」的 2，第三行讀到的是「當時」的 6；三行結束後，盒子裡只剩最後的 2。另一條要維持的紀律是：隨時說得出「這個變數現在代表什麼意義」。好的變數在整段程式裡只承擔一種意義（例如 max 永遠是「目前看過的最大值」）；當你發現同一個變數在不同段落得解釋成不同的意思，就該把它拆成兩個變數了。
 
 ## Pattern Recognition
 
-當需要在迴圈或遞迴中累積數值、追蹤最大或最小值、或是記錄狀態轉換（State Transition）時，就會使用到 State Tracking Pattern。此時變數扮演著跨越時間軸保存狀態的核心角色。
+當需要記錄過程中累積或變動的資訊——加總、目前最大值、狀態旗標、計數器——就是 State Tracking 上場的時機：用一個意義明確的變數，跨越時間軸保存「到目前為止」的結論。日後所有迴圈類的演算法都建立在這個模式上。反過來說，如果一段計算完全不需要記住先前的結果，就不必引入可變的變數，直接用運算式表達即可。
 
 ## Common Mistakes
 
-最常見的錯誤是賦予單一變數過多重疊且含糊不清的含義，隨著程式碼的擴展，導致變數在不同階段被賦予完全不同的資料型別或語意，進而引發難以除錯的邏輯錯誤與執行階段異常。
+最常見的錯誤是變數語意過載：同一個變數先當索引、後當計數、最後又拿去存結果，每一段程式對它的解讀都不同，日後修改任何一段都可能踩壞其他段的假設。第二個錯誤是用數學等式的直覺讀程式：看到 `b = a + 2` 就以為 b 與 a 從此連動，之後改了 a 卻期待 b 自動更新——實際上賦值只發生在執行的那一刻。第三個錯誤是濫用可變狀態：能用常數表達的值也宣告成可變變數，讓讀者（包括三天後的自己）必須整段掃過才能確認它有沒有被改過，白白增加追蹤負擔。
 
 ## Complexity
 
-Time Complexity: O(1) / Space Complexity: O(1)，因為單純宣告變數與基本賦值操作僅佔用固定的常數時間與常數記憶體空間。
+O(1) / O(1)。宣告變數與賦值都是常數時間、常數空間的操作；本課的成本花在你腦中建立正確的模型，而不是電腦的執行資源上。
 
 ## Digest
 
-變數是程式設計中最基礎卻也最核心的概念。本單元協助開發者建立正確的記憶體容器心智模型，捨棄將變數視為數學方程式未知數的迷思。透過理解 State Tracking Pattern，我們學會在時序軸上精確追蹤狀態的變化，並避免變數語意過載（Semantic Overloading）所帶來的維護隱患。掌握此一基礎，能有效提升程式碼的可讀性與穩定度。
+變數不是數學未知數，而是具名的記憶體容器：`x = x + 1` 不是等式，是「取出當下的值、加一、存回去」。兩個關鍵性質——時序性：值取決於最後一次賦值，讀取拿到的是當下內容；獨立性：`b = a` 複製當時的值，之後改 a 不影響 b。驗證你的模型：`a = 5; b = a + 2; a = 10` 之後 b 是多少？答案是 7，因為第二行執行時 a 還是 5。追蹤技巧：每個變數畫一個盒子，逐行把舊值劃掉、寫上新值。最後一條紀律：一個變數自始至終只承擔一種意義（max 永遠是「目前看過的最大值」），需要第二種意義就開第二個變數。
 
 ## TypeScript Tip
 
-善用 const 宣告常數，能有效降低心智負擔並防止非預期的變數重新賦值。
+預設用 `const` 宣告，讓「不會再變的值」在語法上就被凍結；真正需要隨時間更新的狀態才用 `let`——讀者一眼就知道該追蹤誰：
 
 ```typescript
-function computeArea(width: number, height: number): number {
-  const area = width * height;
-  if (area !== 50) throw new Error("assertion failed");
-  return area;
+const FEE = 15; // const：固定的手續費，語法保證不會被改
+function finalBalance(deposits: number[]): number {
+  let balance = 0; // let：隨每筆存款演進的狀態
+  for (const d of deposits) balance = balance + d - FEE;
+  return balance;
 }
-computeArea(5, 10);
+if (finalBalance([100, 200]) !== 270) throw new Error("assertion failed");
+if (finalBalance([]) !== 0) throw new Error("assertion failed");
 ```
+
+可變的盒子越少，需要逐行追蹤的東西就越少。
 
 ## Python Tip
 
-利用 Python 的型別提示（Type Hints）與明確的變數命名來強化程式碼的語意表達。
+Python 的變數是綁到物件上的「名牌」：`=` 是換綁名牌，而兩張名牌綁在同一個可變物件上時，透過任一張的修改彼此都看得見：
 
 ```python
-def compute_area(width: int, height: int) -> int:
-    area = width * height
-    assert area == 50, "assertion failed"
-    return area
+a = [1, 2]
+b = a          # b 與 a 綁到同一個 list 物件
+b.append(3)    # 透過 b 修改物件，a 也看得見
+assert a == [1, 2, 3]
 
-compute_area(5, 10)
+a = [9]        # 重新賦值：a 換綁到新物件，b 不受影響
+assert b == [1, 2, 3]
+
+x = 5
+y = x
+x = x + 1      # 數字重新綁定後，y 仍指向原本的 5
+assert y == 5 and x == 6
 ```
 
-## TypeScript Corner
-
-在 TypeScript 中，變數宣告與型別推導緊密相連。善用 const 可以明確表達不變性（Immutability），減少非必要的可變狀態（Mutable State），有助於編譯器進行最佳化。
-
-```typescript
-function updateCounter(initial: number): number {
-  const base = initial;
-  const increment = 1;
-  const result = base + increment;
-  if (result !== 11) throw new Error("assertion failed");
-  return result;
-}
-updateCounter(10);
-```
-
-## Python Corner
-
-在 Python 中，變數不是盛裝資料的箱子，而是貼在物件上的標籤（Name and Object Reference Model）。賦值動作只是讓名稱指向某個記憶體中的物件，理解這一點對於避免淺拷貝與深拷貝的陷阱至關重要。
-
-```python
-def update_counter(initial: int) -> int:
-    base = initial
-    increment = 1
-    result = base + increment
-    assert result == 11, "assertion failed"
-    return result
-
-update_counter(10)
-```
+畫圖時把名牌與物件分開畫：修改物件（`append`）與換綁名牌（`=`）是兩件不同的事。
 
 ## Takeaway
 
-變數是記憶體的具名參照而非數學未知數，精準追蹤狀態是編寫正確演算法的基石。
+變數是具名的記憶體容器：賦值即覆蓋、讀取看當下，且一個變數自始至終只承擔一種意義。
 
 ## Tomorrow Preview
 
-明天我們將探討迴圈與條件判斷中的狀態轉移機制，進一步延伸 State Tracking Pattern 在更複雜控制流程中的應用。
+明天的 Tracing Execution Flow 會把今天的逐行畫盒子升級成完整的執行流程追蹤，練習在紙上跑程式。今天建立的記憶體模型，之後也會延伸到 Array Memory Layout、Linked List 的節點記憶體模型與 Stack 的核心概念導讀。
 
 ## Today's Challenge
 
-本篇為觀念課，沒有對應的 LeetCode 練習題。請把時間花在把上面的觀念想透。
+本篇為觀念課，沒有對應的 LeetCode 練習題。請拿一段三到五行的賦值程式碼，逐行畫出每個變數（盒子或名牌）在執行前後的內容與指向變化，並核對最終結果。

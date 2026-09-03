@@ -25,12 +25,6 @@ exit_criteria:
 ## Complexity
 O(1)。
 
-## TypeScript Corner
-閱讀用內容。
-
-## Python Corner
-閱讀用內容。
-
 ## Today's Challenge
 閱讀用內容。
 

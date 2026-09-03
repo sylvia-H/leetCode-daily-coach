@@ -6,129 +6,96 @@ pattern_label: Sliding Window Frequency Map
 complexity_label: O(n) / O(k)
 estimated_minutes: 15
 exit_criteria:
-  - Can update frequency map when sliding window boundaries move
-  - Can evaluate window validity based on frequency conditions
+  - 能在視窗邊界移動時更新 frequency map
+  - 能依據頻率條件判斷視窗是否合法
 ---
 ## Concept
 
-Sliding Window with Hash Map Frequency Balancing 是一種用來處理複雜子字串約束條件的進階演算法技巧。當我們需要在動態的滑動視窗內追蹤字元或元素的出現頻率，並依此判斷視窗是否滿足特定條件時（例如字元數量匹配、包含所有必要元素等），單純依賴指針移動已不足夠，此時必須藉由 Hash Map 或陣列來維護視窗內部的頻率狀態。
+Sliding Window Frequency Map 處理的是「合法條件由出現次數決定」的連續區間問題。前一課的相異元素視窗只需要知道字元「有沒有」出現，集合就足夠；但當題目要求視窗內每個字元的數量都對上另一個字串的頻率——例如找出所有 Anagram 的出現位置、或尋找包含目標字串全部字元（含重複數量）的最小子字串——就必須改用 Hash Map 記錄視窗內每個字元出現幾次。此技巧的核心不變式是：任一時刻，頻率表恰好描述目前視窗的組成。右界每納入一個字元就把它的計數加一，左界每移出一個字元就把它的計數減一，狀態便永遠與視窗同步，完全不需要重新掃描視窗內容。
 
 ## Thinking
 
-在思考此類問題時，核心策略在於動態維護滑動視窗的左右邊界與內部頻率。當右指針擴展視窗時，我們將新加入元素的頻率在 Hash Map 中遞增；當視窗滿足特定條件或需要收縮時，我們則移動左指針並將對應元素的頻率遞減。為了避免每次調整視窗時都重新掃描整個 Hash Map 來驗證條件，我們通常會引入一個匹配計數器（如 matchedCount），只在頻率達到目標值時才增減該計數器，藉此達到高效的狀態追蹤。
+用「湊齊目標頻率」來思考。先把目標字串統計成 need 表，滑動過程中維護視窗自己的 window 表。剩下的問題是：如何快速判斷「視窗已經合法」？若每一步都把兩張表整個比對，光小寫字母就得多花 26 倍的時間。解法是引入 matched 計數器，記錄「計數已湊滿的字元種類數」。它為什麼正確：window 中的計數每次只加減一，唯有「恰好跨越 need 中目標值」的那一步會改變該字元湊滿與否——右界納入字元 c 後，若 `window[c]` 恰等於 `need[c]`，matched 加一；左界移出 c 之前，若 `window[c]` 恰等於 `need[c]`，matched 減一。其餘的增減都不影響湊滿狀態，因此 matched 恆等於湊滿的種類數。視窗合法與否，只需比較 matched 是否等於 need 的種類總數，是 O(1) 判斷。
 
 ## Pattern Recognition
 
-當題目要求尋找符合特定頻率分佈的子字串、進行 Anagram 檢索，或是尋找包含另一個字串所有字元的最小子字串時，即可辨識出此 Pattern。其特徵在於：問題涉及連續區間（Subarray 或 Substring），且條件取決於元素出現的「次數」而非單純的數值大小或存在與否。
+兩個訊號同時出現即可鎖定此 Pattern：第一，答案落在連續區間（substring 或 subarray）；第二，合法條件由「出現次數」定義，而不是只看存在與否或數值大小。固定長度版（Anagram 檢索）的視窗大小恆等於目標長度，每一步右端進一格、左端出一格；變動長度版（最小覆蓋子字串）則是「不合法就擴張右界，合法後收縮左界並記錄答案」。兩者共用同一套頻率增減與 matched 維護邏輯，差別只在邊界的推進策略。
 
 ## Common Mistakes
 
-常見的錯誤在於當元素的頻率降為零時，直接從 Hash Map 中刪除該鍵，這可能會導致後續比對時無法正確區分「頻率為零」與「鍵不存在」的狀態。另一個常見錯誤是在視窗收縮時，更新頻率與移動指針的順序發生邏輯錯亂，導致狀態未能確實還原。
+第一，頻率歸零時「刪不刪鍵」必須與合法性判斷方式一致：若靠整表相等來判斷（直接比較兩張表），歸零的鍵必須刪除，否則「a 為 1、b 為 0」與「只有 a 為 1」會被誤判為不同；若靠 matched 計數器，就不必刪也不要亂刪——判斷只看計數器，多餘的刪除反而製造「頻率為零」與「鍵不存在」的混淆。兩種策略混用是此類題最常見的 bug 來源。第二，收縮視窗時頻率更新與 matched 檢查的順序寫反：必須在計數改變的同一步檢查是否恰好跨越目標值，先後錯置會讓 matched 與視窗實況脫節。第三，變動長度版在視窗合法後忘記持續收縮到不能再縮，導致記錄到的不是最短答案。
 
 ## Complexity
 
-Time Complexity: O(n) where n is the length of the input string, since each character enters and leaves the sliding window at most once. Space Complexity: O(k) where k is the size of the character set stored in the Hash Map.
+時間複雜度 O(n)：左右指標都只單向前進，每個字元至多進出視窗各一次，且每次進出只做 O(1) 的計數更新與 matched 比較。空間複雜度 O(k)：k 為字元集大小，兩張頻率表最多各存 k 個鍵；若限定小寫英文字母，k 為 26，可視為常數。
 
 ## Digest
 
-Sliding Window with Hash Map Frequency Balancing 是一種結合雙指針與頻率統計的經典演算法。透過維持一個固定或變動大小的視窗，並利用 Hash Map 實時記錄內部元素的出現次數，我們能夠在線性時間內解決複雜的子字串約束問題。關鍵在於避免重複掃描狀態，而是藉由狀態變數的增減來 O(1) 判斷視窗是否合法。
+今天把 Sliding Window 從「查存在」升級到「對頻率」：用 Hash Map 維護視窗內每個字元的出現次數，右界納入就加一、左界移出就減一，頻率表永遠與視窗同步。合法性判斷不必整表比對，改用 matched 計數器——只在某字元計數「恰好跨越」目標值的那一刻增減，因此它恆等於已湊滿的字元種類數，判斷降為 O(1)。固定長度視窗每步一進一出，適合 Anagram 檢索；變動長度視窗在不合法時擴張、合法後收縮並記錄最短。左右指標各自最多走 n 步，整體 O(n)、空間 O(k)。
 
 ## TypeScript Tip
 
+Map 取不存在的鍵會得到 undefined，累加前用 `?? 0` 收斂；matched 讓每步的合法性判斷都是 O(1)。
+
 ```typescript
-function verifyFrequencyMap(): void {
-  const map = new Map<string, number>();
-  map.set('a', 1);
-  if (map.get('a') !== 1) throw new Error("assertion failed");
+import assert from "node:assert";
+function anagramCount(s: string, p: string): number {
+  const need = new Map<string, number>();
+  for (const c of p) need.set(c, (need.get(c) ?? 0) + 1);
+  const win = new Map<string, number>();
+  let matched = 0;
+  let found = 0;
+  for (let r = 0; r < s.length; r++) {
+    const a = s[r]!;
+    win.set(a, (win.get(a) ?? 0) + 1);
+    if (win.get(a) === need.get(a)) matched++;
+    if (r >= p.length) {
+      const b = s[r - p.length]!;
+      if (win.get(b) === need.get(b)) matched--;
+      win.set(b, (win.get(b) ?? 0) - 1);
+    }
+    if (matched === need.size) found++;
+  }
+  return found;
 }
-verifyFrequencyMap();
+assert.strictEqual(anagramCount("cbaebabacd", "abc"), 2);
 ```
 
 ## Python Tip
 
-```python
-from collections import Counter
-def verify_counter():
-    c = Counter("abc")
-    assert c["a"] == 1, "assertion failed"
-verify_counter()
-```
-
-## TypeScript Corner
-
-```typescript
-function checkInclusion(s1: string, s2: string): boolean {
-  if (s1.length > s2.length) return false;
-  const need = new Map<string, number>();
-  const window = new Map<string, number>();
-  for (const char of s1) {
-    need.set(char, (need.get(char) || 0) + 1);
-  }
-  let matched = 0;
-  let left = 0;
-  for (let right = 0; right < s2.length; right++) {
-    const c = s2[right];
-    if (need.has(c)) {
-      window.set(c, (window.get(c) || 0) + 1);
-      if (window.get(c) === need.get(c)) matched++;
-    }
-    while (right - left + 1 >= s1.length) {
-      if (matched === need.size) return true;
-      const d = s2[left];
-      if (need.has(d)) {
-        if (window.get(d) === need.get(d)) matched--;
-        window.set(d, window.get(d)! - 1);
-      }
-      left++;
-    }
-  }
-  return false;
-}
-if (checkInclusion("ab", "eidbaooo") !== true) throw new Error("assertion failed");
-```
-
-## Python Corner
+歸零的鍵是否要刪，取決於怎麼判斷相等：用一般 dict 逐鍵比較就必須刪；Counter 的 `==` 自 Python 3.10 起將缺鍵視為零。
 
 ```python
 from collections import Counter
 
-def checkInclusion(s1: str, s2: str) -> bool:
-    if len(s1) > len(s2):
-        return False
-    need = Counter(s1)
-    window = Counter()
-    matched = 0
-    left = 0
-    for right, c in enumerate(s2):
-        if c in need:
-            window[c] += 1
-            if window[c] == need[c]:
-                matched += 1
-        while right - left + 1 >= len(s1):
-            if matched == len(need):
-                return True
-            d = s2[left]
-            if d in need:
-                if window[d] == need[d]:
-                    matched -= 1
-                window[d] -= 1
-            left += 1
-    return False
+def anagram_count(s: str, p: str) -> int:
+    k, need = len(p), Counter(p)
+    win = Counter(s[:k])
+    found = int(win == need)
+    for r in range(k, len(s)):
+        win[s[r]] += 1
+        out = s[r - k]
+        win[out] -= 1
+        if win[out] == 0:
+            del win[out]
+        if win == need:
+            found += 1
+    return found
 
-assert checkInclusion("ab", "eidbaooo") == True, "assertion failed"
+assert anagram_count("cbaebabacd", "abc") == 2
 ```
 
 ## Takeaway
 
-掌握 Sliding Window 頻率平衡的核心在於動態更新 Hash Map 與匹配計數器，達成 O(n) 的高效能驗證。
+頻率表隨視窗邊界同步增減，matched 只在計數恰好跨越目標值時更新，讓合法性判斷 O(1)、整體 O(n)。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 與 Sliding Window 在無重複字元區間優化上的變體應用，學習如何處理更具挑戰性的動態邊界調整問題。
+明天進入 Canonical Key Grouping：把互為 Anagram 的字串轉換成同一個標準化鍵值，用 Hash Map 一次把所有等價的字串分好組。
 
 ## Today's Challenge
 
-- **438** · Find All Anagrams in a String 要求在字串中尋找固定長度的字元排列組合，完美對應固定大小滑動視窗與頻率平衡的特性。
-  - Hint: 維護一個長度等於 s1 的視窗，每次右移時更新兩端字元的頻率與匹配狀態。
-- **76** · Minimum Window Substring 要求尋找包含目標字串所有字元的最小子字串，需要動態擴張與收縮視窗大小來平衡頻率條件。
-  - Hint: 當視窗滿足條件時嘗試收縮左邊界以尋找最小長度，並在過程中更新頻率匹配數。
+- **438** · 在字串中找出目標字串所有 Anagram 的起點，視窗長度固定等於目標長度，頻率表每步一進一出。
+  - Hint: 右端納入、左端移出各更新一次頻率，配合 matched 計數器判斷視窗頻率是否與目標完全相符。
+- **76** · 尋找包含目標字串全部字元（含重複數量）的最小子字串，是變動長度頻率視窗的代表題。
+  - Hint: 不合法就擴張右界；matched 湊滿後收縮左界到不能再縮，沿途更新最短答案。

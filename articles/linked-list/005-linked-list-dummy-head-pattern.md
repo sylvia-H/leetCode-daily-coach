@@ -6,142 +6,94 @@ pattern_label: Sentinel Node
 complexity_label: O(n) / O(1)
 estimated_minutes: 15
 exit_criteria:
-  - Can initialize a dummy node pointing to the real head
-  - Can return dummy.next consistently as the modified list head
+  - 能初始化一個指向實際 head 的 dummy 節點
+  - 能一致地回傳 dummy.next 作為修改後的串列 head
 ---
 ## Concept
 
-Linked List Dummy Head Pattern（亦稱 Sentinel Node）是一種在處理 Linked List 題目時極具價值的設計模式。透過在實際的 head 節點之前人為地插入一個額外的 dummy 節點，我們可以為整個串列提供一個永久且固定的前導節點。此 Pattern 的核心目的在於消除當 head 節點本身需要被修改、刪除或在最前方插入新節點時所需的額外邊界條件判斷。由於有了 dummy 節點，原本必須獨立處理的「當前操作會影響 head」之特殊情境，便能與一般節點的操作邏輯完全一致，大幅提升程式碼的簡潔度與正確性。
+Dummy Head Pattern（亦稱 Sentinel Node）是處理 Linked List 修改類題目的基本功。做法極簡：在真正的 head 之前掛一個額外的 dummy 節點（`dummy.next = head`），所有操作從 dummy 出發，最後回傳 `dummy.next`。它解決的是單向鏈結串列一個結構性的不對稱：刪除或插入節點靠的都是「改寫前驅節點的 next」，但 head 沒有前驅——要刪掉 head，只能直接改動外部持有的 head 參照，於是「操作對象是不是 head」就得另寫一條分支。dummy 補上了這個缺口：有了它，每一個真實節點都擁有前驅，「頭部」不再是特例，同一段迴圈邏輯就能覆蓋整條串列。
 
 ## Thinking
 
-在處理 Linked List 的演算法問題時，我們通常需要維護一個指標來走訪節點。若我們直接使用原有的 head 指標進行節點的刪除或插入，當修改發生在第一個節點時，會導致 head 本身的指向改變，從而必須在程式碼中寫入額外的情境判斷（例如 if (head === target)）。為了根除這類複雜的邊界條件，思考的切入點應該是：在演算法執行之初，先建立一個虛擬的 dummy 節點，並將 dummy.next 指向原本的 head。在所有的指標操作過程中，我們從 dummy 開始走訪，所有的刪除與插入操作都在目前指標的 next 進行。最後，函式僅需穩定地回傳 dummy.next 即可取得修改後的正確串列頭部。
+先想清楚 dummy 為什麼正確，而不只是好用。刪除節點的通用規則是：站在前驅 cur 上檢查 cur.next，要刪就寫 `cur.next = cur.next.next`，不刪就前進 `cur = cur.next`。這條規則成立的前提是「被檢查的節點有前驅」。加入 dummy 後，這個前提對包含 head 在內的所有真實節點都成立，於是迴圈不變式「cur 之前的節點都已處理完畢，且 cur 永遠是下一個待檢節點的前驅」能一路維持到結尾——這就是 dummy 消除邊界分支的論證，而非只是經驗法則。實作固定三步：建立 dummy 並指向 head；另用走訪指標 cur 從 dummy 出發執行所有操作，dummy 本身不動；結束時回傳 dummy.next。dummy 還有第二種用法：組裝新串列時當作錨點——新串列的第一個節點是誰事先未知，先一律接在 dummy 後面、用 tail 指標一路延伸，最後同樣回傳 dummy.next，開頭自然就是第一個被接上的節點。
 
 ## Pattern Recognition
 
-當你在閱讀 Linked List 題目時，若發現操作情境符合以下特徵，便高度契合 Dummy Head Pattern：第一，題目的操作可能會導致原本的 head 節點被刪除或取代（例如刪除串列中所有等於特定值的節點）；第二，需要在串列的最前端進行動態插入新節點；第三，在進行複雜的節點重組、合併或兩數相加時，回傳的新串列開頭位置在演算法執行初期無法事先確定。只要會頻繁更動串列的起點結構，或希望統一「頭部節點」與「一般節點」的處理邏輯，就應該立即聯想到使用 Sentinel Node。
+三種訊號提示你使用 dummy：一、操作可能刪除或取代 head，例如刪除所有等於目標值的節點、而目標值恰好出現在開頭；二、可能在串列最前端插入新節點；三、要組裝一條事先不知道開頭是誰的新串列（合併、逐位相加、重排）。反過來說，若題目保證起點結構不變（純走訪、只改節點的值），dummy 沒有壞處但也非必要——判斷依據永遠是「串列的起點結構會不會變動」。
 
 ## Common Mistakes
 
-開發者在初次使用 Dummy Head Pattern 時最常見的錯誤，就是在函式結尾處回傳了 dummy 節點本身（return dummy），而不是回傳真正串列的開頭 dummy.next。這會導致呼叫端拿到的是我們額外附加的虛擬節點，而非實際的 Linked List 內容，進而引發後續的指標錯誤或測試失敗。另一個常見的錯誤是在走訪過程中，不小心把 dummy 指標本身的指向覆蓋掉，導致最後無法找回正確的起點；正確的做法應當是使用一個額外的走訪指標（例如 let current = dummy），而讓 dummy 保持不動以作為最終回傳的錨點。
+第一個經典錯誤：結尾回傳了 dummy 本身而不是 dummy.next，呼叫端會多拿到一個無意義的哨兵節點。第二：直接拿 dummy 當走訪指標移動，走完後失去回傳錨點；正確做法是另立 cur 走訪，dummy 從頭到尾不動。第三：刪除後立刻前進。刪除與前進必須是互斥分支——刪掉 cur.next 之後，新的 cur.next 可能同樣需要刪除（連續目標值），此時前進會漏刪。第四：型別與初始化寫錯。TypeScript 若把 next 宣告成 `ListNode` 而漏掉 `| null`，尾端的「沒有下一個節點」就無法表達，`new ListNode(0, head)` 在 head 可能為 null 時直接編譯不過；Python 則常見建了 `ListNode(0)` 卻忘了設 `dummy.next = head`，最後回傳的 dummy.next 恆為 None，整條串列憑空消失。dummy 的值不參與運算，設什麼都可以。
 
 ## Complexity
 
-O(n) / O(1)
+O(n) / O(1)。走訪整條串列一次，時間 O(n)；dummy 只額外配置一個節點與常數個指標變數，空間 O(1)，不隨串列長度成長。
 
 ## Digest
 
-Linked List Dummy Head Pattern 透過引入一個哨兵節點，完美解決了頭部節點變動所帶來的邊界問題。掌握此模式能大幅減少程式碼中的特殊狀況判斷。
+Dummy Head Pattern 在真正的 head 前掛一個哨兵節點，讓每個真實節點都擁有前驅，「刪改會動到 head」的特殊情境從此與一般節點共用同一段迴圈邏輯。實作三步：建立 dummy 指向 head、另用 cur 從 dummy 出發完成所有操作、最後回傳 dummy.next。它同時是組裝新串列的錨點：開頭未知時先接在 dummy 後面延伸，結束一樣回傳 dummy.next。成本僅一個節點的常數空間。
 
 ## TypeScript Tip
 
 ```typescript
-// TypeScript 中初始化 Dummy Head 的標準寫法
 class ListNode {
     constructor(public val: number = 0, public next: ListNode | null = null) {}
 }
 
-function createList(arr: number[]): ListNode | null {
-    const dummy = new ListNode(0);
-    let current = dummy;
-    for (const num of arr) {
-        current.next = new ListNode(num);
-        current = current.next;
+function removeVal(head: ListNode | null, target: number): ListNode | null {
+    const dummy = new ListNode(0, head);
+    let cur = dummy;
+    while (cur.next !== null) {
+        if (cur.next.val === target) cur.next = cur.next.next; // 刪除後不前進
+        else cur = cur.next;
     }
     return dummy.next;
 }
 
-const testList = createList([1, 2]);
-if (testList?.val !== 1) throw new Error("assertion failed");
+const list = new ListNode(7, new ListNode(7, new ListNode(1, new ListNode(7))));
+const res = removeVal(list, 7);
+if (res?.val !== 1 || res.next !== null) throw new Error("連續或尾端的目標值未刪乾淨");
 ```
+
+建構式直接收 next，`new ListNode(0, head)` 一行完成初始化。測資含連續與尾端目標值：「刪除後照樣前進」的寫法會在此失敗。
 
 ## Python Tip
 
 ```python
-# Python 中初始化 Dummy Head 的標準 idiom
 class ListNode:
     def __init__(self, val=0, next=None):
         self.val = val
         self.next = next
 
-def create_list(nums: list[int]) -> ListNode | None:
-    dummy = ListNode(0)
-    current = dummy
-    for num in nums:
-        current.next = ListNode(num)
-        current = current.next
-    return dummy.next
-
-test_res = create_list([1, 2])
-assert test_res.val == 1, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-    val: number;
-    next: ListNode | null;
-    constructor(val?: number, next?: ListNode | null) {
-        this.val = (val===undefined ? 0 : val);
-        this.next = (next===undefined ? null : next);
-    }
-}
-
-function removeElements(head: ListNode | null, val: number): ListNode | null {
-    const dummy = new ListNode(0, head);
-    let current: ListNode | null = dummy;
-    while (current !== null && current.next !== null) {
-        if (current.next.val === val) {
-            current.next = current.next.next;
-        } else {
-            current = current.next;
-        }
-    }
-    return dummy.next;
-}
-
-const list = new ListNode(1, new ListNode(2, new ListNode(6, new ListNode(3))));
-const result = removeElements(list, 6);
-if (result?.next?.next?.val !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
-def removeElements(head: ListNode | None, val: int) -> ListNode | None:
+def remove_val(head, target):
     dummy = ListNode(0, head)
-    current = dummy
-    while current and current.next:
-        if current.next.val == val:
-            current.next = current.next.next
+    cur = dummy
+    while cur.next:
+        if cur.next.val == target:
+            cur.next = cur.next.next  # 刪除後停在原地
         else:
-            current = current.next
+            cur = cur.next
     return dummy.next
 
-node = ListNode(1, ListNode(2, ListNode(6, ListNode(3))))
-res = removeElements(node, 6)
-assert res.next.next.val == 3, "assertion failed"
+res = remove_val(ListNode(7, ListNode(7, ListNode(1, ListNode(7)))), 7)
+assert res.val == 1 and res.next is None
 ```
+
+`ListNode(0, head)` 是標準 idiom；測資含連續與尾端目標值，刪除後照樣前進的寫法過不了這個 assert。
 
 ## Takeaway
 
-善用 Dummy Head 消除頭部邊界條件，牢記回傳 dummy.next。
+dummy 讓每個真實節點都有前驅，頭部不再是特例；操作從 dummy 出發，最後回傳 dummy.next。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 技巧在 Linked List 中的進階應用，學習如何有效率地尋找環狀結構與中點位置。
+明天進入 Slow and Fast Pointers：讓兩個指標以不同速度或固定間距走訪，在單趟之內找到串列的中點，或定位倒數第 k 個節點。
 
 ## Today's Challenge
 
-- **203** · 目標數值可能剛好出現在串列的最前端，使用 dummy head 可以直接刪除頭部節點而無需額外分流處理。
-  - Hint: 建立 dummy 節點指向 head，利用 current.next 進行值比對與刪除。
-- **83** · 在移除排序串列中的重複元素時，若遇到重複值需要將指標跨越，dummy 模式能保持一致的走訪邏輯。
-  - Hint: 當 current.next 與 current.next.next 的值相同時，調整指標跳過重複節點。
-- **2** · 兩數相加產生的新串列起點在初期無法預知，使用 dummy 節點能輕鬆串接新產生的進位節點並在最後回傳結果。
-  - Hint: 宣告 dummy 節點作為新串列的錨點，用 tail 指標向後延伸並處理 carry。
+- **203** · 昨天你已用「前驅走訪＋head 特判」解過這題；今天用 dummy 重解一次，體會特判整段消失、head 與中間節點統一由前驅處理的差別。
+  - Hint: cur 從 dummy 出發，head 命中與否都走同一條 cur.next 刪除路徑；刪除後仍不前進，連續命中才刪得乾淨。
+- **83** · 排序串列去重保留每組第一個節點，head 一定留下，其實不加 dummy 也能解；適合對照體會 dummy 真正必要的時機。
+  - Hint: 站在 cur 比對 cur.next 的值是否與 cur 相同，相同就跨越，不同才前進。
+- **2** · 相加產生的新串列開頭事先未知，dummy 作為組裝錨點，用 tail 一路接上每一位的和，最後回傳 dummy.next。
+  - Hint: 用 while (l1 || l2 || carry) 單一迴圈涵蓋補位與最後的進位，就不需要事後補節點。

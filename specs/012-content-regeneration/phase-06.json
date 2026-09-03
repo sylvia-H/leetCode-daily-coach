@@ -1,0 +1,62 @@
+{
+  "phase": 6,
+  "window": "sessionIndex 70-83",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "binary-search-exclusive-bounds",
+      "skeleton": "concepts/binary-search/004-binary-search-exclusive-bounds.md",
+      "article": "articles/binary-search/004-binary-search-exclusive-bounds.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "binary-search-find-minimum-rotated",
+      "skeleton": "concepts/binary-search/009-binary-search-find-minimum-rotated.md",
+      "article": "articles/binary-search/009-binary-search-find-minimum-rotated.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "binary-search-inclusive-bounds",
+      "skeleton": "concepts/binary-search/002-binary-search-inclusive-bounds.md",
+      "article": "articles/binary-search/002-binary-search-inclusive-bounds.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "binary-search-lower-bound",
+      "skeleton": "concepts/binary-search/005-binary-search-lower-bound.md",
+      "article": "articles/binary-search/005-binary-search-lower-bound.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "binary-search-matrix-search",
+      "skeleton": "concepts/binary-search/010-binary-search-matrix-search.md",
+      "article": "articles/binary-search/010-binary-search-matrix-search.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "binary-search-overflow-prevention",
+      "skeleton": "concepts/binary-search/003-binary-search-overflow-prevention.md",
+      "article": "articles/binary-search/003-binary-search-overflow-prevention.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "binary-search-rotated-array",
+      "skeleton": "concepts/binary-search/007-binary-search-rotated-array.md",
+      "article": "articles/binary-search/007-binary-search-rotated-array.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "binary-search-rotated-duplicates",
+      "skeleton": "concepts/binary-search/008-binary-search-rotated-duplicates.md",
+      "article": "articles/binary-search/008-binary-search-rotated-duplicates.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "binary-search-upper-bound",
+      "skeleton": "concepts/binary-search/006-binary-search-upper-bound.md",
+      "article": "articles/binary-search/006-binary-search-upper-bound.md",
+      "quizCount": 8
+    }
+  ]
+}

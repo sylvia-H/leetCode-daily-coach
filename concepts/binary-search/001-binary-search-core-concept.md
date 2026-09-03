@@ -12,12 +12,10 @@ prerequisite:
 next:
   - binary-search-inclusive-bounds
 learning_goal:
-  - >-
-    Understand the divide-and-conquer principle of halving the search space in a
-    sorted array.
+  - '理解在已排序陣列中把搜尋範圍砍半的分治（divide-and-conquer）原理。'
 exit_criteria:
-  - Can explain why time complexity is logarithmic.
-  - Can identify sorted array precondition.
+  - '能說明為何時間複雜度是對數級 O(log n)。'
+  - '能辨識「陣列必須已排序」這項前提。'
 leetcode:
   - 704
   - 34

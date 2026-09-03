@@ -13,12 +13,10 @@ prerequisite:
 next:
   - backtracking-combination-sum-ii
 learning_goal:
-  - >-
-    Understand how to handle problems where elements can be reused unlimited
-    times to reach a target sum.
+  - '理解如何處理元素可以無限次重複使用以湊出目標總和的問題。'
 exit_criteria:
-  - Can manage target deduction during recursion.
-  - Can pass the current index back into the recursive call to allow reuse.
+  - '能在遞迴過程中管理目標值的扣減。'
+  - '能把當前索引原樣傳回遞迴呼叫，以允許元素重複使用。'
 leetcode:
   - 39
 tags:

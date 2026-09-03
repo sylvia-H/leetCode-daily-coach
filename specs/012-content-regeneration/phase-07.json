@@ -1,0 +1,62 @@
+{
+  "phase": 7,
+  "window": "sessionIndex 84-97",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "sliding-window-concept-intro",
+      "skeleton": "concepts/sliding-window/001-sliding-window-concept-intro.md",
+      "article": "articles/sliding-window/001-sliding-window-concept-intro.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "sliding-window-find-all-anagrams",
+      "skeleton": "concepts/sliding-window/009-sliding-window-find-all-anagrams.md",
+      "article": "articles/sliding-window/009-sliding-window-find-all-anagrams.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "sliding-window-fixed-size",
+      "skeleton": "concepts/sliding-window/002-sliding-window-fixed-size.md",
+      "article": "articles/sliding-window/002-sliding-window-fixed-size.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "sliding-window-fruit-into-baskets",
+      "skeleton": "concepts/sliding-window/007-sliding-window-fruit-into-baskets.md",
+      "article": "articles/sliding-window/007-sliding-window-fruit-into-baskets.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "sliding-window-longest-substring-no-repeat",
+      "skeleton": "concepts/sliding-window/005-sliding-window-longest-substring-no-repeat.md",
+      "article": "articles/sliding-window/005-sliding-window-longest-substring-no-repeat.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "sliding-window-max-consecutive-ones",
+      "skeleton": "concepts/sliding-window/006-sliding-window-max-consecutive-ones.md",
+      "article": "articles/sliding-window/006-sliding-window-max-consecutive-ones.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "sliding-window-permutation-in-string",
+      "skeleton": "concepts/sliding-window/008-sliding-window-permutation-in-string.md",
+      "article": "articles/sliding-window/008-sliding-window-permutation-in-string.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "sliding-window-variable-size-contraction",
+      "skeleton": "concepts/sliding-window/004-sliding-window-variable-size-contraction.md",
+      "article": "articles/sliding-window/004-sliding-window-variable-size-contraction.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "sliding-window-variable-size-expansion",
+      "skeleton": "concepts/sliding-window/003-sliding-window-variable-size-expansion.md",
+      "article": "articles/sliding-window/003-sliding-window-variable-size-expansion.md",
+      "quizCount": 5
+    }
+  ]
+}

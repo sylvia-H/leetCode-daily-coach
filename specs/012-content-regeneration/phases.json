@@ -1,0 +1,171 @@
+{
+  "origin": {
+    "currentSessionIndex": 28,
+    "asOf": "2026-08-29"
+  },
+  "totalConcepts": 165,
+  "phases": [
+    {
+      "phase": 1,
+      "file": "phase-01.json",
+      "window": "21-34",
+      "concepts": 14,
+      "quiz": 105,
+      "cumulative": 14,
+      "status": "done"
+    },
+    {
+      "phase": 2,
+      "file": "phase-02.json",
+      "window": "14-41",
+      "concepts": 8,
+      "quiz": 55,
+      "cumulative": 22,
+      "status": "done"
+    },
+    {
+      "phase": 3,
+      "file": "phase-03.json",
+      "window": "7-48",
+      "concepts": 9,
+      "quiz": 72,
+      "cumulative": 31,
+      "status": "done"
+    },
+    {
+      "phase": 4,
+      "file": "phase-04.json",
+      "window": "0-55",
+      "concepts": 10,
+      "quiz": 76,
+      "cumulative": 41,
+      "status": "done"
+    },
+    {
+      "phase": 5,
+      "file": "phase-05.json",
+      "window": "56-69",
+      "concepts": 10,
+      "quiz": 82,
+      "cumulative": 51,
+      "status": "done"
+    },
+    {
+      "phase": 6,
+      "file": "phase-06.json",
+      "window": "70-83",
+      "concepts": 9,
+      "quiz": 61,
+      "cumulative": 60,
+      "status": "done"
+    },
+    {
+      "phase": 7,
+      "file": "phase-07.json",
+      "window": "84-97",
+      "concepts": 9,
+      "quiz": 64,
+      "cumulative": 69,
+      "status": "done"
+    },
+    {
+      "phase": 8,
+      "file": "phase-08.json",
+      "window": "98-111",
+      "concepts": 10,
+      "quiz": 75,
+      "cumulative": 79,
+      "status": "done"
+    },
+    {
+      "phase": 9,
+      "file": "phase-09.json",
+      "window": "112-125",
+      "concepts": 9,
+      "quiz": 64,
+      "cumulative": 88,
+      "status": "done"
+    },
+    {
+      "phase": 10,
+      "file": "phase-10.json",
+      "window": "126-139",
+      "concepts": 9,
+      "quiz": 64,
+      "cumulative": 97,
+      "status": "done"
+    },
+    {
+      "phase": 11,
+      "file": "phase-11.json",
+      "window": "140-153",
+      "concepts": 10,
+      "quiz": 69,
+      "cumulative": 107,
+      "status": "done"
+    },
+    {
+      "phase": 12,
+      "file": "phase-12.json",
+      "window": "154-167",
+      "concepts": 9,
+      "quiz": 57,
+      "cumulative": 116,
+      "status": "done"
+    },
+    {
+      "phase": 13,
+      "file": "phase-13.json",
+      "window": "168-181",
+      "concepts": 9,
+      "quiz": 66,
+      "cumulative": 125,
+      "status": "done"
+    },
+    {
+      "phase": 14,
+      "file": "phase-14.json",
+      "window": "182-195",
+      "concepts": 10,
+      "quiz": 69,
+      "cumulative": 135,
+      "status": "done"
+    },
+    {
+      "phase": 15,
+      "file": "phase-15.json",
+      "window": "196-209",
+      "concepts": 9,
+      "quiz": 70,
+      "cumulative": 144,
+      "status": "done"
+    },
+    {
+      "phase": 16,
+      "file": "phase-16.json",
+      "window": "210-223",
+      "concepts": 9,
+      "quiz": 71,
+      "cumulative": 153,
+      "status": "done"
+    },
+    {
+      "phase": 17,
+      "file": "phase-17.json",
+      "window": "224-237",
+      "concepts": 10,
+      "quiz": 79,
+      "cumulative": 163,
+      "status": "done"
+    },
+    {
+      "phase": 18,
+      "file": "phase-18.json",
+      "window": "238-251",
+      "concepts": 2,
+      "quiz": 17,
+      "cumulative": 165,
+      "status": "done"
+    }
+  ]
+}

@@ -11,102 +11,77 @@ exit_criteria:
 ---
 ## Concept
 
-Interval Overlap Detection 與 Interval Merging 是一種常見的資料處理與排序應用。當面對多個連續或重疊的時間區間、會議室預約或數字範圍時，暴力比對的時間複雜度高達 O(n^2)。透過「先排序起點、再線性掃描」的策略，我們能將複雜度降低至 O(n log n)。核心精神在於將所有區間按照起點（Start Time）由小到大排序，接著依序走訪每一個區間。在走訪過程中，維護一個當前正在合併的區間（Current Interval），只要下一個區間的起點小於或等於當前區間的終點（End Time），就代表兩個區間發生重疊，此時透過更新當前區間的終點來完成合併；若沒有重疊，則將當前區間推入結果集並切換至下一個區間。這種模式廣泛應用於行事曆管理、資源配置以及計算覆蓋範圍的題目中。
+這類問題給你一組區間（會議時段、預約範圍、數線線段），要求合併重疊或偵測衝突。暴力做法是兩兩比對，O(n^2)。這一課延續昨天的策略骨架——**先排序，再單趟掃描**——但排序服務的目的變了：昨天排序是為了讓兩端極值可以貪婪配對，今天依起點由小到大排序，是為了讓**可能重疊的區間必然相鄰**。排序後維護一個「目前合併段」，每個新區間只需要跟它比一次：起點還搆得到目前段的終點就併入，搆不到就把目前段封存、另起新段。一趟走完，所有重疊關係都被收乾淨。
 
 ## Thinking
 
-在著手處理區間重疊或合併問題時，第一步通常不是盲目地進行雙迴圈比對，而是思考「排序」帶來的優勢。如果區間是雜亂無章的，我們很難在 O(n) 的時間內判斷某個區間是否與前面的所有區間重疊。因此，第一步絕對是根據每個區間的起點進行升冪排序。排序完成後，區間的相對關係變得清晰：我們只需要關心相鄰的兩個區間。在實作上，我們可以建立一個堆疊或結果陣列（Result Array）。初始化時，將排序後的第一個區間放入結果集。接著迭代剩餘的區間，每次取出結果集的最後一個區間（Tail）與當前遍歷到的區間進行比較。如果 Tail 的終點大於或等於當前區間的起點，代表發生重疊，此時更新 Tail 的終點為兩者終點的最大值；否則，代表沒有重疊，直接將當前區間加入結果集。這種思維確保了我們只需要單向掃描一次陣列，時間效率極高。
+先依 `interval[0]` 升冪排序，把第一個區間設為目前合併段 cur，逐一走訪其餘區間 next：若 `next[0] <= cur[1]`，兩段重疊，更新 `cur[1] = max(cur[1], next[1])`；否則把 cur 推入結果、讓 next 成為新的 cur。有兩個點必須想通。第一，**終點為何取 max 而不是直接覆寫**：next 可能整段被 cur 包住（如 cur = [1, 10]、next = [2, 3]），覆寫會把終點從 10 縮成 3，後面本該併入的區間就被錯判成分離。第二，**封存為何安全**——這是單趟掃描正確性的核心：起點已排序，當 `next[0] > cur[1]` 時，排在 next 後面的每個區間起點都不小於 next 的起點，同樣搆不到 cur 的終點；換句話說，一旦有一個區間跟目前段斷開，之後的所有區間都跟它斷開，cur 可以放心封存，永遠不必回頭。另外注意重疊判斷用 <= 而不是 <：起點恰等於終點的兩段（[1, 4] 與 [4, 5]）首尾相接，合併語意上算重疊，要併成 [1, 5]。
 
 ## Pattern Recognition
 
-當題目具備以下特徵時，即可強烈懷疑適用 Two Pointers 與 Linear Scan 搭配排序的 Pattern：第一，輸入資料為一組或多組區間（Intervals），每個區間包含起點與終點（例如 [start, end]）。第二，題目要求合併重疊區間、計算總覆蓋長度、尋找空閒時間，或是判斷是否存在任何衝突。第三，區間在原始輸入中通常未經過排序。識別出這些特徵後，第一步即為確立排序機制。常見的變體包含：要求返回合併後的區間、要求插入新區間並合併、或是找出區間交集。掌握「排序起點 + 維護末端指標」這個核心架構，即可輕鬆應對絕大多數的區間類題目。
+輸入是一組 [start, end]、題目談重疊／合併／衝突／覆蓋／空檔，而且輸出不要求保持原始順序——這三個訊號指向「依起點排序＋線性掃描」。同一副骨架能接住整族變體：插入新區間後合併、求區間交集、判斷會議是否衝突、算總覆蓋長度，差別只在掃描時維護的狀態。它與相向雙指標是不同的走法：這裡沒有左右夾擠，而是「讀取位置」一路向右、「結果尾端」原地更新——同向的讀寫兩指標。若題目要求答案對應原始輸入順序、或不允許排序，這套就得繞路（例如先記下原索引再排）。
 
 ## Common Mistakes
 
-開發者在實作區間合併時最常犯的錯誤，是忽略了「排序」這個前置步驟，直接進行線性掃描，導致漏掉非連續但實際上重疊的區間。第二個常見錯誤在於更新終點時寫錯邏輯，僅僅將終點設為下一個區間的終點，而沒有考慮當前區間可能完全包覆下一個區間的情況，正確的做法應該是取兩者終點的最大值（Math.max）。第三個錯誤發生在型別處理上，當區間邊界值可能為負數或極大值時，排序的比較函式若寫得不夠嚴謹，會導致 JavaScript 預設的字串排序行為，引發非預期的數字排序錯誤。最後，切記在處理邊界條件時，必須妥善處理空陣列的例外狀況，避免存取未定義的陣列元素。
+第一，更新終點用覆寫而不是取 max，包含關係一來就錯（前面 [1, 10] 吞 [2, 3] 的例子）。第二，沒排序就前後比對：重疊的區間可能分散在陣列各處，只比相鄰元素會大量漏判。第三，排序比較函式寫錯：對 number[][] 排序必須寫 `(a, b) => a[0] - b[0]`，漏傳比較函式時 JavaScript 會把子陣列轉成字串按字典序排——Three Sum 課看過的陷阱在二維陣列上照樣咬人。第四，邊界的等號：重疊判斷寫成 `next[0] < cur[1]` 會把首尾相接的區間錯判為分離；空輸入也要先擋，避免取用不存在的第一個區間。
 
 ## Complexity
 
-Time Complexity: O(n log n)，主要來自於對所有區間進行排序的時間開銷，後續的線性掃描僅需 O(n) 時間。Space Complexity: O(n) 或 O(log n)，取決於排序演算法所需的額外空間以及存放結果集所需的記憶體空間。
+時間複雜度 O(n log n)：排序 O(n log n) 主導，後續掃描僅 O(n)。空間複雜度 O(n)：結果串列在最壞情況（所有區間互不重疊）要存下全部 n 段；排序依語言實作另需 O(log n) 到 O(n) 的輔助空間。
 
 ## Digest
 
-本篇介紹了 Interval Overlap Detection 的核心概念與實作模式。透過「先排序、後掃描」的策略，我們能將 O(n^2) 的暴力檢查優化至 O(n log n)。文章詳細拆解了 Thinking 過程、Common Mistakes 以及 TypeScript 與 Python 的實作細節，幫助讀者建立扎實的區間處理能力。
+區間合併的公式：依起點排序 → 第一段當目前合併段 cur → 逐一比對：`next[0] <= cur[1]` 就併入並取 `cur[1] = max(cur[1], next[1])`，否則封存 cur、以 next 另起新段。以 [[2, 6], [8, 10], [1, 3], [15, 18]] 為例：排序成 [[1, 3], [2, 6], [8, 10], [15, 18]]；2 <= 3 併成 [1, 6]；8 > 6 封存、另起 [8, 10]；15 > 10 再封存——結果 [[1, 6], [8, 10], [15, 18]]。封存安全的理由：起點單調不減，一個區間搆不到 cur 的終點，後面的更搆不到。終點更新記得取 max（防包含）、重疊判斷記得用 <=（首尾相接算重疊）。
 
 ## TypeScript Tip
 
+排序在複本上做，res 的尾端元素（`res[res.length - 1]`）就是目前合併段，push 即封存。兩個斷言分別在「max 被改成覆寫」與「<= 被改成 <」時失敗，鎖住包含關係與首尾相接兩個易錯點。
+
 ```typescript
-// TypeScript 實作小技巧：利用陣列解構與型別宣告確保區間資料結構清晰
-type Interval = [number, number];
-function getEnd(interval: Interval): number {
-  return interval[1];
+import assert from "node:assert";
+
+function merge(intervals: number[][]): number[][] {
+  const sorted = [...intervals].sort((a, b) => a[0]! - b[0]!);
+  const res: number[][] = [];
+  for (const cur of sorted) {
+    const last = res[res.length - 1];
+    if (last && cur[0]! <= last[1]!) last[1] = Math.max(last[1]!, cur[1]!);
+    else res.push([...cur]);
+  }
+  return res;
 }
-const testVal: Interval = [1, 5];
-if (getEnd(testVal) !== 5) throw new Error("assertion failed");
+
+assert.deepStrictEqual(merge([[2, 3], [1, 10], [4, 5]]), [[1, 10]]);
+assert.deepStrictEqual(merge([[1, 4], [4, 5], [6, 7]]), [[1, 5], [6, 7]]);
 ```
 
 ## Python Tip
 
-```python
-# Python 實作小技巧：利用 lambda 運算子精準指定多維度排序的鍵值
-intervals = [[2, 3], [1, 4]]
-intervals.sort(key=lambda x: (x[0], x[1]))
-assert intervals[0] == [1, 4], "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function merge(intervals: number[][]): number[][] {
-  if (intervals.length === 0) return [];
-  intervals.sort((a, b) => a[0] - b[0]);
-  const merged: number[][] = [intervals[0]];
-  for (let i = 1; i < intervals.length; i++) {
-    const currentInterval = intervals[i];
-    const lastMerged = merged[merged.length - 1];
-    if (currentInterval[0] <= lastMerged[1]) {
-      lastMerged[1] = Math.max(lastMerged[1], currentInterval[1]);
-    } else {
-      merged.push(currentInterval);
-    }
-  }
-  return merged;
-}
-const output = merge([[1, 3], [2, 6], [8, 10], [15, 18]]);
-if (output.length !== 3) throw new Error("assertion failed");
-if (output[0][0] !== 1 || output[0][1] !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
+Python 用 `res[-1]` 直接讀寫串列末端，就是「目前合併段」；`sorted(key=lambda x: x[0])` 依起點排序且不改動輸入。斷言與 TypeScript 版鎖住同樣兩個易錯點。
 
 ```python
 def merge(intervals: list[list[int]]) -> list[list[int]]:
-    if not intervals:
-        return []
-    intervals.sort(key=lambda x: x[0])
-    merged = [intervals[0]]
-    for current in intervals[1:]:
-        last_merged = merged[-1]
-        if current[0] <= last_merged[1]:
-            last_merged[1] = max(last_merged[1], current[1])
+    res: list[list[int]] = []
+    for cur in sorted(intervals, key=lambda x: x[0]):
+        if res and cur[0] <= res[-1][1]:
+            res[-1][1] = max(res[-1][1], cur[1])
         else:
-            merged.append(current)
-    return merged
+            res.append(cur[:])
+    return res
 
-output = merge([[1, 3], [2, 6], [8, 10], [15, 18]])
-assert len(output) == 3, "assertion failed"
-assert output[0] == [1, 6], "assertion failed"
+assert merge([[2, 3], [1, 10], [4, 5]]) == [[1, 10]]
+assert merge([[1, 4], [4, 5], [6, 7]]) == [[1, 5], [6, 7]]
 ```
 
 ## Takeaway
 
-區間重疊問題的關鍵在於排序起點與維護末端指標，善用此 Pattern 可將複雜度降至 O(n log n)。
+依起點排序讓重疊必相鄰；終點取 max、封存不回頭——一趟掃描收乾所有重疊。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 在字串與陣列滑動視窗（Sliding Window）中的進階應用，學習如何動態調整視窗大小以解決字串匹配與子陣列最佳化問題。
+明天把雙指標帶進含退格符號的字串：Backspace String Compare——從字串尾端倒著走，用計數器抵銷 # 的刪除效果，不建 Stack 就能以 O(1) 空間完成比對。
 
 ## Today's Challenge
 
-- **56** · 本題為區間合併的經典範例，完美對應先排序起點再進行線性掃描與條件合併的 Two Pointers Pattern。
-  - Hint: 先依據每個區間的起點進行升冪排序，並使用一個變數追蹤當前合併區間的終點最大值。
+- **56** · 排序讓重疊必相鄰、單趟掃描維護合併段——這題把本課的封存論證與 max 更新完整練一遍。
+  - Hint: 依起點排序後維護目前段終點；新區間起點 <= 終點就取 max 併入，否則輸出並另起新段。

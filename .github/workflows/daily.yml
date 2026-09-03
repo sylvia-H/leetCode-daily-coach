@@ -121,6 +121,11 @@ jobs:
     # 主動取消 workflow 後仍發生一次對外站台部署（research R6）。
     if: ${{ !cancelled() && inputs.dry_run != true }}
     continue-on-error: true
+    # 與 pages.yml（手動重新部署）共用同一個 group：GitHub Pages 同時執行兩個 deploy-pages
+    # 會有一個失敗。`cancel-in-progress: false` 讓後到者排隊，MUST NOT 砍掉進行中的部署。
+    concurrency:
+      group: github-pages-deploy
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       contents: read

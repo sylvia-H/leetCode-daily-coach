@@ -11,145 +11,81 @@ exit_criteria:
 ---
 ## Concept
 
-Four Sum Nested Reduction 是一種將高維度 k-sum 問題透過多層巢狀迴圈與相向雙指標進行降維的系統性方法。當我們面對需要在陣列中尋找四個數字其和等於特定目標值的問題時，直覺的暴力解法需要四層迴圈，時間複雜度高達 O(n^4)。透過先對陣列進行排序，並利用雙層迴圈固定前兩個數字，將剩餘的求解範圍縮減為雙指標夾擊的一維搜尋問題，我們能將整體時間複雜度有效降低至 O(n^3)。這種降維策略不僅適用於四數之和，更是推廣至任意 k-sum 問題的核心骨幹。在處理多重巢狀迴圈時，搭配適當的剪枝（Pruning）與去重（Deduplication）機制，可以避免大量重複的計算，大幅提升演算法在極端測資下的執行效能。
+4Sum 把 3Sum 的降維遞推再疊一層：排序後用兩層迴圈固定 `nums[i]` 與 `nums[j]`，剩下的問題又變回「在 j 右側的已排序區間找兩數之和等於 `target - nums[i] - nums[j]`」——同一副對向夾擠。完備性論證與上一課同構：任何一組解按索引遞增排好，最小的兩個數必在某一輪 (i, j) 被同時固定，屆時另外兩數就在 j 右側，夾擠不會漏。層數的意義在於遞推：k 個數的和，固定一個就降成 k - 1 個數的和，固定到只剩兩個，永遠收在同一個兩端夾擠上——這就是 k-sum 的通用骨幹，4Sum 是它第一個需要「多層」的實例。代價是每多固定一層就多乘一個 n：暴力四層是 O(n^4)，這裡是 O(n^3)。
 
 ## Thinking
 
-在處理 Four Sum 問題時，思考的起點在於如何有序地窮舉所有可能的組合而不遺漏、不重複。首先，必須將輸入的數字陣列進行原地排序，排序是所有雙指標與剪枝優化的基石。接著，使用外層迴圈固定第一個數字 nums[i]，並用第二層迴圈固定第二個數字 nums[j]。在固定了前兩個數字之後，問題便轉化為在剩餘的右側區間內尋找兩個數字，使其和等於 target - nums[i] - nums[j]，這正是經典的 Two Sum 變體。此時，我們可以在內部使用左指標 left 與右指標 right 進行相向夾擊。為了達到最佳效能，必須在每一層迴圈中實作嚴格的去重邏輯，跳過與前一個元素相同的數值以避免重複組合。同時，利用極值判斷進行剪枝，當目前最小的和已經大於目標值，或目前最大的和依然小於目標值時，可直接使用 break 或 continue 終止迴圈，省去不必要的運算。
+兩層固定＋夾擠照 3Sum 的寫法展開，真正新的功課有兩件。第一件是第二層的去重邊界。i 層照舊：i 大於 0 且 `nums[i] === nums[i - 1]` 就跳過；j 層卻必須寫成「j 大於 i + 1 才比較 `nums[j] === nums[j - 1]`」。因為 j 的第一個位置就是 i + 1，此時 nums[j] 與 nums[i] 同值是完全合法的組合——[2, 2, 2, 2] 找 8，唯一解就是四個 2；若無條件與前一個比，j 在起點就被跳掉，這類解整批消失。去重方向仍是「與前一個比、保留第一次出現」，理由上一課已論證。第二件是剪枝，每層各兩條、方向不同：在 i 層，若 `nums[i]` 加上緊鄰其後三個數（這一輪能湊出的最小和）已大於 target，更大的 i 只會更糟——break 整個外層；若 `nums[i]` 加上結尾三個最大數（這一輪的最大和）仍小於 target，這個 i 沒救、但更大的 i 還有機會——continue。j 層把「三個」換成「兩個」再寫一組。break 與 continue 不可互換：break 憑藉「往後單調變大」的全域結論，continue 只否定當前這一輪。
 
 ## Pattern Recognition
 
-當題目要求在一個未排序或已排序的數值陣列中尋找多個數字（例如四個數字）的組合，使其總和剛好等於一個給定的目標值，且要求回傳所有不重複的獨特組合時，即可強烈識別出此 Pattern。其核心特徵包含：第一，尋找的目標是數值的組合而非單一索引；第二，所需尋找的數字個數 k 大於 2（本例中 k=4）；第三，允許透過排序與雙指標來取代高維度的指數級窮舉。若題目同時強調時間複雜度需優於 O(n^4) 且空間複雜度要求達到 O(1) 或僅使用額外的排序空間，則此「雙層固定迴圈搭配內層相向雙指標」的 Multi-layer Fixed Pointers 模式即為最標準的解答架構。
+線索與 3Sum 一脈相承：同一個陣列取 k 個數、總和條件、要求輸出不重複的數值組合——排序、固定 k - 2 層、夾擠收尾。資料範圍也是訊號：n 只有兩百左右時，O(n^3) 完全負擔得起。反例同樣要認得：若四個數分別來自四個不同的陣列，或題目要求回傳原始索引，「同一陣列內的組合可任意重排」這個排序的前提就垮了——前者改用兩兩分組配雜湊表更合適，後者回到上一課說過的索引保存問題。
 
 ## Common Mistakes
 
-開發者在實現 Four Sum 演算法時最常見的錯誤，主要集中在多層迴圈的變數去重與邊界條件處理上。首先，容易漏掉對第二層迴圈變數 j 的去重檢查，導致當內層指針重置時產生重複的四元組答案。正確的做法是確保 j > i + 1 時才與前一個數字進行比較（nums[j] === nums[j - 1]）。其次，在處理數字相加時未考慮數值溢位（Overflow）的風險，雖然在多數現代程式語言中整數範圍足夠，但在處理極端大數時仍需特別注意型別安全。最後，剪枝條件的寫法若不夠嚴謹，可能會提早跳過合法的正確解，例如在總和可能小於或大於目標值時誤判了正負號的影響，特別是當陣列中包含負數時，遞增或遞減的單調性判斷必須格外小心。
+第一名就是 j 層去重寫成無條件比較前一個，直接漏掉「前兩個數同值」的解。第二是剪枝方向弄反：把「這一輪最大和仍不足」寫成 break，會把後面還有機會的輪次全砍掉——這是漏解，不是變慢。第三是內層命中後忘了「兩指標都動＋各自跨過重複值」；這段與 3Sum 一字不差，層數變多後反而最容易漏抄。第四是語言特性：JavaScript 的 number 是浮點數，整數只在 2^53 - 1 內精確；本題數值約在正負十億內，四數相加最多約 4 * 10^9，遠低於安全上限，可放心直接加——但同一副骨架搬到 32 位元整數的語言就會溢位，動手前先核對數值範圍。
 
 ## Complexity
 
-時間複雜度為 O(n^3)，其中 n 為陣列長度。主體包含雙層巢狀迴圈，外層執行 n 次，第二層平均執行 n 次，內層的雙指標夾擊在最壞情況下也需要走訪 n 次，因此總運算次數為 O(n^3)。空間複雜度為 O(1)，若不計入排序所需的堆疊空間；若考量排序演算法的空間消耗，則視語言實作而定，通常為 O(log n) 或 O(n)。
+排序 O(n log n)；i、j 兩層產生 O(n^2) 組固定組合，每組內層夾擠至多 O(n)，整體 O(n^3)，排序項被吸收。剪枝與去重能大幅削減實際走訪量，但都不改變最壞情況的量級。輔助空間 O(1)（輸出與排序堆疊照慣例不計）。推廣：k-sum 固定 k - 2 層，時間 O(n^(k-1))。
 
 ## Digest
 
-本單元深入探討 Four Sum Nested Reduction 模式。透過排序與雙層固定迴圈，將高維度的四數之和問題降維至雙指標操作。我們學習了在多層迴圈中如何正確實作去重邏輯，避免重複的組合被加入結果集，並透過嚴謹的邊界控制與指針移動策略確保演算法在 O(n^3) 時間複雜度內高效運行。這項技巧是解決所有 k-sum 類型問題的基礎架構。
+4Sum＝排序 → i、j 兩層固定 → 夾擠收尾，O(n^3)。三個必背細節：一、j 層去重要寫 `j > i + 1 && nums[j] === nums[j - 1]`——[2, 2, 2, 2] 找 8，無條件去重會把唯一解 [2, 2, 2, 2] 跳掉。二、剪枝每層兩條：這輪最小和已超過 target 就 break（往後只會更大）；這輪最大和仍不足就 continue（換更大的基準還有機會）。三、內層命中後兩指標都動並各自跨過重複值，與 3Sum 相同。完備性：每組解最小的兩個數必在某輪 (i, j) 被固定。k-sum 通用式：固定 k - 2 層、夾擠收尾、O(n^(k-1))。
 
 ## TypeScript Tip
 
+j 層去重邊界值得用斷言釘死。下面把「兩層固定＋各自去重」抽出來，驗證 `j > i + 1` 這個條件保住了同值的合法配對：
+
 ```typescript
-function optimizePruningDemo(nums: number[], target: number): number[][] {
-  nums.sort((a, b) => a - b);
+import assert from "node:assert";
+
+function fixedPairs(a: number[]): number[][] {
   const res: number[][] = [];
-  const n = nums.length;
-  for (let i = 0; i < n - 3; i++) {
-    if (nums[i] + nums[i+1] + nums[i+2] + nums[i+3] > target) break;
-    if (nums[i] + nums[n-3] + nums[n-2] + nums[n-1] < target) continue;
-    for (let j = i + 1; j < n - 2; j++) {
-      res.push([nums[i], nums[j], nums[j+1], nums[j+2]]);
-      break;
+  for (let i = 0; i < a.length - 1; i++) {
+    if (i > 0 && a[i] === a[i - 1]) continue;
+    for (let j = i + 1; j < a.length; j++) {
+      if (j > i + 1 && a[j] === a[j - 1]) continue;
+      res.push([a[i]!, a[j]!]);
     }
-    break;
   }
   return res;
 }
-const testRes = optimizePruningDemo([1, 2, 3, 4, 5], 10);
-if (!Array.isArray(testRes)) throw new Error("assertion failed");
+
+assert.deepStrictEqual(fixedPairs([2, 2, 2]), [[2, 2]]);
+assert.deepStrictEqual(fixedPairs([1, 1, 2]), [[1, 1], [1, 2]]);
 ```
+
+把條件改成無條件比較前一個，[2, 2, 2] 會回傳空陣列，第一條斷言立即失敗——這正是漏解的形狀。
 
 ## Python Tip
 
-```python
-def py_early_stopping_demo(nums: list[int], target: int) -> list[list[int]]:
-    nums.sort()
-    res = []
-    n = len(nums)
-    for i in range(n - 3):
-        if nums[i] * 4 > target:
-            break
-        res.append([nums[i], nums[i+1], nums[i+2], nums[i+3]])
-        break
-    return res
-
-assert isinstance(py_early_stopping_demo([1, 2, 3, 4, 5], 10), list), "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function fourSum(nums: number[], target: number): number[][] {
-  nums.sort((a, b) => a - b);
-  const result: number[][] = [];
-  const n = nums.length;
-  for (let i = 0; i < n - 3; i++) {
-    if (i > 0 && nums[i] === nums[i - 1]) continue;
-    for (let j = i + 1; j < n - 2; j++) {
-      if (j > i + 1 && nums[j] === nums[j - 1]) continue;
-      let left = j + 1;
-      let right = n - 1;
-      while (left < right) {
-        const sum = nums[i] + nums[j] + nums[left] + nums[right];
-        if (sum === target) {
-          result.push([nums[i], nums[j], nums[left], nums[right]]);
-          while (left < right && nums[left] === nums[left + 1]) left++;
-          while (left < right && nums[right] === nums[right - 1]) right--;
-          left++;
-          right--;
-        } else if (sum < target) {
-          left++;
-        } else {
-          right--;
-        }
-      }
-    }
-  }
-  return result;
-}
-const ans = fourSum([1, 0, -1, 0, -2, 2], 0);
-if (ans.length !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
+剪枝的兩條規則可以先脫離主程式獨立驗證：同輪最小和過大該 break、最大和不足該 continue，方向寫反就會漏解或白跑。這正是 early stopping 的精神——用排序保證的極值，提早否定整段搜尋。
 
 ```python
-def fourSum(nums: list[int], target: int) -> list[list[int]]:
-    nums.sort()
-    result = []
-    n = len(nums)
-    for i in range(n - 3):
-        if i > 0 and nums[i] == nums[i - 1]:
-            continue
-        for j in range(i + 1, n - 2):
-            if j > i + 1 and nums[j] == nums[j - 1]:
-                continue
-            left, right = j + 1, n - 1
-            while left < right:
-                current_sum = nums[i] + nums[j] + nums[left] + nums[right]
-                if current_sum == target:
-                    result.append([nums[i], nums[j], nums[left], nums[right]])
-                    while left < right and nums[left] == nums[left + 1]:
-                        left += 1
-                    while left < right and nums[right] == nums[right - 1]:
-                        right -= 1
-                    left += 1
-                    right -= 1
-                elif current_sum < target:
-                    left += 1
-                else:
-                    right -= 1
-    return result
+def prune(a: list[int], target: int, i: int) -> str:
+    n = len(a)
+    if a[i] + a[i + 1] + a[i + 2] + a[i + 3] > target:
+        return "break"
+    if a[i] + a[n - 3] + a[n - 2] + a[n - 1] < target:
+        return "continue"
+    return "search"
 
-ans = fourSum([1, 0, -1, 0, -2, 2], 0)
-assert len(ans) == 3, "assertion failed"
+a = [-2, -1, 0, 0, 1, 2]
+assert prune(a, -10, 0) == "break"
+assert prune(a, 10, 0) == "continue"
+assert prune(a, 0, 0) == "search"
 ```
 
 ## Takeaway
 
-Four Sum 透過雙層固定迴圈與內層相向雙指標，將 O(n^4) 暴力解降維至 O(n^3)，核心在於嚴格的排序、去重與剪枝優化。
+多固定一層就多一層責任：j 大於 i + 1 才去重；最小和過大用 break、最大和不足用 continue。
 
 ## Tomorrow Preview
 
-明天我們將探討 Sliding Window 與 Two Pointers 的進階結合應用，學習如何在可變長度的區間內進行高效的子字串與子陣列搜尋，並掌握動態狀態維護的技巧。
+明天暫別 k-sum 家族：Container With Most Water 用同一對指標從兩端夾擠「面積」，淘汰的依據從和的單調性換成短板效應。
 
 ## Today's Challenge
 
-- **18** · 題號 18 4Sum 正是此多層固定指標與相向雙指標降維技術的標準代表題型，需要透過雙層迴圈與雙指標來找出所有獨特的四元組。
-  - Hint: 記得先將陣列排序，並在兩層外迴圈中分別對 i 與 j 進行值相同的重複略過檢查。
+- **18** · 雙層固定＋夾擠的原型題：第二層去重邊界、兩級剪枝、內層跨重複值，每個環節都得寫對才過得了全部測資。
+  - Hint: 排序後 i、j 各自去重（j 層要 j > i + 1 才比較）；命中後兩指標都動並跨過重複值。

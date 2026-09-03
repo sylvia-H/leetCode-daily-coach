@@ -11,108 +11,97 @@ exit_criteria:
 ---
 ## Concept
 
-Unbounded Knapsack Pattern 是動態規劃中處理物品可以被無限次選取的一類經典問題。與 0/1 背包問題最大的不同在於，當我們決策要放入某個物品時，該物品在後續的狀態中仍然可以被選擇，這使得狀態轉移方程在容量的更新方向上有所轉變。掌握此 Pattern 的關鍵在於理解一維陣列優化時為何必須採用正向迴圈，因為這允許較小的容量狀態在同一次疊代中被更新後，直接影響並回饋給較大的容量狀態。
+完全背包（Unbounded Knapsack）只改昨天 0/1 背包的一個條件：每件物品**可以拿任意多次**。題目通常長成「硬幣面額無限供應，湊出 amount 的最少枚數」或「有幾種湊法」。這一個條件會連動改掉三處：二維轉移的第二項讀哪一列、一維迴圈的方向、以及計數題的迴圈巢狀順序。狀態定義、cut-and-paste 論證、滾動壓縮的依賴分析都沿用昨天，本課只講這三處差在哪。
+
+狀態沿用 `g[i][w]`：只用前 i 種硬幣、恰好湊出 w 的最少枚數（湊不出記無限大；計數版則記湊法數）。轉移：
+
+`g[i][w] = min(g[i-1][w], g[i][w - c[i]] + 1)`（第二項只在 `w >= c[i]` 時存在）
+
+第一項「一枚第 i 種都不再拿」、第二項「再拿一枚第 i 種」——注意第二項讀的是**本列** `g[i]`，不是昨天的 `g[i-1]`。拿掉一枚之後剩下的 `w - c[i]` 仍然可以繼續用第 i 種，這就是「無限次」在轉移裡的長相。基底 `g[0][0] = 0`、其餘 `g[0][w]` 為無限大（一種硬幣都沒有，只有 0 湊得出）。
 
 ## Thinking
 
-在思考 Unbounded Knapsack 類型的題目時，我們首先需要確立問題的狀態定義。通常我們定義 dp[w] 為湊成容量或金額 w 時的最佳解，例如最少需要的物品數量或總組合數。接著進行狀態轉移：對於每一個物品，我們考慮是否將其納入背包。若考慮求最少硬幣數，轉移方程為 dp[w] = min(dp[w], dp[w - coin] + 1)；若考慮求組合總數，則是累加狀態 dp[w] += dp[w - coin]。透過這種方式，我們將大問題拆解為依賴較小容量的最佳子問題。
+**第二項讀本列，為什麼算得出來、又為什麼對。** 前提：面額都是正整數（整數才能拿金額當陣列索引；為正即 `c[i] >= 1`），所以 `w - c[i] < w`——同一列裡它是嚴格更小的子問題，依容量遞增填表時它已經算好，不會自己引用自己。若允許 `c[i] = 0`，第二項會讀到 `g[i][w]` 本身，遞迴沒有底；題目「面額為正」的限制正是排除這種情況。正確性走 cut-and-paste：一組只用前 i 種、湊出 w 的最少方案，若不含第 i 種，它是 `g[i-1][w]` 的候選；若至少含一枚第 i 種，拿掉一枚，剩下的是「只用前 i 種湊出 `w - c[i]`」的一個方案——是「前 i 種」而不是「前 i-1 種」，因為剩下的可能還有第 i 種——枚數不少於 `g[i][w - c[i]]`。兩種情況各落在 min 的一項，min 的兩項也各對應一個合法方案，所以相等。
+
+**一維為什麼要正向。** 不變式和昨天一字不差：「開始處理第 i 種之前 `dp[w] = g[i-1][w]`，處理完第 i 種之後 `dp[w] = g[i][w]`，對所有 w 成立。」差別只在更新 `dp[w]` 那一刻要讀 `dp[w - c[i]]` 的**新值** `g[i][w - c[i]]`。容量由 `c[i]` 往上走到 amount，走到 w 時 `dp[0..w-1]` 已是本列、`dp[w..amount]` 還是上一列；前提 `c[i] >= 1` 在這裡用掉——`w - c[i] < w` 落在已更新區，讀到的就是新值。它可能已經含了幾枚第 i 種，再加一枚正是我們要的。昨天的反向迴圈刻意讓 `dp[w - w[i]]` 停在舊值，好擋掉「同一件拿兩次」；今天要的恰恰就是「同一件再拿一次」，所以方向翻過來。用 i = 1、`coins = [1]` 代一次：正向掃完 `dp[w] = w`，每個 w 都用了 w 枚 1 元，對。
+
+**反向會怎樣，用 TypeScript Tip 的資料看。** `coins = [1, 2, 5]`、`amount = 11`：正解 3（5 + 5 + 1）。只把 `for (let w = c; w <= amount; w++)` 改成 `for (let w = amount; w >= c; w--)`，答案變 -1——每種硬幣只剩一次機會，1 + 2 + 5 最多湊到 8，11 湊不出來。`coins = [3, 4]`、`amount = 6` 也從 2（3 + 3）變 -1。反向不是「少算幾種」，是整個退化成 0/1 背包。
+
+**計數版的巢狀順序。** 求「幾種湊法」時 `dp[w] += dp[w - c]`，外層硬幣、內層金額，得到的是**組合數**：處理完前 i 種硬幣之後，`dp[w]` 是「只用前 i 種湊出 w 的多重集合個數」，每個多重集合恰在「它含不含第 i 種」這個分岔被數一次。內外層對調（外層金額、內層硬幣）變成 `dp[w] = dp[w - c1] + dp[w - c2] + …`，數的是**有序序列**：Python Tip 的 `amount = 5`、`coins = [1, 2, 5]` 從 4 變 9，因為 1+2+2、2+1+2、2+2+1 被當成三種。最少枚數版對調順序仍然正確——min 不在乎同一個方案被看幾次；組合數版對調就錯。
 
 ## Pattern Recognition
 
-當題目具備以下特徵時，即可高度懷疑適用 Unbounded Knapsack Pattern：第一，給定一組物品或硬幣，且每種物品或硬幣的數量是無限的；第二，目標是求出湊成特定總量（如金額、重量）的最少／最多元素數量，或是求出湊成該總量的所有組合總數。經典代表如 Coin Change 與 Coin Change II，明確指出硬幣數量無限且可重複使用。
+訊號：物品或硬幣「無限供應」「可重複使用」，目標是湊出某個總量的最少（或最多）件數、或湊法總數。看到「每種只有一個」就回到昨天；看到「每種最多 k 個」是多重背包，不在本課範圍。另一個訊號是「湊法要不要分順序」：不分順序（組合）用外層硬幣；分順序（排列，例如爬樓梯每次走 1 或 2 階的走法數）用外層金額——同一副轉移，巢狀順序決定答案的意義。
 
 ## Common Mistakes
 
-最常見的錯誤是將 0/1 背包的反向迴圈（由右至左）誤用於 Unbounded Knapsack 問題。在 0/1 背包中，反向迴圈是為了確保每個物品只能被使用一次；但在 Unbounded Knapsack 中，若使用反向迴圈會導致較大容量的狀態無法重複利用當前物品的更新結果，從而遺漏物品被多次選取的可能性。另一個常見錯誤是未正確初始化邊界條件，例如求最小值時未將不可達的狀態設為無限大，導致最小值計算出錯。
+每一條都由本篇 Tip 的程式碼施加單一改動實測：
+
+- **把昨天的反向迴圈搬過來**：`coins = [1, 2, 5]`、`amount = 11` 從 3 變 -1；Python Tip 的 `range(c, amount + 1)` 改成 `range(amount, c - 1, -1)`，`amount = 5` 的組合數從 4 變 1（只剩 {5} 一種）。
+- **不可達的狀態初始化成 0**：把 `fill(Infinity)` 改成 `fill(0)`，min 會被 0 吸走，`[1, 2, 5]`、`amount = 11` 答案變 0。求最小值時不可達必須是無限大，且結尾要把仍是無限大的 `dp[amount]` 轉成 -1——刪掉這一步，`coins = [2]`、`amount = 3` 回傳 Infinity 而不是 -1。
+- **計數版內外層對調**：把外層硬幣、內層金額改成外層金額、內層硬幣，4 變 9，見上。
+- **計數版忘了 `dp[0] = 1`**：空組合是唯一的種子，刪掉後 `amount = 5` 得 0；同理 `amount = 0` 的答案是 1，不是 0。
 
 ## Complexity
 
-O(N*W) / O(W)
+時間 O(N * W)（N 種硬幣、W 為金額），空間 O(W)。與昨天相同的偽多項式時間：W 是數值，不是輸入長度。
 
 ## Digest
 
-Unbounded Knapsack Pattern 解決了物品可無限次選取的最佳化與計數問題。核心在於狀態轉移時利用已經包含當前物品的較小容量狀態。實作時，容量迴圈必須由左至右正向走訪，以確保同一個物品能被重複選取。與 0/1 背包的反向迴圈形成鮮明對比。
+完全背包：每種物品可拿任意多次。狀態 `g[i][w]` = 只用前 i 種、恰好湊出 w 的最少枚數，轉移 `g[i][w] = min(g[i-1][w], g[i][w - c[i]] + 1)`——第二項讀**本列**，因為拿掉一枚後剩下的仍可用第 i 種；**在面額為正整數的前提下** `w - c[i] < w`，同列更小的子問題已經算好，不會自引用。壓成一維時要讀 `dp[w - c[i]]` 的新值，所以容量迴圈由小到大：走到 w 時 `dp[0..w-1]` 已是本列，新值可能已含幾枚第 i 種，再加一枚正是要的。反向會退化成 0/1 背包：`coins = [1, 2, 5]`、`amount = 11` 從 3 變 -1。不可達初始化為無限大、結尾轉 -1。計數版 `dp[w] += dp[w - c]`：外層硬幣得組合數（每個多重集合只在「含不含第 i 種」數一次），外層金額得排列數，`amount = 5`、`coins = [1, 2, 5]` 分別是 4 與 9。O(N * W) / O(W)。
 
 ## TypeScript Tip
 
-```typescript
-import assert from "node:assert";
+最少枚數版：不可達用 Infinity 佔位，結尾轉 -1。
 
-function solve(): number {
-  const dp: number[] = [0, Infinity, Infinity];
-  const coin = 1;
-  for (let w = coin; w < dp.length; w++) {
-    dp[w] = Math.min(dp[w], dp[w - coin] + 1);
+```typescript
+import { strict as assert } from "node:assert";
+
+function coinChange(coins: number[], amount: number): number {
+  const dp: number[] = new Array<number>(amount + 1).fill(Infinity);   // dp[w]：湊出 w 的最少枚數
+  dp[0] = 0;
+  for (const c of coins) {
+    for (let w = c; w <= amount; w++) {                  // 正向：dp[w - c] 已是本列（可能已含 c）
+      dp[w] = Math.min(dp[w]!, dp[w - c]! + 1);          // 不再拿 c vs 再拿一枚 c
+    }
   }
-  assert.strictEqual(dp[2], 2);
-  return dp[2];
+  return dp[amount] === Infinity ? -1 : dp[amount]!;
 }
 
-solve();
+assert.equal(coinChange([1, 2, 5], 11), 3);   // 5+5+1；反向會得 -1（每種只能用一次）
+assert.equal(coinChange([3, 4], 6), 2);       // 3+3：不拿 4 才對
+assert.equal(coinChange([2], 3), -1);         // 湊不出來
 ```
 
 ## Python Tip
 
-```python
-def solve() -> int:
-    dp = [1, 0, 0]
-    coin = 1
-    for w in range(coin, len(dp)):
-        dp[w] += dp[w - coin]
-    assert dp[2] == 1
-    return dp[2]
-
-solve()
-```
-
-## TypeScript Corner
-
-```typescript
-import assert from "node:assert";
-
-function coinChange(coins: number[], amount: number): number {
-  const dp: number[] = Array(amount + 1).fill(Infinity);
-  dp[0] = 0;
-  for (const coin of coins) {
-    for (let w = coin; w <= amount; w++) {
-      if (dp[w - coin] !== Infinity) {
-        dp[w] = Math.min(dp[w], dp[w - coin] + 1);
-      }
-    }
-  }
-  return dp[amount] === Infinity ? -1 : dp[amount];
-}
-
-const result = coinChange([1, 2, 5], 11);
-assert.strictEqual(result, 3);
-```
-
-## Python Corner
+組合數版：外層硬幣、內層金額正向。
 
 ```python
 def change(amount: int, coins: list[int]) -> int:
-    dp = [0] * (amount + 1)
+    dp = [0] * (amount + 1)   # dp[w]：只用前面幾種硬幣湊出 w 的組合數
     dp[0] = 1
-    for coin in coins:
-        for w in range(coin, amount + 1):
-            dp[w] += dp[w - coin]
+    for c in coins:                       # 外層硬幣：組合不計順序
+        for w in range(c, amount + 1):    # 正向：dp[w - c] 已含本種硬幣
+            dp[w] += dp[w - c]
     return dp[amount]
 
-result = change(5, [1, 2, 5])
-assert result == 4
+assert change(5, [1, 2, 5]) == 4   # 5 / 2+2+1 / 2+1+1+1 / 1×5；內外層對調會得 9
+assert change(3, [2]) == 0         # 湊不出來就是 0 種
+assert change(0, [7]) == 1         # 空組合算一種
 ```
 
 ## Takeaway
 
-完全背包靠正向迴圈，物品重複選取不求難。
+完全背包的第二項讀本列；面額為正時一維正向掃容量，讓 `dp[w - c]` 帶著已拿過的同種硬幣再疊一枚。
 
 ## Tomorrow Preview
 
-明天我們將探討完全背包的進階變體與多重背包問題，學習當物品數量有限制時，如何透過二進位拆分與單調佇列進行複雜度優化。
+明天換題材：最長共同子序列（Longest Common Subsequence）。兩個字串各佔一個維度的二維表，轉移分「字元相同」與「不同」兩支，滾動壓縮的依賴分析會再派上用場。
 
 ## Today's Challenge
 
-- **322** · 硬幣數量無限且要求湊成目標金額的最少硬幣數，完全符合 Unbounded Knapsack 的定義與轉移結構。
-  - Hint: 初始化 dp 陣列為 Infinity，並確保容量迴圈由左至右正向執行。
-- **518** · 硬幣數量無限且要求計算湊成目標金額的組合總數，是經典的完全背包計數問題。
-  - Hint: 外層走訪硬幣、內層由左至右更新金額，累加所有可能的組合數。
+- **322** · 面額無限供應、求最少枚數：完全背包的 min 版。注意可能湊不出來（只有 2 元卻要湊 3），此時要回傳 -1。
+  - Hint: `dp` 全填 Infinity、`dp[0] = 0`；外層硬幣、內層金額由 c 正向到 amount，`dp[w] = min(dp[w], dp[w - c] + 1)`；結尾 `dp[amount]` 仍是 Infinity 就回 -1。
+- **518** · 面額無限供應、求湊法的**組合**數（1+2 與 2+1 算同一種）：外層硬幣、內層金額正向，`+=` 累加。
+  - Hint: `dp[0] = 1`，外層硬幣、內層金額正向 `dp[w] += dp[w - c]`，回傳 `dp[amount]`（amount 為 0 時是 1）。內外層對調會數成排列數。

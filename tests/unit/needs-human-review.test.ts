@@ -44,8 +44,6 @@ function badDraftResponse(): Record<string, unknown> {
     patternRecognition: "這是一段完全正常的繁體中文辨識線索說明。",
     commonMistakes: "這是一段完全正常的繁體中文常見錯誤說明。",
     complexity: "時間複雜度 O(n)，空間複雜度 O(1)。",
-    tsCorner: "```typescript\nconst x = 1 + 1;\nconsole.log(x);\n```",
-    pyCorner: "```python\nx = 1 + 1\nprint(x)\n```",
     tomorrowPreview: "明日預告內容。",
     digest: "摘要內容。",
     tsTip: "```typescript\nconst y = 2;\nconsole.log(y);\n```",
@@ -71,7 +69,7 @@ describe("needs-human-review（FR-012：重生 3 次仍不過 → 標記、繼�
       { genAiFactory, throttle: new Throttle({ rpmLimit: Infinity }) },
     );
 
-    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank);
+    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank, []);
 
     expect(result.markdown).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);
@@ -117,7 +115,7 @@ describe("重生時把 Gate 失敗原因回饋進 prompt（避免重擲同一顆
       },
     );
 
-    await generateOneConcept(llmClient, fakeConceptNode(), "hints", fakeBank);
+    await generateOneConcept(llmClient, fakeConceptNode(), "hints", fakeBank, []);
 
     expect(prompts).toHaveLength(3);
     expect(prompts[0]).not.toContain("上一次產出未通過品質 Gate");

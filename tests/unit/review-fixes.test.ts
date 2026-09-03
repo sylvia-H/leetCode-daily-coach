@@ -113,8 +113,6 @@ exit_criteria:
     "Digest",
     "TypeScript Tip",
     "Python Tip",
-    "TypeScript Corner",
-    "Python Corner",
     "Takeaway",
     "Tomorrow Preview",
   ]

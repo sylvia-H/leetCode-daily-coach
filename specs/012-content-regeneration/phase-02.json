@@ -1,0 +1,56 @@
+{
+  "phase": 2,
+  "window": "sessionIndex 14-41",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "array-linear-scan",
+      "skeleton": "concepts/array/002-array-linear-scan.md",
+      "article": "articles/array/002-array-linear-scan.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "array-memory-layout",
+      "skeleton": "concepts/array/001-array-memory-layout.md",
+      "article": "articles/array/001-array-memory-layout.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "array-prefix-sum-basic",
+      "skeleton": "concepts/array/003-array-prefix-sum-basic.md",
+      "article": "articles/array/003-array-prefix-sum-basic.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "array-range-sum-query",
+      "skeleton": "concepts/array/004-array-range-sum-query.md",
+      "article": "articles/array/004-array-range-sum-query.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "hash-table-design-lru-cache",
+      "skeleton": "concepts/hash-table/010-hash-table-design-lru-cache.md",
+      "article": "articles/hash-table/010-hash-table-design-lru-cache.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "hash-table-longest-consecutive-sequence",
+      "skeleton": "concepts/hash-table/009-hash-table-longest-consecutive-sequence.md",
+      "article": "articles/hash-table/009-hash-table-longest-consecutive-sequence.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "string-ascii-representation",
+      "skeleton": "concepts/string/001-string-ascii-representation.md",
+      "article": "articles/string/001-string-ascii-representation.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "string-linear-scan",
+      "skeleton": "concepts/string/002-string-linear-scan.md",
+      "article": "articles/string/002-string-linear-scan.md",
+      "quizCount": 6
+    }
+  ]
+}

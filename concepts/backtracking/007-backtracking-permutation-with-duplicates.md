@@ -13,14 +13,10 @@ prerequisite:
 next:
   - backtracking-palindrome-partitioning
 learning_goal:
-  - >-
-    Master generating unique permutations when the input array contains
-    duplicate elements.
+  - '熟練在輸入陣列含有重複元素時生成不重複的排列。'
 exit_criteria:
-  - >-
-    Can apply both visited tracking and conditional duplicate skipping for
-    permutations.
-  - Can prevent duplicate permutation branches.
+  - '能對排列同時套用 visited 追蹤與條件式的重複跳過。'
+  - '能防止產生重複的排列分支。'
 leetcode:
   - 47
 tags:

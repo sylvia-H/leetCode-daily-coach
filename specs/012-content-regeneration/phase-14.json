@@ -1,0 +1,68 @@
+{
+  "phase": 14,
+  "window": "sessionIndex 182-195",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "backtracking-core-concept-introduction",
+      "skeleton": "concepts/backtracking/001-backtracking-core-concept-introduction.md",
+      "article": "articles/backtracking/001-backtracking-core-concept-introduction.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "heap-array-representation",
+      "skeleton": "concepts/heap/002-heap-array-representation.md",
+      "article": "articles/heap/002-heap-array-representation.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "heap-find-median-from-data-stream",
+      "skeleton": "concepts/heap/009-heap-find-median-from-data-stream.md",
+      "article": "articles/heap/009-heap-find-median-from-data-stream.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "heap-kth-largest-element",
+      "skeleton": "concepts/heap/006-heap-kth-largest-element.md",
+      "article": "articles/heap/006-heap-kth-largest-element.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "heap-merge-k-sorted-lists",
+      "skeleton": "concepts/heap/008-heap-merge-k-sorted-lists.md",
+      "article": "articles/heap/008-heap-merge-k-sorted-lists.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "heap-sift-down-extraction",
+      "skeleton": "concepts/heap/004-heap-sift-down-extraction.md",
+      "article": "articles/heap/004-heap-sift-down-extraction.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "heap-sift-up-insertion",
+      "skeleton": "concepts/heap/003-heap-sift-up-insertion.md",
+      "article": "articles/heap/003-heap-sift-up-insertion.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "heap-task-scheduler",
+      "skeleton": "concepts/heap/010-heap-task-scheduler.md",
+      "article": "articles/heap/010-heap-task-scheduler.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "heap-top-k-frequent-elements",
+      "skeleton": "concepts/heap/007-heap-top-k-frequent-elements.md",
+      "article": "articles/heap/007-heap-top-k-frequent-elements.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "heapify-linear-time-construction",
+      "skeleton": "concepts/heap/005-heapify-linear-time-construction.md",
+      "article": "articles/heap/005-heapify-linear-time-construction.md",
+      "quizCount": 7
+    }
+  ]
+}

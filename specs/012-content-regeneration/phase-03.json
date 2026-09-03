@@ -1,0 +1,62 @@
+{
+  "phase": 3,
+  "window": "sessionIndex 7-48",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "edge-case-enumeration",
+      "skeleton": "concepts/programming-mindset/008-edge-case-enumeration.md",
+      "article": "articles/programming-mindset/008-edge-case-enumeration.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "error-driven-refinement",
+      "skeleton": "concepts/programming-mindset/010-error-driven-refinement.md",
+      "article": "articles/programming-mindset/010-error-driven-refinement.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "loop-invariant-thinking",
+      "skeleton": "concepts/programming-mindset/006-loop-invariant-thinking.md",
+      "article": "articles/programming-mindset/006-loop-invariant-thinking.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "problem-simplification-strategy",
+      "skeleton": "concepts/programming-mindset/007-problem-simplification-strategy.md",
+      "article": "articles/programming-mindset/007-problem-simplification-strategy.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "spacetime-tradeoff-awareness",
+      "skeleton": "concepts/programming-mindset/009-spacetime-tradeoff-awareness.md",
+      "article": "articles/programming-mindset/009-spacetime-tradeoff-awareness.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "string-sliding-window-fixed",
+      "skeleton": "concepts/string/005-string-sliding-window-fixed.md",
+      "article": "articles/string/005-string-sliding-window-fixed.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "string-sliding-window-variable",
+      "skeleton": "concepts/string/006-string-sliding-window-variable.md",
+      "article": "articles/string/006-string-sliding-window-variable.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "string-two-pointers-filtering",
+      "skeleton": "concepts/string/004-string-two-pointers-filtering.md",
+      "article": "articles/string/004-string-two-pointers-filtering.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "string-two-pointers-opposite",
+      "skeleton": "concepts/string/003-string-two-pointers-opposite.md",
+      "article": "articles/string/003-string-two-pointers-opposite.md",
+      "quizCount": 9
+    }
+  ]
+}

@@ -13,14 +13,10 @@ prerequisite:
 next:
   - backtracking-permutation-with-duplicates
 learning_goal:
-  - >-
-    Learn how to generate permutations where order matters by visiting all
-    unused elements at each step.
+  - '學會在順序有意義時，透過每一步走訪所有未使用的元素來生成排列。'
 exit_criteria:
-  - >-
-    Can use a visited array or set to track which elements are currently
-    included in the path.
-  - Can generate all n! permutations.
+  - '能使用 visited 陣列或 set 追蹤哪些元素目前已包含在路徑中。'
+  - '能生成全部 n! 種排列。'
 leetcode:
   - 46
 tags:

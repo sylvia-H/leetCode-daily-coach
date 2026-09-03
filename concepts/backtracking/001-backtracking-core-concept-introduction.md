@@ -16,12 +16,10 @@ next:
   - backtracking-word-search
   - backtracking-n-queens-diagonal-pruning
 learning_goal:
-  - >-
-    Understand how backtracking systematically explores the solution space like
-    a depth-first search on a implicit decision tree.
+  - '理解 Backtracking 如何像在一棵隱含的決策樹上做 DFS 一樣，有系統地探索解空間。'
 exit_criteria:
-  - Can explain the choice-explore-unchoose pattern.
-  - Can trace how states are modified and restored.
+  - '能說明「選擇—探索—撤銷選擇」（choose–explore–unchoose）的模式。'
+  - '能追蹤狀態如何被修改與還原。'
 leetcode:
   - 78
 tags:

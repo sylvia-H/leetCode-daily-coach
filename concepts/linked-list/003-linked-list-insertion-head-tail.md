@@ -12,12 +12,10 @@ prerequisite:
 next:
   - linked-list-deletion-by-value-or-index
 learning_goal:
-  - >-
-    Learn how to rewire pointers to insert a new node at the beginning or end of
-    a linked list.
+  - 學會如何重新接線指標，在 linked list 的開頭或結尾插入新節點。
 exit_criteria:
-  - Can prepend a node in O(1) time by updating head pointers correctly
-  - Can handle edge cases like inserting into an initially empty list
+  - 能藉由正確更新 head 指標，以 O(1) 時間在開頭插入節點
+  - 能處理如插入初始為空的串列等邊界情況
 leetcode:
   - 707
 tags:

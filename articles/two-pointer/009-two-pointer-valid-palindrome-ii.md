@@ -11,139 +11,93 @@ exit_criteria:
 ---
 ## Concept
 
-Valid Palindrome with Single Deletion 是經典迴文檢查問題的延伸。傳統迴文檢查要求字串正向與反向讀取完全相同，而此變體允許在過程中至多刪除一個字元。當我們使用相向雙指標由兩端向中心檢查時，若遇到字元不相等的情況，傳統演算法會直接回傳 false，但在允許刪除一個字元的條件下，我們必須分支出兩個子問題：分別嘗試略過左側字元（檢查 s[left+1...right]）或略過右側字元（檢查 s[left...right-1]），只要其中一個子字串為迴文，則原字串即符合條件。
+Valid Palindrome with Single Deletion 把嚴格迴文檢查加上一格容錯：允許刪除至多一個字元。骨架不變——left 從 0、right 從 n - 1 相向夾擠，不變式仍是「區間 [left, right] 之外的字元已全部成對相符」。差別發生在 s[left] 與 s[right] 不相等的那一刻：嚴格版可以立即回傳 false，容錯版此時還有一次刪除額度，而這個第一個不匹配點恰好把刪除位置釘死在兩端之一。理由：若刪掉的是區間內部（不含兩端）的字元，s[left] 與 s[right] 在新字串中仍互為對位，不相等的事實原封不動；若刪掉的是區間外的字元，可以推得那條「對位相等鏈」正好等價於刪 s[left] 的情形。所以只需要分支驗兩個子問題：s[left+1..right] 或 s[left..right-1] 是否為嚴格迴文，其一成立即可。
 
 ## Thinking
 
-在解決此問題時，我們首先設定左右雙指標分別指向字串的頭與尾。當字串兩端的字元相等時，左右指標同步向內移動。一旦發現 s[left] !== s[right]，這代表我們遇到了不匹配的衝突點。此時不能直接放棄，而是必須評估兩種可能的分支：第一種是刪除目前的左字元，檢查剩餘的子字串 s[left+1...right] 是否為迴文；第二種是刪除目前的右字元，檢查剩餘的子字串 s[left...right-1] 是否為迴文。為了保持程式碼結構清晰與高可讀性，我們通常會封裝一個輔助函式專門用來檢查特定範圍的子字串是否為迴文。
+主迴圈與嚴格版完全相同：`while (left < right)`，相等就 left++、right--（相遇那格與自己必然相符，不需比）。第一次遇到 s[left] 不等於 s[right] 時，改呼叫嚴格檢查的 helper isValid(l, r) 兩次：isValid(left + 1, right) 對應刪左、isValid(left, right - 1) 對應刪右，用邏輯 OR 合併後**直接回傳**——分支之後不能再回到主迴圈，因為主迴圈的前提「至今零刪除」已不成立。「相等時不動用額度」這個貪婪決策也要交代：成對相符的位置不需要修理，把唯一的額度留到第一個確定壞掉的位置，由前面的釘死論證保證不會因此錯過任何解。子檢查內部就是普通的嚴格迴文檢查——額度已用完，再遇到不匹配就直接 false，不會再分支。
 
 ## Pattern Recognition
 
-當題目要求判斷字串是否能在「修改、刪除、或替換至多 k 個字元」的條件下達成某種對稱性或特定結構時，通常可以採用 Two Pointers 結合 Conditional Branching 的模式。在雙指標掃描的過程中，遇到不滿足條件的節點時，不是直接終止，而是依據題目的容錯額度進行分支探索。此種模式的時間複雜度通常能維持在線性時間 O(n)，因為分支的次數有嚴格上限，不會導致指數級別的遞迴爆炸。
+訊號：題目允許「刪除、修改至多 k 個字元」後滿足某種對稱結構，且 k 很小、分支次數有明確上限——k = 1 的迴文變體是最常見特例，雙指標加條件分支能維持線性時間。上一課的退格比對也是同族：指標移動附帶條件判斷，只是它的分支由退格符號觸發。反訊號：k 較大或允許任意位置插入與取代（如編輯距離類題目），分支會組合爆炸，該換動態規劃。
 
 ## Common Mistakes
 
-最常見的錯誤是在第一次遇到不相等時，沒有完整涵蓋兩種刪除可能性（例如只嘗試刪除左邊卻忘記嘗試刪除右邊）。另一個常見錯誤是重複實作迴文檢查邏輯而沒有將子範圍檢查抽離為獨立的 helper function，導致程式碼變得冗長且容易在指標邊界計算上出錯。此外，部分實作者在呼叫子範圍檢查時，沒有正確傳入刪除後的正確索引範圍，造成越界存取或邏輯判斷失誤。
+一、只試刪左忘了刪右：`"abac"` 在 (0, 3) 不匹配，刪左得 "bac" 失敗、刪右得 "aba" 成功；`"caba"` 則相反，只有刪左成立——兩個方向都必須驗。二、分支後又回到主迴圈：例如把回傳語句縮排進迴圈或漏寫 return，等於偷偷多送刪除額度，會把該失敗的字串放行。三、子檢查寫成還能繼續分支的遞迴：額度只有一次，子問題必須退化為嚴格檢查，否則正確性與複雜度一起壞掉。四、子範圍邊界差一：刪左是 [left+1, right]、刪右是 [left, right-1]；用 Python 切片時右端不含，刪左要寫 s[left+1:right+1]，少那個 +1 就把 right 位置的字元也丟了。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 為字串長度。雖然在遇到不匹配時會進行分支檢查，但由於子範圍檢查最多只會執行一次（且其內部也是線性掃描），整體操作最多只會掃描字串常數次，因此時間複雜度依然保持在 O(n)。空間複雜度為 O(1)，因為我們僅使用了常數額外的指標變數，不需額外配置大容量的資料結構。
+時間 O(n)：主掃描至多 n / 2 輪；分支最多發生一次，產生兩個各至多 n 步的嚴格檢查，總比較次數不超過約 2n，仍是線性。空間方面要誠實記帳：用索引夾擠的迭代版 helper 只需常數個變數，O(1)；若圖方便用 Python 切片加反轉來驗子字串，每次切片都複製 O(n) 字元，空間升為 O(n)。
 
 ## Digest
 
-Valid Palindrome with Single Deletion 擴展了傳統雙指標迴文檢查。核心策略是利用相向雙指標進行掃描，當遇到 s[left] !== s[right] 時，透過 Conditional Branching 分別驗證刪除左字元或右字元後的子範圍。透過封裝 helper function，我們能保持 O(n) 時間複雜度與 O(1) 空間複雜度，同時確保邏輯清晰無誤。
+一句話公式：嚴格迴文檢查照走，第一個不匹配點就是唯一需要動刀的位置——分支驗 s[left+1..right]（刪左）與 s[left..right-1]（刪右），其一為嚴格迴文即回 true，兩者皆敗即 false。錨點：`"abac"` 只有刪右（留下 "aba"）成立、`"caba"` 只有刪左成立、`"abcda"` 兩邊都救不回來。正確性靠兩件事：區間外已成對相符，刪區間外等價於刪 s[left]；刪區間內部則 s[left] 與 s[right] 仍互為對位，救不了不匹配。分支至多一次、子檢查不再分支，時間維持 O(n)。
 
 ## TypeScript Tip
 
+用箭頭函式把嚴格檢查封裝在閉包裡，共用外層的 s、只傳索引，不切字串，額外空間 O(1)。
+
 ```typescript
-// TypeScript 技巧：利用箭頭函式在區域範疇內封裝輔助邏輯
-function checkPalindrome(s: string): boolean {
+import assert from "node:assert";
+
+function validPalindromeII(s: string): boolean {
   const isValid = (l: number, r: number): boolean => {
     while (l < r) {
-      if (s[l++] !== s[r--]) return false;
+      if (s[l] !== s[r]) return false;
+      l++;
+      r--;
     }
     return true;
   };
-
   let left = 0;
   let right = s.length - 1;
   while (left < right) {
-    if (s[left] === s[right]) {
-      left++;
-      right--;
-    } else {
+    if (s[left] !== s[right]) {
       return isValid(left + 1, right) || isValid(left, right - 1);
     }
+    left++;
+    right--;
   }
   return true;
 }
 
-if (!checkPalindrome("aba")) throw new Error("Test failed");
+assert.strictEqual(validPalindromeII("caba"), true); // 只有刪左成立
+assert.strictEqual(validPalindromeII("abac"), true); // 只有刪右成立
+assert.strictEqual(validPalindromeII("abcda"), false);
+assert.strictEqual(validPalindromeII("racecar"), true);
 ```
 
 ## Python Tip
 
-```python
-# Python 技巧：利用字串切片語法快速驗證子字串是否為迴文
-def check_palindrome_python(s: str) -> bool:
-    left, right = 0, len(s) - 1
-    while left < right:
-        if s[left] == s[right]:
-            left += 1
-            right -= 1
-        else:
-            skip_l = s[left + 1 : right + 1]
-            skip_r = s[left:right]
-            return skip_l == skip_l[::-1] or skip_r == skip_r[::-1]
-        return True
-
-assert check_palindrome_python("aba") == True, "Test failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function validPalindrome(s: string): boolean {
-  function isPalindromeRange(str: string, low: number, high: number): boolean {
-    while (low < high) {
-      if (str[low] !== str[high]) return false;
-      low++;
-      high--;
-    }
-    return true;
-  }
-
-  let left = 0;
-  let right = s.length - 1;
-
-  while (left < right) {
-    if (s[left] === s[right]) {
-      left++;
-      right--;
-    } else {
-      return isPalindromeRange(s, left + 1, right) || isPalindromeRange(s, left, right - 1);
-    }
-  }
-  return true;
-}
-
-const testResult = validPalindrome("abca");
-if (testResult !== true) throw new Error("Assertion failed: expected true");
-```
-
-## Python Corner
+切片寫法極簡，但注意兩件事：切片右端不含，刪左要寫 s[left + 1 : right + 1]；`return True` 必須縮排在 while 之外，縮進迴圈會讓第一輪相符就提前放行。
 
 ```python
-def validPalindrome(s: str) -> bool:
-    def is_palindrome_range(sub: str, low: int, high: int) -> bool:
-        while low < high:
-            if sub[low] != sub[high]:
-                return False
-            low += 1
-            high -= 1
-        return True
-
+def valid_palindrome_ii(s: str) -> bool:
     left, right = 0, len(s) - 1
     while left < right:
-        if s[left] == s[right]:
-            left += 1
-            right -= 1
-        else:
-            return is_palindrome_range(s, left + 1, right) or is_palindrome_range(s, left, right - 1)
+        if s[left] != s[right]:
+            skip_left = s[left + 1 : right + 1]
+            skip_right = s[left:right]
+            return skip_left == skip_left[::-1] or skip_right == skip_right[::-1]
+        left += 1
+        right -= 1
     return True
 
-assert validPalindrome("abca") == True, "Assertion failed"
+assert valid_palindrome_ii("caba") is True
+assert valid_palindrome_ii("abac") is True
+assert valid_palindrome_ii("abcda") is False
+assert valid_palindrome_ii("x") is True
 ```
 
 ## Takeaway
 
-雙指標遇不匹配時切勿慌張，透過條件分支探索刪除後的子問題，保持 O(n) 效能。
+第一個不匹配點釘死刪除位置：分支驗刪左與刪右兩個嚴格子檢查，其一成立即可，整體仍是 O(n)。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 在排序陣列中的進階應用，學習如何處理包含重複元素的複雜情境，並保持演算法的高效性與正確性。
+明天同一副相向骨架從「驗證」改做「搬動」：依奇偶等條件把陣列原地分成兩群的 Partitioning——逐對比較換成條件交換，不變式從「對稱相符」變成「兩側已就位」。
 
 ## Today's Challenge
 
-- **680** · 本題為經典的 Valid Palindrome II，完美對應雙指標遇到不匹配時進行條件分支刪除字元的模式。
-  - Hint: 當 s[left] !== s[right] 時，分別檢查 s[left+1...right] 與 s[left...right-1] 是否為迴文。
+- **680** · 本課的原型題：嚴格迴文檢查一遇不匹配，就分支驗證兩個刪除子問題。
+  - Hint: 封裝 isValid(l, r) 做嚴格檢查；不匹配時回傳 isValid(left + 1, right) 或 isValid(left, right - 1) 的邏輯 OR，分支後不要再回主迴圈。

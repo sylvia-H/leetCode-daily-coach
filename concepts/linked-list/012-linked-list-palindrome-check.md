@@ -11,14 +11,10 @@ prerequisite:
   - linked-list-merge-two-sorted
 next: []
 learning_goal:
-  - >-
-    Check if a linked list is a palindrome in O(1) space by finding the middle,
-    reversing the second half, and comparing.
+  - 透過找出中點、反轉後半段並比較，以 O(1) 空間檢查 linked list 是否為 palindrome。
 exit_criteria:
-  - >-
-    Can find the middle, reverse the second half, compare values symmetrically,
-    and optionally restore the list
-  - Can explain why O(1) space requires structural modification
+  - 能找出中點、反轉後半段、對稱地比較值，並可選擇性地還原串列
+  - 能說明為何 O(1) 空間需要修改結構
 leetcode:
   - 234
   - 143

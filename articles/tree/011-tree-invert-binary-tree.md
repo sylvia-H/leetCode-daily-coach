@@ -6,136 +6,88 @@ pattern_label: Tree Transformation
 complexity_label: O(n) / O(h)
 estimated_minutes: 15
 exit_criteria:
-  - Swap left and right pointers for every node in the binary tree.
+  - 能對二元樹中的每個節點交換 left 與 right 指標。
 ---
 ## Concept
 
-Invert Binary Tree 是一道經典的二元樹轉換題型，核心目標是將整棵二元樹的左右子樹進行對稱翻轉。換句話說，對於樹中的每一個節點，原本指向左子樹的指標會改為指向右子樹，原本指向右子樹的指標則改為指向左子樹。這種結構上的變動需要我們逐一走訪樹中的所有節點，並在每個節點上執行對調操作。透過遞迴或迭代的方式，我們能夠確保每一個子樹都被完整且正確地鏡像翻轉，最終產出結構完全相反的二元樹。
+昨天的 Symmetric Tree 檢查是比較一棵樹「是否等於自己的鏡像」，全程唯讀；今天更進一步——親手把鏡像做出來。所謂反轉（invert）就是產生鏡像：對樹中每一個節點，把它的 left 與 right 指標對調。為什麼這樣就夠了？可以用鏡像的遞迴定義來論證：一棵樹的鏡像，是「根節點不變，左子樹換成原右子樹的鏡像，右子樹換成原左子樹的鏡像」。這個定義本身就是遞迴的——只要每個節點都完成一次交換，而它的兩個子樹也各自被鏡像，整棵樹就是鏡像；空樹的鏡像則仍是空樹，天然構成遞迴的終點。反過來說，只要漏掉任何一個節點的交換，該節點以下的左右關係就會維持原樣，鏡像就不完整。因此「逐節點交換」不是實作上的巧合，而是鏡像定義的直接落實。
 
 ## Thinking
 
-在思考如何實作 Invert Binary Tree 時，我們首先要建立遞迴的思考框架。對於任意節點而言，如果該節點為空，則直接返回空值，這便是遞迴的 Base Case。若節點存在，我們不需要等待子樹處理完才進行交換，也可以選擇先交換當前節點的左子樹與右子樹指標，接著再遞迴地對這兩個子樹進行同樣的翻轉動作。這種由上至下的處理方式確保了每一個節點的左右子樹指標都能夠被確實對調。在迭代解法中，我們則可以利用佇列或堆疊來輔助走訪，依序將每個節點取出並交換其左右子樹，直到所有節點都處理完畢。
+遞迴版的骨架非常短。Base case：空節點的鏡像仍是空節點，直接回傳 null。一般情況：把當前節點的 left 與 right 對調，再分別對兩個子樹遞迴做同樣的事。交換放在兩次遞迴之前（前序式）或之後（後序式）都可以，兩者都維持同一個不變式：「每個節點恰好被交換一次，且兩棵原子樹各被遞迴恰好一次」，這正是正確性的全部所需。但交換唯獨不能夾在兩次遞迴中間（中序式）：交換之後，第二次遞迴的對象已經變成剛處理完的原左子樹，於是它被反轉兩次而復原，原右子樹卻一次都沒進去。可見關鍵不只是「交換只動自己的兩個指標」，更在於兩次遞迴必須分別落在兩棵不同的原子樹上——前序式與後序式都滿足這點。迭代版利用的也是同一個性質：用佇列（BFS）或堆疊（DFS）走訪，每取出一個節點就交換它的左右指標，再把非空的子節點放入容器。取出順序完全不影響結果——兩個子節點總是一起放進容器，不會像中序式那樣漏掉一邊；唯一的要求是每個節點都被取出恰好一次。
 
 ## Pattern Recognition
 
-當我們在題目中看到需要修改、重建、或鏡像對稱整棵樹結構（Tree Structure）的特徵時，通常就可以聯想到 Tree Transformation 的 Pattern。這類題目的共同點在於，答案往往依賴於對子樹處理結果的組合，或者是直接在原樹上進行指標的重定向（In-place Modification）。識別出這個 Pattern 後，我們可以直接思考要採用前序、中序還是後序的遞迴順序，或者是透過層序走訪來逐層交換節點。
+看到「鏡像」「翻轉」「改造整棵樹結構」這類要求時，就能對應到 Tree Transformation 這個 Pattern：與昨天的對稱檢查同樣要走訪整棵樹，但性質從唯讀的判斷變成會寫入的結構修改——透過指標重新指向（in-place）直接改造原樹，不需要配置任何新節點。這類題的通用解法是：只定義「單一節點該做什麼轉換」（這裡是交換兩個指標），子樹的部分完全信任遞迴會處理好。能否把問題化約成「一個節點的局部操作＋兩個子樹的相同子問題」，就是判斷 Tree Transformation 是否適用的試金石。
 
 ## Common Mistakes
 
-在實作二元樹翻轉時，最常見的錯誤是沒有正確儲存或重新指派被交換的參考。舉例來說，如果在沒有暫存變數的情況下直接覆蓋指標，可能會導致遺失原本的子樹參考。另一個常見問題是忘記處理 Base Case，導致遞迴函式在遇到空節點時拋出錯誤。此外，部分開發者在進行原地修改時，誤以為只需要翻轉根節點即可，忽略了必須遞迴深入每一個子樹，導致深層的節點維持原狀。
+最經典的錯誤是逐句賦值遺失參照：先寫 `root.left = root.right`、再寫 `root.right = root.left`，第二句讀到的已是更新後的 left，結果兩個指標同指原右子樹、原左子樹永遠遺失。解法是先用暫存變數保住其中一邊，或用 TypeScript 的解構賦值、Python 的同時賦值一步完成。同一個陷阱的遞迴版更隱蔽：先寫 `root.left = invert(root.right)`、再寫 `root.right = invert(root.left)`，第二次遞迴吃到的是剛掛上去的新 left——也就是已反轉的原右子樹——把它又反轉回原狀，最後左右指標同指原右子樹，原左子樹一樣遺失。其次是忘記 base case：遞迴走到空節點時未直接回傳，對 null 取 left 會拋出執行期錯誤。最後，別誤以為只交換根節點的兩個孩子就完成了——鏡像要求每一層的左右關係都對調，必須深入處理到每一個節點。
 
 ## Complexity
 
-O(n) / O(h)
+時間複雜度 O(n)：每個節點恰好被走訪一次，每次只做常數次指標操作。空間複雜度 O(h)：遞迴深度等於樹高 h，平衡樹約為 O(log n)，樹退化成鏈狀時最壞為 O(n)；若改用 BFS 迭代，額外空間則取決於最寬一層的節點數。
 
 ## Digest
 
-Invert Binary Tree 是掌握樹狀結構轉換的入門基石。透過理解遞迴的 Base Case 與指標交換技巧，我們能夠輕鬆達成樹的鏡像翻轉。無論是 TypeScript 的暫存變數指派，或是 Python 的同時賦值語法，都能夠優雅地完成節點互換。掌握這個 Pattern 後，面對其他需要修改或重建樹結構的題目將能游刃有餘。
+反轉二元樹＝產生整棵樹的鏡像：對每一個節點交換 left 與 right 指標。正確性來自鏡像的遞迴定義——根不動、左右子樹互換並各自鏡像，所以「每個節點恰交換一次」就是全部所需。前序、後序、層序都能完成反轉，唯獨把交換夾在兩次遞迴中間（中序式）會重複反轉原左子樹、漏掉原右子樹。實作上用同時賦值或暫存變數，避免逐句覆蓋導致參照遺失。時間 O(n)、空間 O(h)。昨天唯讀地檢查鏡像，今天親手建出鏡像——這組讀寫對照正是 Tree Transformation 的入門。
 
 ## TypeScript Tip
 
-在 TypeScript 中，利用解構賦值可以讓變數交換變得非常簡潔乾淨。例如：`[root.left, root.right] = [invertTree(root.right), invertTree(root.left)]`。以下為完整的可執行範例：
+解構賦值讓交換一步完成：右側兩個遞迴呼叫都在寫入前求值完畢，天然避開「第二句讀到已更新指標」的陷阱。
+
 ```typescript
 class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
+  left: TreeNode | null = null;
+  right: TreeNode | null = null;
+  constructor(public val: number) {}
 }
 
-function invertTree(root: TreeNode | null): TreeNode | null {
+function invert(root: TreeNode | null): TreeNode | null {
   if (!root) return null;
-  [root.left, root.right] = [invertTree(root.right), invertTree(root.left)];
+  [root.left, root.right] = [invert(root.right), invert(root.left)];
   return root;
 }
 
-const root = new TreeNode(1, new TreeNode(2), null);
-const res = invertTree(root);
-if (res?.right?.val !== 2) throw new Error("Tip assertion failed");
+const root = new TreeNode(1);
+root.left = new TreeNode(2);
+root.left.right = new TreeNode(3);
+const r = invert(root);
+if (r?.right?.val !== 2 || r.right.left?.val !== 3) {
+  throw new Error("invert failed");
+}
 ```
 
 ## Python Tip
 
-Python 的語法特性支援同時賦值（Simultaneous Assignment），這使得 `node.left, node.right = node.right, node.left` 的交換操作變得極其直觀且安全。以下為完整的可執行範例：
+Python 的同時賦值會先把右側整組求值完畢，再由左至右逐一指派給左側目標，因此兩個遞迴結果不會互相干擾，一行就完成交換。
+
 ```python
 class TreeNode:
     def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
+        self.val, self.left, self.right = val, left, right
 
-def invertTree(root: TreeNode | None) -> TreeNode | None:
+def invert(root: TreeNode | None) -> TreeNode | None:
     if root:
-        root.left, root.right = invertTree(root.right), invertTree(root.left)
+        root.left, root.right = invert(root.right), invert(root.left)
     return root
 
-root = TreeNode(1, TreeNode(2), None)
-res = invertTree(root)
-assert res.right.val == 2, "Tip assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function invertTree(root: TreeNode | null): TreeNode | null {
-  if (!root) return null;
-  const temp = root.left;
-  root.left = invertTree(root.right);
-  root.right = invertTree(temp);
-  return root;
-}
-
-const root = new TreeNode(4, new TreeNode(2), new TreeNode(7));
-const inverted = invertTree(root);
-if (inverted?.left?.val !== 7) throw new Error("Assertion failed: left child should be 7");
-if (inverted?.right?.val !== 2) throw new Error("Assertion failed: right child should be 2");
-```
-
-## Python Corner
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
-
-def invertTree(root: TreeNode | None) -> TreeNode | None:
-    if not root:
-        return None
-    root.left, root.right = invertTree(root.right), invertTree(root.left)
-    return root
-
-root = TreeNode(4, TreeNode(2), TreeNode(7))
-inverted = invertTree(root)
-assert inverted.left.val == 7, "Assertion failed: left child should be 7"
-assert inverted.right.val == 2, "Assertion failed: right child should be 2"
+root = TreeNode(1, TreeNode(2, None, TreeNode(3)), None)
+r = invert(root)
+assert r is not None and r.right is not None
+assert r.right.val == 2 and r.right.left is not None
+assert r.right.left.val == 3
 ```
 
 ## Takeaway
 
-掌握遞迴對調左右子樹的核心邏輯，理解 Tree Transformation 的結構修改模式，並熟練運用原地指標更新。
+鏡像整棵樹＝每個節點恰好交換一次 left 與 right；前序後序皆可，用同時賦值避免逐句覆蓋遺失參照。
 
 ## Tomorrow Preview
 
-明天我們將探討 Valid Binary Search Tree 驗證二元搜尋樹的進階題型，學習如何透過遞迴帶入上下界來確保樹結構符合特定的排序規則。
+tree 模組到此收官——從節點表示、三種 DFS 走訪、深度與平衡檢查，一路走到樹的比較與鏡像轉換，「拆成子樹、信任遞迴」的思維已經完整成形。明天起展開全新的模組，用同樣的節奏繼續推進。
 
 ## Today's Challenge
 
-- **226** · 此題為經典的 Tree Transformation 題型，完全符合透過遞迴或迭代交換左右子樹以達到整樹鏡像翻轉的 Pattern 特徵。
-  - Hint: 注意 Base Case 的處理，並確保每一個節點的左右子樹都有被遞迴呼叫並對調。
+- **226** · 反轉二元樹的原型題：整棵樹的 in-place 鏡像轉換，恰好對應「單節點交換指標＋遞迴處理兩子樹」的 Tree Transformation 骨架。
+  - Hint: 空節點直接回傳；交換用同時賦值或暫存變數，避免第二句讀到已更新的指標。

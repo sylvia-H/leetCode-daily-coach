@@ -340,7 +340,7 @@ exit code）：讀取 `state` 分支的最新 `state.json` + `articles/**`，以
   今日課程標題，尚未開始 / 已完課皆有明確狀態。
 - **全文閱讀頁**（[`src/pages/article-page.ts`](src/pages/article-page.ts)）：Discord 只推
   Digest（≤6,000 字元限制），全文（Concept / Thinking / Pattern Recognition / Common
-  Mistakes / Complexity / Corner 等）留給 Pages 呈現。
+  Mistakes / Complexity / TypeScript·Python Tip / Tomorrow Preview）留給 Pages 呈現。
 - **課綱總覽**（[`src/pages/curriculum-view.ts`](src/pages/curriculum-view.ts)）：列出全部
   Concept，已解鎖者可點連結、未解鎖者僅顯示標題與「未解鎖」標示，不產生指向不存在頁面的連結。
 - **RSS/Atom feed**（[`src/pages/feed.ts`](src/pages/feed.ts)）：可訂閱全站或單一 Track，

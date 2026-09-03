@@ -6,140 +6,99 @@ pattern_label: Greedy Frequency Heap
 complexity_label: O(n log k) time / O(k) space
 estimated_minutes: 30
 exit_criteria:
-  - >-
-    Can greedily process the most frequent available tasks while respecting
-    cooling timers.
+  - 能以 Greedy 方式處理當前可用且頻率最高的任務，同時遵守 cooldown 計時。
 ---
 ## Concept
 
-Task Scheduler with Cooldown 旨在處理帶有冷卻時間限制的任務排程問題。當多個任務具有各自的執行頻率，且相同的任務之間必須間隔一段固定的冷卻週期才能再次執行時，Greedy Frequency Heap 成為最佳的解題策略。透過維護一個最大堆積來追蹤剩餘次數最多的任務，並結合一個儲存冷卻中任務與可用時間點的佇列，我們能夠在每個時間單位做出局部的最佳選擇，從而最小化整體的閒置時間。
+題目設定是：一串任務（每個以大寫字母表示），CPU 每個時間單位執行一個任務或閒置（idle）；同一種任務的兩次執行之間至少要隔 n 個單位。問完成全部任務最少需要幾個時間單位——答案**包含 idle**。第一個關鍵觀察：任何連續 n+1 個時間單位裡，同一種任務最多只能出現一次。所以可以把時間切成一格一格長度 n+1 的視窗（round），每個視窗最多裝 n+1 種**不同**的任務，裝不滿的位置就是 idle。第二個觀察：瓶頸是剩餘次數最多的任務。次數 f 的任務要佔 f 個位置且兩兩相隔至少 n+1，光它自己就把時間撐到 (f-1)*(n+1)+1，其他任務只是填縫。兩個觀察合起來就是 Greedy Frequency Heap：用 max-heap 依剩餘次數排序，每個視窗從堆頂取出最多 n+1 種任務、各執行一次、次數減一後放進等待佇列（本視窗內不得再取），視窗結束再把仍有剩餘的整批放回 heap。前一課的 Two Heaps 是用兩個 heap 切割資料流；今天回到單一 max-heap，重點轉為「為什麼貪婪是安全的」。
 
 ## Thinking
 
-在處理這類排程問題時，直覺上我們需要優先處理那些出現頻率最高、且種類最多的任務，因為它們最容易成為瓶頸並導致系統閒置。因此，我們首先統計每個任務的出現次數，並將其放入一個 max-heap 中。在每個時間步驟中，我們從 heap 中取出頻率最高的任務進行執行。執行後，該任務的剩餘次數減少，但由於冷卻時間的限制，它不能立即被再次執行。此時，我們不能直接丟棄它，而是需要將它連同「何時可以再次執行」的時間戳記（當前時間加上冷卻期）一同放入一個 FIFO 的冷卻佇列中。隨著時間的推進，當佇列中的任務冷卻期滿時，我們再將其重新放回 heap 中參與後續的排程競賽。
+用 tasks = `AAABBB`、n = 2 走一遍。計數得 {A: 3, B: 3}。第一個視窗長 3：取 A、B 各執行一次（各剩 2），第三格沒有第三種任務可取，只能 idle；視窗算滿 3 個單位。第二個視窗同樣是 A、B、idle。第三個視窗取 A、B 後兩者歸零、heap 為空——這是最後一輪，只算實際執行的 2 格，不補 idle。總計 3+3+2 = 8，排程為 `A B _ A B _ A B`。
+
+為什麼「先取剩餘最多者」不會吃虧？交換論證：假設某個最優排程在時刻 t 執行了 Y，而當時可用的 X 剩餘次數不少於 Y。把兩者從 t 起的出現位置逐對配對（X 的第 i 次對 Y 的第 i 次），每一對把較早的位置給 X、較晚的給 Y；X 多出來的次數留在原位。X 新的相鄰間距不小於原來 X 或 Y 的某個同任務間距，Y 亦然，所以 cooldown 仍然滿足；所有位置只是重新分配，總長度一個單位都沒變。若最優排程在 t 選擇 idle 而 X 可用，把 X 的下一次出現提前到 t 同樣合法且不更長。反覆套用，任何最優排程都能改寫成每一步先排最多者，貪婪因此不劣於最優。
+
+再對照公式解 `max(len(tasks), (maxFreq-1)*(n+1)+countOfMax)`。設最高次數為 f、有 c 種任務達到 f。任一種的最後一次出現至少落在第 (f-1)*(n+1)+1 格；c 種任務的最後一次出現彼此不同格，所以總長至少 (f-1)*(n+1)+c。這是下界，貪婪模擬恰好達到它：前 f-1 個視窗各滿 n+1 格，最後一輪只放那 c 個任務。但下界的另一半是任務總數本身：tasks = `AAABBBCCCDDD`、n = 2 時 (3-1)*3+4 = 10，可是有 12 個任務、一格只能做一件，答案是 12。這就是公式要取 max 的理由；種類多到每個視窗都填滿時完全不需要 idle，模擬版本此時每一輪都取滿、最後一輪也不補格，兩者自然一致。
 
 ## Pattern Recognition
 
-當題目具備以下特徵時，應立即聯想至 Greedy Frequency Heap Pattern：第一，任務具有明確的執行頻率或數量限制；第二，相同的任務之間存在必須間隔的冷卻時間（Cooldown Interval）；第三，目標是最小化完成所有任務所需的總時間或總步驟數。這種問題的核心在於局部最佳解的迭代，即「永遠優先處理當前剩餘次數最多的任務」，這正是 Greedy 策略的典型應用場景。
+觸發訊號是三件事同時出現：任務有次數、同種任務之間有固定的間隔限制、目標是最小化總時間或總步數。這類題的骨架都一樣——按剩餘次數排序、每個視窗取前 n+1 種、執行後重新入列。例如「重排字串使相同字元至少相距 k」就是同一套；把「相距 k」換成「每種資源同時最多用一份」也一樣。若題目只給次數而沒有間隔限制，不需要 heap，總數就是答案；若間隔限制不是對「同種」而是對「任意兩個」任務，那是另一種題。
 
 ## Common Mistakes
 
-最常見的錯誤在於忘記將冷卻期滿的任務重新放回 max-heap 中，導致程式陷入死循環或漏掉必要的任務執行。另一個常見誤區是誤用簡單的陣列排序來模擬每一秒的狀態，這會導致時間複雜度劣化為 O(N^2) 或更糟。此外，在計算最終總時間時，容易搞錯「實際執行的時間」與「因為冷卻而產生的閒置時間（Idle Time）」之間的數學關係，導致邊界條件出錯。
+第一，最後一輪也算滿 n+1 格。`AAABBB`、n = 2 會算成 9 而非 8；`AAAB`、n = 2 正確是 7（`A B _ A _ _ A`），算滿會變成 9，多算了 2 個本來不存在的 idle。第二，沒有優先取剩餘最多者，例如照字母序或先取次數少的：`CCAB`、n = 1 先排 A、B，再排 C 時得插一格 idle 成 `A B C _ C`，總長 5；正確是 `C A C B`，4。`AAABBBCCCDDD`、n = 2 若每輪固定取字母序前三種，會得到 16 而非 12。第三，執行後立刻放回 heap 而不經過等待佇列：`AAAB`、n = 2 時第一個視窗會連取三次 A，回傳 4，但那個排程違反 cooldown。第四，把「幾個 idle」當答案，或把公式的第二項單獨當答案：`AAABBBCCCDDD`、n = 2 的第二項是 10，比任務總數還少，這種排程不可能存在。
 
 ## Complexity
 
-時間複雜度為 O(n log k)，其中 n 是總任務數量，k 是任務的種類數（即字母表的大小，在此通常為 26）。在最壞情況下，每個任務都需要進出 heap 與 queue 多次，每次操作的時間與樹的高度成對數關係。空間複雜度為 O(k)，因為 max-heap 與冷卻佇列中同時存在的任務種類數不會超過總任務的種類上限 k。
+設任務總數為 N、任務種類為 k（本題 k ≤ 26）。每次從 heap 取出的都對應一次實際執行，取出總次數恰為 N，每次 O(log k)，加上視窗結束時的放回，總時間 O(N log k)；heap 與等待佇列最多各存 k 個項目，空間 O(k)。注意 `complexity_label` 裡的 n 指任務數，與題目的 cooldown 參數 n 不是同一個。公式解只需計數與一次掃描，O(N + k) 時間、O(k) 空間。
 
 ## Digest
 
-Task Scheduler with Cooldown 核心在於結合 Greedy 策略與資料結構。我們使用 max-heap 確保每次都優先執行頻率最高的任務，並透過帶有時間戳記的佇列來管理冷卻中的任務。這種設計能有效減少閒置時間，並將時間複雜度控制在 O(n log k)。掌握此 Pattern 後，面對各類帶有相依性或冷卻限制的資源配置問題將能游刃有餘。
+Task Scheduler 的答案是「含 idle 的總時間單位數」。任何連續 n+1 格內同一種任務最多出現一次，所以把時間切成長度 n+1 的視窗，每個視窗從 max-heap 取出最多 n+1 種剩餘次數最高的任務、各執行一次、次數減一後放進等待佇列，視窗結束再放回；除最後一輪外每輪都算 n+1 格，最後一輪只算實際執行數。先取最多者是安全的：對任何最優排程，把它與貪婪分歧點之後兩個任務的出現位置逐對交換，早的給次數多者、晚的給少者，cooldown 仍滿足且長度不變。公式 `max(N, (f-1)*(n+1)+c)` 是同一件事的封閉形式：後一項是最高次數 f 的 c 種任務撐出的下界，前一項是任務總數；種類多到不需 idle 時後一項會小於 N，所以要取 max。時間 O(N log k)，空間 O(k)。
 
 ## TypeScript Tip
 
-TypeScript 開發者在處理這類頻率統計與堆積操作時，應注意型別的安全防範。若自行實作 Priority Queue，務必確保比較函數的穩定性。以下為簡化的型別安全模擬範例：
+TS 無內建 heap；本題種類至多 26 種、每輪只要前 n+1 大，用計數加每輪排序就能示範貪婪本身：每輪 O(k log k)，heap 是 O((n+1) log k)——這是替代品，不是 heap。兩個斷言分別殺「最後一輪算滿」與「未優先取最多者」。
 
 ```typescript
-function processTasks(tasks: string[]): number {
-  const map: Record<string, number> = {};
-  for (const t of tasks) {
-    map[t] = (map[t] || 0) + 1;
+function leastInterval(tasks: string[], n: number): number {
+  const cnt = new Map<string, number>();
+  for (const t of tasks) cnt.set(t, (cnt.get(t) ?? 0) + 1);
+  let rem = [...cnt.values()];
+  let time = 0;
+  while (rem.length) {
+    rem.sort((a, b) => b - a);
+    const take = Math.min(n + 1, rem.length);
+    const next = rem.slice(take);
+    for (let i = 0; i < take; i++) if (rem[i]! > 1) next.push(rem[i]! - 1);
+    rem = next;
+    time += next.length ? n + 1 : take;
   }
-  const values = Object.values(map);
-  const maxVal = Math.max(...values);
-  if (maxVal <= 0) throw new Error("assertion failed");
-  return maxVal;
+  return time;
 }
-processTasks(["A", "A"]);
+if (leastInterval("AAAB".split(""), 2) !== 7) throw new Error("overcount");
+if (leastInterval("ABCC".split(""), 1) !== 4) throw new Error("order");
 ```
 
 ## Python Tip
 
-Python 的 heapq 預設為 min-heap，因此在處理最大頻率時，必須將計數值取負數（negative values）轉為最小堆積來模擬 max-heap 的行為。以下為標準操作示範：
+`heapq` 是 min-heap，把次數取負放入即成 max-heap；每一輪彈出的項目先收在 `hold`（本輪的等待佇列），輪末再整批推回。`AAAB` 的斷言殺「最後一輪算滿」與「立刻放回」，後者殺「沒取負、先取少者」。
 
 ```python
 import heapq
+from collections import Counter
 
 
-def demo_heap(nums: list[int]) -> int:
-    max_heap = [-x for x in nums]
-    heapq.heapify(max_heap)
-    val = -heapq.heappop(max_heap)
-    assert val == 5, "assertion failed"
-    return val
-
-
-demo_heap([1, 3, 5])
-```
-
-## TypeScript Corner
-
-在 TypeScript 中，由於標準函式庫未內建 Heap 資料結構，我們通常需要自行實作 Priority Queue 或使用陣列模擬。以下為利用計數與迴圈模擬 Task Scheduler 的完整程式碼，內含斷言以確保正確性。
-
-```typescript
-function leastInterval(tasks: string[], n: number): number {
-  const freq = new Map<string, number>();
-  for (const task of tasks) {
-    freq.set(task, (freq.get(task) || 0) + 1);
-  }
-
-  const counts = Array.from(freq.values()).sort((a, b) => b - a);
-  const maxFreq = counts[0];
-  let idleTime = (maxFreq - 1) * n;
-
-  for (let i = 1; i < counts.length; i++) {
-    idleTime -= Math.min(maxFreq - 1, counts[i]);
-  }
-
-  const result = tasks.length + Math.max(0, idleTime);
-  if (result !== 8) throw new Error("assertion failed");
-  return result;
-}
-
-leastInterval(["A", "A", "A", "B", "B", "B"], 2);
-```
-
-## Python Corner
-
-在 Python 中，可以完美結合 heapq 模組與 collections.deque 來實作具備冷卻機制的任務排程器。以下程式碼展示了如何利用 max-heap 與 timestamp queue 模擬任務執行，並包含斷言檢查。
-
-```python
-from collections import Counter, deque
-import heapq
-
-
-def leastInterval(tasks: list[str], n: int) -> int:
-    count = Counter(tasks)
-    maxHeap = [-cnt for cnt in count.values()]
-    heapq.heapify(maxHeap)
-
+def least_interval(tasks: list[str], n: int) -> int:
+    heap = [-c for c in Counter(tasks).values()]
+    heapq.heapify(heap)
     time = 0
-    q = deque()
-
-    while maxHeap or q:
-        time += 1
-        if maxHeap:
-            cnt = heapq.heappop(maxHeap) + 1
-            if cnt != 0:
-                q.append((cnt, time + n))
-        if q and q[0][1] == time:
-            heapq.heappush(maxHeap, q.popleft()[0])
-
-    assert time == 8, "assertion failed"
+    while heap:
+        hold, done = [], 0
+        while heap and done <= n:
+            c = heapq.heappop(heap) + 1
+            done += 1
+            if c < 0:
+                hold.append(c)
+        for c in hold:
+            heapq.heappush(heap, c)
+        time += n + 1 if heap else done
     return time
 
 
-leastInterval(["A", "A", "A", "B", "B", "B"], 2)
+assert least_interval(list("AAAB"), 2) == 7, "last round or cooldown wrong"
+assert least_interval(list("AAABBBCCCDDD"), 2) == 12, "max-first violated"
 ```
 
 ## Takeaway
 
-貪婪策略結合堆積與佇列，是解開冷卻排程問題的唯一金鑰。
+長度 n+1 的視窗內同種任務最多一次；每輪先取剩餘最多者不會吃虧，最後一輪只算實際執行數。
 
 ## Tomorrow Preview
 
-明天我們將探討 Sliding Window 與 Two Pointers 的進階結合應用，學習如何在動態資料流中維持特定區間的最優性質，敬請期待。
+Heap 模組到此收官：從 heap property 與陣列表示、單一路徑的修復、線性時間建堆，到 Top-K、多路合併、雙 heap 平衡，再到今天的貪婪排程，heap 的用法都圍繞同一句話——隨時知道最值在哪，其餘只維持夠用的順序。之後將另起新的主題。
 
 ## Today's Challenge
 
-- **621** · 題號 621 正是典型的 Task Scheduler 問題，需要透過 Greedy Frequency Heap 優先處理高頻任務並配合冷卻時間佇列來最小化閒置時間。
-  - Hint: 先統計所有任務的出現頻率，並利用負數技巧將 Python 的 min-heap 當作 max-heap 使用。
+- **621** · 這題就是本課的原型：同種任務間隔至少 n、求含 idle 的最少總時間，剩餘次數最多的任務撐出時間下界，適合以 max-heap 逐輪取前 n+1 種的貪婪模擬。
+  - Hint: 先計數。每輪從剩餘最多者開始取、每種最多一次、最多取 n+1 種，取完再把仍有剩餘者放回；只要放回後還有任務，本輪就算 n+1 個單位（含填不滿的 idle），最後一輪只算實際取出的個數。回傳累計的單位數。

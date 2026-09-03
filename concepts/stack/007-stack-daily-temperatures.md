@@ -16,12 +16,10 @@ next:
   - stack-online-stock-span
   - stack-sum-of-subarray-minimums
 learning_goal:
-  - >-
-    Understand the core principle of a monotonic decreasing stack to find the
-    next greater element.
+  - 理解單調遞減 stack（Monotonic Stack）用於尋找 next greater element 的核心原理。
 exit_criteria:
-  - Can store indices in a stack while maintaining decreasing order of values.
-  - Can resolve pending indices when a greater element is encountered.
+  - 能在 stack 中儲存索引，同時維持對應值的遞減順序。
+  - 能在遇到更大的元素時，結算尚待處理的索引。
 leetcode:
   - 739
 tags:

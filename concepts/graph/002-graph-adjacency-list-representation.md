@@ -13,9 +13,9 @@ next:
   - graph-adjacency-matrix-representation
   - graph-dfs-traversal
 learning_goal:
-  - Represent a graph using an adjacency list in code.
+  - 在程式碼中使用 adjacency list 表示圖。
 exit_criteria:
-  - Successfully build an adjacency list from a list of edges.
+  - 能從邊的列表成功建立 adjacency list。
 leetcode:
   - 133
 tags:

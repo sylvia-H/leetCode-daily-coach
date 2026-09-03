@@ -61,7 +61,7 @@ describe("backoff-exhaustion（FR-018：429 退避重試、非暫時性 4xx 立�
     });
     const llmClient = createLlmClient({ GEMINI_API_KEY: "key" }, { genAiFactory, throttle });
 
-    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank);
+    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank, []);
 
     expect(result.markdown).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);
@@ -85,7 +85,7 @@ describe("backoff-exhaustion（FR-018：429 退避重試、非暫時性 4xx 立�
       { genAiFactory, throttle: new Throttle({ rpmLimit: Infinity, maxRetries: 5 }) },
     );
 
-    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank);
+    const result = await generateOneConcept(llmClient, fakeConceptNode(), "author hints", fakeBank, []);
 
     expect(result.markdown).toBeUndefined();
     expect(result.attempts).toBe(MAX_REGEN);

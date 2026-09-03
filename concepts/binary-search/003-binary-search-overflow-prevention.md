@@ -12,13 +12,9 @@ prerequisite:
 next:
   - binary-search-exclusive-bounds
 learning_goal:
-  - >-
-    Prevent integer overflow when calculating mid in languages with fixed-width
-    integers.
+  - '在使用固定寬度整數的語言中，計算 mid 時防止整數溢位。'
 exit_criteria:
-  - >-
-    Use mid = left + Math.floor((right - left) / 2) instead of (left + right) /
-    2.
+  - '能改用 mid = left + Math.floor((right - left) / 2)，而非 (left + right) / 2。'
 leetcode:
   - 374
   - 33

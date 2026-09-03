@@ -6,128 +6,112 @@ pattern_label: Visited-Aware Duplicate Skipping
 complexity_label: O(n!) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can apply both visited tracking and conditional duplicate skipping for
-    permutations.
-  - Can prevent duplicate permutation branches.
+  - 能對排列同時套用 visited 追蹤與條件式的重複跳過。
+  - 能防止產生重複的排列分支。
 ---
 ## Concept
 
-Backtracking Permutation with Duplicates 是一種在包含重複元素的陣列中，生成所有不重複排列（Permutations）的經典演算法策略。在處理一般排列時，我們只關心每個元素是否已被使用過；然而當輸入資料含有重複值時，若不加過濾地進行遞迴窮舉，會產生大量結構相同但順序重複的結果。為了確保產生的排列結果唯一，必須在回溯框架中導入排序與去重機制。
+昨天的排列樹是按**索引**分支的：`used[i]` 記的是「第 i 格用掉了沒」，兩個值相等的格子在它眼裡是兩個不同的個體。所以對 `[1, 1, 2]` 它照樣長出 6 片葉子，`[1, 1, 2]`、`[1, 2, 1]`、`[2, 1, 1]` 各出現兩次——兩個 1 互換位置，值序列相同、索引序列不同。題目要的是不重複的**值序列**。今天的增量只有兩件事，其餘全部沿用昨天：先排序讓相等的值相鄰，再在迴圈裡多一條跳過條件 `i > 0 && nums[i] === nums[i - 1] && !used[i - 1]`。
+
+它的意思是：一群相等的值，只准**按索引順序**依次進入 `path`。要選第 i 格時，若前一格值相同卻還沒被用，代表你想越過前一格先用這一格——這種選法產生的值序列，「前一格先用」的分支已經產生過，直接剪掉。反之若 `used[i - 1]` 為 `true`，前一格已在 `path` 裡，這一格是合法的「下一個相同值」。
+
+正確性：把「相等值按索引遞增順序使用」當成每個值序列**唯一的標準索引寫法**。不重複——兩條索引序列若值序列相同、索引序列不同，其中必有某群相等值不是按索引順序用的，它第一次越過前一格時就被條件擋掉，所以每個值序列最多留下一條路徑。不漏——標準寫法每一步選第 i 格時，同群更小的索引都已在 `path` 裡：i 是該群第一格時值與前一格不同，否則 `used[i - 1]` 為 `true`，兩種情形條件都不成立，這條路一路暢通。合起來：葉節點與不重複的排列一一對應。新的不變式是：`path` 中任何一群相等值，其索引嚴格遞增。
 
 ## Thinking
 
-思考這類問題時，核心在於如何在遞迴樹中辨識並剪枝。首先，必須將輸入的數字陣列進行排序，讓相同的元素相鄰。在建構排列的每一層中，我們依序迭代未被訪問過的元素。如果當前元素與前一個元素相同，且前一個元素剛好在同一個遞迴層級中被略過（即尚未被使用），我們就必須跳過當前元素。透過這個嚴格的條件，能確保相同數值的元素在遞迴過程中維持固定的相對順序，進而徹底杜絕重複的排列組合。
+用 `[1, 1, 2]` 走一遍，索引 0、1 都是 1。根層 i = 0 選第一個 1；回來後 i = 1，`nums[1] === nums[0]` 且 `used[0]` 已還原為 `false`，跳過；i = 2 選 2。選了第一個 1 之後那層：i = 1 時 `used[0]` 為 `true`，允許，往下得到 `[1, 1, 2]`；i = 2 選 2，再選第二個 1（`used[0]` 仍為 `true`）得到 `[1, 2, 1]`。根層選 2 之後：i = 0 選 1，再 i = 1 得 `[2, 1, 1]`；i = 1 在這層被擋。三片葉子、九次呼叫，沒有一條死路。
+
+對照子集去重那一課：那裡的條件是 `i > start && nums[i] === nums[i - 1]`，「同一層剛被撤銷」由 `start` 界定；排列沒有 `start`，每層都從 0 掃，於是改用 `used[i - 1]` 判斷前一格是「在上面某層被用掉」還是「就在這一層剛被撤銷」。兩個條件形狀相似，問的問題不同——這正是這一課要拆開的東西。
+
+順帶一提，在同樣先排序的前提下，把條件反過來寫成 `used[i - 1]`（前一格已用才跳）**同樣正確**、輸出順序也相同，它強制的是索引遞減的標準寫法；差別在剪枝時機：`[1, 1, 2]` 要 12 次呼叫且出現死路，八個 1 更要 2781 次對 9 次。教材採用 `!used[i - 1]`。
 
 ## Pattern Recognition
 
-辨識此 Pattern 的關鍵線索在於題目的輸入包含重複數字，且要求輸出所有的排列組合、要求結果不得重複。當看到題目明確指出「含有重複元素」且屬於「排列（Permutation）」範疇時，直覺就應該想到必須結合 Visited Array 與條件式跳過（Conditional Skipping）的 Backtracking 技巧。
+線索是「輸入含重複值」加上「回傳所有**不重複**的排列」。更廣的辨識法：凡是回溯樹的葉子會因為「相等的東西互換」而重複出現，就在分支時釘死相等元素的使用順序，而不是生完再用 Set 過濾——後者對 8 個 1 仍會走完 8! 片葉子，前者只走 9 個節點。含重複字母的字串重排也是同一招。
 
 ## Common Mistakes
 
-最常見的錯誤是混淆了 Subset（子集）與 Permutation（排列）的去重邏輯。在 Subset 問題中，通常會使用 nums[i] == nums[i - 1] && i > direct_start 來去重；而在 Permutation 問題中，由於元素可以從任意位置選取（只要未被訪問），因此必須透過 visited 陣列來追蹤狀態，去重條件必須檢查前一個相同元素是否已被訪問或剛好在同層被捨棄，搞錯這兩者的條件會導致結果不正確或嚴重超時。
+以下結果都以本篇 Tip 的程式實測。第一，**只寫 `nums[i] === nums[i - 1]` 就跳、不看 `used[i - 1]`**：`[1, 1, 2]` 得到 0 筆——第二個 1 在任何層都被擋，`path` 到不了長度 3。第二，**忘了排序**：`[1, 2, 1]` 得到 6 筆，兩個 1 不相鄰，條件從未觸發。第三，**改看 `path` 最後一個元素**（`path[path.length - 1] === nums[i]` 就跳）：`[1, 1, 2]` 得到 `[1, 2, 1]` 兩次，`[1, 1, 2]` 與 `[2, 1, 1]` 全沒了——相等值相鄰的排列被誤殺，不相鄰的重複反而沒擋。第四，**沿用按值的 Set 當 visited**：`[1, 1, 2]` 得到 0 筆，兩個 1 被視為同一個值，`path` 永遠湊不到 3 個。第五，**生完再靠 Set 去重**：結果正確，但沒有剪掉任何分支，8 個相同元素要走完 8! 片葉子才吐出 1 筆。
 
 ## Complexity
 
-時間複雜度為 O(n!)，因為在最壞情況下仍需枚舉所有的排列可能；空間複雜度為 O(n)，主要取決於遞迴調用堆疊的最大深度以及儲存狀態的 visited 陣列所需記憶體。
+排序 O(n log n)。剪枝後的樹沒有死路，葉數是 n! 除以各重複值出現次數的階乘乘積（`[1, 1, 2, 2]` 為 24 / (2 · 2) = 6）；每個節點掃 n 格、每片葉拷貝 O(n)，最壞（全相異）仍是 O(n · n!)，全相同時只剩 n + 1 個節點。額外空間 O(n)：`path`、`used` 與遞迴深度。
 
 ## Digest
 
-掌握 Backtracking Permutation with Duplicates 的核心在於利用排序與 visited 狀態判定來進行剪枝。透過「nums[i] == nums[i-1] 且前一個相同元素未被訪問」的條件，能夠完美過濾掉重複的排列分支。此技巧在處理含重複元素的組合與排列題目時非常實用。
+昨天的排列樹按索引分支，遇到 `[1, 1, 2]` 會把三種排列各生兩次。今天只加兩件事：先排序讓相等值相鄰，再在迴圈裡加 `i > 0 && nums[i] === nums[i - 1] && !used[i - 1]` 就跳過。意思是一群相等的值只准按索引順序進入 `path`：前一格值相同卻還沒用，代表你想越過它，這條分支的值序列已由「前一格先用」的分支產生過。正確性：以「相等值按索引遞增使用」作為每個值序列唯一的標準索引寫法，非標準的走法在第一次越過前一格時被擋（不重複），標準走法每一步的前一格若與它同值就必定已被使用，條件不觸發（不漏）。與子集去重的差別：那裡用 `start` 判斷同層，排列沒有 `start`，改用 `used[i - 1]`。反寫成 `used[i - 1]` 也正確，只是剪枝較晚。葉數為 n! 除以各重複次數階乘之積，額外空間 O(n)。
 
 ## TypeScript Tip
 
+測資 `[1, 2, 1]` 未排序，能同時抓到漏排序（6 筆）與漏 `!used[i - 1]`（0 筆）。
+
 ```typescript
-function solveTypeScript(nums: number[]): number {
-  nums.sort((a, b) => a - b);
-  if (nums.length === 0) throw new Error("assertion failed");
-  return nums.length;
+import { strict as assert } from 'node:assert';
+
+function permuteUnique(nums: number[]): number[][] {
+  nums = [...nums].sort((a, b) => a - b);
+  const res: number[][] = [];
+  const path: number[] = [];
+  const used = nums.map(() => false);
+  const bt = (): void => {
+    if (path.length === nums.length) { res.push([...path]); return; }
+    for (let i = 0; i < nums.length; i++) {
+      if (used[i]) continue;
+      if (i > 0 && nums[i] === nums[i - 1] && !used[i - 1]) continue; // 今天的增量
+      used[i] = true; path.push(nums[i]!);
+      bt();
+      path.pop(); used[i] = false;
+    }
+  };
+  bt();
+  return res;
 }
 
-if (solveTypeScript([1, 1, 2]) !== 3) throw new Error("assertion failed");
+assert.deepEqual(permuteUnique([1, 2, 1]), [[1, 1, 2], [1, 2, 1], [2, 1, 1]]);
 ```
 
 ## Python Tip
 
-```python
-def solve_python(nums: list[int]) -> int:
-    nums.sort()
-    assert len(nums) > 0, "assertion failed"
-    return len(nums)
-
-assert solve_python([1, 1, 2]) == 3, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function permuteUnique(nums: number[]): number[][] {
-  const result: number[][] = [];
-  nums.sort((a, b) => a - b);
-  const visited = new Array(nums.length).fill(false);
-  
-  function backtrack(path: number[]) {
-    if (path.length === nums.length) {
-      result.push([...path]);
-      return;
-    }
-    for (let i = 0; i < nums.length; i++) {
-      if (visited[i]) continue;
-      if (i > 0 && nums[i] === nums[i - 1] && !visited[i - 1]) continue;
-      visited[i] = true;
-      path.push(nums[i]);
-      backtrack(path);
-      path.pop();
-      visited[i] = false;
-    }
-  }
-  backtrack([]);
-  return result;
-}
-
-const output = permuteUnique([1, 1, 2]);
-if (output.length !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
+`not used[i - 1]` 是關鍵；反寫成 `used[i - 1]` 仍正確但剪枝較晚。
 
 ```python
 def permute_unique(nums: list[int]) -> list[list[int]]:
-    result = []
-    nums.sort()
-    visited = [False] * len(nums)
-    
-    def backtrack(path: list[int]):
+    nums = sorted(nums)
+    res: list[list[int]] = []
+    path: list[int] = []
+    used = [False] * len(nums)
+
+    def bt() -> None:
         if len(path) == len(nums):
-            result.append(path[:])
+            res.append(path[:])
             return
         for i in range(len(nums)):
-            if visited[i]:
+            if used[i]:
                 continue
-            if i > 0 and nums[i] == nums[i - 1] and not visited[i - 1]:
+            if i > 0 and nums[i] == nums[i - 1] and not used[i - 1]:
                 continue
-            visited[i] = True
+            used[i] = True
             path.append(nums[i])
-            backtrack(path)
+            bt()
             path.pop()
-            visited[i] = False
-            
-    backtrack([])
-    return result
+            used[i] = False
 
-output = permute_unique([1, 1, 2])
-assert len(output) == 3, "assertion failed"
+    bt()
+    return res
+
+assert permute_unique([1, 2, 1]) == [[1, 1, 2], [1, 2, 1], [2, 1, 1]]
+assert permute_unique([1, 1, 1]) == [[1, 1, 1]]
 ```
 
 ## Takeaway
 
-排序陣列、結合 visited 狀態、嚴格檢查重複元素的相對位置，是解決含重複元素排列問題的三大關鍵。
+排序後加一條 `nums[i] == nums[i-1] and not used[i-1]` 就跳過：相等值只按索引順序使用，每個不重複排列恰生成一次。
 
 ## Tomorrow Preview
 
-明天我們將探討回溯演算法在字串分割與回文切分問題中的應用，學習如何有效結合 DP 優化與 Backtracking 來處理子問題的狀態轉移。
+明天離開陣列、改切字串：在每個可能的切點把字串分成片段，用 Backtracking 探索所有切法，並把「這一段是不是回文」當成剪枝條件，只往合法的切分往下走。
 
 ## Today's Challenge
 
-- **47** · 題目輸入包含重複的數字，且要求返回所有不重複的排列組合，完全對應 Visited-Aware Duplicate Skipping 的核心 Pattern。
-  - Hint: 先將陣列排序，並在遞迴迴圈中利用 visited[i-1] 是否為 false 來決定是否略過當前重複元素。
+- **47** · 輸入含重複值、要求不重複的排列，正是今天這條跳過條件的原題；與昨天的差別只有排序與那一行 `!used[i - 1]`。
+  - Hint: 先排序；每層 i 從 0 掃，`used[i]` 為真跳過，`i > 0 && nums[i] == nums[i-1] && !used[i-1]` 也跳過；其餘同昨天：葉節點 push 拷貝，返回時 pop 並還原 `used[i]`。

@@ -6,32 +6,32 @@ pattern_label: Frequency Map
 complexity_label: O(n) / O(n)
 estimated_minutes: 10
 exit_criteria:
-  - Can build a frequency map from an array
-  - Can iterate through map entries to find maximum or matching frequencies
+  - 能從陣列建立 frequency map
+  - 能走訪 map 的項目以找出最大或符合條件的頻率
 ---
 ## Concept
 
-Frequency Counting with Hash Map 是一種透過雜湊表（Hash Map）來統計資料集合中各元素出現次數的核心演算法技巧。在處理陣列、字串或清單時，我們常需要得知特定元素出現了幾次，藉此判斷是否重複、尋找最常出現的元素，或是驗證數量是否符合特定條件。透過將元素作為鍵（Key）、出現次數作為值（Value），我們能在常數時間內完成頻率的查詢與更新，將原本可能需要平方級時間的暴力解法降至線性時間。
+Frequency Counting with Hash Map 是以雜湊表統計集合中各元素出現次數的基礎技巧：把元素本身當作鍵（Key）、出現次數當作值（Value）。統計之所以只需一次走訪就完整，是因為「計數」與順序無關——每個元素恰好為自己的鍵貢獻一次加一，走訪完畢時頻率分佈就完整成形；而雜湊表讓每次「查詢舊計數、寫回新計數」都是平均 O(1)，整體因此是線性時間。相比之下，若每遇到一個元素就重新掃描整個集合來數它出現幾次，成本會是 O(n^2)——頻率表正是用 O(n) 的空間換掉這層重複掃描。
 
 ## Thinking
 
-當面臨需要計算、比較或統計集合中元素數量的問題時，我們的思考流程應直接導向 Frequency Map。首先，初始化一個空的雜湊表來記錄各元素的對應次數。接著，遍歷整個資料集合一次；在每次迭代中，檢查當前元素是否已存在於雜湊表中。若尚未存在，則將其設為初始計數（通常為 1）；若已存在，則將其計數遞增。遍歷結束後，這個雜湊表即完整包含了所有元素的出現頻率分佈，後續只需針對此雜湊表進行迴圈檢索或條件判斷即可解決問題。
+標準流程分兩個階段。第一階段建表：走訪集合一次，對每個元素先查它目前的計數——不存在就視為 0——再加一寫回。「不存在視為 0」是這個 Pattern 最關鍵的實作細節，直接對未初始化的鍵遞增，在許多語言會得到錯誤結果。第二階段消費這張表：需求不同，用法也不同——找出現次數為 1 的元素，就再走訪一次原集合並查表；找頻率最高者，就迭代表中所有鍵值對取最大值；驗證一個集合的字元是否足以組成另一個集合，則先統計供給方，再逐一扣除需求方的計數，一旦某個鍵被扣成負數即可判定不足。值得注意的是，第二次走訪「原集合」還是「頻率表」是有差別的：前者保留了原始順序（例如要找「第一個」符合條件的元素），後者只剩頻率資訊。
 
 ## Pattern Recognition
 
-辨識此 Pattern 的關鍵線索在於題目敘述中出現尋找重複項目、計算出現次數、判斷是否包含足夠數量的字元，或是尋找頻率最高、唯一出現的元素。例如題目要求「找出第一個不重複的字元」、「檢查字串 A 是否能由字串 B 的字元組成」，或是「依據元素出現頻率進行排序」，這些情境皆高度契合 Frequency Map 的應用場景。
+題目敘述出現這些訊號時，就該想到 Frequency Map：計算出現次數、找重複或唯一出現的元素、找出現頻率最高（或前幾高）的項目、判斷一個集合的元素是否足夠組成另一個集合、依出現次數重新排序。共同點是答案只取決於「每種元素各出現幾次」，而與元素間的排列細節無關；一旦確認這一點，先建頻率表再消費它，幾乎就是標準解法骨架。
 
 ## Common Mistakes
 
-最常見的錯誤在於處理新鍵值時，忘記正確初始化計數為 0 或 1。在許多程式語言中，直接對未定義的鍵進行數值遞增會導致型別錯誤（如 undefined 加上數字變成 NaN）。此外，開發者常在遍歷雜湊表時同時修改其結構，導致迭代器失效或邏輯錯亂。另一個常見盲點是忽略了大寫與小寫字母或特殊字元的差異，導致計數結果不準確。
+最常見的錯誤是漏掉初始化：在 TypeScript 中對 Map 裡不存在的鍵取值會得到 undefined，直接加一會變成 NaN，必須用 `freq.get(key) ?? 0` 這類寫法收斂。第二是在迭代雜湊表的同時增刪其中的鍵，可能導致迭代行為錯亂，應先收集再修改。第三是計數口徑不一致：大小寫、全形半形或空白字元是否算同一個鍵，須先向題目確認。最後是兩表比對只驗證單向——供給方計數足夠不代表兩者頻率完全相同，若題目要求「恰好相等」，還得確認沒有多出來的鍵。
 
 ## Complexity
 
-Time Complexity: O(n)，其中 n 為資料集合的長度，因為我們只需完整遍歷集合一次即可建立完整的頻率對映，雜湊表的鍵值插入與查找在平均狀況下皆為 O(1) 時間。Space Complexity: O(u)，其中 u 為集合中唯一元素的數量，用以儲存雜湊表的鍵值對。
+Time Complexity: O(n)，其中 n 為集合長度：建表走訪一次，每次查詢與寫回平均 O(1)；後續消費頻率表至多再一次線性走訪。Space Complexity: O(u)，u 為獨特元素的數量；若鍵的種類有固定上限（例如僅小寫英文字母 26 種），空間即為 O(1)。
 
 ## Digest
 
-Frequency Counting with Hash Map 是處理計數與頻率統計問題的基石。核心概念是利用雜湊表將元素映射至其出現次數。透過單次遍歷集合並動態更新計數，我們能將時間複雜度優化至 O(n)。在 TypeScript 中，需注意使用 map.get(key) || 0 來防範未初始化造成的 NaN 問題；在 Python 中則可直接運用 collections.Counter 簡化程式碼。此 Pattern 廣泛應用於字串檢索、驗證與排序等各類 LeetCode 題目中。
+Frequency Counting with Hash Map 以元素為鍵、次數為值，單次走訪即可建出完整頻率分佈，把 O(n^2) 的重複掃描降為 O(n)。實作關鍵是「不存在視為 0」的初始化——TypeScript 用 `freq.get(key) ?? 0`，Python 直接用 collections.Counter。建表之後依需求消費：查唯一、取最大、逐項扣除比對兩集合。空間 O(u)，鍵種類固定時即為 O(1)。
 
 ## TypeScript Tip
 
@@ -39,12 +39,13 @@ Frequency Counting with Hash Map 是處理計數與頻率統計問題的基石�
 function getCharFrequency(s: string): Map<string, number> {
   const freq = new Map<string, number>();
   for (const char of s) {
-    freq.set(char, (freq.get(char) || 0) + 1);
+    freq.set(char, (freq.get(char) ?? 0) + 1);
   }
   return freq;
 }
 const freqMap = getCharFrequency("leetcode");
 if (freqMap.get("e") !== 3) throw new Error("assertion failed");
+if (freqMap.get("t") !== 1) throw new Error("assertion failed");
 ```
 
 ## Python Tip
@@ -57,47 +58,22 @@ def get_char_frequency(s: str) -> Counter:
 
 freq_map = get_char_frequency("leetcode")
 assert freq_map["e"] == 3, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function countFrequencies(nums: number[]): Map<number, number> {
-  const freqMap = new Map<number, number>();
-  for (const num of nums) {
-    freqMap.set(num, (freqMap.get(num) || 0) + 1);
-  }
-  return freqMap;
-}
-const result = countFrequencies([1, 2, 2, 3, 3, 3]);
-if (result.get(3) !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-from collections import Counter
-
-def count_frequencies(nums: list[int]) -> dict[int, int]:
-    return dict(Counter(nums))
-
-result = count_frequencies([1, 2, 2, 3, 3, 3])
-assert result[3] == 3, "assertion failed"
+assert freq_map["z"] == 0, "missing key should default to 0"
 ```
 
 ## Takeaway
 
-以元素為鍵、次數為值建立雜湊表，單次遍歷即可完成 O(n) 的高效頻率統計。
+以元素為鍵、次數為值建立雜湊表，單次走訪即完成 O(n) 頻率統計，記得把不存在的鍵視為 0。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers Pattern，學習如何在排序或未排序陣列中利用雙指標移動來有效降低搜尋與配對的時間複雜度。
+明天將探討 Complement Lookup：走訪時把看過的值存進雜湊表，用 O(1) 查詢「目標值減去當前值」的互補數是否出現過，一趟完成配對搜尋。
 
 ## Today's Challenge
 
-- **387** · 必須先統計字串中每個字元的出現頻率，才能找出第一個頻率為 1 的唯一字元。
-  - Hint: 建立頻率雜湊表後，再次遍歷字串並檢查第一個計數為 1 的字元索引。
-- **383** · 需統計 magazine 中的可用字元頻率，並與 ransomNote 所需的字元數量進行比對。
-  - Hint: 統計 magazine 頻率後，逐一扣除 ransomNote 的字元需求，若小於 0 則代表無法組成。
-- **451** · 透過頻率雜湊表統計字元出現次數後，必須依據頻率數值進行降序排序與重建字串。
-  - Hint: 建立頻率對映後，將字元依據對應的次數排序並重新組合成結果字串。
+- **387** · 答案取決於每個字元的出現次數，必須先建頻率表，再依原始順序找出計數為 1 的字元。
+  - Hint: 建表後第二次走訪原字串（而非頻率表），第一個計數為 1 的索引即為答案。
+- **383** · 驗證一方的字元數量能否滿足另一方的需求，是兩個頻率表逐項比對的典型應用。
+  - Hint: 統計 magazine 的字元頻率後逐一扣除 ransomNote 的需求，出現負數即無法組成。
+- **451** · 統計字元頻率後依次數降冪重建字串，是頻率表結合排序的進階應用。
+  - Hint: 建立頻率表後，把字元依對應計數由大到小排序，再各自重複其次數拼接成結果。

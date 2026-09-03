@@ -12,13 +12,9 @@ prerequisite:
 next:
   - heap-task-scheduler
 learning_goal:
-  - >-
-    Use a max-heap and a min-heap together to dynamically track the median of a
-    stream.
+  - 同時使用一個 max-heap 與一個 min-heap，動態追蹤資料流的中位數。
 exit_criteria:
-  - >-
-    Can maintain balance between two heaps such that roots give the median
-    directly.
+  - 能維持兩個 heap 之間的平衡，使兩者的根能直接給出中位數。
 leetcode:
   - 295
 tags:

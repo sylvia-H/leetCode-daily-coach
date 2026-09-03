@@ -6,125 +6,87 @@ pattern_label: Mirror Image DFS
 complexity_label: O(n) / O(h)
 estimated_minutes: 20
 exit_criteria:
-  - 'Compare left subtree''s left with right subtree''s right, and left with right.'
+  - 能比較左子樹的 left 與右子樹的 right，並比較 left 與 right。
 ---
 ## Concept
 
-Symmetric Tree Check 核心觀念在於驗證一個二元樹是否為其自身的鏡像。這意味著根節點的左子樹必須與右子樹呈鏡像對稱，包含節點數值相等以及結構相對反轉。
+一棵二元樹「對稱」，意思是把它沿著根節點的中軸左右翻轉後與原樹重合。這句話可以精確化為：根的左子樹與右子樹互為鏡像。而「互為鏡像」本身有遞迴定義——兩個節點 a 與 b 互為鏡像，若且唯若兩者同為空；或兩者皆非空、數值相等，且 a 的左子樹與 b 的右子樹互為鏡像、a 的右子樹與 b 的左子樹互為鏡像。整個問題就這樣從「一棵樹的性質」化約成昨天學過的「兩個節點之間的關係」。
 
 ## Thinking
 
-思考對稱性時，單一指標往往不足，因為我們需要同時比較兩個相對位置的節點。因此，設計一個接受兩個參數的遞迴輔助函數是標準作法。該函數同時走訪兩個節點，檢查它們的值是否相等，並將左節點的左子樹與右節點的右子樹進行配對，同時將左節點的右子樹與右節點的左子樹進行交叉配對。
+原函式的簽名只收一個 root，但鏡像關係天生是「一對節點」的問題，所以標準作法是另寫一個接收兩個節點 (a, b) 的輔助函式，主函式回傳 mirror(root.left, root.right)；root 為空的空樹視為對稱。
+
+輔助函式內部的三段判斷與昨天完全相同：同空回傳 true、單空回傳 false、皆非空才比較數值。差別只在遞迴的配對方向。為什麼要交叉？想像鏡子的效果：左半邊最外側的東西，映到右半邊也在最外側。所以 a 的 left（外側）要對 b 的 right（外側），a 的 right（內側）要對 b 的 left（內側）。若改成左對左、右對右，驗證的其實是「左右子樹完全相同」——那是形狀平移，不是鏡射。
+
+正確性同樣來自定義：mirror(a, b) 的四個條件（同空、值相等、外側互為鏡像、內側互為鏡像）就是鏡像定義的逐字翻譯，遞迴只是把大問題拆成兩個更小的同型問題，直到空節點觸底。
+
+疊代版則把節點成對入列：每次取出一對 (a, b) 做三段判斷，通過後將 (a.left, b.right) 與 (a.right, b.left) 兩對交叉入列。與遞迴版邏輯一致，只是把堆疊換成佇列。
 
 ## Pattern Recognition
 
-當題目要求驗證某個資料結構、樹狀結構或字串是否以中心軸呈左右對稱、迴文或鏡像反射時，即可辨識為 Mirror Image DFS Pattern。
+當題目要求驗證資料結構是否以某個中軸左右對稱、或要求「翻轉後仍等於自己」時，就是 Mirror Image DFS 的訊號。另一個實務線索是簽名不匹配：題目給你一個 root，但子問題需要同時追蹤兩個位置——這時「主函式包一層、輔助函式收兩個指標」就是標準解法骨架。它與昨天的 Same Tree 只差在配對方向：平行配對驗證「相同」，交叉配對驗證「鏡像」。
 
 ## Common Mistakes
 
-最常見的錯誤是沿用一般樹狀走訪的思維，去比較左子樹的左子樹與右子樹的左子樹（即同側比較），而忽略了鏡像反射需要進行交叉比較（左對右、右對左）。
+最典型的錯誤是沿用平行走訪的慣性，比較 a.left 與 b.left（同側比較）——這驗證的是兩個子樹相同而非互為鏡像：真正對稱的樹會被判為不對稱，而左右子樹一模一樣、兩側同向偏斜的樹反而會被誤判為對稱。第二個錯誤是想逐層收集數值、檢查每層是否回文：不記錄 null 佔位時，缺孔位置不同的兩層可能產生相同的數值序列而漏判。第三個錯誤是忘了空樹與單節點樹都是對稱的，root 為空時直接當例外處理或回傳 false。最後，別把對稱檢查與樹的反轉混為一談：檢查是唯讀的比對，不需要也不應該實際改動任何指標。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 為樹中的節點總數，因為每個節點最多被訪問一次。空間複雜度為 O(h)，其中 h 為樹的高度，代表遞迴呼叫堆疊的最大深度。
+時間複雜度 O(n)：每個節點恰好參與一次配對比較，n 為節點總數。空間複雜度 O(h)：遞迴深度等於樹高，平衡樹約 O(log n)，歪斜樹最壞 O(n)；疊代版的佇列在最寬一層可達 O(n)。
 
 ## Digest
 
-本單元探討 Symmetric Tree 檢查。核心在於使用 Mirror Image DFS 比較左右子樹的對稱性。遞迴函數必須同時接收兩個節點進行交叉比對。
+Symmetric Tree Check 把「一棵樹是否對稱」化約成「左右子樹是否互為鏡像」。輔助函式收一對節點 (a, b)：同空為真、單空為假、皆非空則比較數值，並交叉遞迴——外側對外側 mirror(a.left, b.right)、內側對內側 mirror(a.right, b.left)。同側比較驗證的是相同而非鏡像，這是與 Same Tree 唯一的分歧點。時間 O(n)、空間 O(h)。
 
 ## TypeScript Tip
 
-TS 中注意節點型別與 null 檢查。
+空值判斷可合併為 `a === b`：同為 null 時相等、單空時不等，之後型別已收斂可安全讀 `.val`。
+
 ```typescript
-function check(a: number | null, b: number | null): boolean {
-  if (a === null && b === null) return true;
-  if (a === null || b === null) return false;
-  const ok = a === b;
-  if (!ok) throw new Error("mismatch");
-  return ok;
+import assert from "node:assert";
+class TreeNode { constructor(public val: number, public left: TreeNode | null = null, public right: TreeNode | null = null) {} }
+function isSymmetric(root: TreeNode | null): boolean {
+  const mirror = (a: TreeNode | null, b: TreeNode | null): boolean => {
+    if (a === null || b === null) return a === b;
+    return a.val === b.val && mirror(a.left, b.right) && mirror(a.right, b.left);
+  };
+  return root === null || mirror(root.left, root.right);
 }
-check(10, 10);
+const s = new TreeNode(1, new TreeNode(2, null, new TreeNode(3)), new TreeNode(2, new TreeNode(3)));
+assert(isSymmetric(s));
+assert(!isSymmetric(new TreeNode(1, new TreeNode(2), new TreeNode(3))));
 ```
 
 ## Python Tip
 
-Python 中可利用巢狀函數封裝對稱邏輯。
-```python
-def check(a: int | None, b: int | None) -> bool:
-    if a is None and b is None:
-        return True
-    if a is None or b is None:
-        return False
-    ok = (a == b)
-    assert ok, "mismatch"
-    return ok
-check(10, 10)
-```
+巢狀 `mirror(a, b)` 封裝雙節點遞迴；空值判斷合併為 `a is b`——同為 None 才成立。
 
-## TypeScript Corner
-
-TypeScript 在處理節點型別時，需要精確定義可能為 null 的情況。以下為實作範例：
-```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-function isSymmetric(root: TreeNode | null): boolean {
-  if (!root) return true;
-  const isMirror = (t1: TreeNode | null, t2: TreeNode | null): boolean => {
-    if (!t1 && !t2) return true;
-    if (!t1 || !t2) return false;
-    return t1.val === t2.val && isMirror(t1.left, t2.right) && isMirror(t1.right, t2.left);
-  };
-  const result = isMirror(root.left, root.right);
-  if (result !== true) throw new Error("Assertion failed");
-  return result;
-}
-const node = new TreeNode(1, new TreeNode(2), new TreeNode(2));
-isSymmetric(node);
-```
-
-## Python Corner
-
-Python 在處理遞迴與 Optional 節點型別時，語法簡潔明瞭。以下為實作範例：
 ```python
 class TreeNode:
     def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
+        self.val, self.left, self.right = val, left, right
 
 def is_symmetric(root: TreeNode | None) -> bool:
-    if not root:
-        return True
-    def is_mirror(t1: TreeNode | None, t2: TreeNode | None) -> bool:
-        if not t1 and not t2:
-            return True
-        if not t1 or not t2:
-            return False
-        return t1.val == t2.val and is_mirror(t1.left, t2.right) and is_mirror(t1.right, t2.left)
-    result = is_mirror(root.left, root.right)
-    assert result == True, "Assertion failed"
-    return result
-root = TreeNode(1, TreeNode(2), TreeNode(2))
-is_symmetric(root)
+    def mirror(a, b):
+        if a is None or b is None:
+            return a is b
+        return a.val == b.val and mirror(a.left, b.right) and mirror(a.right, b.left)
+    return root is None or mirror(root.left, root.right)
+
+s = TreeNode(1, TreeNode(2, None, TreeNode(3)), TreeNode(2, TreeNode(3)))
+assert is_symmetric(s)
+assert not is_symmetric(TreeNode(1, TreeNode(2), TreeNode(3)))
 ```
 
 ## Takeaway
 
-對稱樹檢查的關鍵在於交叉比較左右子樹，透過雙指標遞迴確保結構與數值完全鏡像。
+對稱即左右子樹互為鏡像：輔助函式收一對節點，外側對外側、內側對內側交叉遞迴，同側比較驗的是相同不是鏡像。
 
 ## Tomorrow Preview
 
-明天我們將探討 Binary Tree Level Order Traversal，學習如何使用 BFS 逐層走訪樹狀結構。
+明天進入 Invert Binary Tree：今天我們「驗證」鏡像關係而不動樹，明天則實際動手把每個節點的左右子樹對調，產生一棵鏡像樹——兩課合起來，你會同時掌握鏡像的判定與建構。
 
 ## Today's Challenge
 
-- **101** · 此題直接要求判斷二元樹是否為自身的鏡像，完全對應 Mirror Image DFS Pattern 的雙指標交叉比較核心邏輯。
-  - Hint: 編寫一個輔助函數接收左節點與右節點，同時遞迴檢查左的左與右的右、左的右與右的左。
+- **101** · 要求判斷二元樹是否為自身的鏡像，正是雙指標交叉配對的原型題：外側對外側、內側對內側，一次練熟 Mirror Image DFS。
+  - Hint: 寫一個收兩個節點的輔助函式，先做同空與單空判斷，再比較數值並交叉遞迴 (a.left, b.right) 與 (a.right, b.left)。

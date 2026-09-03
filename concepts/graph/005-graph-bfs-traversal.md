@@ -12,9 +12,9 @@ prerequisite:
 next:
   - graph-connected-components
 learning_goal:
-  - Implement Breadth-First Search using a queue to traverse level by level.
+  - 使用佇列實作 Breadth-First Search，逐層走訪。
 exit_criteria:
-  - Find shortest paths in unweighted graphs using BFS.
+  - 能使用 BFS 在無權重圖中找出最短路徑。
 leetcode:
   - 994
 tags:

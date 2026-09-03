@@ -6,139 +6,92 @@ pattern_label: Percolate Up
 complexity_label: O(log n) time / O(1) space
 estimated_minutes: 20
 exit_criteria:
-  - Can trace how a newly added element bubbles up to its correct position.
+  - 能追蹤新加入的元素如何向上冒泡到正確位置。
 ---
 ## Concept
 
-Heap Insertion and Sift-Up Operation 是建構與維護 Binary Heap（二元堆積）資料結構的核心演算法。當我們將一個新的元素加入 Heap 時，為了維持 Heap Property（堆積性質，例如 Max-Heap 中父節點大於等於子節點，Min-Heap 中父節點小於等於子節點），必須將新元素放置於底層的最右側空位（即陣列的尾端），隨後透過 Percolate Up（向上滲透）或 Sift-Up 操作，將該元素與其父節點進行比較與交換，直到滿足 Heap Property 或到達根節點為止。此機制確保了每次動態插入後，資料結構都能在 O(log n) 的時間內恢復平衡。
+昨天把 heap 放進了陣列，今天讓它長大。插入（push）分兩步：先把新元素接在陣列尾端，也就是索引 n 的位置；再從那裡出發，反覆與 parent 比較，若違反 heap property 就交換並上移一層，直到 parent 不比自己大、或已經抵達 root 為止。這個往上走的過程叫 sift-up，也叫 percolate up 或 bubble up。第一步之所以放尾端而不是別處，是為了守住形狀約束：索引 n 正是完全二元樹「最後一層最右邊的下一個空位」，放進去之後整棵樹仍然完全，昨天的三條索引公式全部繼續適用。形狀既然沒壞，剩下要修的就只有順序約束，而且——這是本課的核心——只有一條路徑可能出問題。以下沿用昨天的 Min-Heap 慣例：parent 的值小於或等於每個 child。
 
 ## Thinking
 
-在思考如何實作 Heap Insertion 時，我們需要結合陣列表示法（Array-based Heap Representation）來定位節點。對於索引為 i 的節點，其父節點的索引為 Math.floor((i - 1) / 2)。思考流程如下：首先，將新元素推送至陣列結尾。此時新元素可能破壞了堆積性質。我們記錄當前元素的索引變數 currentIndex，並進入迴圈。在每一次迭代中，若 currentIndex 大於 0 且當前元素違反了堆積順序（例如在 Min-Heap 中小於父節點），我們就將其與父節點交換位置，並將 currentIndex 更新為父節點的索引。這個過程持續進行，直到 currentIndex 等於 0（到達根節點）或者父節點已經滿足堆積條件為止。這個不斷向上檢查與修正的過程，就是典型的 Percolate Up 模式。
+先問：放進新元素 x 之後，哪些 parent-child 配對可能違規？牽涉到 x 的配對只有兩種：x 與它的 parent，以及 x 與它的 child——但 x 在索引 n，是葉，沒有 child。所以全樹唯一可能違規的配對是「x 與 x 的 parent」，其他配對的值都沒動過，原本合法就仍然合法。接著看一次交換做了什麼。設 x 在索引 i、parent 在 p，且 `a[p] > x`。交換後 x 上移到 p，原本的 parent 值 v 下移到 i。逐一檢查受影響的配對：v 與它的新 child（x 原本的 child，也就是 v 原本的孫）——v 原本就是那些節點的祖先，沿路徑遞移得 `v <= 孫`，合法；x 與它的新 child v——剛才的比較就是 `v > x`，合法；x 與 x 原本的兄弟（若有）——它現在改掛在 x 底下，而它原本是 v 的 child，`v <= 兄弟` 加上 `x < v` 得 `x < 兄弟`，合法。唯一沒有保證的，又只剩「x 與 x 的新 parent」。這就是迴圈不變式：**每一輪開始時，全樹只有 x 與其 parent 這一對可能違規**。迴圈的終止條件有兩個：`a[parent(i)] <= x`，此時最後一對也合法，全樹恢復 heap property；或 i = 0，x 已是 root，沒有 parent 可違規。兩種結束方式都直接推出正確性。用 `[1, 5, 2, 9, 7, 3]` 插入 0 走一遍：0 放到索引 6，parent 是索引 2 的 2，2 > 0 交換；到索引 2，parent 是 root 的 1，1 > 0 交換；到索引 0，停。途中只碰過索引 6、2、0 三格，其餘位置原封不動——push 不需要碰任何其他子樹，連看都不必看。
 
 ## Pattern Recognition
 
-當題目要求我們維護一個動態資料集，並且需要頻繁且高效地取得或移除極值（Maximum 或 Minimum）時，Heap 便是首選的資料結構。而「Percolate Up」這項 Pattern 的辨識線索在於：當資料以串流形式持續加入，或我們需要在每次新增元素後立即恢復某種順序限制（Order Constraints）時，我們就會在插入階段採用自底向上的 Sift-Up 操作。這種模式常見於 Priority Queue（優先佇列）的底層實作、即時資料流的中位數維護，以及 Dijkstra 演算法中節點距離的動態更新。
+線索是「元素持續進來，且每次進來後都要立刻保住某種順序約束」。串流資料維持目前最小值、Priority Queue 收到新工作、Dijkstra 鬆弛出一條更短的暫定距離——這些場合都是先把新東西放到結構的尾端，再讓它沿一條路徑往上找到該在的位置。辨識時問兩個問題：新元素進來時，形狀能否靠「放在尾端」保住？修復是否只沿一條路徑？兩個都是，就是 sift-up。反過來，若新元素進來後得重排整個結構（例如維持一條完全排序的陣列），那是 O(n) 的插入，不是這個 Pattern。
 
 ## Common Mistakes
 
-在實作 Sift-Up 演算法時，常見的錯誤包括：第一，沒有正確處理邊界條件，導致索引小於 0 時發生陣列存取錯誤，或忘記在到達根節點（index 0）時終止迴圈；第二，計算父節點索引時未妥善處理整數除法，導致在某些語言中產生浮點數或錯誤的偏移量；第三，在進行元素交換時遺漏了暫存變數或未正確更新迴圈指標，造成無窮迴圈。此外，部分開發者會混淆 Max-Heap 與 Min-Heap 的比較條件，導致新元素無法正確上浮。
+以下用 Min-Heap 舉反例，錯誤結果都以本篇 Tip 的迴圈寫法（`a[p] <= a[i]` 成立就 break）推得。第一，比較方向寫反：把「parent 比我大才換」寫成 `a[i] > a[p]` 才換。對 `[5, 10]` 插入 3，`3 > 5` 為 `false`，迴圈立刻停，得到 `[5, 10, 3]`，root 不是最小值；對 `[1, 2]` 插入 9 則會一路換到 root，得到 `[9, 2, 1]`。第二，parent 用了 1-based 的 `floor(i / 2)`：對合法的 `[0, 3, 1, 4]` 插入 2，它在索引 4，真正的 parent 是索引 1 的 3，該交換；錯的公式卻算出索引 2 的 1，`1 <= 2` 於是不動，留下 `[0, 3, 1, 4, 2]`，索引 1 的 3 大於它的 child 2，heap 已壞。第三，除法忘了取整：TypeScript 寫 `(i - 1) / 2`，i = 2 時得到 0.5，`a[0.5]` 是 `undefined`，比較恆為 `false` 所以不會 break，反而把值寫進不存在的 0.5 位置、把 `a[2]` 洗成 `undefined`，對 `[5, 10]` 插入 3 得到 `[5, 10, undefined]`；Python 用 `/` 會拋 TypeError，要用 `//`。第四，忘了在 root 停下：迴圈條件少了 `i > 0`，x 到達索引 0 後 parent 算出 -1。TypeScript 的 `a[-1]` 是 `undefined`，比較同樣恆為 `false`，於是把 root 洗成 `undefined`；Python 的 `a[-1]` 是最後一個元素，對 `[1, 5, 2, 9, 7, 3]` 插入 0，0 抵達 root 後會再與尾端的 2 交換，得到 `[2, 5, 1, 9, 7, 3, 0]`，root 大於 child。第五，`heapq` 的命名與教材相反：`heappush` 內部呼叫的是 `_siftdown`，它做的正是本課的往上移動；讀原始碼時以函式做的事為準，別被名字帶偏。
 
 ## Complexity
 
-Time Complexity: O(log n)，其中 n 為 Heap 中的節點總數。因為完全二元樹的高度為 log n，Sift-Up 操作最多只需要從底層走到根節點，交換次數不會超過樹的高度。Space Complexity: O(1)，因為整個上浮與交換過程都是在原陣列（In-place）中進行，不需要額外的記憶體空間。
+時間 O(log n)：每輪交換讓 x 上升一層，而完全二元樹的高度是 floor(log2 n)，所以最多交換 floor(log2 n) 次，每次是 O(1) 的比較與交換；最好情況是新元素不比 parent 小，一次比較就結束。空間 O(1)：所有操作在原陣列上完成，只多用一個索引變數。
 
 ## Digest
 
-Heap Insertion and Sift-Up Operation 是建構優先佇列的基礎。當我們將元素加入 Heap 時，必須先將其放於陣列結尾，接著透過 Percolate Up 模式不斷與父節點比較並交換，直到恢復堆積性質。此操作的時間複雜度為 O(log n)，空間複雜度為 O(1)。實作時務必注意根節點的終止條件與父節點索引的計算精確性。
+插入分兩步：把新元素 x 接在陣列尾端（索引 n），形狀因此仍是完全二元樹；再從那裡沿 parent 公式往上，parent 比 x 大就交換，直到 parent 不比 x 大或 x 成為 root。正確性來自迴圈不變式：每輪開始時，全樹只有「x 與其 parent」這一對可能違規——x 是葉沒有 child，而交換後下移的舊 parent 對它的新 child 仍滿足 `<=`，因為它們原本就是它的後代。迴圈最多走樹高 floor(log2 n) 層，故 O(log n) 時間、O(1) 空間。實作要點：parent 用 `floor((i - 1) / 2)`，迴圈條件含 `i > 0`，Min-Heap 的交換條件是 `a[parent] > a[i]`。
 
 ## TypeScript Tip
 
-在 TypeScript 中實作 Heap 時，陣列解構賦值（Array Destructuring）[a, b] = [b, a] 可以非常乾淨地完成變數交換。但務必確保迴圈條件包含 index > 0，並在每次交換後更新指標。
+JavaScript 沒有內建 heap，最小可用的 Min-Heap 只需 push 與 sift-up；斷言除了檢查 root 是最小值與全樹合法，還比對整條陣列的最終布局，確認交換只沿一條路徑發生。
+
 ```typescript
-function siftUp(heap: number[], index: number): void {
-  while (index > 0) {
-    const parent = Math.floor((index - 1) / 2);
-    if (heap[index] >= heap[parent]) break;
-    [heap[index], heap[parent]] = [heap[parent], heap[index]];
-    index = parent;
+class MinHeap {
+  a: number[] = [];
+  push(v: number): void {
+    this.a.push(v);
+    let i = this.a.length - 1;
+    while (i > 0) {
+      const p = Math.floor((i - 1) / 2);
+      if (this.a[p]! <= this.a[i]!) break;
+      [this.a[p], this.a[i]] = [this.a[i]!, this.a[p]!];
+      i = p;
+    }
   }
 }
-const testHeap = [5, 10, 3];
-siftUp(testHeap, 2);
-if (testHeap[0] !== 3) throw new Error("assertion failed");
+const h = new MinHeap();
+for (const v of [5, 3, 8, 1, 4, 1]) h.push(v);
+const a = h.a;
+if (a[0] !== 1) throw new Error("root is not the minimum");
+for (let i = 1; i < a.length; i++) if (a[Math.floor((i - 1) / 2)]! > a[i]!) throw new Error("violated at " + i);
+if (a.join() !== "1,3,1,5,4,8") throw new Error("unexpected layout " + a.join());
 ```
 
 ## Python Tip
 
-Python 的整數除法運算子 // 非常適合用來計算二元樹中父節點的索引（(index - 1) // 2）。同時，Python 原生支援的多重指定（Multiple Assignment）語法能讓元素交換變得極其簡潔。
+自己寫 sift-up（`heapq` 裡對應的函式偏偏叫 `_siftdown`，別照名字猜）；用同一串輸入與 `heapq.heappush` 逐步對照，每一步的布局都必須完全一致。
+
 ```python
-def sift_up(heap: list[int], index: int) -> None:
-    while index > 0:
-        parent = (index - 1) // 2
-        if heap[index] >= heap[parent]:
+import heapq
+
+def push(a: list[int], v: int) -> None:
+    a.append(v)
+    i = len(a) - 1
+    while i > 0:
+        p = (i - 1) // 2
+        if a[p] <= a[i]:
             break
-        heap[index], heap[parent] = heap[parent], heap[index]
-        index = parent
+        a[p], a[i] = a[i], a[p]
+        i = p
 
-test_heap = [5, 10, 3]
-sift_up(test_heap, 2)
-assert test_heap[0] == 3, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class MinHeap {
-  private heap: number[] = [];
-
-  public insert(val: number): void {
-    this.heap.push(val);
-    this.siftUp(this.heap.length - 1);
-  }
-
-  private siftUp(index: number): void {
-    while (index > 0) {
-      const parentIndex = Math.floor((index - 1) / 2);
-      if (this.heap[index] < this.heap[parentIndex]) {
-        [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
-        index = parentIndex;
-      } else {
-        break;
-      }
-    }
-  }
-
-  public getMin(): number {
-    return this.heap[0];
-  }
-}
-
-const minHeap = new MinHeap();
-minHeap.insert(5);
-minHeap.insert(3);
-minHeap.insert(8);
-if (minHeap.getMin() !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
-
-```python
-class MinHeap:
-    def __init__(self) -> None:
-        self.heap: list[int] = []
-
-    def insert(self, val: int) -> None:
-        self.heap.append(val)
-        self._sift_up(len(self.heap) - 1)
-
-    def _sift_up(self, index: int) -> None:
-        while index > 0:
-            parent_index = (index - 1) // 2
-            if self.heap[index] < self.heap[parent_index]:
-                self.heap[index], self.heap[parent_index] = self.heap[parent_index], self.heap[index]
-                index = parent_index
-            else:
-                break
-
-    def get_min(self) -> int:
-        return self.heap[0]
-
-min_heap = MinHeap()
-min_heap.insert(5)
-min_heap.insert(3)
-min_heap.insert(8)
-assert min_heap.get_min() == 3, "assertion failed"
+mine: list[int] = []
+ref: list[int] = []
+for v in [5, 3, 8, 1, 4, 1]:
+    push(mine, v)
+    heapq.heappush(ref, v)
+    assert mine == ref, f"diverged after pushing {v}: {mine} vs {ref}"
+assert mine[0] == 1 and mine == [1, 3, 1, 5, 4, 8], "final layout"
 ```
 
 ## Takeaway
 
-Heap Insertion 透過在陣列結尾新增元素並執行 Sift-Up，以 O(log n) 時間維持堆積性質。
+插入放尾端保形狀，再沿 parent 路徑上浮修順序；不變式保證每輪只有一對可能違規，最多走 log n 層。
 
 ## Tomorrow Preview
 
-在掌握了 Heap Insertion 與 Sift-Up 操作之後，我們明天將探討相對應的 Heap Deletion 與 Sift-Down（也稱為 Percolate Down 或 Heapify）操作。我們將學習如何在移除堆積頂端元素（Root）後，利用對稱的向下調整機制維持堆積的完整性與高效能。
+明天是 Heap Extraction and Sift-Down Operation：取出 root 後，把尾端元素搬到 root，再讓它沿另一條路徑往下修復——這次每一步要面對兩個 child，該和誰交換是明天要回答的問題。
 
 ## Today's Challenge
 
-本篇為觀念課，沒有對應的 LeetCode 練習題。請把時間花在把上面的觀念想透。
+本篇為觀念課，沒有對應的 LeetCode 練習題。請用紙筆對 `[1, 5, 2, 9, 7, 3]` 依序插入 4 與 0，寫出每一步的陣列，並標出哪些索引被碰過、哪些原封不動。

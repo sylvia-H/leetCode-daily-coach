@@ -16,12 +16,10 @@ next:
   - hash-table-design-lru-cache
   - string-ascii-representation
 learning_goal:
-  - >-
-    Understand how key-value pairs are stored and retrieved using hash
-    functions.
+  - '理解 key-value 配對如何透過 hash function 儲存與取回。'
 exit_criteria:
-  - Can explain why average lookup time is O(1)
-  - Can write a basic map insertion and retrieval
+  - '能說明為何平均查找時間是 O(1)'
+  - '能寫出基本的 map 插入與取值操作'
 leetcode:
   - 1
   - 217

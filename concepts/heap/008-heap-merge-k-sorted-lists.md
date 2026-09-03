@@ -12,13 +12,9 @@ prerequisite:
 next:
   - heap-find-median-from-data-stream
 learning_goal:
-  - >-
-    Use a min-heap to merge multiple sorted iterators or linked lists
-    efficiently.
+  - 使用 min-heap 高效地合併多個已排序的 iterator 或 linked list。
 exit_criteria:
-  - >-
-    Can maintain one active node per list in a heap and push its successor upon
-    extraction.
+  - 能在 heap 中為每個串列維護一個作用中節點，並在取出時推入其後繼節點。
 leetcode:
   - 23
 tags:

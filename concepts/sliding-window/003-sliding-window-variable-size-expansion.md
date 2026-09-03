@@ -13,16 +13,10 @@ next:
   - sliding-window-variable-size-contraction
   - queue-sliding-window-maximum
 learning_goal:
-  - >-
-    Master the right pointer expansion phase in variable-size sliding window
-    problems.
+  - 精通變動長度 Sliding Window 問題中右指標的擴張階段。
 exit_criteria:
-  - >-
-    Can write a loop that greedily expands the right pointer until a condition
-    is met or violated.
-  - >-
-    Can update window state correctly upon incorporating a new element at the
-    right pointer.
+  - 能寫出貪婪地擴張右指標的迴圈，直到條件滿足或被違反為止。
+  - 能在右指標納入新元素時正確更新視窗狀態。
 leetcode: []
 tags:
   - sliding-window

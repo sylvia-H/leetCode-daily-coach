@@ -13,12 +13,10 @@ prerequisite:
 next:
   - stack-sum-of-subarray-minimums
 learning_goal:
-  - >-
-    Use a monotonic stack to calculate spans or cumulative counts of smaller
-    elements.
+  - 使用 Monotonic Stack 計算 span 或較小元素的累計數量。
 exit_criteria:
-  - 'Can store pairs of (value, span) in a monotonic stack.'
-  - Can aggregate counts of consecutive smaller elements efficiently.
+  - 能在 Monotonic Stack 中儲存 (value, span) 的成對資料。
+  - 能有效率地累計連續較小元素的數量。
 leetcode:
   - 901
 tags:

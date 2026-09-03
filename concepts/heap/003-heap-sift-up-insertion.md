@@ -12,9 +12,9 @@ prerequisite:
 next:
   - heap-sift-down-extraction
 learning_goal:
-  - Implement insertion into a heap and restore the heap property using sift-up.
+  - 實作 heap 的插入操作，並使用 sift-up 恢復 heap property。
 exit_criteria:
-  - Can trace how a newly added element bubbles up to its correct position.
+  - 能追蹤新加入的元素如何向上冒泡到正確位置。
 leetcode: []
 tags:
   - heap

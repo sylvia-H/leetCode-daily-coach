@@ -13,10 +13,10 @@ prerequisite:
 next:
   - stack-remove-adjacent-duplicates
 learning_goal:
-  - Evaluate postfix expressions using a stack for operands.
+  - 使用 stack 存放運算元，對 postfix 運算式求值。
 exit_criteria:
-  - Can push operands and apply operators to the top two stack elements.
-  - Understand operator precedence handling in postfix notation.
+  - 能將運算元推入 stack，並將運算子套用到 stack 頂端的兩個元素。
+  - 理解 postfix 表示法中運算子優先順序的處理方式。
 leetcode:
   - 150
 tags:

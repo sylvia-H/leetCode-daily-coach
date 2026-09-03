@@ -6,147 +6,97 @@ pattern_label: Cycle Detection
 complexity_label: O(n) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - Can implement Floyd's cycle-finding algorithm correctly
-  - >-
-    Can explain why slow and fast pointers are guaranteed to meet if a cycle
-    exists
+  - 能正確實作 Floyd's cycle-finding algorithm
+  - 能說明為何存在環時 slow 與 fast 指標保證會相遇
 ---
 ## Concept
 
-Linked List Cycle Detection 利用快慢指標（Tortoise and Hare Algorithm，即 Floyd's Cycle-Finding Algorithm）來判斷鏈結串列中是否包含循環結構。此演算法的核心概念在於設定兩個指標：慢指標每次前進一步，快指標每次前進兩步。若鏈結串列中存在環，由於快指標的速度較快，它將在環內追上慢指標；若不存在環，快指標將順利到達鏈結串列的末端（null）。這種方法將空間複雜度精簡至常數級別，展現出極高的效率。
+判斷鏈結串列是否有環，直覺做法是用 Hash Set 記錄走過的節點、看是否重訪，但要付出 O(n) 額外空間。Floyd's Cycle-Finding Algorithm（別名 Tortoise and Hare）只用兩個指標：slow 每次走一步、fast 每次走兩步，同時從 head 出發。若串列無環，fast 會先抵達尾端的 null，走訪自然結束；若有環，fast 會先進入環內打轉，等 slow 也進了環，fast 便一步步追上 slow，兩者必定相遇。於是「是否相遇」成了「是否有環」的等價判準——時間 O(n)、空間 O(1)。
 
 ## Thinking
 
-在處理鏈結串列的結構問題時，首要考量是如何在不佔用額外記憶體（例如 Hash Set）的前提下偵測巡訪路徑是否重複。初始化兩個指標 slow 與 fast 均指向 head。在迴圈中，條件必須確保 fast 與 fast.next 皆不為 null，以防止存取屬性時發生空指標異常。每一次疊代中，slow 移動一步，fast 移動兩步。若二者指向同一個記憶體位址，代表指標相遇，確定存在環；若迴圈正常結束且 fast 到達終點，則代表結構為線性，無環存在。
+核心疑問是：fast 一次跳兩步，會不會恰好「跳過」slow、兩者擦身而過？把場景放在兩者都已進入環內的時刻，設 fast 落後 slow 的環上距離為 d（沿前進方向計）。每一輪 slow 走 1 步、fast 走 2 步，d 恰好縮短 1——這是全程維持的不變式。既然 d 每輪只減 1，它必定經過 0，不可能從 1 直接跳成負值；換句話說 fast 一定「正好踩在」slow 所在的節點上。這也解釋了速度為何選 1 與 2：相對速度恰為 1，保證間距逐步歸零。若把 fast 改成一次走 3 步，間距每輪縮 2，就可能從 1 直接跨成 −1（也就是繞回環長減一），「每輪只減一所以不會跳過」這個論證立刻失效；兩者從 head 同時出發時其實仍會相遇（雙方都入環後，步數走到環長的整數倍就同位），但相遇點不再滿足明天要用的距離等式。再估步數上界：slow 入環當下，間距至多是環長減一，每輪縮一，所以 slow 繞完一圈之前必被追上；加上入環前的路段，總步數與節點數成正比。實作上迴圈條件寫 `while (fast && fast.next)`：先確認 fast 非空、再確認 fast.next 非空，才能安全執行 `fast = fast.next.next`；迴圈內先推進兩個指標、再比較是否相遇，相遇即回傳有環，迴圈自然結束則回傳無環。
 
 ## Pattern Recognition
 
-當題目描述中出現循環（cycle）、迴圈（loop）、無限巡訪路徑，或是要求在不使用額外儲存空間（O(1) space complexity）的條件下檢驗鏈結串列結構時，即可直接聯想至 Cycle Detection 樣式。此樣式特別適用於單向鏈結串列（Singly Linked List）節點的關聯性驗證。
+題目出現 cycle、loop、「會不會走不完」這類字眼，或要求在 O(1) 空間內判斷走訪路徑是否重複時，就該想到 Cycle Detection。它與前一課的快慢指標系出同源：找中點觀察的是「fast 抵達尾端時 slow 的落點」，偵測環觀察的是「fast 追上 slow 的相遇事件」——同一組指標，讀取的訊號不同。對照 Hash Set 解法：時間同為 O(n)，但空間是 O(n) 對 O(1)；面試中「能不能不用額外空間？」的 follow-up 幾乎都指向 Floyd。
 
 ## Common Mistakes
 
-最常見的錯誤在於指標前進時未嚴格檢查快指標及其後續節點是否為 null。若直接進行 fast.next.next 的存取，當串列長度有限且走向結尾時，將引發 Null Pointer Exception 或 TypeError。此外，若誤將初始位置設定錯誤，或未讓慢指標與快指標保持正確的步數差（如 1 對 2），將導致無法正確交會或陷入無窮迴圈。
+第一是空值檢查不完整：只確認 `fast` 就直接取 `fast.next.next`，無環串列走到尾端時當場拋出 TypeError，正確寫法是靠 `&&` 的短路特性依序檢查 `fast` 與 `fast.next`。第二是比較對象錯誤：相遇必須比較節點參照（TypeScript 用 `===`、Python 用 `is`），不能比較 val——不同節點可以存相同的值，比值會誤報有環。第三是搞混兩個出口：有環時靠「相遇」提前回傳，無環時靠 fast 撞到 null 結束，缺一不可；若只寫 `while (slow !== fast)` 而不檢查 null，無環串列會直接崩潰。第四是起點刻意錯開（如 fast 從 head.next 出發）：雖然也能偵測到環，但會改變相遇位置的數學性質，影響明天要學的「找環起點」，建議養成兩者同從 head 出發的標準寫法。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 為鏈結串列中的節點總數。在無環的情況下，快指標最多走 n/2 次即到達結尾；在有環的情況下，指標相遇所需的步數亦與環的長度成正比，總體時間與資料規模呈線性關係。空間複雜度為 O(1)，因為僅使用了兩個額外的指標變數，不隨節點數量增加而消耗額外記憶體。
+時間 O(n)：無環時 fast 每輪走兩步，至多約 n/2 輪就抵達尾端；有環時，slow 走完入環前路段後至多再繞近一圈就被追上，兩階段步數都與節點數成正比。空間 O(1)：全程只有 slow 與 fast 兩個指標變數，與串列長度無關——這正是它勝過 Hash Set 解法之處。
 
 ## Digest
 
-本篇探討使用 Floyd's Tortoise and Hare Algorithm 進行鏈結串列的循環偵測。透過快慢指標的相對速度差，我們能在 O(n) 時間與 O(1) 空間內判斷串列是否含有迴圈。撰寫時必須特別留意對 null 的邊界條件防範。
+Floyd's Cycle-Finding Algorithm 用快慢指標偵測鏈結串列的環：slow 走一步、fast 走兩步，有環則兩者必相遇，無環則 fast 先撞到 null。相遇保證來自不變式「環上間距每輪恰縮短一」——間距只減一就不會跳過零，fast 必定正好踩上 slow。迴圈條件先檢查 fast 再檢查 fast.next 才能安全前進兩步；相遇判斷比較節點參照而非值。時間 O(n)、空間 O(1)，是 Hash Set 解法的常數空間升級版。
 
 ## TypeScript Tip
 
 ```typescript
+import assert from "node:assert";
+
 class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val: number) {
-    this.val = val;
-    this.next = null;
-  }
+  constructor(public val: number, public next: ListNode | null = null) {}
 }
-function verifyFastPointer(head: ListNode | null): boolean {
+
+function hasCycle(head: ListNode | null): boolean {
+  let slow = head;
   let fast = head;
   while (fast !== null && fast.next !== null) {
+    slow = slow!.next; // slow 永遠落後 fast，必非 null
     fast = fast.next.next;
+    if (slow === fast) return true; // 比較參照而非 val
   }
-  return true;
+  return false;
 }
-import assert from "node:assert";
-const head = new ListNode(1);
-assert.strictEqual(verifyFastPointer(head), true);
+
+const a = new ListNode(1);
+const b = new ListNode(2);
+const c = new ListNode(3);
+a.next = b; b.next = c; c.next = b; // 尾端指回第二個節點成環
+assert.strictEqual(hasCycle(a), true);
+assert.strictEqual(hasCycle(new ListNode(1, new ListNode(2))), false);
+assert.strictEqual(hasCycle(null), false);
 ```
 
 ## Python Tip
 
 ```python
 class ListNode:
-    def __init__(self, val: int):
+    def __init__(self, val=0, next=None):
         self.val = val
-        self.next = None
+        self.next = next
 
-def verify_pointers(head: ListNode | None) -> bool:
-    slow, fast = head, head
+def has_cycle(head: ListNode | None) -> bool:
+    slow = fast = head
     while fast and fast.next:
         slow = slow.next
         fast = fast.next.next
-    return True
-
-node = ListNode(1)
-assert verify_pointers(node) is True
-```
-
-## TypeScript Corner
-
-```typescript
-class ListNode {
-  val: number;
-  next: ListNode | null;
-  constructor(val?: number, next?: ListNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.next = (next===undefined ? null : next);
-  }
-}
-function hasCycle(head: ListNode | null): boolean {
-  let slow: ListNode | null = head;
-  let fast: ListNode | null = head;
-  while (fast !== null && fast.next !== null) {
-    slow = slow!.next;
-    fast = fast.next.next;
-    if (slow === fast) {
-      return true;
-    }
-  }
-  return false;
-}
-import assert from "node:assert";
-const n1 = new ListNode(3);
-const n2 = new ListNode(2);
-const n3 = new ListNode(0);
-const n4 = new ListNode(-4);
-n1.next = n2;
-n2.next = n3;
-n3.next = n4;
-n4.next = n2;
-assert.strictEqual(hasCycle(n1), true);
-```
-
-## Python Corner
-
-```python
-class ListNode:
-    def __init__(self, x):
-		self.val = x
-		self.next = None
-
-def hasCycle(head: ListNode | None) -> bool:
-    slow = head
-    fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-        if slow == fast:
+        if slow is fast:  # 用 is 比較節點身分，不用 ==
             return True
     return False
 
-head = ListNode(1)
-head.next = ListNode(2)
-head.next.next = head
-assert hasCycle(head) is True
+a, b, c = ListNode(1), ListNode(2), ListNode(3)
+a.next, b.next, c.next = b, c, b  # 尾端指回第二個節點成環
+assert has_cycle(a) is True
+assert has_cycle(ListNode(1, ListNode(2))) is False
+assert has_cycle(None) is False
 ```
 
 ## Takeaway
 
-快慢指標是處理鏈結串列結構問題的利器，能在 O(1) 空間內完成循環偵測。
+有環時相對速度 1 的追趕使間距每輪恰縮一、必然歸零相遇；無環時 fast 先撞到 null——一趟走訪、常數空間定勝負。
 
 ## Tomorrow Preview
 
-明天的課程將延續 Floyd's Cycle-Finding Algorithm 的應用，探討如何精確找出環的起點（Linked List Cycle II）。我們將推導數學關係，在確認有環後將其中一個指標重置回起點，再次以相同速率前進以定位交會點。
+明天延續 Floyd：偵測到相遇之後，如何精確找出環的起始節點？做法是把其中一個指標重設回 head、兩者同速前進，背後有一條漂亮的距離等式，我們將完整推導它為何成立。
 
 ## Today's Challenge
 
-- **141** · 題號 141 完美對應 Floyd's Algorithm 的標準實作，用於檢驗鏈結串列中是否存在迴圈。
-  - Hint: 注意迴圈條件需同時檢查 fast 與 fast.next 是否為空。
-- **142** · 題號 142 在偵測到循環的基礎上，進一步要求找出環的起始節點。
-  - Hint: 當快慢指標相遇後，將其中一個指標移回頭部，兩者同速前進即可在起點相遇。
+- **141** · Floyd 演算法的標準應用：只需回答有沒有環，完整練習快慢指標的推進與相遇判斷。
+  - Hint: 迴圈條件先檢查 fast 再檢查 fast.next；相遇比較節點參照而非節點值。
+- **142** · 在相遇偵測的基礎上更進一步，要求找出環的起始節點，正是明天課程的主角，可先試著挑戰。
+  - Hint: 先完成相遇偵測；相遇後把一個指標移回 head，兩者同速前進到再次相等。

@@ -14,10 +14,10 @@ prerequisite:
 next:
   - stack-daily-temperatures
 learning_goal:
-  - Use a stack to filter out adjacent matching elements dynamically.
+  - 使用 stack 動態濾除相鄰且相同的元素。
 exit_criteria:
-  - Can compare current element with stack top to remove duplicates.
-  - Can reconstruct the resulting string from the stack.
+  - 能將目前元素與 stack 頂端比較以移除重複。
+  - 能從 stack 重建出結果字串。
 leetcode:
   - 1047
   - 1209

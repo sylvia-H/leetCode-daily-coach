@@ -12,14 +12,10 @@ prerequisite:
 next:
   - linked-list-cycle-start-node
 learning_goal:
-  - >-
-    Detect cycles in a linked list using constant extra space with tortoise and
-    hare pointers.
+  - 使用 tortoise and hare 指標，以常數額外空間偵測 linked list 中的環。
 exit_criteria:
-  - Can implement Floyd's cycle-finding algorithm correctly
-  - >-
-    Can explain why slow and fast pointers are guaranteed to meet if a cycle
-    exists
+  - 能正確實作 Floyd's cycle-finding algorithm
+  - 能說明為何存在環時 slow 與 fast 指標保證會相遇
 leetcode:
   - 141
   - 142

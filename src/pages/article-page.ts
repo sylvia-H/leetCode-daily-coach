@@ -31,8 +31,11 @@ export interface ArticlePageView {
   takeaway: string;
 }
 
-// data-model.md §3：固定區塊順序（Today's Challenge 由 problems 欄位結構化呈現，不併入 sections；
-// Digest／TypeScript Tip／Python Tip 不呈現，research R2）。
+// data-model.md §3：固定區塊順序（Today's Challenge 由 problems 欄位結構化呈現，不併入 sections）。
+// F12 Phase 0 起：`TypeScript Corner` / `Python Corner` 已自 §10 移除，改由 `TypeScript Tip` /
+// `Python Tip` 承擔語言實戰內容，且 Discord 與本頁**共用同一份 Tip**——故此處**呈現** Tip（推翻
+// F9 research R2 第 3 點的「Tips 不在全文頁重複呈現」）。`Digest` 仍不呈現：它是 Concept /
+// Thinking / Pattern Recognition 的濃縮，與本頁前三段重複。
 // site-build-contract.md §3：頁面 MUST NOT 內嵌任何 JavaScript。marked 自 v5 起移除內建 sanitize，
 // 預設讓 markdown 中的 raw HTML 原樣穿透；凍結 Article 雖為自產內容，仍是本模組唯一未經 escapeHtml()
 // 的外部檔案輸入面。故建一個專用實例（MUST NOT 改動全域 marked 設定），把 html token（block 與 inline
@@ -52,8 +55,8 @@ const SECTION_ORDER = [
   "Pattern Recognition",
   "Common Mistakes",
   "Complexity",
-  "TypeScript Corner",
-  "Python Corner",
+  "TypeScript Tip",
+  "Python Tip",
   "Tomorrow Preview",
 ] as const;
 

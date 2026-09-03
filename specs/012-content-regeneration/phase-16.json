@@ -1,0 +1,62 @@
+{
+  "phase": 16,
+  "window": "sessionIndex 210-223",
+  "model": "fable",
+  "status": "done",
+  "concepts": [
+    {
+      "conceptId": "bfs-queue-level-order",
+      "skeleton": "concepts/dfs-bfs/004-bfs-queue-level-order.md",
+      "article": "articles/dfs-bfs/004-bfs-queue-level-order.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "bfs-shortest-path-unweighted",
+      "skeleton": "concepts/dfs-bfs/005-bfs-shortest-path-unweighted.md",
+      "article": "articles/dfs-bfs/005-bfs-shortest-path-unweighted.md",
+      "quizCount": 5
+    },
+    {
+      "conceptId": "dfs-bfs-core-concept-introduction",
+      "skeleton": "concepts/dfs-bfs/001-dfs-bfs-core-concept-introduction.md",
+      "article": "articles/dfs-bfs/001-dfs-bfs-core-concept-introduction.md",
+      "quizCount": 10
+    },
+    {
+      "conceptId": "dfs-recursive-implementation",
+      "skeleton": "concepts/dfs-bfs/002-dfs-recursive-implementation.md",
+      "article": "articles/dfs-bfs/002-dfs-recursive-implementation.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "dfs-visited-state-management",
+      "skeleton": "concepts/dfs-bfs/003-dfs-visited-state-management.md",
+      "article": "articles/dfs-bfs/003-dfs-visited-state-management.md",
+      "quizCount": 8
+    },
+    {
+      "conceptId": "graph-connected-components-count",
+      "skeleton": "concepts/dfs-bfs/008-graph-connected-components-count.md",
+      "article": "articles/dfs-bfs/008-graph-connected-components-count.md",
+      "quizCount": 6
+    },
+    {
+      "conceptId": "graph-cycle-detection-undirected",
+      "skeleton": "concepts/dfs-bfs/009-graph-cycle-detection-undirected.md",
+      "article": "articles/dfs-bfs/009-graph-cycle-detection-undirected.md",
+      "quizCount": 7
+    },
+    {
+      "conceptId": "matrix-bfs-multi-directional",
+      "skeleton": "concepts/dfs-bfs/007-matrix-bfs-multi-directional.md",
+      "article": "articles/dfs-bfs/007-matrix-bfs-multi-directional.md",
+      "quizCount": 9
+    },
+    {
+      "conceptId": "matrix-dfs-grid-exploration",
+      "skeleton": "concepts/dfs-bfs/006-matrix-dfs-grid-exploration.md",
+      "article": "articles/dfs-bfs/006-matrix-dfs-grid-exploration.md",
+      "quizCount": 9
+    }
+  ]
+}

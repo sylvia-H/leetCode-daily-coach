@@ -14,12 +14,10 @@ next:
   - hash-table-prefix-sum-frequency
   - string-anagram-grouping
 learning_goal:
-  - >-
-    Group related items into buckets using a sorted string or frequency tuple as
-    a hash map key.
+  - '使用排序後的字串或頻率 tuple 作為 hash map 的 key，將相關項目分組到各個桶中。'
 exit_criteria:
-  - Can generate a canonical representation for items that share properties
-  - Can store and append items to lists inside a hash map
+  - '能為具有共同性質的項目產生 canonical 表示'
+  - '能在 hash map 內以 list 儲存並附加項目'
 leetcode:
   - 49
   - 249

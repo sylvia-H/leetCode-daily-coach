@@ -11,114 +11,106 @@ exit_criteria:
 ---
 ## Concept
 
-Linear House Robber Pattern 是一種核心的動態規劃策略，專門用於解決在無法選擇相鄰元素的情況下尋求最佳總和的問題。每一步的決策都在於評估『選擇當前元素並累加跳過相鄰元素的先前結果』與『跳過當前元素並保留前一個元素的最佳總和』兩者之間的取捨。透過維護狀態轉移，能夠以線性時間複雜度有效求解。
+這是你第五次遇到 LeetCode 198 House Robber。前四課依序用樸素遞迴、記憶化、由底而上的表格、滾動變數解過它，換的一直是**實作技巧**：怎麼不重算、怎麼把遞迴改成迴圈、怎麼把陣列壓成兩個變數。今天不再換寫法，換的是**抽象層級**：把「打劫房屋」抽離成可以套到任何序列上的決策型 Pattern——每個元素只有「取」與「不取」兩種決定，取了就與相鄰元素互斥，目標是最大化總和。
+
+這個 Pattern 的關鍵不是轉移式（你已經會背），而是狀態的**定義**。把 `dp[i]` 定成「只看前 i 間房屋（索引 0 到 i-1），在不取相鄰的前提下能拿到的最大金額」——是「前 i 間的最佳」，不是「必須打劫第 i 間」。這個定義對「取」與「不取」都封閉（兩種決定的結果仍是某個前綴的最佳），所以轉移式恰好只需要兩個前驅。今天的交付物是：對一個沒看過的序列問題，自己把狀態定義、轉移式與邊界寫出來，並用 213 的環形變形檢驗你抽象得夠不夠乾淨。
 
 ## Thinking
 
-在建構狀態轉移方程式時，我們定義 dp[i] 代表考慮到第 i 個元素時能夠獲得的最大累計總和。當我們處於位置 i 時，面臨兩種互斥的選擇：第一種是選擇偷取當前房屋的價值 nums[i]，此時我們不能選擇相鄰的前一個房屋 i-1，因此總和為 dp[i-2] + nums[i]；第二種是選擇不偷取當前房屋，此時總和為前一個房屋的最佳結果 dp[i-1]。結合這兩種選擇，我們得到核心的狀態轉移方程式：dp[i] = max(dp[i-1], dp[i-2] + nums[i])。
+**為什麼這個定義讓轉移式寫得出來。** 看第 i 間（索引 i-1，金額 `x`）。任何一個「前 i 間」的合法方案，要嘛含這一間，要嘛不含，沒有第三種：
+
+- 不取：方案完全落在前 i-1 間，最好就是 `dp[i-1]`。
+- 取：第 i-1 間被禁止，其餘部分完全落在前 i-2 間；而 `dp[i-2]` 的任何方案都不含第 i-1 間，與「取第 i 間」相容，最好就是 `dp[i-2] + x`。
+
+兩個候選都是合法方案（不會多算非法解），每個合法方案又必落在兩者之一（不會漏），所以 `dp[i] = max(dp[i-1], dp[i-2] + x)` 恰好是前 i 間的最佳值，答案是 `dp[n]`。
+
+**邊界。** 「前 0 間」是空集合，`dp[0] = 0`。題目保證金額非負，於是 `dp[1] = max(dp[0], 0 + nums[0]) = nums[0]`、`dp[2] = max(nums[0], nums[1])`：只要把「前 -1 間」也視為 0，長度 1 與 2 都被一般式自然涵蓋，線性版不需要特判。滾動變數就是讓 `prev2`、`prev1` 從兩個 0 起跑（怎麼滾是前一課的事，這裡只用）。
+
+**213 的環形變形。** 房屋排成一圈，多了一條邊：第 0 間與第 n-1 間相鄰。前提：n ≥ 2——n = 1 時沒有「另一端」，硬拆會把兩段都切成空、答案變 0，所以直接回傳 `nums[0]`。在 n ≥ 2 下，第 0 間與第 n-1 間不能同取，環上每個合法方案至少滿足其一：「不含第 n-1 間」或「不含第 0 間」。不含第 n-1 間的方案，就是線性區段 `nums[0..n-2]` 的合法方案（環上那條額外的邊因一端沒取而失效）；不含第 0 間的同理是 `nums[1..n-1]` 的。反過來，這兩段的任何線性合法方案都缺了一端，放回環上也合法。所以「兩段各跑一次線性版、取較大者」的候選集恰好等於環上的合法方案集：不漏，也不多算非法解；兩端都不取的方案在兩段各出現一次，但求最大值不受重複影響。n = 2 時兩段各剩一間，答案 `max(nums[0], nums[1])`，與「兩間相鄰」一致。
 
 ## Pattern Recognition
 
-當題目明確指出不能選擇相鄰的元素（例如連續索引不能同時被選取），且要求找出最大總和或最佳效益時，即可辨識出此 Pattern。常見的特徵包含具有一維陣列結構的序列資料，且每個元素帶有正數權重或代價，要求在特定約束條件下進行最佳化選擇。
+線索三件湊齊即可套用：一維序列；每個元素只有取／不取；取了會**禁用固定範圍內的鄰居**，目標是最大化總和。互斥範圍若擴成「距離 k 以內不能同取」，轉移式只是把 `dp[i-2]` 換成 `dp[i-k-1]`；序列首尾相連就用今天的拆段法。反例：限制若不是「相鄰」而是「總容量」（每個物品取或不取，但總重不能超過上限），前驅就不再是固定偏移，那是背包家族，之後的課才處理。
 
 ## Common Mistakes
 
-最常見的錯誤是在處理邊界條件時未考慮陣列長度小於 2 的情況，導致直接存取索引 i-2 時引發陣列越界或未定義的錯誤。另一個常見迷思是嘗試記錄具體的選擇路徑，但實際上此 Pattern 的動態規劃本質僅需關注最大數值的遞推，無需保存完整的組合狀態。
+每一條都由本篇 TypeScript Tip 的程式碼做單一改動得到：
+
+1. **「取」接錯前驅。** 把 `Math.max(prev1, prev2 + x)` 改成 `Math.max(prev1, prev1 + x)`：`[2, 7, 9, 3, 1]` 得 22（全部拿走），相鄰互斥被丟掉了。
+2. **「不取」接錯前驅。** 改成 `Math.max(prev2, prev2 + x)`：`[2, 1, 1, 2]` 得 3，正解是取頭尾的 4。不取第 i 間時繼承的必須是「前 i-1 間的最佳」，接到 `prev2` 等於強迫每兩間至少取一間。
+3. **環形版漏掉 n = 1。** 刪掉 `if (n === 1) return nums[0]!`：`[5]` 得 0，因為兩段都被切成空陣列。
+4. **環形版少切一端。** 把 `nums.slice(0, n - 1)` 改成 `nums.slice(0, n)`：`[2, 3, 2]` 得 4，但第 0 間與第 2 間在環上相鄰，正解是 3。
 
 ## Complexity
 
-O(n) / O(1)
+O(n) / O(1)。環形版跑兩次線性版仍是 O(n)。示範碼用 `slice` 切段是為了可讀，會多出 O(n) 的複製；被追問空間時，改成把起訖索引傳進線性版即可維持 O(1)。
 
 ## Digest
 
-Linear House Robber Pattern 透過動態規劃解決相鄰互斥的最佳化問題。核心精神在於每個元素面臨『選或不選』的抉擇：若選擇當前元素則必須加上跳過相鄰元素的歷史總和；若不選則繼承前一步的總和。利用狀態壓縮技巧，我們僅需常數級別的空間複雜度即可完成整體運算，是掌握一維動態規劃的重要基石。
+198 你已經解過四輪，今天換的是抽象層級：把它看成「每個元素取／不取、取了就與相鄰互斥、最大化總和」的決策型 Pattern。狀態要定成「前 i 間的最佳」而不是「必取第 i 間」——任何合法方案要嘛含第 i 間、要嘛不含：不含就是 `dp[i-1]`，含就是 `dp[i-2] + nums[i-1]`（`dp[i-2]` 的方案不含第 i-1 間，所以相容）；兩個候選都合法、所有方案都被覆蓋，取 max 即正解。金額非負、以 `dp[0] = 0` 起跑（「前 -1 間」同樣視為 0），長度 1 與 2 都被一般式涵蓋，線性版不必特判。環形版多一條邊「第 0 間與第 n-1 間相鄰」：在 n ≥ 2 的前提下兩端不能同取，每個環上合法方案至少缺其中一端，恰好落在 `nums[0..n-2]` 或 `nums[1..n-1]` 這兩個線性子問題之一；兩段的線性方案放回環上也都合法，故取兩段較大者就是答案。n = 1 沒有另一端，直接回傳 `nums[0]`。
 
 ## TypeScript Tip
 
+迴圈處理第 i 間之前，`prev2`、`prev1` 分別是 `dp[i-2]`、`dp[i-1]`，從兩個 0 起跑；環形版只是套兩次線性版。
+
 ```typescript
-function robOptimized(nums: number[]): number {
-  let rob1 = 0;
-  let rob2 = 0;
-  for (const n of nums) {
-    const temp = Math.max(n + rob1, rob2);
-    rob1 = rob2;
-    rob2 = temp;
+function rob(nums: number[]): number {
+  let prev2 = 0, prev1 = 0;
+  for (const x of nums) {
+    const cur = Math.max(prev1, prev2 + x);
+    prev2 = prev1;
+    prev1 = cur;
   }
-  if (rob2 < 0) throw new Error("assertion failed");
-  return rob2;
+  return prev1;
 }
-const res = robOptimized([2, 7, 9, 3, 1]);
-if (res !== 12) throw new Error("assertion failed");
+function robRing(nums: number[]): number {
+  const n = nums.length;
+  if (n === 1) return nums[0]!;
+  return Math.max(rob(nums.slice(0, n - 1)), rob(nums.slice(1)));
+}
+const ok = (c: boolean, m: string) => { if (!c) throw new Error(m); };
+ok(rob([2, 7, 9, 3, 1]) === 12 && rob([2, 1, 1, 2]) === 4, "rob");
+ok(rob([]) === 0 && rob([5]) === 5, "edge");
+ok(robRing([5]) === 5 && robRing([1, 2]) === 2, "n<=2");
+ok(robRing([2, 3, 2]) === 3 && robRing([1, 2, 3, 1]) === 4, "ring");
 ```
 
 ## Python Tip
 
-```python
-def rob_optimized(nums: list[int]) -> int:
-    rob1, rob2 = 0, 0
-    for n in nums:
-        temp = max(n + rob1, rob2)
-        rob1 = rob2
-        rob2 = temp
-    assert rob2 >= 0, "assertion failed"
-    return rob2
-
-res = rob_optimized([2, 7, 9, 3, 1])
-assert res == 12, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function rob(nums: number[]): number {
-  if (nums.length === 0) return 0;
-  if (nums.length === 1) return nums[0];
-  let prev2 = 0;
-  let prev1 = nums[0];
-  for (let i = 1; i < nums.length; i++) {
-    const current = Math.max(prev1, prev2 + nums[i]);
-    prev2 = prev1;
-    prev1 = current;
-  }
-  if (prev1 < 0) throw new Error("assertion failed");
-  return prev1;
-}
-const result = rob([1, 2, 3, 1]);
-if (result !== 4) throw new Error("assertion failed");
-```
-
-## Python Corner
+`prev2, prev1 = prev1, max(prev1, prev2 + x)` 一行同時推進兩個變數；環形版用切片拆成兩段。
 
 ```python
 def rob(nums: list[int]) -> int:
-    if not nums:
-        return 0
-    if len(nums) == 1:
-        return nums[0]
-    prev2 = 0
-    prev1 = nums[0]
-    for i in range(1, len(nums)):
-        current = max(prev1, prev2 + nums[i])
-        prev2 = prev1
-        prev1 = current
-    assert prev1 >= 0, "assertion failed"
+    prev2, prev1 = 0, 0
+    for x in nums:
+        prev2, prev1 = prev1, max(prev1, prev2 + x)
     return prev1
 
-result = rob([1, 2, 3, 1])
-assert result == 4, "assertion failed"
+def rob_circle(nums: list[int]) -> int:
+    n = len(nums)
+    if n == 1:
+        return nums[0]
+    return max(rob(nums[:n - 1]), rob(nums[1:]))
+
+assert rob([2, 7, 9, 3, 1]) == 12
+assert rob([2, 1, 1, 2]) == 4
+assert rob([]) == 0 and rob([5]) == 5
+assert rob_circle([5]) == 5 and rob_circle([1, 2]) == 2
+assert rob_circle([2, 3, 2]) == 3
+assert rob_circle([1, 2, 3, 1]) == 4
 ```
 
 ## Takeaway
 
-掌握動態規劃的狀態轉移方程式與空間優化技巧，透過記錄前兩步的數值即可在 O(n) 時間與 O(1) 空間內解決相鄰約束的最佳化問題。
+狀態定成「前 i 間的最佳」，取／不取各接一個前驅；環形在 n ≥ 2 時拆成缺首、缺尾兩段線性取大，n = 1 直接回傳。
 
 ## Tomorrow Preview
 
-明天我們將探討環形結構下的 House Robber 變體，學習如何將環形限制拆解為多次線性問題來求解。
+接下來是 Grid Path Counting：狀態從一維前綴走到二維格子，「到達某格的方法數 = 上方 + 左方」，同樣得先定好表格的意義與第一列／第一欄的初始值。之後的 0/1 Knapsack 則是「取／不取」的另一個家族——互斥條件從「相鄰」換成「總容量」，你今天寫出的兩分支轉移式會在那裡多一個維度。
 
 ## Today's Challenge
 
-- **198** · 這是最經典的線性打家劫舍問題，完美對應相鄰不可同時選取的限制與最大總和求取需求。
-  - Hint: 注意處理陣列長度小於 2 的邊界情況。
-- **213** · 此題將房屋排成環狀，首尾相連，可透過將問題拆解為兩次線性打家劫舍來解決。
-  - Hint: 分別計算不包含最後一個元素與不包含第一個元素的線性結果，取兩者最大值。
+- **198** · 第五次解它，這次不交程式碼，交的是抽象：用一句話寫下 `dp[i]` 的定義，再檢查「取」「不取」兩條分支是否各對應到恰好一個前驅、合起來是否覆蓋所有合法方案。
+  - Hint: 先用長度 1 與 2 的輸入手算，確認從 `dp[0] = 0` 起跑的一般式不需特判；再想想若把定義改成「必取第 i 間」，答案還能直接讀 `dp[n]` 嗎。
+- **213** · 環形只多了「第 0 間與第 n-1 間相鄰」這一條邊，正是檢驗你能否把新限制化約回已知線性子問題的題目。
+  - Hint: n = 1 直接回傳唯一那間；n ≥ 2 時對 `nums[0..n-2]` 與 `nums[1..n-1]` 各跑一次線性版取較大者。動筆前先說服自己：環上任何合法方案都至少缺一端，所以必落在其中一段。

@@ -25,8 +25,6 @@ function sampleDraft(overrides: Partial<DraftArticleResponse> = {}): DraftArticl
     patternRecognition: "辨識線索",
     commonMistakes: "常見錯誤",
     complexity: "複雜度說明",
-    tsCorner: "```typescript\nif (1 + 1 !== 2) throw new Error('x');\n```",
-    pyCorner: "```python\nassert 1 + 1 == 2\n```",
     tomorrowPreview: "明日預告",
     digest: "摘要",
     tsTip: "```typescript\nif (1 !== 1) throw new Error('x');\n```",

@@ -6,145 +6,96 @@ pattern_label: Bottom-up Heapify
 complexity_label: O(n) time / O(1) space
 estimated_minutes: 25
 exit_criteria:
-  - Can explain why bottom-up heap construction is O(n) instead of O(n log n).
+  - 能說明為何 bottom-up 建構 heap 是 O(n) 而非 O(n log n)。
 ---
 ## Concept
 
-Linear Time Heap Construction 亦稱為 Heapify，是指將一個任意順序的陣列在 O(n) 的線性時間複雜度內轉換為 Binary Heap 的演算法。傳統上透過迴圈呼叫插入操作建立 Heap 需要 O(n log n) 時間，而 Bottom-up Heapify 透過從最後一個非葉子節點開始倒序執行 Sift-down 操作，巧妙地利用了樹狀結構高度的數學性質，將總工作量降至 O(n)。
+Heapify 是把一整條無序陣列就地變成 heap。最直覺的做法是逐一插入：把元素一個個放到尾端再 sift-up，每次至多 O(log n)，總共 O(n log n)。Bottom-up Heapify 反過來用昨天的 sift-down：從**最後一個非葉節點** `floor(n/2) - 1` 開始，索引倒著走到 0，對每個節點做一次 sift-down，總成本只有 O(n)。起點為什麼是 `floor(n/2) - 1`：最後一個元素在索引 `n-1`，它的 parent 是 `floor((n-2)/2)`，也就是 `floor(n/2) - 1`；所有索引 `>= floor(n/2)` 的節點，left child `2i+1 >= n` 不存在，都是葉子。葉子沒有 child，本身就是合法的單節點 heap，不必處理。倒著走的理由是 sift-down 的前提：它要求「兩棵子樹各自已是 heap」。節點 `i` 的 child 索引 `2i+1`、`2i+2` 都比 `i` 大，倒序處理時它們一定已經處理完；於是迴圈不變式是「所有索引大於 `i` 的節點都已是合法子 heap 的 root」，處理到 `i` 時 sift-down 的前提剛好成立，做完 0 就是整棵 heap。
 
 ## Thinking
 
-在處理需要頻繁取得最大值或最小值的資料集時，經常需要將無序陣列轉換為 Heap。若逐一將元素插入空的 Heap 中，每次插入花費 O(log n)，總體複雜度為 O(n log n)。然而，如果我們觀察完整二元樹的結構會發現，大多數的節點都集中在底層（葉子節點佔了約一半的數量）。葉子節點本身已經是合法的子樹，不需要進行任何調整。因此，我們只需要從最後一個非葉子節點開始，由下往上、由右至左逐一執行 Sift-down（下濾）操作。藉由這種逆向處理，底層節點只需移動較短的距離，而只有少數接近根節點的元素需要下濾較長距離，數學積分證明此總操作次數為線性級別 O(n)。
+拿 `[4, 3, 2, 1]` 建 Min-Heap。n = 4，起點是索引 1。索引 1 的值 3 只有 left child（索引 3 的 1），1 < 3 交換：`[4, 1, 2, 3]`。索引 0 的值 4，child 是 1 與 2，較小的 1 上來：`[1, 4, 2, 3]`，4 落到索引 1，它的 child 是 3，再換：`[1, 3, 2, 4]`。兩次 sift-down、三次交換，完成。真正要論證的是為什麼總量是 O(n)。關鍵是把每個節點的成本算成它的**高度** h（到最深葉子的距離），而不是深度：sift-down 最多沉 h 層。完全二元樹裡高度為 h 的節點至多 `ceil(n / 2^(h+1))` 個——葉子約 n/2 個高度 0，往上一層約 n/4 個高度 1，再上一層 n/8 個高度 2。總交換次數至多 Σ h · n/2^(h+1) = (n/2) · Σ h/2^h。這個級數不是「等比所以收斂」就能帶過，要真的算：把 Σ h/2^h 拆成一層層的尾和，1/2 + 2/4 + 3/8 + ... = (1/2 + 1/4 + 1/8 + ...) + (1/4 + 1/8 + ...) + (1/8 + ...) + ... = 1 + 1/2 + 1/4 + ... = 2。所以總交換 ≤ (n/2) · 2 = n，比較次數至多兩倍，是 O(n)。以 n = 1023 的滿樹為例，所有節點的高度加總正好是 n − 10 = 1013，用遞減陣列實測，交換次數就是 1013。反觀逐一插入，每個元素的成本是**深度**，而完全二元樹裡有一半的節點深度是 `floor(log2 n)`，遞減輸入建 Min-Heap 時每個新元素都得一路浮到 root，總交換 Σ floor(log2 i) 約等於 n log2 n − 2n，n = 1023 時實測是 8194。這就是 sift-up 版做不到 O(n) 的原因：葉子最多而葉子的深度最長，成本被最多的節點拉高；sift-down 版剛好相反，葉子最多但高度為 0，成本集中在少數靠近 root 的節點上。要公平地說，隨機資料下逐一插入平均只要約 1.2 次交換，也是線性；差別在最壞情況，而演算法的保證看最壞情況。
 
 ## Pattern Recognition
 
-當看到需要將一個完整的、已知的靜態陣列轉換為 Heap，且效能要求嚴格限制為線性時間時，應立即聯想到底層至頂層的 Bottom-up Heapify 模式。辨識線索包含：輸入為無序陣列、需要就地（In-place）轉換、且禁止逐一插入的 O(n log n) 實作方式。
+觸發訊號是「資料一開始就全部到齊，之後才開始取最值」：heap sort 的第一階段、對整條陣列做前 k 大（先 O(n) 建 heap 再 pop k 次，O(n + k log n)）、多路合併前把每條來源的第一個元素建成 heap，Python 的 `heapq.heapify` 就是這個演算法。反之，元素是一個個到達、到達時就要回答查詢的串流場景，沒有「一次建完」可言，仍然只能逐一插入。
 
 ## Common Mistakes
 
-最常見的錯誤是從索引 0 開始正向執行 Heapify，誤以為從根節點向下調整可以建立 Heap。這樣做不僅邏輯錯誤，無法正確滿足 Heap 的結構性質，更會破壞時間複雜度的分析基礎。另一個常見錯誤是索引計算錯誤，例如忽略了從最後一個非葉子節點開始遞減，或者在計算左、右子節點索引時未正確考慮陣列的 0-based 與 1-based 差異。
+第一，從索引 0 正著做。`[4, 3, 2, 1]` 正著做：索引 0 的 4 跟較小的 child 2 換，得 `[2, 3, 4, 1]`；索引 1 的 3 跟 child 1 換，得 `[2, 1, 4, 3]`；索引 2、3 沒有 child。結果 root 2 比 child 1 大，不是 heap。原因是處理索引 0 時子樹還沒整理過，sift-down 的前提不成立，1 被埋在下面上不來。第二，JavaScript 忘記 `Math.floor`：n = 5 時 `n / 2 - 1` 是 1.5，`h[1.5]` 讀到 `undefined`，所有比較都是 false，迴圈跑完陣列一個字都沒動，`[4, 3, 2, 1, 0]` 原樣回傳。第三，Python 把 `range(n // 2 - 1, -1, -1)` 寫成 `range(n // 2 - 1, 0, -1)`，漏掉 root：`[4, 3, 2, 1]` 只做索引 1，得 `[4, 1, 2, 3]`。第四，以為 heapify 完的陣列是排序好的：`[4, 3, 2, 1]` 建完是 `[1, 3, 2, 4]`，只有 root 是最小值，其餘順序沒有保證。
 
 ## Complexity
 
-Time Complexity: O(n) 由於絕大多數節點的高度很低，Sift-down 的成本加總起來為等比級數收斂至 O(n)。Space Complexity: O(1) 只需要在原本的陣列上進行原地修改，不需額外配置線性空間。
+Bottom-up Heapify 是 O(n) 時間：高度為 h 的節點至多 n/2^(h+1) 個、各沉至多 h 層，總和 (n/2) · Σ h/2^h = n 次交換。就地修改，O(1) 額外空間。逐一插入是 O(n log n) 最壞情況，遞減輸入建 Min-Heap 時可達到。
 
 ## Digest
 
-本單元深入探討 Linear Time Heap Construction（Heapify），剖析為何從最後一個非葉子節點出發進行 Bottom-up 逆向 Sift-down 可以將建構時間從 O(n log n) 壓低至 O(n)。我們釐清了從索引 0 開始的正向錯誤觀念，並透過嚴謹的複雜度分析與雙語程式碼實作，確保讀者能掌握原地建構 Heap 的核心技巧，為未來的高效優先佇列演算法打下穩固基礎。
+Heapify 把整條無序陣列就地建成 heap：從最後一個非葉節點 `floor(n/2) - 1` 倒著走到 0，對每個節點做一次 sift-down。倒著走是為了讓 sift-down 的前提「兩棵子樹已是 heap」在每一步都成立；索引 `>= floor(n/2)` 的都是葉子，不用處理。總成本是 O(n) 而非 O(n log n)，因為 sift-down 的代價是節點的高度而非深度：高度 h 的節點至多 n/2^(h+1) 個，Σ h · n/2^(h+1) = (n/2) · Σ h/2^h = (n/2) · 2 = n。逐一插入 sift-up 的代價是深度，而一半的節點是深度最大的葉子，最壞情況 n = 1023 時要 8194 次交換，bottom-up 只要 1013 次。從索引 0 正著做會壞掉：`[4, 3, 2, 1]` 會得到 root 2 大於 child 1 的 `[2, 1, 4, 3]`。
 
 ## TypeScript Tip
 
+自己寫 bottom-up `heapify`：先精確比對 `[4, 3, 2, 1]` 建完的結果，再用遞減的 1..63 逐對驗 heap property。
+
 ```typescript
-function verifyMaxHeap(arr: number[]): boolean {
-  const n = arr.length;
-  for (let i = 0; i <= Math.floor(n / 2) - 1; i++) {
-    const left = 2 * i + 1;
-    const right = 2 * i + 2;
-    if (left < n && arr[i] < arr[left]) return false;
-    if (right < n && arr[i] < arr[right]) return false;
+function siftDown(h: number[], i: number): void {
+  for (;;) {
+    let m = i;
+    for (const c of [2 * i + 1, 2 * i + 2]) if (c < h.length && h[c]! < h[m]!) m = c;
+    if (m === i) return;
+    [h[i], h[m]] = [h[m]!, h[i]!];
+    i = m;
   }
-  return true;
 }
-const sample = [10, 5, 8, 1, 2];
-if (!verifyMaxHeap(sample)) throw new Error("assertion failed");
+function heapify(h: number[]): number[] {
+  for (let i = Math.floor(h.length / 2) - 1; i >= 0; i--) siftDown(h, i);
+  return h;
+}
+const isMinHeap = (h: number[]) => h.every((v, i) => i === 0 || h[(i - 1) >> 1]! <= v);
+if (heapify([4, 3, 2, 1]).join() !== "1,3,2,4") throw new Error("exact");
+const big = heapify(Array.from({ length: 63 }, (_, i) => 63 - i));
+if (!isMinHeap(big) || big[0] !== 1) throw new Error("property");
 ```
 
 ## Python Tip
 
-```python
-def verify_max_heap(arr: list[int]) -> bool:
-    n = len(arr)
-    for i in range(n // 2):
-        left = 2 * i + 1
-        right = 2 * i + 2
-        if left < n and arr[i] < arr[left]:
-            return False
-        if right < n and arr[i] < arr[right]:
-            return False
-    return True
-sample = [10, 5, 8, 1, 2]
-assert verify_max_heap(sample), "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function heapify(arr: number[]): number[] {
-  const n = arr.length;
-  const lastNonLeaf = Math.floor(n / 2) - 1;
-
-  function siftDown(i: number, length: number) {
-    let parent = i;
-    while (2 * parent + 1 < length) {
-      let left = 2 * parent + 1;
-      let right = left + 1;
-      let largest = parent;
-
-      if (arr[left] > arr[largest]) {
-        largest = left;
-      }
-      if (right < length && arr[right] > arr[largest]) {
-        largest = right;
-      }
-      if (largest === parent) break;
-
-      [arr[parent], arr[largest]] = [arr[largest], arr[parent]];
-      parent = largest;
-    }
-  }
-
-  for (let i = lastNonLeaf; i >= 0; i--) {
-    siftDown(i, n);
-  }
-  return arr;
-}
-
-const testArr = [3, 1, 6, 5, 2, 4];
-heapify(testArr);
-if (testArr[0] !== 6) throw new Error("assertion failed");
-```
-
-## Python Corner
+自己寫 bottom-up `heapify` 並數交換次數，與逐一插入對照：n = 1023 遞減輸入下前者是節點高度總和 1013，後者 8194。
 
 ```python
-def heapify(arr: list[int]) -> list[int]:
-    n = len(arr)
-    last_non_leaf = n // 2 - 1
+def sift_down(h, i):
+    s = 0
+    while (c := 2 * i + 1) < len(h):
+        if c + 1 < len(h) and h[c + 1] < h[c]: c += 1
+        if h[i] <= h[c]: break
+        h[i], h[c] = h[c], h[i]
+        i, s = c, s + 1
+    return s
 
-    def sift_down(i: int, length: int):
-        parent = i
-        while 2 * parent + 1 < length:
-            left = 2 * parent + 1
-            right = left + 1
-            largest = parent
+def heapify(h):
+    return sum(sift_down(h, i) for i in range(len(h) // 2 - 1, -1, -1))
 
-            if arr[left] > arr[largest]:
-                largest = left
-            if right < length and arr[right] > arr[largest]:
-                largest = right
-            if largest == parent:
-                break
+def by_insert(xs):
+    h, s = [], 0
+    for x in xs:
+        h.append(x)
+        i = len(h) - 1
+        while i and h[(p := (i - 1) // 2)] > h[i]:
+            h[i], h[p] = h[p], h[i]
+            i, s = p, s + 1
+    return s
 
-            arr[parent], arr[largest] = arr[largest], arr[parent]
-            parent = largest
-
-    for i in range(last_non_leaf, -1, -1):
-        sift_down(i, n)
-    return arr
-
-test_arr = [3, 1, 6, 5, 2, 4]
-heapify(test_arr)
-assert test_arr[0] == 6, "assertion failed"
+d = list(range(1023, 0, -1))
+assert heapify(d) == 1013 and all(d[(i - 1) // 2] <= d[i] for i in range(1, 1023))
+assert by_insert(list(range(1023, 0, -1))) == 8194
 ```
 
 ## Takeaway
 
-掌握由下而上的 Heapify 技巧，從最後一個非葉子節點逆向執行 Sift-down，即可在 O(n) 時間內完成線性堆積建構。
+從 `floor(n/2) - 1` 倒著對每個節點 sift-down；成本看高度不看深度，Σ h · n/2^(h+1) = n，所以是 O(n)。
 
 ## Tomorrow Preview
 
-明天我們將探討 Heap 結構的高階應用：Merge k Sorted Lists，學習如何運用 Min-heap 有效合併多個已排序的串列，進一步掌握優先佇列在分治與指標維護上的威力。
+明天是 Finding Kth Element with Heap：今天先 O(n) 建 heap 再 pop k 次是一條路，維持大小為 k 的 heap 是另一條，明天把兩條路線在時間與空間上比清楚，並延伸到串流資料。
 
 ## Today's Challenge
 
-本篇為觀念課，沒有對應的 LeetCode 練習題。請把時間花在把上面的觀念想透。
+本篇為觀念課，沒有對應的 LeetCode 練習題。請在紙上對 `[9, 8, 7, 6, 5, 4, 3]` 從索引 2 倒著做 sift-down 建 Min-Heap，逐步寫出陣列並數交換次數，再對照「所有節點高度總和」是不是 4；然後試著從索引 0 正著做一次，找出哪一個 parent-child 對壞掉了。

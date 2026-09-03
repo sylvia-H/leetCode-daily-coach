@@ -11,124 +11,109 @@ exit_criteria:
 ---
 ## Concept
 
-Edit Distance Pattern 是一種處理字串轉換與動態規劃的經典模型。它的核心目標是計算將一個來源字串轉換成另一個目標字串所需的最小編輯操作次數。常見的操作包含三種：插入一個字元、刪除一個字元、以及替換一個字元。透過二維陣列的狀態轉移，我們可以系統化地求解字串之間的差異與相似度。
+昨天的 LCS 已經把「兩個序列的二維表格」建起來了：`dp[i][j]` 看的是 s 的前 i 個字元與 t 的前 j 個字元，邊界列與邊界欄對應空字串，只留上一列就能把空間滾到 `O(min(m, n))`。今天不重教這個框架，換的只有兩件事：**每一格的選項從兩個變成三個**，以及**邊界不再是 0**。
+
+Edit Distance 問的是：把字串 s 變成字串 t 最少要幾步。允許三種操作——插入一個字元、刪除一個字元、把一個字元替換成另一個——每一步代價都是 1，每一步只動一個位置。狀態定義照舊：`dp[i][j]` 是把 s 的前 i 個字元變成 t 的前 j 個字元的最少步數，答案在 `dp[m][n]`。
 
 ## Thinking
 
-當我們思考如何將字串 s1 轉換為 s2 時，可以從字串的末端開始檢查。若最後一個字元相符，則不需要額外操作，問題可縮小為子問題 dp[i-1][j-1]。若最後一個字元不相符，我們必須在三種操作中做出選擇：插入字元（對應 dp[i][j-1]）、刪除字元（對應 dp[i-1][j]）、或替換字元（對應 dp[i-1][j-1]）。我們取這三種操作所產生的最小步數，並加上當前的一次操作成本（即 +1），這就是完整的狀態轉移方程式：min(insert, delete, replace) + 1。
+**邊界是長度，不是 0。** `dp[i][0] = i`、`dp[0][j] = j`。這個「等於」其實是兩個不等式：刪 i 次顯然做得到，所以至多 i 步；至少也要 i 步，因為每一步最多只讓長度變 1（插入 +1、刪除 −1、替換 0），從長度 i 走到 0 至少要 i 步。空字串變成長度 j 的字串同理，靠 j 次插入。這裡用到了「每步代價都是 1」——712 每刪一個字元付的錢不同，邊界就變成前綴和而非長度。
+
+**三條轉移各自是一種收尾。** 任何一個把 s 前 i 個變成 t 前 j 個的方案，看它怎麼處置最後兩個字元 `s[i-1]` 與 `t[j-1]`，因為每步只動一個位置，只有三種可能：
+
+- `s[i-1]` 被刪掉：剩下的工作是 s 前 i−1 個變成 t 前 j 個，代價 `dp[i-1][j] + 1`。表格的**上方**：s 的指標前進、t 不動。
+- `t[j-1]` 是插入來的：剩下的工作是 s 前 i 個變成 t 前 j−1 個，代價 `dp[i][j-1] + 1`。**左方**：t 前進、s 不動。
+- 兩個字元對上：相同不花錢，不同就替換一次，代價 `dp[i-1][j-1] + (相同 ? 0 : 1)`。**左上**：兩邊都前進。
+
+為何取 `min`：三種收尾窮舉了所有方案；每種收尾剩下的工作都是一個更小的子問題，換成它的最佳解不會更差，所以三個候選裡最小的就是 `dp[i][j]`。三條都是「付一步」，`+1` 才能提到 `min` 外面——這是第二次用到「每步代價相同」。對照昨天：LCS 的兩條分支是「放棄誰」取 `max`，今天的三條是「付一步做什麼」取 `min`；LCS 沒有替換那條，因為它不允許改字元。
+
+**每一步的代價只看「做哪種操作、動到哪個字元」、與發生在哪個位置無關時（72 三種都是 1，符合），相符就能直接取 `dp[i-1][j-1]`，不必再看另外兩條。** 論證：若最佳方案的收尾是刪掉 `s[i-1]`，代價 `dp[i-1][j] + 1`；但「先照 `dp[i-1][j]` 的最佳方案做完，再刪掉最後的 `t[j-1]`」是一個把 s 前 i−1 個變成 t 前 j−1 個的合法方案，所以 `dp[i-1][j-1] ≤ dp[i-1][j] + 1`——刪除這條不會比對上更好。插入那條對稱：先補一個 `s[i-1]` 再套 `dp[i][j-1]` 的方案，得 `dp[i-1][j-1] ≤ dp[i][j-1] + 1`。兩處「多做的那一步」動到的都是同一個字元（`s[i-1]` 等於 `t[j-1]`），所以與分支裡那一步等價；若代價隨位置而變，這個等價就斷了，不等式可能翻轉。
+
+**空間滾到 `O(min(m, n))`。** 第 i 列只用到第 i−1 列與自己左邊那格，兩個一維陣列就夠，長度是欄數 +1。想讓欄是較短的字串，進入前把兩字串交換即可——合法，因為把 s 變 t 與把 t 變 s 的步數相同：把每一步的插入與刪除對調、替換反向、順序倒過來走，方案一一對應而步數不變。
+
+**712 換的是代價，不是框架。** 它只准刪除，每刪一個字元付它的 ASCII 值。原封不動的：狀態定義、`(m+1) × (n+1)` 的表格、「相符走左上、不相符取 `min`」、相符時不必看其他分支的論證（712 的代價只看被刪的是哪個字元，仍與位置無關）。跟著變的三處：替換分支消失，只剩上方與左方（「兩個都刪」不必另列，它等於上方再左方各走一步）；`+1` 不能再提到 `min` 外面，因為兩條分支付的錢不同——上方付 `ord(s[i-1])`、左方付 `ord(t[j-1])`；邊界不再是長度，而是 ASCII 前綴和（前 i 個全刪光，每一個都得付）。
 
 ## Pattern Recognition
 
-當題目明確要求計算「將一個字串轉換成另一個字串所需的最小操作次數」、「計算兩個字串的相似度與編輯成本」，或者在某些字串比對與自動校正的場景中，這就是典型的 Edit Distance Pattern。此外，若問題允許透過刪除特定字元來使兩個字串達到相等（如 Minimum ASCII Delete Sum for Two Strings），其底層架構與狀態轉移邏輯也高度相似。
+- 「把 A 變成 B 最少幾步／最小代價」，且每步只動一個位置、代價只看操作種類：三條轉移取 `min`、邊界是空字串的代價。
+- 題目給的操作集合決定分支數：只准刪（712、昨天的 583）就沒有替換那條；三種都准就是 72；再多給一種（如交換相鄰兩字元）就多一條轉移，框架不變。
+- 代價不是常數（每字元不同、每種操作不同）：`+1` 搬進各分支、邊界改成前綴和。
+- 反向訊號：問「最長／最多」而非「最少」，多半是 LCS 那一族取 `max`；問連續的「子字串」則狀態要改成「以 i、j 結尾」。
 
 ## Common Mistakes
 
-初學者在實現 Edit Distance Pattern 時，最常犯的錯誤是搞錯各種操作對應到 DP 表格的方向。例如誤將插入操作對應到上方，或將刪除操作對應到左方。正確的對應關係是：插入操作會消耗目標字串的字元，對應到表格的左方；刪除操作會消耗來源字串的字元，對應到表格的上方；而替換操作則是同時消耗雙方的字元，對應到表格的左上方。另一個常見錯誤是未正確初始化空字串轉換為目標字串所需的基礎編輯步數。
+四條反例都能拿本篇 Tip 的程式碼改一處重現，數字是實際執行結果。
+
+1. **邊界寫成 0**：TS 把 `const curr: number[] = [i]` 改成 `[0]`，`editDistance("horse", "ros")` 得 2（正確 3）——表格以為「把 s 前 i 個刪光」免費。把 `(_, j) => j` 改成 `() => 0` 則 `editDistance("ce", "abcde")` 得 1（正確 3）。
+2. **相符時仍 +1**：TS 把 `curr[j] = prev[j - 1]` 改成 `prev[j - 1] + 1`，`"horse" → "ros"` 得 5。相同的字元被當成替換付費。
+3. **漏掉替換分支**：TS 把 `Math.min(prev[j], curr[j - 1], prev[j - 1])` 改成 `Math.min(prev[j], curr[j - 1])`，`"horse" → "ros"` 得 4——正好是 `m + n − 2 × LCS = 5 + 3 − 2 × 2`，退化成昨天 583 的「只准插刪」。
+4. **權重掛錯邊**：把口訣「插入對應左方、刪除對應上方」記反，在 72 不會出事——三條都 +1，上方左方對調後 `min` 不變；在 712 會。Python 把 `prev[j] + ord(s1[i - 1])` 與 `curr[j - 1] + ord(s2[j - 1])` 的兩個 `ord` 對調，`min_delete_sum("sea", "eat")` 得 212（正確 231）。上方是「刪 s1 的字元」，就得付 s1 那個字元的錢。
 
 ## Complexity
 
-時間複雜度為 O(m * n)，其中 m 與 n 分別為兩個字串的長度，因為需要填滿大小為 (m+1) * (n+1) 的二維表格。空間複雜度若使用完整二維陣列為 O(m * n)，若運用滾動陣列進行優化，空間複雜度可降至 O(min(m, n))。
+時間 `O(m*n)`：`(m+1) × (n+1)` 格每格常數時間。空間 `O(min(m, n))`：只留上一列，且進入前把較短的字串放到欄的方向（步數對稱，交換合法）；示範碼滾動的是第二個參數那一維，沒有交換，空間為 `O(n)`。
 
 ## Digest
 
-Edit Distance Pattern 透過二維動態規劃解決字串轉換的最小操作成本問題。核心在於判斷字元是否相符，若不相符則取插入、刪除、替換三種決策的最小值加一。正確初始化基礎邊界條件與釐清表格方向是解題的關鍵。
+昨天的 LCS 已經把兩個序列的二維表格教過了；今天每一格的選項從兩個變成三個，邊界從 0 變成長度。`dp[i][j]` 是把 s 前 i 個變成 t 前 j 個的最少步數。邊界 `dp[i][0] = i`、`dp[0][j] = j`：至多 i 步（刪 i 次），至少 i 步（每步最多讓長度變 1）。不相符時 `dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])`，三條各對應一種收尾：上方是刪掉 `s[i-1]`、左方是插入 `t[j-1]`、左上是替換；取 `min` 是因為三種收尾窮舉了所有方案。代價只看操作種類與字元、不看位置時，相符直接取 `dp[i-1][j-1]`：把另外兩條的方案「再多做一步」就能得到 `dp[i-1][j-1]` 的上界，所以它們不會更好。712 只准刪、每字元付 ASCII 值：框架不變，變的是替換分支消失、`+1` 搬進各分支、邊界改成 ASCII 前綴和。
 
 ## TypeScript Tip
 
+72 的滾動版：只留上一列。示範碼沒做交換，空間是 `O(n)`；要拿到 `O(min(m, n))`，進入前把較短者換到 `b`。
+
 ```typescript
-function optimizedMinDistance(word1: string, word2: string): number {
-  let prev = Array.from({ length: word2.length + 1 }, (_, i) => i);
-  for (let i = 1; i <= word1.length; i++) {
-    const curr = [i];
-    for (let j = 1; j <= word2.length; j++) {
-      if (word1[i - 1] === word2[j - 1]) {
-        curr[j] = prev[j - 1];
-      } else {
-        curr[j] = Math.min(prev[j], curr[j - 1], prev[j - 1]) + 1;
-      }
+function editDistance(a: string, b: string): number {
+  const n = b.length;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j); // dp[0][j] = j：開頭先插 j 個
+  for (let i = 1; i <= a.length; i++) {
+    const curr: number[] = [i]; // dp[i][0] = i：前 i 個全刪
+    for (let j = 1; j <= n; j++) {
+      if (a[i - 1] === b[j - 1]) curr[j] = prev[j - 1];
+      else curr[j] = 1 + Math.min(prev[j], curr[j - 1], prev[j - 1]); // 刪 / 插 / 換
     }
     prev = curr;
   }
-  return prev[word2.length];
+  return prev[n];
 }
-if (optimizedMinDistance("intention", "execution") !== 5) throw new Error("assertion failed");
+if (editDistance("horse", "ros") !== 3) throw new Error("換 h、刪 r、刪 e：應為 3");
+if (editDistance("ce", "abcde") !== 3) throw new Error("插 a、b、d：應為 3");
 ```
 
 ## Python Tip
 
-```python
-def optimizedMinDistance(word1: str, word2: str) -> int:
-    prev = list(range(len(word2) + 1))
-    for i in range(1, len(word1) + 1):
-        curr = [i]
-        for j in range(1, len(word2) + 1):
-            if word1[i - 1] == word2[j - 1]:
-                curr.append(prev[j - 1])
-            else:
-                curr.append(1 + min(prev[j], curr[-1], prev[j - 1]))
-        prev = curr
-    return prev[-1]
-
-assert optimizedMinDistance("intention", "execution") == 5, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function minDistance(word1: string, word2: string): number {
-  const m = word1.length;
-  const n = word2.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (word1[i - 1] === word2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1];
-      } else {
-        dp[i][j] = Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1;
-      }
-    }
-  }
-  return dp[m][n];
-}
-const result = minDistance("horse", "ros");
-if (result !== 3) throw new Error("assertion failed");
-```
-
-## Python Corner
+712 的加權版。對照上面的 TS 看三處差異：邊界是前綴和、代價搬進分支、沒有替換。
 
 ```python
-def minDistance(word1: str, word2: str) -> int:
-    m, n = len(word1), len(word2)
-    dp = [[0] * (n + 1) for _ in range(m + 1)]
-    for i in range(m + 1):
-        dp[i][0] = i
-    for j in range(n + 1):
-        dp[0][j] = j
-    for i in range(1, m + 1):
+def min_delete_sum(s1: str, s2: str) -> int:
+    n = len(s2)
+    prev = [0] * (n + 1)
+    for j in range(1, n + 1):  # dp[0][j]：s2 前 j 個全刪＝ASCII 前綴和
+        prev[j] = prev[j - 1] + ord(s2[j - 1])
+    for i in range(1, len(s1) + 1):
+        curr = [prev[0] + ord(s1[i - 1])] + [0] * n  # dp[i][0] 同理
         for j in range(1, n + 1):
-            if word1[i - 1] == word2[j - 1]:
-                dp[i][j] = dp[i - 1][j - 1]
-            else:
-                dp[i][j] = min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1
-    return dp[m][n]
+            if s1[i - 1] == s2[j - 1]:
+                curr[j] = prev[j - 1]  # 相符：兩邊都留下，免費
+            else:  # 只剩刪 s1 或刪 s2，各付自己那個字元
+                curr[j] = min(prev[j] + ord(s1[i - 1]), curr[j - 1] + ord(s2[j - 1]))
+        prev = curr
+    return prev[n]
 
-result = minDistance("horse", "ros")
-assert result == 3, "assertion failed"
+assert min_delete_sum("sea", "eat") == 231  # 刪 s(115) 與 t(116)
+assert min_delete_sum("delete", "leet") == 403
 ```
 
 ## Takeaway
 
-掌握插入、刪除與替換三種操作的狀態轉移與邊界初始化，能有效破解各類字串編輯距離與相似度計算問題。
+不相符時付一步取三條之 `min`（上刪、左插、左上換）；代價只看操作與字元不看位置時，相符可直接取左上；邊界是空字串的代價。
 
 ## Tomorrow Preview
 
-明天我們將探討字串比對的另一個經典模式：Longest Common Subsequence（LCS）及其延伸應用，學習如何處理不連續子序列的狀態轉移。
+這是整條課綱的最後一課，動態規劃這條線到此收束：從一維的序列、二維的網格與背包，走到兩個序列並排的表格，今天再把每一格的選項擴成三條。接下來沒有新的觀念，只有挑戰與複習。往後遇到任何「最少幾步把 A 變成 B」的題目——差異比對、拼字校正、序列比對——先問三件事：允許哪些操作、每步代價是否只看操作與字元、空字串的邊界要付多少；答完，表格就自己長出來了。
 
 ## Today's Challenge
 
-- **72** · 本題為經典的 Edit Distance 題目，直接對應插入、刪除與替換三種字串轉換操作的狀態轉移模型。
-  - Hint: 注意初始化空字串到目標字串所需的基礎邊界步數。
-- **712** · 雖然本題計算的是刪除字元的最小 ASCII 總和，但其核心的決策架構與編輯距離模型高度相似。
-  - Hint: 將操作成本從固定的 1 改為對應字元的 ASCII 數值即可。
+- **72** · 三種操作全部登場的原型題：不相符時三條轉移取 `min`、邊界是長度，Tip 的 TS 就是它。
+  - Hint: 先把 `dp[i][0] = i`、`dp[0][j] = j` 填好，再問每一格「最後兩個字元怎麼收尾」；相符直接取左上，最後回傳右下角那一格。
+- **712** · 同一張表、不同代價：只准刪除、每字元付 ASCII 值，用來檢驗你分得清「框架」與「代價」哪些跟著變。
+  - Hint: 邊界改成 ASCII 前綴和；不相符時 `min(上方 + ord(s1[i-1]), 左方 + ord(s2[j-1]))`，`+1` 不能提到外面。

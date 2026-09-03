@@ -14,16 +14,10 @@ next:
   - sliding-window-max-consecutive-ones
   - sliding-window-minimum-window-substring
 learning_goal:
-  - >-
-    Master the left pointer contraction phase to restore validity or optimize
-    window size.
+  - 精通左指標的收縮階段，以恢復視窗合法性或最佳化視窗大小。
 exit_criteria:
-  - >-
-    Can write the inner while-loop that shrinks the window from the left when a
-    constraint is violated.
-  - >-
-    Can update the global optimal result (max or min length) correctly during
-    contraction.
+  - 能寫出在限制被違反時，從左側收縮視窗的內層 while 迴圈。
+  - 能在收縮過程中正確更新全域最佳結果（最大或最小長度）。
 leetcode:
   - 209
 tags:

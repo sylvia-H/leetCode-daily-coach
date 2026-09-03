@@ -12,14 +12,10 @@ prerequisite:
 next:
   - linked-list-insertion-head-tail
 learning_goal:
-  - >-
-    Master the standard traversal loop using a temporary pointer to visit every
-    node safely.
+  - 精通使用暫時指標安全走訪每個節點的標準走訪迴圈。
 exit_criteria:
-  - >-
-    Can write a while loop that advances current = current.next without losing
-    references
-  - Can correctly handle empty list conditions
+  - 能寫出以 current = current.next 前進且不遺失參照的 while 迴圈
+  - 能正確處理空串列的情況
 leetcode:
   - 876
   - 430

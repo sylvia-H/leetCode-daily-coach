@@ -11,119 +11,99 @@ exit_criteria:
 ---
 ## Concept
 
-在圖形與網格搜尋中，DFS 已造訪狀態管理（Visited Tracking）是確保演算法正確終止並避免陷入無限迴圈的核心機制。由於圖形結構可能包含環（Cycles），若無適當的狀態記錄，深度優先搜尋會重複造訪相同的節點，導致堆疊溢位（Stack Overflow）或執行時間無限延伸。透過資料結構（如 Hash Set 或布林陣列）追蹤每個節點的造訪狀態，我們能確保每個節點與邊僅被處理一次，維持演算法的線性時間複雜度。
+昨天把遞迴式 DFS 拆成 base case、當前節點處理、對鄰居遞迴三個部件，並說它會終止的前提是「每次真正進入都讓某個不會小於 0 的量嚴格變小」。樹上這個量是子樹大小，不需要任何額外記錄；圖上就沒有現成的量——圖可以有環，從 u 走到 v 再走回 u，子問題沒有變小。今天只講讓那個量存在的東西：visited 狀態。
+
+先把它定義清楚。設 visited 為「曾經進入過的頂點集合」，且標記一旦設下就不清除。在這個前提下，遞迴式 DFS 的每一次遞迴呼叫都先被 `!visited` 擋過、進入時立刻加入 visited，所以「未標記頂點數」在每次進入時嚴格減一；它從 V 開始、不會小於 0，進入次數最多 V 次，遞迴一定終止。每條邊在兩端各被掃一次，時間 O(V + E)；格子圖每格最多四條邊，就是 O(V)。這條論證只用到兩件事：標記在掃鄰居之前完成、標記永不清除。今天的三個問題都繞著它們：什麼時候標、標在哪、以及什麼情況下你會刻意違反第二條。
+
+visited 還有另一種語意：「在目前這條路徑上的頂點」。要列舉所有簡單路徑時，一個頂點在這條路徑用過、在另一條路徑還能再用，所以進入時標記、離開時清除。此時上面的論證失效——那個量不再單調——演算法仍然終止，因為一條簡單路徑最長 V 個頂點，但呼叫次數等於從起點出發的簡單路徑數，最壞是指數級。兩種語意用同一個容器、只差一行 `delete`，混用就是今天最常見的錯。
 
 ## Thinking
 
-當面對圖形或矩陣遍歷問題時，思考的起點在於識別狀態空間與轉移條件。在進入遞迴函式或處理特定節點的瞬間，我們必須立即將該節點標記為已造訪。這種即時標記的策略可防止後續的鄰居節點在迴圈中再次將當前節點加入處理佇列或遞迴呼叫中。此外，我們必須釐清狀態標記的時機：對於多數基礎走訪與連通分量計算，在進入節點時標記即可；對於需要尋找所有簡單路徑的回溯（Backtracking）問題，則可能需要在離開節點時進行狀態重置（Unvisiting）。
+第一問：這題要每個頂點處理一次，還是每條路徑處理一次？問「有幾塊」「能不能到」「把相連的都改掉」「哪些被包圍」是前者，永久標記；問「所有路徑」「有沒有一條不重複的走法」是後者，進入時標記、離開時清除。
+
+第二問：標在哪一行？永久標記放在 base case 之後、掃鄰居之前的第一行；等價寫法是呼叫 `dfs(v)` 之前先標 v，起點在外面先標。兩者維持同一條不變式：此刻在呼叫堆疊上的每個頂點都已標記，所以任何鄰居都不可能再進入堆疊上的頂點，環在第一步就被擋下。標記放在迴圈之後（離開時才標）就打破不變式：一條無向邊 u–v 本身就是環，v 看到 u 未標記又進去。
+
+第三問：容器放哪？可變的格子圖可以就地標記——把格子改寫成一個「再進來會被 base case 擋下」的值（陸地 '1' 改 '0'、像素改成新色），省掉容器，但要滿足一個前提：改寫後的值必須與未造訪的值可區分。填色時新色等於原色，改完的格子看起來跟沒改一樣，`!= old` 擋不住，會無限遞迴，得先判同色直接回傳。有時標記本身要攜帶資訊：找被包圍區域時，從邊界的 'O' 啟動 DFS，走到的格子不能直接改成 'X'——最後一趟就分不出「本來就是 X」與「不被包圍」——要改成第三個符號，最後再一趟解碼。不能改輸入、或頂點不是格子時，用額外容器：布林陣列（頂點是 0 到 V-1 的整數）、`Set<number>` 存 `r * cols + c`、或 `Set<string>` 存 `"r,c"`（多一次字串組裝，但最直覺）；Python 用 `set` 存 `(r, c)` tuple。
 
 ## Pattern Recognition
 
-當題目涉及網格（Grid）、有向圖（Directed Graph）或無向圖（Undirected Graph）的遍歷、連通分量計算、路徑搜尋或區域擴散時，即可明確辨識出 Visited Tracking 的 Pattern。若題目要求找出所有可能路徑、計算島嶼數量、或是判斷是否存在環，通常都離不開造訪狀態的管理。
+輸入是圖或格子而且可能有環——無向圖的任一條邊都是來回的環，格子圖的四鄰居關係也是——就一定要有 visited。訊號：連通塊、填色、包圍、可達性，永久標記；所有路徑、單字搜尋、不重複走法，路徑標記（離開時清除）。樹是例外：父子單向、無環，昨天的寫法不用 visited；但一旦樹的邊被當成無向（節點有 parent 指標、或用鄰接表存樹），它就是圖，照樣要標。
 
 ## Common Mistakes
 
-最常見的錯誤是在將節點加入鄰居清單或準備遞迴時才進行標記，而不是在「進入」節點的當下立即標記。這會導致同一個節點在不同分支中被重複加入待處理清單，造成效能劣化甚至無限迴圈。另一個常見錯誤是在需要回溯的場景中忘記在遞迴返回時清除已造訪狀態，導致合法路徑被錯誤排除。
+以下每條都以本篇 Tip 的程式碼實測。第一，離開時才標記：把 TypeScript Tip `reach` 裡的 `seen.add(u);` 移到 `for` 迴圈之後，`0-1` 這條邊就讓 `reach` 在 0 與 1 之間互相呼叫直到 `RangeError: Maximum call stack size exceeded`。第二，列舉路徑卻用永久標記：刪掉 TypeScript Tip `paths` 的 `onPath.delete(u);`，同一張圖從 0 到 3 的簡單路徑從 4 條數成 2 條——先走的分支把 2 標掉，`0-2-3`、`0-2-1-3` 再也進不去。第三，可達性卻用路徑標記：在 `reach` 的 `for` 迴圈後補一行 `seen.delete(u);`，結束時 seen 是空的、答案直接錯，而且呼叫次數變成從起點出發的簡單路徑數——四個頂點的完全圖 16 次、八個頂點 13700 次，永久標記各只要 4 次與 8 次。第四，就地標記的值與原值不可區分：拿掉 Python Tip 的 `if old == color: return img`，`[[1, 1], [1, 1]]` 以新色 1 填色，每格改完仍等於 old，四格互相呼叫直到 `RecursionError`。
 
 ## Complexity
 
-時間複雜度為 O(V)，其中 V 為節點總數（或網格中的格子總數），因為每個節點僅會被造訪與標記一次。空間複雜度為 O(V)，主要取決於遞迴呼叫堆疊的最大深度以及儲存已造訪狀態所需的 Hash Set 或陣列空間。
+永久標記：每個頂點進入一次、每條邊掃兩次，O(V + E)；格子圖 E 不超過 4V，所以是 O(V)。空間 O(V)：visited 容器 O(V)（就地標記為 0），加上呼叫堆疊最深 O(V)。路徑標記（離開時清除）：時間等於從起點出發的簡單路徑數，最壞指數級（完全圖是 (V-1)! 量級）；空間仍 O(V)，因為堆疊與容器上同時只掛著一條路徑。
 
 ## Digest
 
-今日重點聚焦於 DFS 中的 Visited Tracking Pattern。我們學習到圖形走訪必須嚴格管理節點的造訪狀態，以防範因環狀結構導致的無限遞迴。透過在進入節點時立即標記，我們能確保演算法以 O(V) 的時間效率正確執行。TypeScript 使用 Set<number> 或 Set<string>，Python 則使用 set() 達成常數時間的查詢與更新。掌握此基礎，能為後續更複雜的圖論演算法打下穩固根基。
+visited 有兩種語意，先選對再動筆。永久標記：visited＝曾經進入過的頂點，進入時（掃鄰居之前）加入、永不清除；在這個前提下「未標記頂點數」每次進入嚴格減一，含環的圖也最多進入 V 次，時間 O(V + E)，格子圖就是 O(V)。路徑標記：visited＝目前路徑上的頂點，進入時加入、離開時清除，用來列舉所有簡單路徑；仍會終止但呼叫次數等於從起點出發的簡單路徑數，最壞指數級。標在哪：可變格子就地改寫成會被 base case 擋下的值，前提是改寫後的值與未造訪的值可區分（填色時新舊同色要先判掉）；標記要攜帶資訊就用第三個符號、最後解碼；不能改輸入就用布林陣列或 Set。不變式：堆疊上的每個頂點都已標記，環才擋得住。
 
 ## TypeScript Tip
 
+同一張含環的圖：永久標記數可達頂點，離開時清除數簡單路徑。
+
 ```typescript
-function hasValidVisit(grid: number[][]): boolean {
-    const visited = new Set<string>();
-    const key = (r: number, c: number) => `${r},${c}`;
-    visited.add(key(0, 0));
-    if (!visited.has(key(0, 0))) throw new Error("assertion failed");
-    return true;
+import assert from "node:assert";
+
+function reach(adj: number[][], u: number, seen = new Set<number>()): number {
+  seen.add(u); // 進入即標記、永不清除
+  for (const v of adj[u] ?? []) if (!seen.has(v)) reach(adj, v, seen);
+  return seen.size;
 }
-hasValidVisit([[0]]);
+function paths(adj: number[][], s: number, t: number): number {
+  const onPath = new Set<number>();
+  const dfs = (u: number): number => {
+    if (u === t) return 1;
+    onPath.add(u);
+    let n = 0;
+    for (const v of adj[u] ?? []) if (!onPath.has(v)) n += dfs(v);
+    onPath.delete(u); // 離開時清除
+    return n;
+  };
+  return dfs(s);
+}
+const adj = [[1, 2], [0, 2, 3], [0, 1, 3], [1, 2]]; // 含環
+assert.equal(reach(adj, 0), 4);
+assert.equal(paths(adj, 0, 3), 4); // 0-1-3、0-2-3、0-1-2-3、0-2-1-3
 ```
 
 ## Python Tip
 
-```python
-def has_valid_visit(grid: list[list[int]]) -> bool:
-    visited = set()
-    key = (0, 0)
-    visited.add(key)
-    assert key in visited, "assertion failed"
-    return True
-has_valid_visit([[0]])
-```
-
-## TypeScript Corner
-
-```typescript
-function countComponents(n: number, edges: number[][]): number {
-    const adj: number[][] = Array.from({ length: n }, () => []);
-    for (const [u, v] of edges) {
-        adj[u].push(v);
-        adj[v].push(u);
-    }
-    const visited = new Set<number>();
-    let count = 0;
-    const dfs = (node: number) => {
-        visited.add(node);
-        for (const neighbor of adj[node]) {
-            if (!visited.has(neighbor)) {
-                dfs(neighbor);
-            }
-        }
-    };
-    for (let i = 0; i < n; i++) {
-        if (!visited.has(i)) {
-            dfs(i);
-            count++;
-        }
-    }
-    if (count !== 1) throw new Error("assertion failed");
-    return count;
-}
-countComponents(3, [[0, 1], [1, 2]]);
-```
-
-## Python Corner
+就地標記：改色就是 visited；新舊同色時改完分不出來，必須先判掉。
 
 ```python
-def count_components(n: int, edges: list[list[int]]) -> int:
-    adj = [[] for _ in range(n)]
-    for u, v in edges:
-        adj[u].append(v)
-        adj[v].append(u)
-    visited = set()
-    count = 0
-    def dfs(node: int):
-        visited.add(node)
-        for neighbor in adj[node]:
-            if neighbor not in visited:
-                dfs(neighbor)
-    for i in range(n):
-        if i not in visited:
-            dfs(i)
-            count += 1
-    assert count == 1, "assertion failed"
-    return count
-count_components(3, [[0, 1], [1, 2]])
+def flood_fill(img: list[list[int]], sr: int, sc: int, color: int) -> list[list[int]]:
+    old = img[sr][sc]
+    if old == color:
+        return img  # 改成同色＝沒標記，不擋會無限遞迴
+    rows, cols = len(img), len(img[0])
+    def fill(r: int, c: int) -> None:
+        if r < 0 or c < 0 or r >= rows or c >= cols or img[r][c] != old:
+            return
+        img[r][c] = color  # 改色即標記：再進來會被 != old 擋下
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            fill(r + dr, c + dc)
+    fill(sr, sc)
+    return img
+
+assert flood_fill([[1, 1, 0], [1, 0, 1], [1, 1, 1]], 0, 1, 2) == [[2, 2, 0], [2, 0, 2], [2, 2, 2]]
+assert flood_fill([[1, 1], [1, 1]], 0, 0, 1) == [[1, 1], [1, 1]]  # 同色：拿掉判斷會 RecursionError
 ```
 
 ## Takeaway
 
-Visited Tracking 是圖形走訪的靈魂，即時標記、正確選擇資料結構，是確保演算法終止與效能的關鍵。
+visited 先選語意：永久標記（進入即標、永不清除）擋環保 O(V)；路徑標記（離開時清除）列舉路徑；就地標記的值必須與未造訪可區分。
 
 ## Tomorrow Preview
 
-明天我們將深入探討圖論中的進階主題：使用拓撲排序（Topological Sort）解決依賴關係問題，並學習如何結合入度表與佇列來偵測有向圖中的環。
+接下來三課都建立在今天的 visited 之上：BFS 與佇列層級走訪（用 Queue 逐層向外擴散、FIFO 在層級搜尋中的角色）、二維網格的 DFS 探索（用方向陣列走四鄰居、邊界檢查）、圖形連通分量計算（外層迴圈配合計數器，每啟動一次搜尋就是一個群組）。
 
 ## Today's Challenge
 
-- **733** · 著色問題需要在二維網格中向四個方向擴散，精準記錄已填色的像素座標可避免重複處理與無限迴圈。
-  - Hint: 在更新像素顏色的同時，將當前座標加入 visited 集合或直接比對原顏色以避免重複造訪。
-- **130** · 需要在網格邊界上利用 DFS 走訪與狀態標記，以區分出與邊界相連的 O 區域以及被 X 完全包圍的內部區域。
-  - Hint: 先從邊界的 O 開始進行 DFS，將所有可連通的 O 標記為特殊狀態，最後再掃描整個網格進行轉換。
+- **733** · 就地標記的最小案例：像素改成新色本身就是 visited，不需要額外容器。唯一的陷阱是新色等於原色——「已填」與「未填」無法區分，會無限遞迴；本篇 Python Tip 就是這題的完整骨架。
+  - Hint: 先記下起點原色，等於新色就直接回傳原圖；DFS 進入時判界外或非原色就返回，改色後再遞迴四方向。
+- **130** · 反過來想：從四條邊界上的 'O' 啟動 DFS，走得到的 'O' 都不被包圍。這題的 visited 要攜帶資訊，直接改成 'X' 會在最後一趟與原本的 'X' 混在一起，必須用第三個符號。
+  - Hint: 對邊界的每個 'O' 呼叫 DFS 改成暫記號（如 '#'），角落重複啟動無害（已是 '#' 會立刻返回）；走完後全盤掃描：'O' 改 'X'、'#' 改回 'O'。

@@ -6,156 +6,100 @@ pattern_label: Variable Sliding Window + Requirement Counter
 complexity_label: O(n + m) / O(1)
 estimated_minutes: 25
 exit_criteria:
-  - >-
-    Can track how many unique required characters have met their target
-    frequencies.
-  - >-
-    Can contract the left pointer greedily while maintaining full coverage of
-    all required characters.
+  - 能追蹤有多少個必要的相異字元已達到其目標頻率。
+  - 能在維持完整涵蓋所有必要字元的同時，貪婪地收縮左指標。
 ---
 ## Concept
 
-Minimum Window Substring 是一種進階的 Variable Sliding Window 問題。核心在於動態維護一個左右指標，透過擴展右指標（Right Pointer）來尋找包含所有目標字元（t）的有效視窗，隨後收縮左指標（Left Pointer）來尋找包含相同所有目標字元的最小長度視窗。為了在常數時間內確認視窗是否滿足條件，我們需要引入一個狀態計數器（Requirement Counter），用來追蹤當前視窗內已滿足目標頻率的獨立字元數量。
+Minimum Window Substring（LeetCode 標為 Hard）是 sliding-window 模組的收官課，但你需要的零件其實都學過：頻率表的起手式來自 hash-table 的 Frequency Counting，need / win 與 matched 計數器來自排列判定與 anagram 兩課，「擴張納入、收縮移出」的變動視窗骨架來自 expansion 與 contraction 兩課；這題本身你也在 hash-table 的頻率視窗課當 Challenge 寫過一次，當時 Hint 一句帶過的流程，本課要補上 matched 的精確語意與不漏解的論證。本課的增量只有一個——把比對語意從「恰好相等」放寬成「涵蓋」：視窗內每個必要字元的數量大於等於需求即可，超額不扣分。這個放寬正是視窗不再定長的原因：合法視窗可以任意延長，題目要的卻是最短的一個。於是策略成形——右端擴張直到 matched 湊滿，然後在維持涵蓋的前提下貪婪收縮左端，每次移除前記下視窗，直到涵蓋被打破，再回頭繼續擴張。
 
 ## Thinking
 
-解題思考分為四個步驟：第一，建立字元頻率表（Frequency Map）記錄字串 t 中每個字元的所需數量。第二，使用 formed 變數記錄已經達到目標頻率的獨立字元數，當 formed 等於所需總數時，代表當前視窗是合法的（Valid Window）。第三，右指標不斷右移，將新字元納入視窗並更新當前統計。第四，一旦視窗合法，立刻嘗試收縮左指標，記錄此時的最小視窗長度與邊界，直到視窗不再合法為止，重複此過程直到右指標遍歷完整個字串。
+涵蓋語意下，matched 的增減要抓準「恰好」的時刻：納入 c 後若 win[c] 恰好追平 need[c]，matched 加一；已超額再納入同字元，matched 不動。移出 d 前若 win[d] 恰好等於 need[d]，代表拿走它涵蓋就破，matched 減一；超額字元移出則不影響。增減對稱，狀態才不會漂。matched 的湊滿目標是 t 的相異字元數——重複的需求由 need 的數值承擔，不另佔名額。記錄時機沿用 contraction 課的原則「只在視窗合法時記錄」：合法期間位於內層 while，所以記錄放在每次移除之前，移除後視窗可能已不合法。
+
+不漏解的論證補上最後一塊：設最佳解為 [l*, r*]。若 right 走到 r* 時 left 尚未越過 l*，此刻視窗包住最佳解、必然合法，內層 while 會一路收縮，收到 left = l* 時記下的正是最佳解本身；若 left 更早就越過 l*，由於收縮只在視窗合法時發生，越過的那一刻視窗 [l*, right] 合法、右端更早、長度比最佳解更短，而記錄恰好排在每次移除之前——這個更短的合法視窗已被記下。兩頭堵死，左指標因此可以單向前進、永不回頭；配合每個字元至多進出視窗各一次的攤銷帳（contraction 課算過總帳），整體時間是線性的。
 
 ## Pattern Recognition
 
-當題目要求『尋找包含另一個字串所有字元的最小子字串』（Finding the smallest substring containing all characters of another string），且字串長度可能很長、需要有效率的線性時間解法時，這就是經典的 Variable Sliding Window + Requirement Counter 模式。與一般固定長度的視窗不同，這裡的視窗大小會根據合法性條件動態伸縮。
+題面是「最短的、涵蓋另一組必要元素的連續區間」，就是 Variable Sliding Window + Requirement Counter。與昨天 anagram 的分水嶺在比對語意：anagram 要求定長且頻率恰好相等，超額即失配；涵蓋只要求大於等於，超額無害，視窗因此可長可短，「最短」得靠收縮擇優。動手前照例做單調性檢查：移出字元只會讓涵蓋變差、不會變好，收縮才有明確停點，這是本模板適用的前提。
 
 ## Common Mistakes
 
-最常見的錯誤在於收縮左指標時，未能正確維護 formed 計數。當左指標指向的字元頻率剛好達到目標閾值、且即將被移出視窗時，若沒有將 formed 數量減一，會導致演算法誤判視窗的合法性狀態，進而錯過真正的最小視窗解。另一個錯誤是忽略了字串中可能包含重複字元，直接使用字元總長度而非獨立字元種類數作為完成條件。
+第一，收縮時忘了 matched 減一：移出達標邊界的字元後涵蓋已破，matched 卻沒跌，內層 while 條件恆真，left 失控前衝——TypeScript 取到 undefined 不擲錯、卡死在迴圈裡；Python 則對尚未納入的字元扣減或越界取值，拋 KeyError 或 IndexError；失效形式是掛住或擲錯，不是算錯。第二，matched 加一的條件寫成大於等於：以 s = "aab"、t = "ab" 為例，納入第二個 a 時 win[a] = 2 >= 1 又加一次，matched 虛胖成 2 湊滿目標，視窗 "aa" 根本沒有 b 就被判合法。第三，湊滿目標誤用 t 的總長度：t = "aab" 長度為 3，但 matched 數的是相異字元、至多 2，永遠湊不滿，整題只回傳空字串。後兩種錯誤不擲例外、只安靜給出錯答案，務必拿含重複字元的小例子驗過。
 
 ## Complexity
 
-時間複雜度：O(n + m)，其中 n 是字串 s 的長度，m 是字串 t 的長度。左右指標各自最多走過 s 的每個字元一次。空間複雜度：O(k)，其中 k 是字元集的大小（若為英文大小寫字母，k 最大為 52，可視為常數 O(1)）。
+時間 O(n + m)：建 need 表走過 t 一次是 O(m)；主迴圈中每個字元至多被 right 納入一次、被 left 移出一次，每一步的頻率更新與 matched 判定都是 O(1)，合計 O(n)。空間 O(k)：need 與 win 的鍵數不超過字元集大小 k（英文大小寫至多 52），可視為常數 O(1)。
 
 ## Digest
 
-Minimum Window Substring 是滑動視窗（Sliding Window）的殿堂級考題。我們透過擴展右指標收集候選字元，並利用 Requirement Counter 在 O(1) 時間內判斷視窗是否合法。一旦合法，便積極收縮左指標以逼近最小長度。此模式不僅適用於字串覆蓋問題，也是處理陣列區間包含特定集合條件的通用骨架。
+Minimum Window Substring 把 sliding-window 模組的零件收攏成一題：need / win 頻率表加 matched 計數器判涵蓋——win 恰好追平 need 時 matched 加一、移出使其跌破時減一，湊滿 t 的相異字元數即合法；變動視窗負責擇優——不合法就擴張右端，合法就收縮左端，每次移除前先記錄。實例 s = "ADOBECODEBANC"、t = "ABC"：right 走到第一個 C 時湊滿涵蓋，收縮記下 "ADOBEC"；其後視窗歷經打破與重建，最後收縮出 "BANC" 即為答案。整體 O(n + m) 時間、O(1) 額外空間（字元集大小為常數）。
 
 ## TypeScript Tip
 
+Map 版不限定字元集；`?? 0` 收斂缺鍵，三處 `!` 是邏輯上保證存在的收斂斷言。
+
 ```typescript
-// TypeScript 效能與型別實踐建議
-function checkCoverage(windowMap: Map<string, number>, targetMap: Map<string, number>): boolean {
-  for (const [key, val] of targetMap) {
-    if ((windowMap.get(key) || 0) < val) return false;
+import assert from "node:assert";
+function minWindow(s: string, t: string): string {
+  const need = new Map<string, number>(), win = new Map<string, number>();
+  for (const c of t) need.set(c, (need.get(c) ?? 0) + 1);
+  let matched = 0, L = 0, best = "";
+  for (let r = 0; r < s.length; r++) {
+    const c = s[r]!;
+    win.set(c, (win.get(c) ?? 0) + 1);
+    if (win.get(c) === need.get(c)) matched++;
+    while (matched === need.size) {
+      if (!best || r - L + 1 < best.length) best = s.slice(L, r + 1);
+      const d = s[L++]!;
+      if (win.get(d) === need.get(d)) matched--;
+      win.set(d, win.get(d)! - 1);
+    }
   }
-  return true;
+  return best;
 }
-const wMap = new Map([["a", 1]]);
-const tMap = new Map([["a", 1]]);
-if (!checkCoverage(wMap, tMap)) throw new Error("assertion failed");
+assert.strictEqual(minWindow("aabbc", "aab"), "aab");
 ```
 
 ## Python Tip
 
-```python
-# Python 效能與字典操作建議
-from collections import defaultdict
-
-def fast_counter_check() -> bool:
-    d = defaultdict(int)
-    d["a"] += 1
-    return d["a"] == 1
-
-assert fast_counter_check() == True, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function minWindow(s: string, t: string): string {
-  if (s.length === 0 || t.length === 0) return "";
-  const dictT = new Map<string, number>();
-  for (let i = 0; i < t.length; i++) {
-    const char = t[i];
-    dictT.set(char, (dictT.get(char) || 0) + 1);
-  }
-  const required = dictT.size;
-  let formed = 0;
-  const windowCounts = new Map<string, number>();
-  let l = 0, r = 0;
-  let ans: [number, number, number] = [-1, 0, 0];
-  while (r < s.length) {
-    const c = s[r];
-    const count = windowCounts.get(c) || 0;
-    windowCounts.set(c, count + 1);
-    if (dictT.has(c) && windowCounts.get(c) === dictT.get(c)) {
-      formed++;
-    }
-    while (l <= r && formed === required) {
-      const leftChar = s[l];
-      if (ans[0] === -1 || r - l + 1 < ans[0]) {
-        ans = [r - l + 1, l, r];
-      }
-      windowCounts.set(leftChar, windowCounts.get(leftChar)! - 1);
-      if (dictT.has(leftChar) && windowCounts.get(leftChar)! < dictT.get(leftChar)!) {
-        formed--;
-      }
-      l++;
-    }
-    r++;
-  }
-  return ans[0] === -1 ? "" : s.substring(ans[1], ans[2] + 1);
-}
-const result = minWindow("ADOBECODEBANC", "ABC");
-if (result !== "BANC") throw new Error("assertion failed");
-```
-
-## Python Corner
+Counter 對缺鍵回 0 且不落鍵，`win[c] == need[c]` 的追平比對對無關字元因此天然安全。
 
 ```python
 from collections import Counter
 
 def min_window(s: str, t: str) -> str:
-    if not s or not t:
-        return ""
-    dict_t = Counter(t)
-    required = len(dict_t)
-    window_counts = Counter()
-    l, r = 0, 0
-    formed = 0
-    ans = float("inf"), None, None
-    
-    while r < len(s):
-        character = s[r]
-        window_counts[character] += 1
-        
-        if character in dict_t and window_counts[character] == dict_t[character]:
-            formed += 1
-            
-        while l <= r and formed == required:
-            character = s[l]
-            if (r - l + 1) < ans[0]:
-                ans = (r - l + 1, l, r)
-                
-            window_counts[character] -= 1
-            if character in dict_t and window_counts[character] < dict_t[character]:
-                formed -= 1
-            l += 1
-            
-        r += 1
-        
-    return "" if ans[0] == float("inf") else s[ans[1] : ans[2] + 1]
+    need = Counter(t)
+    win: dict[str, int] = {}
+    matched, left, best = 0, 0, ""
+    for r, c in enumerate(s):
+        win[c] = win.get(c, 0) + 1
+        if win[c] == need[c]:
+            matched += 1
+        while matched == len(need):
+            if not best or r - left + 1 < len(best):
+                best = s[left:r + 1]
+            d = s[left]
+            left += 1
+            if win[d] == need[d]:
+                matched -= 1
+            win[d] -= 1
+    return best
 
-res = min_window("ADOBECODEBANC", "ABC")
-assert res == "BANC", "assertion failed"
+assert min_window("ADOBECODEBANC", "ABC") == "BANC"
+assert min_window("a", "aa") == ""
+assert min_window("aabbc", "aab") == "aab"
 ```
 
 ## Takeaway
 
-掌握 Variable Sliding Window 搭配 Requirement Counter，能以 O(n + m) 時間精準解開字串覆蓋與極小化視窗問題。
+涵蓋是大於等於而非恰好相等：擴張湊滿 matched，合法時先記錄再收縮，最短覆蓋視窗一個都不漏。
 
 ## Tomorrow Preview
 
-明天我們將探討字串處理中的雙指標與字元頻率結合的另一種變化題型：Longest Substring Without Repeating Characters，學習如何使用固定或變動大小的視窗來處理無重複字元的連續區間。
+sliding-window 模組到此收官——從固定視窗的頻率匹配、變動視窗的擴張與收縮，到涵蓋語意下的最短擇優，「維護視窗狀態、單向推進」這副骨架已經完整。明天起進入新的模組，用同樣的節奏繼續推進。
 
 ## Today's Challenge
 
-- **76** · 本題為 Minimum Window Substring 的原題，完美對應 Variable Sliding Window 與 Requirement Counter 的所有特徵。
-  - Hint: 使用兩個雜湊表或陣列分別紀錄目標字元頻率與當前視窗頻率，配合 formed 變數進行動態收縮。
+- **76** · 求 s 中涵蓋 t 全部字元（含重複頻率）的最短子字串，Variable Sliding Window + Requirement Counter 的原型題；LeetCode 標 Hard，但零件你都已練過。
+  - Hint: need / win / matched 全套沿用；matched 湊滿進內層 while，先記錄再移出 s[left]，移出破壞涵蓋時同步將 matched 減一。

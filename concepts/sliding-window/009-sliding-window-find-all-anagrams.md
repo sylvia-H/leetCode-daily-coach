@@ -12,16 +12,10 @@ prerequisite:
 next:
   - sliding-window-minimum-window-substring
 learning_goal:
-  - >-
-    Collect all starting indices where a fixed sliding window matches a target
-    frequency signature.
+  - 收集固定長度滑動視窗與目標頻率特徵相符的所有起始索引。
 exit_criteria:
-  - >-
-    Can record the starting index of the window whenever the frequency match
-    condition is satisfied.
-  - >-
-    Can traverse the entire string while maintaining the fixed window
-    efficiently.
+  - 能在頻率匹配條件成立時，記錄視窗的起始索引。
+  - 能在有效率維護固定視窗的同時走訪整個字串。
 leetcode:
   - 438
 tags:

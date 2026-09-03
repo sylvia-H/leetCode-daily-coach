@@ -13,12 +13,10 @@ prerequisite:
 next:
   - backtracking-word-search
 learning_goal:
-  - >-
-    Learn how to partition a string into segments at every possible index and
-    explore valid configurations using backtracking.
+  - '學會在每個可能的索引處把字串切分成片段，並用 Backtracking 探索合法的切分組合。'
 exit_criteria:
-  - Can slice strings at different cut points during recursion.
-  - Can integrate palindrome validation as a pruning condition.
+  - '能在遞迴過程中於不同切點切出子字串。'
+  - '能把回文驗證整合為剪枝條件。'
 leetcode:
   - 131
 tags:

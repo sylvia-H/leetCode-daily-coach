@@ -6,116 +6,96 @@ pattern_label: Collision Resolution
 complexity_label: O(n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - >-
-    Can simulate continuous interactions where current elements affect
-    previously stored elements.
-  - Can manage loop conditions with stack modifications.
+  - 能模擬目前元素會影響先前已儲存元素的連續交互過程。
+  - 能在修改 stack 的同時管理迴圈條件。
 ---
 ## Concept
 
-使用 Stack 結構來解決碰撞與消除問題（Collision Resolution）。當序列中的元素會依據方向或條件與前方已儲存的元素發生互動、消除或合併時，Stack 能有效率地維護存活的元素，並在每次進場時處理連鎖反應。
+碰撞消解（Collision Resolution）處理的是這樣一類問題：元素依序抵達，每個新元素可能與「先前被保留下來的元素」發生方向性的互動——消滅、抵銷或相安無事。堆疊維護「目前仍存活」的元素序列；新元素只需要和堆疊頂端互動，因為在一維直線上，向左移動的新元素必然先撞上離它最近的向右移動者，而「最近被保留的」正是堆疊頂端。這是昨天括號匹配的升級版：括號比對的是型態，這裡比對的是方向與大小，而且一次進場可能引發連鎖反應，接連摧毀多個舊元素。
 
 ## Thinking
 
-當我們面對像隕石碰撞這類會受到方向性影響且可能產生連鎖反應的問題時，陣列中的每個元素都會對前方的元素造成影響。我們可以使用一個 Stack 來追蹤目前所有存活的元素。當遇到一個會向左移動的新元素時，我們必須檢查 Stack 頂端是否有向右移動的元素，若有則發生碰撞。此時必須比較兩者的大小：較小的元素會被銷毀，若兩者相等則雙雙毀滅。這個消除過程可能是連續的，因此需要一個 while 迴圈持續進行碰撞判定，直到沒有衝突或 Stack 為空為止。
+以 Asteroid Collision 為例：正數向右移動、負數向左移動，大小為絕對值。逐一掃描，對每個新元素 a 先問「會不會撞」：四種方向組合中，只有「頂端向右（top 為正）且 a 向左（a 為負）」會相向而行；同向、背向（頂端向左、a 向右）或堆疊為空，都直接把 a 推入。會撞時比較絕對值，結果有三種——頂端較小：彈出頂端，用 while 迴圈讓 a 繼續與新頂端交手；兩者相等：頂端彈出、a 也陣亡，雙雙消滅；頂端較大：a 消滅，堆疊不動。實作上用一個存活旗標貫穿：while 迴圈以「a 還活著且仍構成碰撞」為條件，結束後只有倖存的 a 才能入堆疊。
+
+正確性由不變式保證：堆疊中不可能存在「向右者在下、向左者在上」的相鄰組合——因為向左的元素想入堆疊，必須先把上方所有向右的頂端清算完畢。因此掃描結束時，堆疊由底至頂必然是一段向左的元素接一段向右的元素，彼此背向或同向、不再有任何碰撞，這就是最終答案。
 
 ## Pattern Recognition
 
-當題目具有以下特徵時，即可辨識為 Collision Resolution Pattern：1. 元素依序進入處理流程，且可能與之前保留的元素產生交互作用或消除。2. 互動具有方向性或對立性（例如正負號、左右移動、上下夾擊）。3. 單次新元素的加入可能引發多次連鎖反應，銷毀多個先前的元素。
+三個辨識特徵：一、元素依序進場，且只與「先前保留的元素」互動；二、互動具方向性或對立性（正負號、左右移動、強弱對決）；三、單一新元素可能連鎖消滅多個舊元素。符合這三點，就套「堆疊＋內層 while」的骨架。同型場景：相鄰字元的成對抵銷消除、任何「新事件會回頭撤銷若干最近事件」的模擬題。
 
 ## Common Mistakes
 
-最常見的錯誤是只用一次 if 判斷來處理碰撞，而忽略了碰撞可能會摧毀多個先前的 Stack 元素。由於新元素的體積可能足夠大，它在消滅頂端元素後，還必須繼續和下一個頂端元素碰撞，因此必須使用 while 迴圈來完整模擬連鎖反應。另一個常見錯誤是未妥善處理元素相等時雙雙銷毀的邏輯。
+第一，用單次 if 處理碰撞：夠大的新元素會接連摧毀多個頂端，漏了 while 就只撞一次。第二，相等時只做一半：雙滅要求「彈出頂端」且「新元素不入堆疊」，常見 bug 是彈出後仍照常 push。第三，碰撞條件寫錯：誤以為「一正一負就會撞」，但頂端向左、新元素向右（如序列 -2、3）是背向遠離，永不相撞——四種組合只有一種會撞。第四，迴圈條件不完整：彈出頂端後未重新確認「堆疊非空、頂端仍向右、a 仍存活」，就會誤讀空堆疊或多撞一場。
 
 ## Complexity
 
-時間複雜度為 O(n)，因為每個元素最多被推入 Stack 一次並被彈出一次。空間複雜度為 O(n)，在最壞情況下（沒有發生任何碰撞）所有元素都會被保留在 Stack 中。
+時間複雜度 O(n)：雖然有巢狀迴圈，但每個元素至多入堆疊一次、被彈出一次，內層 while 除了收尾那一次，每次疊代都伴隨一次永久性的彈出，全程操作總數受兩倍元素個數限制，攤銷後為線性。空間複雜度 O(n)：完全沒有碰撞時（例如全部同向），所有元素都留在堆疊中。
 
 ## Digest
 
-本篇探討使用 Stack 解決元素碰撞與連鎖消除問題。核心思維是維護一個存活元素的 Stack，當遇到反向或衝突的新元素時，透過 while 迴圈持續比較並彈出受影響的元素，直到滿足穩定狀態。這種方法能將原本可能需要平方級時間的暴力比對，降低至線性時間 O(n)。學習重點在於正確處理邊界條件、連鎖碰撞以及相等元素的抵銷邏輯。
+碰撞消解 Pattern：堆疊維護存活元素，新元素只與頂端互動。唯一的碰撞條件是「頂端向右、新元素向左」；比絕對值分三種結果——頂端小則彈出並用 while 連鎖再撞、相等則雙滅、頂端大則新元素陣亡。存活旗標貫穿迴圈，倖存者才入堆疊。不變式「堆疊內不存在向右者在下、向左者在上的相鄰對」保證終局穩定。每個元素至多一進一出，攤銷 O(n)、空間 O(n)。與括號匹配同骨架：新符號與最近未結案者互動，互動規則從型態比對升級為大小對決。
 
 ## TypeScript Tip
 
+while 條件一次收齊四件事：a 還活著、a 向左、堆疊非空、頂端向右。`noUncheckedIndexedAccess` 之下讀頂端要用非空斷言收斂型別。
+
 ```typescript
-// TypeScript 提示：利用陣列當作 Stack 時，使用 push 與 pop 操作可以維持 O(1) 的效能。
-const stack: number[] = [];
-stack.push(1);
-const top = stack.pop();
-if (top !== 1) throw new Error("assertion failed");
+function collide(arr: number[]): number[] {
+  const st: number[] = [];
+  for (const a of arr) {
+    let alive = true;
+    while (alive && a < 0 && st.length > 0 && st[st.length - 1]! > 0) {
+      const top = st[st.length - 1]!;
+      if (top < -a) st.pop();
+      else {
+        if (top === -a) st.pop();
+        alive = false;
+      }
+    }
+    if (alive) st.push(a);
+  }
+  return st;
+}
+if (collide([5, 10, -5]).join() !== "5,10") throw new Error("assertion failed");
+if (collide([8, -8]).length !== 0) throw new Error("assertion failed");
+if (collide([10, 2, -5]).join() !== "10") throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
-```python
-# Python 提示：Python 的 list 原生支援 append 與 pop，非常適合作為 Stack 使用。
-stack = []
-stack.append(1)
-top = stack.pop()
-assert top == 1, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function asteroidCollision(asteroids: number[]): number[] {
-  const stack: number[] = [];
-  for (const ast of asteroids) {
-    let alive = true;
-    while (alive && ast < 0 && stack.length > 0 && stack[stack.length - 1] > 0) {
-      const top = stack[stack.length - 1];
-      if (top < -ast) {
-        stack.pop();
-      } else if (top === -ast) {
-        stack.pop();
-        alive = false;
-      } else {
-        alive = false;
-      }
-    }
-    if (alive) {
-      stack.push(ast);
-    }
-  }
-  return stack;
-}
-const res = asteroidCollision([5, 10, -5]);
-if (res.length !== 2 || res[0] !== 5 || res[1] !== 10) throw new Error("assertion failed");
-```
-
-## Python Corner
+`st and st[-1] > 0` 用短路求值同時擋掉空堆疊；負索引讀頂端是 Python 慣用寫法。
 
 ```python
-def asteroidCollision(asteroids: list[int]) -> list[int]:
-    stack = []
-    for ast in asteroids:
+def collide(arr: list[int]) -> list[int]:
+    st = []
+    for a in arr:
         alive = True
-        while alive and ast < 0 and stack and stack[-1] > 0:
-            top = stack[-1]
-            if top < -ast:
-                stack.pop()
-            elif top == -ast:
-                stack.pop()
-                alive = False
+        while alive and a < 0 and st and st[-1] > 0:
+            if st[-1] < -a:
+                st.pop()
             else:
+                if st[-1] == -a:
+                    st.pop()
                 alive = False
         if alive:
-            stack.append(ast)
-    return stack
+            st.append(a)
+    return st
 
-res = asteroidCollision([5, 10, -5])
-assert res == [5, 10], "assertion failed"
+assert collide([5, 10, -5]) == [5, 10]
+assert collide([8, -8]) == []
+assert collide([10, 2, -5]) == [10]
+assert collide([-2, -1, 1, 2]) == [-2, -1, 1, 2]
 ```
 
 ## Takeaway
 
-運用 Stack 模擬碰撞時，務必使用 while 迴圈處理連鎖反應，並細心處理元素相等時的雙向銷毀。
+只有「頂端向右、新元素向左」才相撞；while 連鎖比絕對值，倖存者才入堆疊，每個元素至多一進一出。
 
 ## Tomorrow Preview
 
-明天我們將探討 Monotonic Stack 在下一個更大元素問題中的應用，學習如何維持 Stack 的單調性以優化搜尋效率。
+明天堆疊轉戰運算式求值：Reverse Polish Notation 中運算元入堆疊，遇到運算子就彈出頂端兩個元素、計算後再推回——後綴式不需要括號也能決定運算順序。
 
 ## Today's Challenge
 
-- **735** · 隕石依據移動方向相向而行，且單一新隕石可能連續撞毀多個前方隕石，非常適合使用 Stack 來模擬消除過程。
-  - Hint: 注意當新隕石小於 0 且 Stack 頂端大於 0 時才會觸發碰撞判定。
+- **735** · 新的小行星只會與「最近仍存活且向右」的頂端互動，且可能連鎖摧毀多個，LIFO 恰好維護這份存活序列。
+  - Hint: 只有新元素為負、頂端為正才會碰撞；用 while 搭配存活旗標處理連鎖，絕對值相等時記得雙滅。

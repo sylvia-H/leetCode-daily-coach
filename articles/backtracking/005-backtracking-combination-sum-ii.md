@@ -6,118 +6,100 @@ pattern_label: Unique Combination Sum Pattern
 complexity_label: O(2^n) / O(n)
 estimated_minutes: 20
 exit_criteria:
-  - 'Can combine sorting, level-skip duplicate checks, and target subtraction.'
-  - Can ensure each combination is unique.
+  - 能結合排序、同層跳過的重複檢查與目標值扣減。
+  - 能確保每個組合都是唯一的。
 ---
 ## Concept
 
-Combination Sum II 的核心在於「元素僅能使用一次」以及「候選陣列中含有重複元素，但產出的組合必須唯一」。相較於 Combination Sum I，本問題增加了兩個約束條件：第一，每個數字在每個組合中只能被選用一次，因此遞迴時必須傳入下一索引 i + 1；第二，輸入陣列可能包含重複數值，若不進行處理，會產生重複的組合結果。為了解決重複問題，必須先對輸入陣列進行排序，並在同一遞迴層級中略過相鄰的重複元素，確保相同數值的元素不會在同一個位置重複展開搜尋。
+昨天的 Combination Sum 已經把骨架搭好：`dfs(start, rem, path)`，挑一個數就從 `rem` 扣掉，`rem === 0` 收集，排序後遇到 `cand[i] > rem` 就 break。今天只改兩個條件：每個索引只能用一次，且候選陣列含重複值，但輸出的組合仍須唯一。對應的改法也只有兩行。第一，遞迴改傳 `i + 1`——這是退回子集生成的原始寫法，昨天為了無限重用才改成 i。第二，加上同層跳過：`if (i > start && cand[i] === cand[i - 1]) continue`，與含重複元素的子集那一課一模一樣。排序在這裡身兼二職：讓 break 剪枝安全，也讓相同的值相鄰、跳過檢查才比得到。
 
 ## Thinking
 
-思考這類問題時，首先要掌握 Backtracking 的三個核心要素：選擇、遞迴與撤銷選擇。因為要求得所有和為 target 的組合，我們使用一個暫存陣列記錄目前的組合路徑。當路徑總和等於 target 時，將其加入結果集；若總和超過 target，則提前終止搜尋。為了確保組合的唯一性，必須在遞迴前將輸入陣列排序。在迴圈遍歷候選元素時，若發現當前元素與前一個元素相同，且該元素並非當前遞迴層級的第一個選擇（即 i > start），則直接跳過此迴圈，以避免重複計算。
+先問「傳 i + 1 之後，重複從哪裡來」。候選 `[1, 1, 2]`、target 3：索引 0 的 1 配索引 2 的 2 得 [1, 2]，索引 1 的 1 配索引 2 的 2 也得 [1, 2]。兩條路徑用的索引不同、值卻相同，這是重複的唯一來源——同一層裡挑了「值相同、位置不同」的元素當下一個。
+再問為什麼「同層只保留第一個」不會漏解。某一層從 start 起有 k 個相等的值 v 排在一起。挑第一個 v 之後，下一層的 start 落在第二個 v，於是「再挑一個 v、再挑一個 v……」都還走得到，「用 1 個到 k 個 v」全部涵蓋在第一個 v 的子樹裡。若在同一層改挑第二個 v，它之後只剩 k - 1 個 v 可用，能湊出的每一組都是第一個 v 的子樹已經產出的，全是重複。所以跳過同層第二個起的 v 不漏，也剛好把重複砍乾淨。
+再問為什麼是 `i > start` 而不是 `i > 0`。跨層連著用相同的值是合法的：`[1, 1, 6]`、target 8 的正解 [1, 1, 6] 就需要索引 0 與索引 1 連用。索引 1 的 1 是在下一層以 `start = 1` 的身分被挑的，此時 `i === start`，不跳過；只有 `i > start`——它是這一層的第二個以上的候選且與前一個同值——才跳。迴圈不變式因此改寫：昨天是「path 的索引序列不遞減」，今天是「嚴格遞增」，再加一條「每一層裡，每個相異值最多被當作下一個元素一次」。以 `[10, 1, 2, 7, 6, 1, 5]`、target 8 排序後走一遍，整棵樹只呼叫 17 次 dfs，得到 [1, 1, 6]、[1, 2, 5]、[1, 7]、[2, 6]，每組恰好一次。
 
 ## Pattern Recognition
 
-當題目要求在含有重複元素的集合中，找出所有「不重複」且符合特定總和（target）的組合，且每個元素只能使用一次時，這就是典型的 Unique Combination Sum Pattern。辨識線索包含：目標總和、元素不可重複使用、輸入陣列含重複值、輸出結果必須去重。此時必須聯想到「排序 + 層級去重（Level-skip Duplicate Check）+ 索引前進（i + 1）」的樣板架構。
+線索是三個條件同時出現：「每個元素只能用一次」對應 i + 1、「候選有重複值」對應排序加同層跳過、「總和等於 target」對應 rem 扣減與 break。任兩個的組合你都已經會了，今天只是把三個疊在一起。另一個訊號是輸出要求「不含重複組合」——在含重複值的輸入下，這句話幾乎就是在說「請用同層跳過」。用 Set 把結果字串化去重也能得到正確輸出，但它只在葉端擋掉重複，中間的重複子樹照樣走完。
 
 ## Common Mistakes
 
-最常見的錯誤是混淆了 Combination Sum I 與 Combination Sum II 的使用規則。在 Combination Sum I 中，元素可以重複使用，因此遞迴時傳入的是 i；而在本題中元素只能使用一次，若錯誤傳入 i 會導致無限遞迴或重複選用。另一個常見錯誤是漏掉排序步驟，或是在遞迴中沒有正確實作同層級的重複略過條件（if (i > start && nums[i] === nums[i-1]) continue），導致最終結果包含重複的組合。
+以下每一條都用本篇 Tip 的程式碼實測。第一，沿用昨天的 i：對 `[1, 2]`、target 2 會產出 [1, 1]，同一個索引被用了兩次。第二，跳過條件寫成 `i > 0`：對 `[1, 1]`、target 2 得到空陣列，正解 [1, 1] 被跨層誤殺；改拿 path 的最後一個值來比較也是同樣的錯，`[1, 1, 6]`、target 8 一樣輸出空陣列。第三，沒有同層跳過：對 `[1, 1, 2]`、target 3 得到 [1, 2] 兩次；對 `[2, 5, 2, 1, 2]`、target 5 得到 [1, 2, 2] 三次。第四，有跳過檢查卻沒排序：對 `[5, 2, 1, 2, 2]`、target 5 同時得到 [1, 2, 2] 與 [2, 1, 2]，相同的值不相鄰，跳過檢查根本比不到。第五，靠 Set 去重代替同層跳過：結果正確但代價不成比例——20 個 1、target 5 時，同層跳過只呼叫 6 次 dfs，Set 版呼叫 21,700 次。
 
 ## Complexity
 
-時間複雜度為 O(2^n)，其中 n 為候選陣列的長度，因為在最壞情況下，每個元素都有選取與不選取兩種狀態。空間複雜度為 O(n)，主要取決於遞迴呼叫堆疊的深度以及儲存當前路徑所需的空間。
+時間 O(2^n)：每個索引最多用一次，每條路徑對應候選的一個子集，子集總數 2^n 是上界；排序的 O(n log n) 被指數項吸收。同層跳過與 break 只砍節點、不加節點，上界不變，實際節點數通常遠少於此。空間 O(n)：遞迴深度與 path 長度都不超過 n，結果集另計。
 
 ## Digest
 
-Combination Sum II 結合了目標總和追蹤與元素去重邏輯。核心在於：1. 排序輸入陣列以利剪枝與去重。2. 遞迴時傳入 i + 1 確保每個元素僅用一次。3. 透過 i > start 檢查同層級重複值並跳過，確保結果唯一。掌握此架構能輕鬆應對多數子集與組合類的去重問題。
+在昨天的 `dfs(start, rem, path)` 骨架上只改兩行：遞迴傳 `i + 1`（每個索引只用一次），以及排序後的同層跳過 `if (i > start && cand[i] === cand[i - 1]) continue`。重複的唯一來源是同一層挑了值相同、位置不同的元素；挑第一個 v 之後下一層的 start 就落在第二個 v，用 1 到 k 個 v 的情形全在第一個 v 的子樹裡，所以同層跳過第二個起的 v 不漏也不重。條件是 `i > start` 而非 `i > 0`，因為跨層連用相同的值（如 [1, 1, 6]）是合法的。排序同時服務 break 剪枝與跳過檢查，沒排序兩者都失效。時間 O(2^n)、空間 O(n)。
 
 ## TypeScript Tip
 
+輸入未排序且含兩個 1：改傳 `i` 會多出全 1 的組合，`i > 0` 會少掉 `1+1+6`，拿掉跳過則 `1+2+5` 與 `1+7` 各出現兩次。
+
 ```typescript
-// TypeScript 提示：利用條件判斷與嚴格型別確保遞迴安全
-function validateSum(nums: number[], target: number): boolean {
-  const total = nums.reduce((acc, curr) => acc + curr, 0);
-  return total <= target;
+function combinationSum2(c: number[], target: number): number[][] {
+  const cand = [...c].sort((a, b) => a - b);
+  const res: number[][] = [];
+  const dfs = (start: number, rem: number, path: number[]): void => {
+    if (rem === 0) { res.push([...path]); return; }
+    for (let i = start; i < cand.length; i++) {
+      const v = cand[i]!;
+      if (v > rem) break;
+      if (i > start && v === cand[i - 1]) continue;
+      path.push(v);
+      dfs(i + 1, rem - v, path);
+      path.pop();
+    }
+  };
+  dfs(0, target, []);
+  return res;
 }
-if (!validateSum([1, 2], 5)) throw new Error("Tip test failed");
+const got = combinationSum2([10, 1, 2, 7, 6, 1, 5], 8).map((p) => p.join("+")).sort();
+if (got.join(" ") !== "1+1+6 1+2+5 1+7 2+6") throw new Error(got.join(" "));
 ```
 
 ## Python Tip
 
-```python
-# Python 提示：使用切片或列表操作維護狀態
-def quick_check(nums: list[int]) -> bool:
-    return all(x > 0 for x in nums)
-assert quick_check([1, 2, 3]), "Tip test failed"
-```
-
-## TypeScript Corner
-
-```typescript
-function combinationSum2(candidates: number[], target: number): number[][] {
-  candidates.sort((a, b) => a - b);
-  const result: number[][] = [];
-  
-  function backtrack(start: number, current: number[], sum: number) {
-    if (sum === target) {
-      result.push([...current]);
-      return;
-    }
-    for (let i = start; i < candidates.length; i++) {
-      if (sum + candidates[i] > target) break;
-      if (i > start && candidates[i] === candidates[i - 1]) continue;
-      current.push(candidates[i]);
-      backtrack(i + 1, current, sum + candidates[i]);
-      current.pop();
-    }
-  }
-  
-  backtrack(0, [], 0);
-  return result;
-}
-
-const ans = combinationSum2([10, 1, 2, 7, 6, 1, 5], 8);
-if (ans.length !== 4) throw new Error("Assertion failed");
-```
-
-## Python Corner
+第二個斷言專門守 `i > start`：候選只有兩個 1、target 2，唯一解要跨層連用兩個 1，寫成 `i > 0` 會回傳空串列。
 
 ```python
-def combinationSum2(candidates: list[int], target: int) -> list[list[int]]:
-    candidates.sort()
-    result = []
-    
-    def backtrack(start: int, current: list[int], total: int):
-        if total == target:
-            result.append(list(current))
+def combination_sum2(c: list[int], target: int) -> list[list[int]]:
+    cand = sorted(c)
+    res: list[list[int]] = []
+
+    def dfs(start: int, rem: int, path: list[int]) -> None:
+        if rem == 0:
+            res.append(path[:])
             return
-        for i in range(start, len(candidates)):
-            if total + candidates[i] > target:
+        for i in range(start, len(cand)):
+            v = cand[i]
+            if v > rem:
                 break
-            if i > start and candidates[i] == candidates[i - 1]:
+            if i > start and v == cand[i - 1]:
                 continue
-            current.append(candidates[i])
-            backtrack(i + 1, current, total + candidates[i])
-            current.pop()
-            
-    backtrack(0, [], 0)
-    return result
+            path.append(v)
+            dfs(i + 1, rem - v, path)
+            path.pop()
 
-ans = combinationSum2([10, 1, 2, 7, 6, 1, 5], 8)
-assert len(ans) == 4, "Assertion failed"
+    dfs(0, target, [])
+    return res
+
+assert combination_sum2([2, 5, 2, 1, 2], 5) == [[1, 2, 2], [5]]
+assert combination_sum2([1, 1], 2) == [[1, 1]]
 ```
 
 ## Takeaway
 
-排序為去重之本，i + 1 確保單次使用，層級剪枝杜絕重複組合。
+昨天的骨架加兩行：傳 i + 1 讓每個索引只用一次，排序後 `i > start` 的同層跳過砍掉重複；跨層連用相同值仍合法。
 
 ## Tomorrow Preview
 
-明天我們將探討經典的 Permutations 題型，學習當元素順序會影響結果時，如何利用狀態標記陣列（Used Array）來產生所有可能的排列組合。
+明天是 Backtracking Permutation Basics：當順序有意義時，不再只往後選，而是每一步走訪所有尚未使用的元素，用 visited 陣列或 set 追蹤哪些元素已在路徑中，生成全部 n! 種排列。
 
 ## Today's Challenge
 
-- **40** · 符合 Unique Combination Sum Pattern，必須在含有重複元素的候選陣列中找出所有不重複且總和等於 target 的組合，且每個元素僅能使用一次。
-  - Hint: 記得先對陣列排序，並在迴圈中使用 i > start 檢查並略過相鄰的重複元素。
+- **40** · 三個條件同時出現：每個索引只能用一次、候選含重複值、輸出組合須唯一，是「i + 1、排序加同層跳過、rem 扣減」疊在一起的標準題。
+  - Hint: 先排序；遞迴傳 `i + 1`；迴圈裡 `cand[i] > rem` 就 break，`i > start && cand[i] === cand[i - 1]` 就 continue；rem 歸零時複製 path 收集。

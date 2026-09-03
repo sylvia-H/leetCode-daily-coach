@@ -13,12 +13,10 @@ next:
   - sliding-window-variable-size-expansion
   - sliding-window-permutation-in-string
 learning_goal:
-  - >-
-    Implement a sliding window of a strictly fixed length k to find optimal
-    subarray metrics.
+  - 實作長度嚴格固定為 k 的 Sliding Window，以求得 subarray 的最佳度量值。
 exit_criteria:
-  - Can write the loop structure to initialize the first window of size k.
-  - Can correctly slide the window across the rest of the array in O(n) time.
+  - 能寫出初始化第一個大小為 k 的視窗的迴圈結構。
+  - 能在 O(n) 時間內正確地將視窗滑過陣列其餘部分。
 leetcode:
   - 643
   - 1343

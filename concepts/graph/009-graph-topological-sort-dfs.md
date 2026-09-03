@@ -12,9 +12,9 @@ prerequisite:
 next:
   - graph-topological-sort-bfs-kahns
 learning_goal:
-  - Perform topological sorting on a DAG using post-order DFS.
+  - 使用後序 DFS 對 DAG 進行拓樸排序。
 exit_criteria:
-  - Prepend or push nodes to a result list after visiting all their descendants.
+  - 能在造訪完某節點的所有後代後，將該節點前插或推入結果列表。
 leetcode:
   - 210
 tags:

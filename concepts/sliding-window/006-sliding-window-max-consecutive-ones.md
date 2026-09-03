@@ -13,14 +13,10 @@ prerequisite:
 next:
   - sliding-window-fruit-into-baskets
 learning_goal:
-  - >-
-    Solve window problems allowing a limited number of invalid element
-    conversions (k replacements).
+  - 解決允許有限次數無效元素轉換（k 次替換）的視窗問題。
 exit_criteria:
-  - >-
-    Can track the count of the most frequent element or invalid elements within
-    the window.
-  - Can maintain window validity based on (window_length - max_freq <= k).
+  - 能追蹤視窗內最高頻元素或無效元素的數量。
+  - 能依據 (window_length - max_freq <= k) 維持視窗合法性。
 leetcode:
   - 1004
 tags:

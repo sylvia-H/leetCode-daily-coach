@@ -19,11 +19,9 @@ next:
   - string-parsing-simulation
   - two-pointer-backspace-string-compare
 learning_goal:
-  - Traverse strings character by character to accumulate or check conditions.
+  - '逐字元走訪字串以累積結果或檢查條件。'
 exit_criteria:
-  - >-
-    Can write a standard loop over string indices or characters without
-    off-by-one errors.
+  - '能寫出走訪字串索引或字元的標準迴圈，且沒有 off-by-one 錯誤。'
 leetcode:
   - 387
   - 242

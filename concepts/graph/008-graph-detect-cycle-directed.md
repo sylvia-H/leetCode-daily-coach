@@ -12,13 +12,9 @@ prerequisite:
 next:
   - graph-topological-sort-dfs
 learning_goal:
-  - >-
-    Detect cycles in a directed graph using 3-state coloring or recursion stack
-    tracking.
+  - 使用三狀態著色或遞迴堆疊追蹤，偵測有向圖中的環。
 exit_criteria:
-  - >-
-    Distinguish between globally visited nodes and nodes currently in the
-    recursion stack.
+  - 能區分全域已造訪的節點與目前位於遞迴堆疊中的節點。
 leetcode:
   - 207
 tags:

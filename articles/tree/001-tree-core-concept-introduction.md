@@ -6,108 +6,88 @@ pattern_label: Hierarchical Data Structure
 complexity_label: O(n) / O(h)
 estimated_minutes: 15
 exit_criteria:
-  - 'Define root, parent, child, leaf, depth, and height correctly.'
+  - 能正確定義 root、parent、child、leaf、depth 與 height。
 ---
 ## Concept
 
-Tree Core Concept Introduction 探討的是一種階層式的資料結構，由節點與有向邊所組成，具備天生的遞迴特性。在線性資料結構如陣列與鏈結串列中，元素呈一維序列排列；而 Tree 則能有效表達一對多的父子關係。理解樹的核心結構必須掌握幾個基本術語：Root 代表樹的最頂端節點，是所有其他節點的祖先；Parent 與 Child 分別指上下層的相鄰節點；Leaf 則是沒有任何子節點的終端節點。此外，Depth 定義為從根節點到特定節點的路徑長度，Height 則定義為從特定節點到最遠葉節點的最長路徑長度。理解這些定義是分析遞迴演算法基礎的關鍵。
+線性結構（陣列、鏈結串列）把元素排成一條線，每個元素最多只有一個「下一個」；Tree 則是階層式資料結構，由節點（node）與有向邊（edge）組成，每個節點可以分支出多個 child，天生適合表達一對多的從屬關係。嚴謹的定義是：一棵含 n 個節點的樹恰有 n - 1 條邊、連通且無環；除了 root 之外，每個節點恰有一個 parent。基本術語：Root 是唯一沒有 parent 的最頂端節點，是所有其他節點的祖先；Parent 與 Child 是相鄰上下層的節點；Leaf 是沒有任何 child 的終端節點。Depth 是從 root 沿唯一路徑走到該節點所經過的邊數，由上往下量；Height 是從該節點走到最遠 leaf 的最長路徑邊數，由下往上量。兩者方向相反：root 的 depth 是 0，整棵樹的 height 就等於 root 的 height。樹最重要的性質是遞迴定義——一棵樹等於一個 root 加上零個或多個互不相交的子樹，而每棵子樹本身也是一棵完整的樹。這個自我相似性是後續所有樹狀演算法共同的地基。
 
 ## Thinking
 
-當面對階層式資料結構時，思考方式必須轉換為自我相似的遞迴視角。首先需要找出 Root 節點作為遞迴的進入點，接著觀察子節點如何延續相同的樹狀結構。對於每一個節點而言，以該節點為根的子樹在結構上與整棵樹完全相同。因此，設計演算法時通常會採用深度優先搜尋或廣度優先搜尋，將大問題拆解為處理左子樹與右子樹的小問題。在追蹤狀態時，必須明確定義遞迴的終止條件，也就是當節點為空或抵達 Leaf 節點時應當回傳何種預設值，藉此確保遞迴調用能夠正確收斂。
+面對樹的問題，第一步是把視角從「逐格走訪」切換成「自我相似的遞迴」：對任何節點而言，以它為 root 的子樹與整棵樹結構同型、只是規模較小，所以「對整棵樹做的事」幾乎都能改寫成「先對每棵子樹做同一件事，再合併結果」。設計遞迴時要先回答兩個問題。第一是終止條件：節點為空或沒有 child 時要回傳什麼預設值？例如數節點總數時空樹回 0、算 height 時 leaf 回 0；預設值一旦取錯，每一層合併都會把錯誤放大。第二是遞迴為什麼保證會停：因為樹無環且節點數有限，每往 child 走一步，剩下的子樹就嚴格變小，呼叫鏈最深只到 leaf 便必然折返——這正是「無環」性質在正確性論證中扮演的角色；換成有環的圖，同一套寫法會無窮遞迴。走訪順序上，深度優先搜尋（DFS）順著一條分支走到底再回頭，天生契合遞迴；廣度優先搜尋（BFS）逐層掃描，需要 queue 輔助。
 
 ## Pattern Recognition
 
-當題目描述的資料呈現出明顯的上下層級、組織架構、目錄結構、或者決策分支時，即可辨識出 Hierarchical Data Structure 的 Pattern。常見的特徵包含元素之間存在明確的父子依賴、允許從單一入口分支出多個子問題、且問題本身具備最優子結構或可遞迴求解的性質。若資料處理邏輯需要逐層深入或自底向上進行數值聚合，通常也可以利用樹狀結構的遞迴特性來簡化實作。
+看到「上下層級」就該想到樹：組織架構、檔案目錄、HTML 的 DOM、分類階層、決策分支，共同特徵是每個元素恰有一個上層來源、卻可以展開多個下層分支。更具操作性的判斷訊號有三個：資料之間存在明確的父子從屬而非前後順序；問題可以從單一入口拆成幾個互不重疊的子問題；整體答案可以由子問題的答案合併而得，例如整棵樹的節點數等於 1 加上各子樹節點數之和。若處理邏輯需要逐層深入或自底向上聚合數值，通常就是在樹上做遞迴。
 
 ## Common Mistakes
 
-初學者在學習樹狀結構時，常見的錯誤包含混淆 Tree Depth 與 Tree Height 的計算方式，誤將整棵樹的深度與高度視為完全相同。另一個常見的迷思是忽略了樹的無環性質，誤以為任意圖形結構都可以直接套用樹的遞迴邏輯。在實作遞迴時，若遺漏了針對空節點的防禦性檢查，將會導致空指標異常。此外，在手動建構樹狀節點時，若指標串接錯誤，亦容易造成孤立節點或無窮遞迴。
+最常見的錯誤是混淆 depth 與 height：兩者都以邊數計，但 depth 從 root 往下量、height 從該節點往最遠 leaf 量，方向相反；只有單一節點的樹，depth 與 height 都是 0。另外部分教材改以「節點數」計算，數值會差 1，讀題時先確認慣例。第二類錯誤是遺漏空節點檢查：遞迴函式沒有處理空值的分支，一碰到缺 child 的節點就拋出空指標錯誤。第三類是誤把圖當樹：樹保證無環，遞迴才必然終止；若資料實際上有環（例如指標互指），同一套遞迴會耗盡呼叫堆疊。最後，手動串接節點時方向接反或漏接，會造成孤立節點或意外共享子樹，之後的走訪結果就難以解釋。
 
 ## Complexity
 
-Time Complexity: O(n)，其中 n 為樹中的節點總數，因為在最壞情況下必須走訪每一個節點一次。Space Complexity: O(h)，其中 h 為樹的高度，主要取決於遞迴調用堆疊所消耗的記憶體空間。在平衡二元樹中高度為 log n，而在極端不平衡的鏈狀樹中高度則可能達到 n。
+Time Complexity: O(n)，其中 n 為節點總數——任何完整走訪都必須把每個節點各拜訪一次，而每條邊只被經手常數次（下去一次、回來一次），邊數又固定是 n - 1，所以總工作量與節點數成正比。Space Complexity: O(h)，其中 h 為樹的高度——遞迴呼叫堆疊的最大深度等於 h。平衡樹的 h 約為 log n，退化成一條鏈時 h 可達 n，因此分析樹狀演算法時應同時交代平均與最壞情況。
 
 ## Digest
 
-本單元深入剖析 Tree Core Concept Introduction 與 Hierarchical Data Structure。樹狀結構由節點與有向邊組成，核心術語包含 Root、Parent、Child、Leaf、Depth 與 Height。透過遞迴思維，我們可以將複雜的階層問題拆解為子問題。在 TypeScript 與 Python 的實作中，我們定義了包含數值與子指標的類別來建構節點。掌握這些基礎觀念後，便能順利銜接後續的走訪與進階樹狀演算法。
+Tree 是由節點與有向邊組成的階層式資料結構：n 個節點、n - 1 條邊、連通且無環，除 root 外每個節點恰有一個 parent。核心術語：Root 是唯一無 parent 的起點、Leaf 是無 child 的終端、Depth 是 root 到該節點的邊數（往下量）、Height 是該節點到最遠 leaf 的邊數（往上量）。樹的遞迴定義——一棵樹是 root 加上若干互不相交的子樹——讓「處理整棵樹」可以拆成「處理各子樹再合併結果」；無環且節點有限，則保證遞迴必然終止。完整走訪花 O(n) 時間，遞迴堆疊佔 O(h) 空間：平衡時 h 約 log n，退化成鏈時 h 為 n。
 
 ## TypeScript Tip
 
+用 class 定義一般樹節點，`children` 陣列承載任意分支數；`height` 的遞迴直接對應定義：leaf 回 0，否則取各子樹 height 的最大值加一。
+
 ```typescript
-interface NodeInterface<T> {
-  val: T;
-  children: NodeInterface<T>[];
-}
-function countNodes<T>(root: NodeInterface<T> | null): number {
-  if (!root) return 0;
-  let count = 1;
-  for (const child of root.children) {
-    count += countNodes(child);
+class TreeNode {
+  children: TreeNode[] = [];
+  constructor(public val: number) {}
+  add(child: TreeNode): this {
+    this.children.push(child);
+    return this;
   }
-  return count;
 }
-const node: NodeInterface<number> = { val: 1, children: [] };
-if (countNodes(node) !== 1) throw new Error("assertion failed");
+function height(node: TreeNode): number {
+  if (node.children.length === 0) return 0;
+  return 1 + Math.max(...node.children.map(height));
+}
+const root = new TreeNode(1);
+const mid = new TreeNode(2);
+root.add(mid);
+mid.add(new TreeNode(3));
+if (height(root) !== 2) throw new Error("root height should be 2");
+if (height(new TreeNode(9)) !== 0) throw new Error("leaf height is 0");
 ```
 
 ## Python Tip
 
-```python
-class GeneralTreeNode:
-    def __init__(self, val: int):
-        self.val = val
-        self.children: list['GeneralTreeNode'] = []
-
-def count_nodes(root: GeneralTreeNode | None) -> int:
-    if not root:
-        return 0
-    return 1 + sum(count_nodes(child) for child in root.children)
-
-root = GeneralTreeNode(1)
-assert count_nodes(root) == 1, "assertion failed"
-```
-
-## TypeScript Corner
-
-```typescript
-class TreeNode<T> {
-  val: T;
-  left: TreeNode<T> | null;
-  right: TreeNode<T> | null;
-  constructor(val: T, left: TreeNode<T> | null = null, right: TreeNode<T> | null = null) {
-    this.val = val;
-    this.left = left;
-    this.right = right;
-  }
-}
-const root = new TreeNode(1, new TreeNode(2), new TreeNode(3));
-if (root.val !== 1) throw new Error("assertion failed");
-if (root.left?.val !== 2) throw new Error("assertion failed");
-```
-
-## Python Corner
+用 class 搭配 `list` 存放 children；`height` 以 generator 對子樹取最大值，單一節點（leaf）回 0，與「以邊數計」的定義一致。
 
 ```python
 class TreeNode:
-    def __init__(self, val: int = 0, left = None, right = None):
+    def __init__(self, val: int):
         self.val = val
-        self.left = left
-        self.right = right
+        self.children: list['TreeNode'] = []
 
-root = TreeNode(1, TreeNode(2), TreeNode(3))
-assert root.val == 1, "assertion failed"
-assert root.left.val == 2, "assertion failed"
+def height(node: TreeNode) -> int:
+    if not node.children:
+        return 0
+    return 1 + max(height(c) for c in node.children)
+
+root = TreeNode(1)
+mid = TreeNode(2)
+root.children.append(mid)
+mid.children.append(TreeNode(3))
+assert height(root) == 2, "root height should be 2"
+assert height(TreeNode(9)) == 0, "leaf height is 0"
 ```
 
 ## Takeaway
 
-Tree 是由節點與邊構成的階層式資料結構，具備天生的遞迴特性，透過掌握 Root、Leaf、Depth 與 Height 等術語能建立扎實的基礎。
+Tree 是無環的階層結構：root 唯一、leaf 無 child，depth 往下量、height 往上量，遞迴定義讓整棵樹可拆成子樹處理。
 
 ## Tomorrow Preview
 
-明天將進一步探討 Binary Tree 的走訪策略，包含 Pre-order、In-order 與 Post-order 的遞迴與迭代實作方式，並分析不同走訪順序在解決實際問題時的應用場景。
+明天進入 Binary Tree Node Representation：親手實作含 value、left、right 指標的二元樹節點，把今天的術語落實成程式碼結構，為後續的走訪演算法鋪路。
 
 ## Today's Challenge
 
-本篇為觀念課，沒有對應的 LeetCode 練習題。請把時間花在把上面的觀念想透。
+本篇為觀念課，沒有對應的 LeetCode 練習題。請在紙上畫一棵小樹，標出每個節點的 depth 與 height，確認自己能不查表說出兩者的差別。

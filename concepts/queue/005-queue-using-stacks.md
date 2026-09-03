@@ -14,12 +14,10 @@ prerequisite:
 next:
   - stack-using-queues
 learning_goal:
-  - >-
-    Simulate FIFO behavior using two LIFO stacks with amortized O(1) time
-    complexity.
+  - '用兩個 LIFO 堆疊模擬 FIFO 行為，並達到攤銷（amortized）O(1) 的時間複雜度。'
 exit_criteria:
-  - Manage input and output stacks correctly.
-  - Understand why amortized analysis guarantees O(1) per operation.
+  - '能正確管理 input 與 output 兩個堆疊。'
+  - '能理解為何攤銷分析能保證每次操作為 O(1)。'
 leetcode:
   - 232
 tags:
