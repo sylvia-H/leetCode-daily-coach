@@ -11,65 +11,87 @@ exit_criteria:
 ---
 ## Concept
 
-Implement Stack using Queues 探討如何僅透過標準的 Queue 介面（即先進先出 FIFO 的資料結構）來模擬 Stack 的行為（即後進先出 LIFO）。由於 Queue 的操作限制在尾端推入（enqueue）與前端彈出（dequeue），我們必須透過策略性的元素重排（Rotation），讓最新加入的元素永遠維持在 Queue 的前端，以達成 Stack 的 pop 與 top 操作。
+Implement Stack using Queues 是昨天 queue-using-stacks 的鏡像題：手上只有支援尾端 enqueue、前端 dequeue 的 Queue（FIFO），要做出 LIFO 的 Stack。但兩題的成本結構並不對稱——把 Stack 倒進另一個 Stack，順序會倒轉；把 Queue 倒進另一個 Queue，先進的還是先出，順序原封不動，「倒轉」這招在 Queue 上完全失效。我們只能改用「旋轉」：每次 push 新元素後，把它前面的舊元素逐一從前端取出、接回尾端，硬是把新元素轉到隊首。如此 pop 與 top 都能直接讀隊首，代價是 push 變成 O(n)，而且這個 O(n) 無法靠攤銷（amortized，又稱均攤）攤平。
 
 ## Thinking
 
-當我們嘗試用 Queue 實作 Stack 時，核心挑戰在於順序的逆轉。Stack 的特性是最後進入的元素（Newest Element）必須最先被取出。如果我們採用 push 時進行昂貴操作（Costly Push）的策略：每當有新元素加入時，先將其推入 Queue 的尾端，隨後將該新元素之前的所有舊元素依序從前端取出並重新推回尾端（Rotation）。透過這個重排步驟，新加入的元素會被移動到 Queue 的最前端。這樣一來，pop 與 top 操作只需直接對 Queue 的前端進行，時間複雜度便能降為 O(1)。
+單一 Queue 的 push 昂貴（costly push）做法：設 push 前佇列已有 k 個元素，先把新元素 enqueue 到尾端，再重複 k 次「從前端 dequeue 一個、enqueue 回尾端」。不變式（invariant）：每次 push 完成後，佇列從前到後恰好是「由新到舊」的 LIFO 順序。歸納論證：push 前若已滿足不變式，新元素接在尾端後，前面 k 個元素依序旋轉到它後面；旋轉不改變這 k 個元素的相對順序，它們仍由新到舊，而新元素成為隊首——不變式保持。於是 pop＝dequeue、top＝讀隊首，都是 O(1)。為什麼攤銷救不了 push：連續 n 次 push 的旋轉總成本是 0+1+…+(n-1)，即 O(n^2)，攤到每次仍是 O(n)。對照昨天：雙 Stack 裡每個元素一生最多被搬移一次；這裡的舊元素卻在往後每一次 push 都被再旋轉一輪，成本重複累積，這就是兩題複雜度分道揚鑣的根本原因。
 
 ## Pattern Recognition
 
-當題目要求使用某種資料結構去模擬另一種性質完全相反的資料結構（例如用 Queue 模擬 Stack，或反之），且介面受到嚴格限制時，即為典型的 Queue-to-Stack Transformation 模式。辨識線索在於介面僅能使用 push、pop、top、empty，且底層資料結構缺乏直接存取尾端或支援逆序走訪的能力。此時必須決定要在 push 階段還是 pop 階段付出時間成本來維護順序。
+辨識線索：介面被限制成只能用 Queue 的標準操作（尾端進、前端出），卻要求 LIFO 行為；或需要「讓最新元素隨時待在可讀取的那一端」。設計決策在於把 O(n) 放在哪一邊：push 昂貴讓 pop 與 top 都是 O(1)，適合讀多寫少；pop 昂貴（push 為 O(1)，pop 時用輔助 Queue 把前 k 個搬走、取出最後一個）適合寫多讀少。判別法與昨天一致：先問「這個容器倒進另一個自己，順序會不會倒轉」——會，就有機會攤銷；不會，就只能逐次旋轉、乖乖付線性成本。
 
 ## Common Mistakes
 
-最常見的錯誤是在進行元素旋轉（Rotation）時搞混 Queue 的方向，導致新元素沒有確實移動到最前端，或者在旋轉過程中遺漏了部分元素。另一個常見誤區是誤以為雙向佇列（Deque）的所有雙向操作都可以直接使用，因而違反了題目僅允許使用標準 Queue 介面（push, pop, size, empty）的限制。此外，未能在 push 階段正確計算旋轉次數（例如沒有記錄加入新元素之前的 Queue 大小），導致進入無窮迴圈。
+第一：旋轉圈數算錯。該轉的是「新元素之前」的 k 個舊元素；若誤以 push 後的長度 k+1 來轉，新元素會被多轉一圈送回尾端。另一種寫壞法是 `while (佇列非空) { 取出前端、接回尾端 }`——旋轉不改變長度，條件永遠成立、迴圈不會結束；正確寫法是把圈數釘死在 push 前的 k。第二：搞混方向——旋轉是「前端取出、接回尾端」；若改用 deque 的 appendleft 直接把新元素插到前端，等於動用雙端佇列的能力，違反題目只允許標準 Queue 介面的限制。第三：以為改用兩個 Queue 能改善漸進複雜度——雙 Queue 只是把搬移成本從 push 挪到 pop（或反向），在這兩種標準做法下總有一個操作是 O(n)，與昨天雙 Stack 的攤銷 O(1) 本質不同。第四：pop 昂貴版在搬移時忘了留下最後一個元素，把整條佇列都搬走，pop 反而取不到目標。
 
 ## Complexity
 
-時間複雜度：push 操作為 O(n)，因為每次加入新元素都需要將先前的 n 個元素重新旋轉一遍；pop 操作為 O(1)，top 操作為 O(1)，empty 操作為 O(1)。空間複雜度：O(n)，用以儲存總共 n 個元素。
+push 昂貴版：push 為 O(n)（旋轉先前全部元素），pop、top、empty 為 O(1)；且這個 O(n) 是每次 push 都實付的成本，攤銷後仍是 O(n)。pop 昂貴版則相反：push 為 O(1)、pop 為 O(n)。空間複雜度 O(n)；單 Queue 版只用一個容器，雙 Queue 版多維護一個暫時的輔助容器。
 
 ## Digest
 
-本單元探討如何使用 Queue 模擬 Stack。透過 Queue-to-Stack Transformation，我們學習到在 push 階段進行元素旋轉（Rotation），使最新加入的元素保持在前端。這樣能確保 pop 與 top 的時間複雜度維持在 O(1)。我們同時比較了成本分攤在 push 與 pop 的優劣，並掌握了 TypeScript 與 Python 實作時的細節。
+用 Queue 模擬 Stack 靠的是旋轉：push 新元素後，把它前面的 k 個舊元素逐一從前端取出、接回尾端，新元素便站上隊首；佇列從此保持由新到舊，pop 與 top 直接讀隊首即 O(1)。與雙 Stack 模擬 Queue 不同——Queue 倒進 Queue 順序不變、借不到倒轉的力，舊元素在每次 push 都要重轉一輪，成本重複累積，攤銷後 push 仍是 O(n)。另一路線是 pop 昂貴：push O(1)，pop 時搬移到只剩最後一個再取出。兩種取捨依讀寫頻率選邊。
 
 ## TypeScript Tip
 
-使用 TypeScript 實作時，陣列的 shift 方法會使後續元素往前搬移，屬於 O(n) 操作。配合我們在 push 時的旋轉，每次推入新元素會進行多次搬移。
+用 `number[]` 模擬 Queue 時，`shift` 對應 dequeue。注意 `shift` 本身就是 O(n)（後面元素整段前移），教學實作可接受，正式環境應換成真正的 Queue 結構。
 
 ```typescript
-function verifyQueueSimulation(): void {
-  const queue: number[] = [1, 2, 3];
-  const shifted = queue.shift();
-  if (shifted !== 1) throw new Error("assertion failed");
-  if (queue.length !== 2) throw new Error("assertion failed");
+class MyStack {
+  private q: number[] = [];
+  push(x: number): void {
+    this.q.push(x);
+    for (let i = 0; i < this.q.length - 1; i++) this.q.push(this.q.shift()!);
+  }
+  pop(): number {
+    const v = this.q.shift();
+    if (v === undefined) throw new Error("empty stack");
+    return v;
+  }
 }
-verifyQueueSimulation();
+const s = new MyStack();
+s.push(1); s.push(2); s.push(3);
+if (s.pop() !== 3 || s.pop() !== 2) throw new Error("assertion failed");
+s.push(4);
+if (s.pop() !== 4 || s.pop() !== 1) throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
-Python 的 collections.deque 是雙向佇列，其 popleft 與 append 操作均為 O(1)。在實作旋轉時，善用 deque 可以維持高效的資料流向。
+`collections.deque` 的 `append` 與 `popleft` 都是 O(1)，是標準 Queue 的正確替身；旋轉時只用這兩個方法，別碰 `appendleft`——那已超出題目允許的介面。
 
 ```python
 from collections import deque
 
-def verify_deque_rotation():
-    d = deque([1, 2, 3])
-    d.append(d.popleft())
-    assert list(d) == [2, 3, 1], "assertion failed"
-verify_deque_rotation();
+class MyStack:
+    def __init__(self) -> None:
+        self.q: deque[int] = deque()
+
+    def push(self, x: int) -> None:
+        self.q.append(x)
+        for _ in range(len(self.q) - 1):
+            self.q.append(self.q.popleft())
+
+    def pop(self) -> int:
+        return self.q.popleft()
+
+s = MyStack()
+s.push(1); s.push(2); s.push(3)
+assert s.pop() == 3 and s.pop() == 2, "assertion failed"
+s.push(4)
+assert s.pop() == 4 and s.pop() == 1, "assertion failed"
 ```
 
 ## Takeaway
 
-透過 Queue 模擬 Stack 的關鍵在於利用旋轉將新元素置於前端，達成 LIFO 語意。
+Queue 倒進 Queue 不會倒轉順序，只能在 push 時旋轉出 LIFO：用 O(n) 換 pop 的 O(1)。
 
 ## Tomorrow Preview
 
-明天我們將探討相反的經典題型：Implement Queue using Stacks。我們將分析如何利用兩個 Stack 的協同運作，實現均攤時間複雜度（Amortized Time Complexity）為 O(1) 的佇列操作。
+明天佇列將回到它最重要的舞台：Queue BFS Level Order Traversal（queue-bfs-level-order-traversal）。我們會用佇列實作 Breadth-First Search，以「佇列長度快照」逐層走訪二元樹的節點，一次處理完整的一層。
 
 ## Today's Challenge
 
-- **225** · 本題為標準的 Queue-to-Stack 實作題，完美對應利用 Queue 介面模擬 Stack LIFO 行為的轉換模式。
-  - Hint: 在每次 push 新元素後，將前面所有的舊元素依序 dequeue 並重新 enqueue 到尾端。
+- **225** · 本題是旋轉技巧的原型：介面被限制成只能用 Queue 的標準操作，卻要交出 push、pop、top、empty 的 LIFO 行為；push 昂貴與 pop 昂貴的取捨正是題目的討論核心。
+  - Hint: push 新元素後，把它前面原有的 k 個元素依序 dequeue 再 enqueue 回尾端。

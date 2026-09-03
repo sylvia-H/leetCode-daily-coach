@@ -106,6 +106,20 @@ Phase 1 查證出 3 起 quiz 缺陷，其中兩起顯示錯誤的傳播路徑：
 
 ---
 
+### Phase 14 新傳染路徑：舊題庫 → orchestrator 派件 prompt → 新教材
+
+orchestrator 派件給 `heap-find-median-from-data-stream` 的作者時寫「直接依大小分邊會壞——給具體序列
+反例」。這句話的來源正是該課**舊 quiz item[2] `explanation[3]`** 的偽命題（「依數值分流會使兩側數量
+失去控制」）——orchestrator 讀舊題庫建立脈絡時把它當成事實吸收，再寫進 prompt。作者 B4 實測 3,000 組
+（依值分邊 + 依大小搬頂 = 0 錯）後主動更正，reviewer S4 手推證實「依值分邊再依個數搬頂」是**正確**寫法，
+壞的是「只看個數不看值」或「不做再平衡」的版本。
+
+**教訓**：派件 prompt 裡的演算法命題 MUST 與 Common Mistakes 同等對待——寫不出具體反例就不要寫進 prompt；
+orchestrator 從舊教材／舊題庫讀到的「常見錯誤」在證實之前 MUST 視為待驗證，MUST NOT 轉述給作者當前提。
+若作者沒有實測的習慣，這條偽命題會原封不動進入新教材、再流入新 quiz，完成一次跨代傳染。
+
+---
+
 ## D3 · quiz `longest-option-bias` 的敘述性要求對 agent 無效
 
 **狀態**：🟢 已於 Phase 1 收尾修正（`agent-brief.md`）
@@ -155,7 +169,18 @@ docblock 記載的實測教訓一致。
 | **亂碼填充字串** | `binary-search-lower-bound` 舊卷 4 題的 `explanation[4]` 是 `aspectpiicidv`——`aspect` 正是 `quiz-aspects.ts` 裡「出題面向」的欄位名，研判為**產線內部識別項洩漏並被截斷** |
 | **引述不存在的選項文字** | `binary-search-find-minimum-rotated` item[1]、`binary-search-matrix-search` item[4] 的 explanation 引述了選項裡根本沒有的敘述 |
 
-四種變體（複製正解／洩漏學習目標／亂碼填充／引述不存在的選項）指向同一件事：
+**Phase 13 發現第五種變體（reviewer R4 查出）**：`graph-topological-sort-dfs` 舊卷 7 題共 21 段錯項
+解釋，**全部**是「〈選項原文〉的說法錯誤，因為…」模板——把選項原文貼進來當主詞、後半才是一句
+通用理由。同批 `graph-detect-cycle-directed` 舊卷 8/8、`graph-adjacency-matrix-representation`
+舊卷 10/10 的 `explanation[0]` 逐字等於正解（graph 模組 +1）。
+
+**Phase 14 再擴大（backtracking、heap 兩模組）**：`backtracking-core-concept-introduction` 舊卷
+`explanation[0]` 5/5「正解為＋正解選項原文」、`[2]`–`[4]` 15/15 第五變體模板（跨模組再現）；
+`heap-merge-k-sorted-lists` 6/6、`heap-find-median-from-data-stream` 7/7 複製正解；
+`heap-array-representation` `[2]`–`[4]` 用「針對……的選項」模板；heap 006／010 多題。
+累計樣本已涵蓋 **9 個模組**。
+
+五種變體（複製正解／洩漏學習目標／亂碼填充／引述不存在的選項／選項原文當模板主詞）指向同一件事：
 **`explanation` 各段的職責在產線 prompt 裡從未被定義**，模型在缺乏指示時各自退化成不同的填充策略。
 累計樣本 **14 個 Concept / 4 模組 / 3 個 Phase**，無一例外。確定性判定完全坐實。
 
@@ -278,6 +303,13 @@ MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教�
 `string-sliding-window-fixed` 補上一句誠實定位：先修課的 matched 計數器是同一副骨架的常數優化，
 本課先用整表比對把不變式講清楚。這讓「倒退感」變成「刻意的鋪陳」，但**沒有解決重複本身**。
 
+### Phase 10 新登錄的重複配題（供該課重生時帶入）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 111 | `queue-shortest-path-unweighted`（queue，level 8） | `bfs-shortest-path-unweighted`（dfs-bfs/005，level 14） | 兩課主題幾乎相同（同為無權圖最短路、同 `complexity_label`）。dfs-bfs/005 重生時 MUST 誠實承認學員已在 queue/008 解過 111 且已學過同一套逐層擴散 |
+| 203 | `linked-list-deletion-by-value-or-index`（004） | `linked-list-dummy-head-pattern`（005） | **本批已止血**：004 誠實鋪梗「明天的 Dummy Head 會把這個特例收編」，005 誠實承認昨天已解過並明講差別（刪頭特判整段消失） |
+
 ### 修復方向（MUST NOT 在 F12 處理）
 
 1. Problem Bank 的 Concept ↔ Problem 對應加一條檢查：同一題號被多個 Concept 列為
@@ -287,7 +319,72 @@ MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教�
 
 ---
 
-## D8 · `gate:code` 擋不住死斷言：能跑且不拋錯的假測試完美通過
+### 新登錄（Phase 11 reviewer 查出）
+
+| 題號 | 兩課 | 舉證責任 |
+| --- | --- | --- |
+| 23 | `linked-list-merge-two-sorted`（linked-list，第 10 模組）／`heap-merge-k-sorted-lists`（heap，第 13 模組） | 落在課序較晚的 **heap/008**：重生時 MUST 具名承認 linked-list 已用 23 教過兩條串列的合併，並說明 Min-Heap／分治的差異 |
+
+本次重生的 011 已誠實鋪梗「k 條時交給 Min-Heap 或分治」，銜接良好，不需再改。
+
+### 新登錄（Phase 12 reviewer 查出）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 104 | `queue-bfs-level-order-traversal`（queue，level 8，三個 track 皆有） | `tree-maximum-depth-bottom-up`（tree/006，level 10）、`tree-maximum-depth-top-down`（tree/007，同批）、`dfs-recursive-implementation`（dfs-bfs/002，level 14，**最晚，舉證責任在它**） | **tree/006、007 本批已止血**：006 於 Concept 段承認 Queue BFS 已解過同一題（逐層擴散 vs 回溯聚合）；007 的 Challenge why 改寫為「此題你已見過兩次」。dfs-bfs/002 重生時 MUST 帶入本清單並誠實定位 |
+
+Phase 12 作者的 prompt 未帶重複配題清單，作者無從得知——後續批次派件時 SHOULD 把本節
+相關列一併帶入該 Concept 的 prompt。
+
+### 新登錄（Phase 13 reviewer 查出；本批派件已首次帶入清單，實測有效）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 200 | `graph-dfs-traversal`（graph/004，level 11） | `dfs-recursive-implementation`（dfs-bfs/002，level 14） | graph/004 本批已把 200 教滿（格子圖當隱式圖、visited 時機、四方向邊界）；dfs-bfs/002 重生時 MUST 帶入本篇路徑並誠實定位 |
+| 323 | `graph-connected-components`（graph/006，level 11） | `graph-connected-components-count`（dfs-bfs/008，level 14） | graph/006 本批首次；dfs-bfs/008 重生時 MUST 誠實定位 |
+| 994（第三次） | `queue-matrix-multi-source-bfs`（queue/009）→ `graph-bfs-traversal`（graph/005，**本批已止血**：why 具名承認 queue 模組已解過，並補其未展開的不變式論證） | `matrix-bfs-multi-directional`（dfs-bfs/007，level 14） | dfs-bfs/007 重生時 MUST 帶入前兩篇路徑 |
+| 207（模組內） | `graph-detect-cycle-directed`（graph/008） | `graph-topological-sort-bfs-kahns`（graph/010，同批） | **本批已止血**：010 的 Challenge why 具名承認 008 已用三色法判過環，說明 Kahn 順便產出順序、以彈出計數判環 |
+
+派件帶清單的作法自本批起為常態：orchestrator 於開批前以腳本掃 `concepts/**` 的 `leetcode`
+交叉列出重複，寫進各作者 prompt。
+
+### 新登錄（Phase 14）
+
+| 題號 | 先出現（較早） | 後出現（**舉證責任在此**） | 狀態 |
+| --- | --- | --- | --- |
+| 215（模組內） | `heap-sift-down-extraction`（heap/004）——Skeleton 指派 215 且 Author Hints 明寫 size-k min-heap，本課只能教滿 | `heap-kth-largest-element`（heap/006，同批） | **本批已止血**：006 的 Concept 與 Challenge why 具名承認 004 已解過，今日抽象成「第 k 大 ⇒ 反向 k 元素 heap」Pattern 並延伸到串流版 703。課綱層問題：004 被迫把 006 的 learning_goal 教完 |
+| 23 | `linked-list-merge-two-sorted`（linked-list/011，已重生） | `heap-merge-k-sorted-lists`（heap/008） | **本批已履行**（Phase 11 登錄的舉證責任）：008 具名承認、逐字沿用 011 的迴圈不變式與 dummy／tail 術語，只加 heap 專屬不變式與三種解法的複雜度推導，嚴格增量 |
+| 78（模組內） | `backtracking-core-concept-introduction`（backtracking/001）——已用 `start` 模板教滿完整輸出與不重複論證 | `backtracking-subset-generation`（backtracking/002） | 002 重生時 MUST 帶入本篇路徑並誠實定位（差別只能是變形：去重、剪枝、迭代版） |
+
+### 新登錄（Phase 16；本批 7 筆，是 F12 至今最密的一批）
+
+dfs-bfs 模組排在 queue（166–169）與 graph（174–179）之後，**舉證責任全在本模組的 9 課**。
+7 筆全部已具名承認並寫出真增量：
+
+| 題號 | 先課（皆已重生） | 後課（舉證責任） | 履行狀況 |
+| --- | --- | --- | --- |
+| **104**（第四次） | `queue-bfs-level-order-traversal`（queue/007）、`tree-maximum-depth-bottom-up`（tree/006）、`tree-maximum-depth-top-down`（tree/007） | `dfs-recursive-implementation`（dfs-bfs/002） | why 具名「第四次見到」並列出三種寫法，增量＝對照三者「狀態放在哪」。⚠️ 但 104 是 Easy、被難度帶濾掉，見 D19 |
+| 200 | `graph-dfs-traversal`（graph/004） | 同上 dfs-bfs/002 | 具名沿用「進入即標記、先查邊界再讀格子」，增量＝量最深層數＋改寫顯式堆疊 |
+| 102 | `queue-bfs-level-order-traversal`（queue/007） | `bfs-queue-level-order`（dfs-bfs/004） | 具名承認，增量＝不變式從樹搬到一般圖、FIFO 換堆疊的實測對照、「邊兩端最多差一層」引理 |
+| **111** | `queue-shortest-path-unweighted`（queue/008） | `bfs-shortest-path-unweighted`（dfs-bfs/005） | **兩課主題幾乎完全相同**（同為無權圖最短路、同 `complexity_label`）。誠實寫「今天是換一個角度把同一件事講透」，真增量＝**補上先課缺的那一半證明**（見 D19） |
+| **994**（第三次） | `queue-matrix-multi-source-bfs`（queue/009）、`graph-bfs-traversal`（graph/005） | `matrix-bfs-multi-directional`（dfs-bfs/007） | 標題逐字具名兩課，增量＝把先課用散文帶過的殘留與多算一輪寫成 `fresh > 0` 終止條件＋三個具體反例 |
+| 323 | `graph-connected-components`（graph/006） | `graph-connected-components-count`（dfs-bfs/008） | **兩課幾乎同名**。增量＝把先課依賴「編號最小節點」的論證換成迴圈不變式（因此可脫離整數編號、搬到網格）＋邊界情形 |
+| **261**（本次掃描新查出，先前未登錄） | `graph-detect-cycle-undirected`（graph/007） | `graph-cycle-detection-undirected`（dfs-bfs/009） | **兩課幾乎同名**。增量＝「無環 ⇔ 分量數 = n − E」（先課的 n−1 捷徑是 c=1 的特例）、環長公式、重邊行為 |
+
+### Phase 16 新樣態一：**承認了先修課，但把次數寫死且數錯**
+
+前 14 批的 D7 缺陷都是「不承認先修課」。Phase 16 出現新形態：作者在誠實定位段落寫
+「遞迴式 DFS 你其實已經寫過**三次**」，只數了自己引用的那三課，**沒有回頭核對課表**——
+同模組的前一課 001 自己就列了更多，而課表 sessionIndex 212 之前尚有 tree 五課、graph 的
+連通塊／環偵測／拓樸排序，以及整個 backtracking 模組。
+
+**規則（MUST）**：D7 定位**除非核對過該 Track 的課表，否則 MUST NOT 寫死次數**；
+用「很多次／已經寫過好幾輪」並列舉代表課即可。硬數字比含糊的說法更傷——它可被證偽。
+
+### Phase 16 新樣態二：**定位只寫在 Challenge 的 `why` 裡，可能永遠不被 render**
+
+見 **D19**。**規則（MUST）**：D7 誠實定位 MUST 寫進正文（`Concept` 或 `Thinking`），
+**MUST NOT 只寫在某一題的 `why`**——那一題可能根本不會出現在該 Track 的推播裡。
 
 **狀態**：🔴 未修復
 **嚴重度**：中高——這是機械 Gate 的**結構性盲區**，不是零星漏網。
@@ -324,6 +421,26 @@ MUST 讀過既有課文、MUST 沿用其邊界慣例與術語、**MUST NOT 教�
    reviewer 逐一驗算 20 個 code block 確認新版未重蹈覆轍。但這只治新寫的，治不了產線重跑。
 
 ---
+
+### Phase 15 新樣態：**測資的形狀退化，使整個維度的突變逃逸**
+
+前述樣態都是「斷言本身無效」。Phase 15 的 `backtracking-word-search` 是另一種機制——
+**斷言有效，但測資的形狀讓某些程式碼路徑永遠走不到**：
+
+| 段落 | 測資 | 逃逸的突變 |
+| --- | --- | --- |
+| TS Tip | `[['B','A','A']]`（**單列**） | `dfs(r + 1, ...)` / `dfs(r - 1, ...)` 刪掉或改成重複方向，四條斷言全部照樣 PASS——up／down 在任何呼叫都必然出界 |
+| PY Tip | `[["A"],["X"],["B"]]`（**單行**） | 鏡像地，`dfs(r, c ± 1, ...)` 的突變全部逃逸 |
+
+兩段 Tip 合起來**沒有任何一個 2D 棋盤**，而該課 `exit_criteria` 第一條就是「四方向相鄰格」。
+作者自報「六種突變全 FAIL、原版 PASS」屬實，但它的突變清單只做「少試一個方向」而**未區分軸向**。
+
+**修法（Phase 15 已實施）**：改測資為 `[['B','A'],['X','A']]`（798 → 796 字元，未動示範碼）——
+`AAB` 的唯一路徑需要 up + left、`BAA` 的唯一路徑需要 right + down，四個方向各自被斷言守住。
+
+**通則**：突變清單 MUST 按**維度**分類，而非按「行數」分類。凡是程式碼有 k 個對稱分支
+（四方向、雙指標兩端、左右子樹），測資 MUST 讓每一個分支都在某條斷言的必經路徑上；
+**退化形狀（單列、單行、空集合、n = 1）會讓整組分支變成 dead code，而 `gate:code` 一樣是綠的**。
 
 ## D9 · Today's Challenge 的 Hint 沒有任何正確性驗證
 
@@ -392,6 +509,26 @@ Common Mistakes 是固定區塊，**prompt 要求「列出常見錯誤」但沒�
    reviewer 再獨立驗一次。**但這只治已知的偽命題，治不了未知的。**
 
 ---
+
+### Phase 15 再現（第二次）：**驗算腳本與 Tip 程式碼漂移**
+
+Phase 14 的 heap 003 已出過一次（作者用 swap-form 驗證 Common Mistakes、Tip 卻是 break-form），
+Phase 15 的 `backtracking-palindrome-partitioning` 再次發生，且是同一個機制：
+
+- 教材寫「遞迴傳 `bt(end + 1)`，`"aab"` 得 `[["a","b"],["aa"]]`」。
+- 本篇 Tip 的 base case 是 `start === s.length`（**嚴格相等**）：`["a","b"]` 那條走到 `bt(4)` 時
+  `4 !== 3` 且迴圈不進入，**從未被收集**——正確結果是 `[["aa"]]`。
+- `[["a","b"],["aa"]]` 只有在 base case 寫成 `start >= s.length` 時才成立。作者的 `verify-pp.js`
+  用的正是與 Tip **不同**的寫法，而它的 findings 仍把這條列在「全部證實」表裡。
+
+同批的 `backtracking-subset-with-duplicates` 是同一個病的變體：Common Mistakes 只寫出比較片段
+（「比較對象寫成下一個 `nums[i] === nums[i + 1]`」），而配的輸出數字對應的是「整個條件換掉」的寫法；
+「只換比較對象、保留 `i > start`」實跑是 6 筆而非 4 筆。**敘述不精確 ⇒ 讀者複現不出文中的數字。**
+
+**通則（MUST，取代 Phase 14 只寫在 batches.md 的建議）**：
+`Common Mistakes` 的每一條反例 **MUST 由該篇 Article 的 fenced code 原文逐字複製後施加單一突變**
+取得，**MUST NOT 另寫等價實作**；且敘述 MUST 精確到「改哪一行、改成什麼」，
+MUST NOT 只給一個比較片段而讓讀者自行推測突變範圍。
 
 ## D11 · 114 個 Concept 的 `exit_criteria` / `learning_goal` 是英文，會直接推播給中文學習者
 
@@ -624,6 +761,22 @@ cp.execSync(cmd, { cwd: REPO, stdio: 'pipe', timeout: 30000 })   // cmd = `npx t
 orchestrator 看到了卻只當成「它表現好」，沒有把它變成規則——換一個 agent，同樣的任務就出事。
 **凡是靠 agent 自覺才成立的保障，MUST 寫成規則；規則擋不住的，MUST 有偵測層。**
 
+
+### Phase 11 觀察：reviewer 取得改檔權後，紅線仍守住，但**提示層有反向壓力**
+
+2026-09-02 改制後 reviewer 可讀可改、仍 MUST NOT 執行任何指令。首批 6 個 reviewer 中有 1 個
+**自陳誤發了 2 次唯讀 Bash**（`node -e` 讀 `problem-bank.json`、一次 `echo`），皆瞬間結束、
+未開背景行程，之後自行切回唯讀模式並在回報中主動揭露。
+
+值得記的是它給的原因：**harness 的 auto 模式提示要求「盡量用 Bash 完成工作」**，與 prompt 的
+零執行權紅線方向相反。這不是 agent 擅自越線，是兩層指示衝突。
+
+**處置**：後續 reviewer 的 prompt MUST 把紅線寫成「包含 `node -e`／`cat`／`ls`／`echo` 在內的
+任何一次 Bash 呼叫」，不能只寫「不要跑驗算腳本」——Phase 11 最後一個 reviewer 的 prompt 已改用
+此措辭，該 reviewer 全程零 Bash。
+收批時 orchestrator 仍 MUST 依第三層防護清點 `node.exe`（本批清點 20 個，累計 CPU 最高 39 秒，
+全為 Claude Code／VSCode 常駐行程，無孤兒）。
+
 ---
 
 ## D15 · 時區測試的 sanity check 拿「現在」當基準，每天有 8 小時是紅的
@@ -680,3 +833,396 @@ expect(boundaryUtcDay).not.toBe(boundaryTaipeiDay);
 凡是「確認這個 fixture 真的具備某性質」的檢查，MUST 只用 fixture 自身的資料推導——
 拿外部可變狀態當基準，等於把測試的通過與否交給執行時機決定。
 本專案是時區敏感系統（Asia/Taipei guard、UTC cron），這類錯誤 MUST 特別留意。
+
+---
+
+## D16 · Skeleton 的 Author Hints 內含**未經驗證的錯誤程式碼**，照抄即壞
+
+**狀態**：🔴 未修復（Skeleton 屬 F12 結構凍結範圍，MUST NOT 在教材批次中修改）
+**嚴重度**：中——Author Hints 是作者的權威輸入，錯誤會被直接抄進教材。
+
+### 證據（Phase 11 reviewer B 查出）
+
+`concepts/linked-list/009-linked-list-reversal-iterative.md` 的 Author Hints 給的 Python 一行反轉：
+
+```python
+(prev, curr, curr.next) = (curr, curr.next, prev)   # 壞的
+```
+
+Python 的 tuple assignment **右式先整體求值，左式再由左至右逐一指派**。第二個位置把 `curr` 改寫成
+原本的 `curr.next` 之後，第三個位置的 `curr.next` 就寫到了**新的** curr 身上，原節點的 `next` 從未被反轉。
+正確寫法 MUST 讓 `curr.next` 先於 `curr` 被指派。
+
+作者（Fable）的教材版本順序是對的——但那是它**自己重寫**的結果，不是照 Hints 抄的。
+換一個較被動的作者就會照抄，而 `gate:code` 只掃 `articles/**`、不掃 `concepts/**`，抄了也不會被擋。
+
+### 通則
+
+**Author Hints 的程式碼 MUST NOT 被視為已驗證**。F7 Stage 1 產 Skeleton 時未對 Hints 內的
+fenced code block 跑任何實測，至今也沒有任何 Gate 覆蓋它。
+
+### 處置
+
+F12 不得改 Skeleton，本項登錄待 Skeleton 層另立任務時處理；屆時 SHOULD 一併把 `gate:code`
+的掃描範圍擴及 `concepts/**` 的 fenced code block。
+
+---
+
+## D17 · Tip 的 800 字元預算與 D8 的斷言鑑別力互相排擠
+
+**狀態**：🟡 已知限制，未處置
+**嚴重度**：低——不產生錯誤內容，但會讓「補上具鑑別力的測資」在預算滿的篇章變成做不到。
+
+### 證據（Phase 11 reviewer A 查出）
+
+`linked-list-cycle-start-node` 的 TS Tip 已達 **798/800**、PY Tip 742/800。其測資 `a→b→c→b`（F=1）
+**無法鑑別「先前進再比較」的錯誤寫法**——該錯法在此測資下同樣回傳正確答案；要抓它必須補一組
+**F = 0**（head 即環起點）的案例，但字元餘裕不足以再放一組建構與斷言。reviewer 因此判定不改並具名回報。
+
+同一批的 `linked-list-palindrome-check` 是相反的幸運案例：TS Tip 785/800 時，把既有偶數反例
+`[1,2,2,1]` 改成 `[1,2,3,1]` 只花 +3 字元就補上了鑑別力（PY Tip 預算寬裕則用新增一行的方式補）。
+
+### 通則
+
+**D8 的「斷言要能殺掉突變」與 Tip 的 800 字元上限是同一份預算的競爭者**。預算緊時，
+reviewer MUST 優先選擇「改測資」而非「加測資」（如上例 +3 字元）；真的補不上時
+MUST 具名回報，MUST NOT 為了塞測資而砍掉示範碼本身。
+
+若日後這類案例累積，SHOULD 檢討 Tip 預算（spec §14.5 的 450 是 Discord 側，
+`agent-brief.md` §5 的 800 是 Pages 全文側，兩者可分開評估）。
+
+---
+
+## D18 · 正確性論證**省略必要前提**，且缺口被複製進 Digest
+
+**狀態**：🔴 未修復（產線層）
+**嚴重度**：中高——比 D10 隱蔽。D10 是編造一條不存在的錯誤，D18 是**論證本身在多數情境下成立、
+只在被省略的前提之外崩掉**，語感完全讀不出來，而 Digest 會把缺口單獨推上 Discord。
+
+### 證據（Phase 15，三例，出自兩位不同作者）
+
+| Concept | 寫成的命題 | 缺的前提 | 反例 |
+| --- | --- | --- | --- |
+| `backtracking-combination-sum` | 「在已排序的候選陣列上，每個多重集合**恰好**對應一條『索引不遞減』的挑選序列」 | **候選彼此相異** | 候選 `[2, 2, 3]` 時多重集合 {2, 3} 對應 `[0, 2]` 與 `[1, 2]` 兩條 |
+| `backtracking-permutation-with-duplicates` | 「把條件反過來寫成 `used[i - 1]` 也正確」 | **已排序** | 未排序時兩種寫法都會產出重複排列 |
+| 同上 | 「標準寫法每一步選第 i 格時 `used[i - 1]` 為 `true`，條件不成立」 | 該群**第一格**的情形 | `[1,1,2]` 根層選索引 2 時 `used[1]` 就是 `false`，論證漏掉這個分支 |
+
+三例的共同結構：
+
+1. **前提存在，但寫在論證之後**（第一例的「候選彼此相異」只出現在後面的 Pattern Recognition），
+   或**完全靠上下文承接**（第二例）——形成**先用後證**。
+2. **整篇的正確性都掛在這一句上**。第一例的「傳 i 為何不重複也不漏」全靠它支撐。
+3. **缺口被複製進 `Digest`**（第一、三例皆是）。Digest 是獨立推播單位，讀者看不到正文的補救。
+4. 與**明天那一課**形成表面矛盾：第一例讓讀者問「既然不遞減序列保證不重複，為何 005 的嚴格遞增
+   反而會重複」——答案正是相異與否，而教材沒說。
+
+### 為何機械 Gate 抓不到
+
+`gate:code` 只實測 Tip 的程式碼；論證是散文。而且**這類命題在本課的題目上恆為真**
+（Combination Sum 的候選確實彼此相異），任何以本課測資為準的驗證都不會失敗。
+它只在**讀者把結論搬到下一課**時才崩。
+
+### 修復方向
+
+1. **prompt 層**：凡是寫成「恰好對應」「一定不會」「每一步都」這類**全稱命題**，
+   MUST 在同一段內寫出它成立的前提，並說明**前提不成立時會怎樣**
+   （第一例的正確寫法：「候選若含重複值，同一個多重集合會對應到多條序列，
+   去重就得另外靠明天的同層跳過」——順帶把今明兩課的接點補實）。
+2. **self-check 層**：新增提問——「你寫的每個全稱命題，能不能舉出一組**讓它為假**的輸入？
+   若能，那組輸入被哪個前提排除掉了？該前提有沒有寫在命題**之前**？」
+3. **Digest 連動**：`Digest` 若複述了正文的核心命題，MUST 連同前提一起複述，
+   MUST NOT 只抄結論——Digest 是獨立推播單位。
+4. **審查層（已實施）**：Phase 15 起列入 Opus reviewer 的必查清單
+   （「自己把每個『因為…所以…』重推一次，特別檢查有沒有把必要條件寫成充分條件」），
+   本批三例全數由 reviewer 抓出並就地補上前提。
+
+---
+
+## D19 · Track 難度帶會濾掉 Skeleton 的部分題目，寫在該題 `why` 的內容**永遠不被 render**
+
+**狀態**：🔴 未修復（跨層：課表生成 × 教材撰寫慣例）
+**嚴重度**：中——不產生錯誤內容，但會讓「已寫好且經審查的內容」對學員完全隱形。
+
+### 證據（Phase 16，S2 查出，orchestrator 查證）
+
+- `curriculum/track-params.json`：`interviewMastery.problemDifficulties` = `["Medium", "Hard"]`。
+- `concepts/dfs-bfs/002` 的 `leetcode` 是 `[200, 104]`、`003` 是 `[733, 130]`，
+  而 **104 與 733 都是 Easy**（`data/problem-bank.json`）。
+- `schedule-generator.ts` 的 `selectConceptProblems(concept, param.problemDifficulties, …)`
+  依難度帶過濾，因此 `schedules/interview-mastery.json` 的 session 212 `problemIds` 只有 `[200]`、
+  213 只有 `[130]`。
+- **dfs-bfs 模組只排在 interview-mastery 這一條 Track**（level 14 > 其餘兩軌的 maxLevel）。
+
+⇒ 作者寫在 104 `why` 裡、經 reviewer 逐項複核過的「第四次見到」D7 定位，**沒有任何學員看得到**。
+
+**這不是課表的 bug**：難度帶過濾正是 spec §4-6「Track 差異只發生在課表＋題目難度帶」的設計。
+問題在**教材撰寫慣例**假設了「Skeleton 的每一題都會被 render」。
+
+### 為何 Gate 抓不到
+
+`gate:articles` 要求 Article 的 Today's Challenge **涵蓋 Skeleton `leetcode` 的每一個題號**
+（教材三軌共用，本來就該寫齊）；而 Lesson Compiler 只 render 課表的 `problemIds`。
+兩邊各自正確，**沒有任何檢查比對「哪些 why 在任何 Track 上都不會出現」**。
+
+### 修復方向
+
+1. **教材撰寫慣例（已寫入 D7，MUST）**：D7 誠實定位 MUST 寫進正文（`Concept` / `Thinking`），
+   MUST NOT 只寫在某一題的 `why`。
+2. **Gate 層（可做，成本低）**：新增一道報告式檢查——列出「Skeleton 有、但在**所有**啟用 Track 的
+   課表上都不出現」的題號，供人判斷。無需擋下，但不該無聲發生。
+3. **課綱層**：若某 Concept 的題目在唯一承載它的 Track 上被濾掉大半，那是配題與難度帶不匹配的訊號。
+
+---
+
+## D20 · Problem Bank 把**資料庫題**標成演算法 pattern，Skeleton 照單全收（Author Hint 自承 Placeholder）
+
+**狀態**：🔴 未修復（`concepts/**` 與 `data/problem-bank.json` 皆屬 F12 結構凍結範圍）
+**嚴重度**：中——會把一題與本課完全無關的 SQL 題推播給學員。
+
+### 證據（Phase 16，B5 回報，S5 與 orchestrator 各自查證）
+
+- `data/problem-bank.json`：`2668 / find-latest-salaries / "Find Latest Salaries" / Easy`，
+  卻掛著 `patterns: ["dfs-bfs"]`。**LeetCode 2668 是資料庫（SQL）題**。
+- `concepts/dfs-bfs/008-graph-connected-components-count.md` 的 `leetcode` 列了 2668，
+  且 Author Hints 自己寫著：
+  `- 題號 2668 為何適合此 Pattern：Note: Placeholder for graph connected components easy level.`
+- **全庫掃描 `Placeholder` 只有這一處**（孤例，非系統性）。
+
+### 根因
+
+補題階段為了填「該 Concept 缺一題 easy」的配額而塞了一題湊數，`patterns` 欄位跟著被寫成該 pattern；
+**沒有任何 Gate 檢查「這題是不是演算法題」**，Skeleton 產線也沒有攔下自己寫出的 Placeholder 字樣。
+
+### F12 期間的處置（已做）
+
+教材誠實標明它是資料庫題、與連通分量無關、配題錯置，重心放在 323，並給真的解得了該題的 SQL 方向
+Hint。S5 複核後判定「在不能改 Skeleton／Problem Bank 的前提下，這是唯一誠實的選項」。
+
+### 修復方向（MUST NOT 在 F12 處理）
+
+1. **兩層都要改**：`concepts/dfs-bfs/008` 的 `leetcode` 換題（例如 200 / 695 / 1254）或移除，
+   且 `data/problem-bank.json` 的 `2668.patterns` 一併修正。
+2. **Gate 層**：Skeleton 的 Author Hints 出現 `Placeholder`／`TODO`／`TBD` 等字樣 MUST 直接擋下。
+3. 補題腳本 SHOULD 排除 LeetCode 的 Database／Shell／Concurrency 分類。
+
+---
+
+### Phase 16 補充：D14 第三層防護的**偵測指令本身有缺口**
+
+runbook 的殘留行程清點寫的是：
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+  Where-Object { $_.CommandLine -like '*<repo-name>*' }
+```
+
+**`node -e "..."` 從 repo 目錄啟動時，命令列裡不含 repo 路徑**——這型孤兒會被過濾掉。
+
+**實例（Phase 15）**：作者 A5 有一個反引號跳脫寫壞的 `node -e` 計數指令**掛了約 72 分鐘**
+（agent 總時長 4,353s，而它首次回報時是 1,070s），而收批時依上述指令清點**沒有看到它**。
+本次無實害（該行程最終自行結束，且 Phase 16 收批前的全量清點確認本專案零殘留），
+但偵測層確實漏了它，且那 72 分鐘是**計費卻零產出**的時間。
+
+**修法（MUST）**：清點時**不要用 repo 名過濾**，改列出全部 `node.exe` 逐一判斷：
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+  Select-Object ProcessId, CreationDate,
+    @{n='CPU_s';e={[math]::Round(($_.KernelModeTime+$_.UserModeTime)/1e7,1)}}, CommandLine |
+  Sort-Object CreationDate
+```
+
+常駐項（CodeGraph watcher、編輯器）與**其他專案**的行程要人眼排除，但這是唯一不會漏的做法。
+
+---
+
+## D21 · `agent-brief.md` §5 對 `noUncheckedIndexedAccess` 的敘述是**假的**，已誤導作者 17 個 Phase
+
+**狀態**：🔴 未修復（F12 期間刻意不改，見下方「為何不在 F12 中途改」）
+**嚴重度**：低—中——不產生錯誤內容，但**從 Tip 的 800 字元預算裡持續扣款**，而該預算正是 D17 指出的
+「與斷言鑑別力互相排擠」的那一份。
+
+### 證據（Phase 17，A4 回報，orchestrator 查證）
+
+`agent-brief.md` §5「程式碼區塊」寫著：
+
+> **MUST 真的能編譯並執行通過**。專案 `tsconfig.json` **有開 `noUncheckedIndexedAccess`**，
+> 索引存取要收斂型別（`arr[i]!` 或 `?? 0`），**否則 Gate 會擋**。
+
+前半句為真（`tsconfig.json:10` 確實 `"noUncheckedIndexedAccess": true`），**但「否則 Gate 會擋」為假**。
+`gate:code` 走的是 `scripts/run-code-blocks.ts` 的 `TSC_ALIGNED_FLAGS`，該常數**刻意不帶**這個旗標，
+且原始碼註解（同檔 line 198–200）把理由寫得很清楚：
+
+> **刻意不帶 `noUncheckedIndexedAccess`**（專案 `src/**` 有開）：教材片段大量出現 `nums[i]` 這類索引
+> 存取，開了會讓 `nums[i] + nums[j]` 這種標準解法一律 TS2532/TS2345。該選項對產品程式碼是正確的嚴格度，
+> 對教材語境則是過度嚴格，MUST NOT 加入。
+
+⇒ **brief 與產線程式碼對同一件事的說法相反**，而 brief 是作者的權威輸入。
+
+### 代價（不是零）
+
+`!` 與 `?? 0` 每個都要花字元，而 Tip 上限是 800、D17 已實測「斷言鑑別力與 800 字元上限是同一份預算的
+競爭者」（`linked-list-cycle-start-node` 就因為 798/800 而補不上具鑑別力的測資）。Phase 17 有多篇卡在
+766～800 之間（001 的 TS Tip 剛好 **800/800**、008 的 780/800、dfs-bfs/010 的 767 與 791）——
+**這些餘裕有一部分是付給一個不存在的約束的。**
+
+### 為何不在 F12 中途改
+
+改了會讓 Phase 17 與 Phase 18 兩批的作者指示不一致，而 `!` 寫法本身無害（兩種設定下都能過），
+不構成內容缺陷。**F12 結束後 SHOULD 修正 §5 的措辭**：保留「專案 `src/**` 有開，寫 `!` 不會錯」的資訊，
+刪掉「否則 Gate 會擋」這個假因果。
+
+### 通則
+
+**brief 對「Gate 會不會擋」的每一條陳述，MUST 以產線程式碼為準**。這類敘述一旦寫錯，
+作者無從察覺（照做也會過），會靜默地持續付出代價。SHOULD 在 F12 之後對 brief §5／§6 的每一條
+「否則 Gate 會擋」逐條回頭核對實作。
+
+---
+
+## D22 · reviewer 無執行權 ⇒ 對「機械性指標」只能手算，而手算會 off-by-one
+
+**狀態**：🟡 已知限制，處置已定（orchestrator 複驗）
+**嚴重度**：低——不產生錯誤內容，但會製造**假的 finding**，並可能誤指作者的自報不實。
+
+### 證據（Phase 17，S5）
+
+S5 回報 `dp-knapsack-unbounded` quiz item[2] 為 **`1/8`**（正解是唯一最長選項），據此改了干擾項，
+並在回報中寫「**請留意作者的 findings 寫 0/8 是不實的，不要拿它當通過證據**」。
+
+orchestrator 用 `isAnswerUniqueLongestOption`（`src/compiler/quiz.ts:137`，與 brief §6 自驗腳本同一套
+判準）實測：
+
+| 選項 | code point |
+| --- | --- |
+| **正解** options[0] | **36** |
+| options[1] | 36（S5 修改前） |
+| options[2] | 24 |
+| options[3] | 25 |
+
+**正解與干擾項打平 36 = 36 ⇒ 不是「唯一」最長 ⇒ 不違規**（判準的 doc comment 明寫：
+「唯一最長」而非「最長」是刻意的——若有其他選項與正解等長，長度就不構成可利用的線索）。
+S5 手數正解時多算了 1 個 code point（記為 37），把「打平」誤判成「唯一最長」。
+**作者 A5 的 `0/8` 屬實**；orchestrator 在 A5 交件當下與 A4 交件後各掃過一次，兩次都是 `0/8 OK`。
+
+### 根因
+
+這是 **D14 禁令的必然副作用，不是 reviewer 的疏忽**：reviewer MUST NOT 執行任何指令（含 `node -e`），
+所以凡是「數 code point」「比對字集」「算長度」這類**純機械量測**，它只能逐字手數。
+Opus 手數幾十個中英夾雜字串時 off-by-one 是可預期的，且**錯的方向不對稱**——多算一個字元會把合規判成
+違規（假陽性、浪費一次修改），少算一個會把違規判成合規（假陰性、漏網）。
+
+### 處置（MUST，Phase 17 起）
+
+1. **reviewer 回報的機械性指標，orchestrator MUST 自己複驗，MUST NOT 直接採信**——
+   包含 `longest-option-bias`、字元數、字集掃描。這些是腳本一行就能算的，複驗成本近乎零。
+2. **reviewer 依手算做出的「作者自報不實」指控，MUST 先複驗再寫進收批紀錄**——
+   本次若照抄 S5 的說法，A5 會被留下一筆不實的紀錄。
+3. reviewer 仍 SHOULD 手算並回報——它抓得到「這一題的正解比干擾項完整太多」這類**語意層**傾斜，
+   那是腳本量不到的；但**判定是否違反判準以 orchestrator 的實測為準**。
+4. **MUST NOT 為此鬆綁 D14**：讓 reviewer 執行指令換到的只是幾個數字，而 D14 的代價是吃滿 CPU 的孤兒行程。
+
+---
+
+### D7 新登錄（Phase 17；本批是 F12 至今**模組內**重複最極端的一批）
+
+dynamic-programming 模組 001–005 是一條「同一題、逐步更好的解法」的教學線，全庫掃描確認
+**70／198／509／746 只出現在本模組內**（其他模組零出現），故次數精確：
+
+| 題號 | 難度 | 出現在哪幾課 | 次數 | 履行狀況 |
+| --- | --- | --- | --- | --- |
+| **198 House Robber** | Medium | 001 → 002 → 003 → 004 → 005 | **5** | 五課全部在**正文**具名承認並寫出真增量；001 額外寫出整條線的路線圖 |
+| **70 Climbing Stairs** | Easy（**不 render**） | 001 → 002 → 003 → 004 | 4 | 003 具名；004 依裁決不具名（見下） |
+| **509 Fibonacci Number** | Easy（**不 render**） | 001 → 002 | 2 | 002 具名「在課文裡辨過它與爬樓梯只差 base case」 |
+
+**這一批把 D7 與 D19 的交互作用第一次講清楚**：`interviewMastery` 的學員在 idx 225／226／228（review）／
+229／230／231 **連續六個 session 看到 198**，而 225／226／229／230 四天**畫面上只有 198 一題**——
+因為 70／509／746 是 Easy，被難度帶濾掉。
+
+⇒ **裁決（可作為後續通則）**：**D7 的誠實定位只需涵蓋「該 Track 實際 render 得到的題」**。
+Phase 17 的 004 未具名 70，理由是 `schedules/interview-mastery.json` 的 idx230 `problemIds` 實測
+只有 `[198]`，具名一題學員永遠看不到的 Easy 題對他零效益。**但正文若把該題當教學範例使用
+（001／002 的爬樓梯呼叫樹），措辭 MUST 誠實區分「解過」與「在課文裡見過」**——Phase 17 的 002
+初稿寫「昨天你已經用樸素遞迴**解過** 509、70、198」，經 reviewer 指出後改為只認 198 是「解過」。
+
+### D8 補充（Phase 17）：**官方範例測資不等於有鑑別力的測資**
+
+`dp-grid-minimum-path-sum` 實測（A4 自報、S4 手推複驗）：若 TS Tip 只用 LeetCode 64 的官方範例網格
+`[[1,3,1],[1,5,1],[4,2,1]]`，把「從左方轉移」整條刪掉（`min(dp[j], dp[j-1])` → `dp[j]`）
+**回傳仍是 7，突變存活**——因為該網格的最佳路徑「右右下下」只靠第一列前綴和就能重現。
+換成階梯網格 `[[1,9,9],[1,1,9],[9,1,1]]` 才得 29（KILLED）。
+
+**通則**：作者常直覺沿用題目的官方範例當測資，但官方範例是**為了說明題意**而挑的，
+不是為了**區分正確實作與錯誤實作**。§E2 的維度覆蓋 MUST 自己驗，MUST NOT 因為「用的是官方範例」
+就假設涵蓋完整。
+
+---
+
+## D23 · 作者的窮舉「找不到」不等於「不存在」——搜尋空間是它自己寫的
+
+**狀態**：🔴 未修復（產線層）
+**嚴重度**：中——會讓作者基於假陰性做出**不必要的退讓**（砍掉正確的實作或降級承諾），
+且該假結論會寫進 findings，被後續批次引用。
+
+### 證據（Phase 18，B2 自報 → T2 手推反例 → orchestrator 實測確認）
+
+`dp-string-edit-distance` 的作者發現：Tip 帶「交換讓短字串當欄」那一行時，
+「刪插入分支」與「邊界列全 0」兩個突變**逃逸**——因為交換後 `a` 恆較長，而 `dp[0][j] = j` 本身就是
+開頭插入，內圈的插入分支永遠不勝出。它接著**窮舉搜尋**能同時逼出兩者的測資，結論是
+「**有交換時這種測資結構上極稀少、窮舉零命中**」，於是**拿掉了交換那一行**，
+把示範碼的空間從 `O(min(m, n))` 降為 `O(n)`，與 frontmatter 的 `complexity_label` 產生落差。
+
+reviewer 手推出一組反例；orchestrator 從 Article fence 抽碼實測：
+
+| 輸入 | baseline | 刪掉插入分支 | 判定 |
+| --- | --- | --- | --- |
+| `("cxab", "abc")` | **3** | **4** | **KILLED** |
+
+且 `len("cxab") = 4 > len("abc") = 3` ⇒ 交換是 no-op ⇒ **這組測資在保留交換的版本下同樣有效**。
+「保留交換 + 換測資」原本就是可行解，作者的退讓不必要。
+
+### 根因
+
+窮舉腳本的**搜尋空間與判定條件都是作者自己寫的**。常見的窄化來源：
+
+- 只搜某個長度範圍、某個字母表大小（本例的反例需要 `a` 含一個 `b` 沒有的字元、且共同子序列不在開頭）。
+- 判定條件寫成「同時逼出 A 與 B」，而實際只需要「逼出 A」（另一條已被別組測資守住）。
+- 把「我想到的那種形狀」當成全部形狀。
+
+**這是 D22 的鏡像**：D22 是 reviewer 手算得到假陽性，D23 是作者機械窮舉得到**假陰性**。
+兩者的共同教訓是——**「我驗過了」的證據力取決於驗的是什麼，而那件事本身沒有被驗**。
+
+### 處置（MUST）
+
+1. **作者的窮舉結論若導致「退讓」（砍功能／降級承諾／改壞示範碼），MUST 在 findings 寫出
+   搜尋空間的定義**（長度範圍、字母表、判定條件），MUST NOT 只寫「窮舉零命中」。
+2. **reviewer MUST 對這類結論嘗試手推一組反例**——本例證實人手推比機械窮舉更快找到。
+3. **orchestrator MUST 實測 reviewer 提出的反例再下裁決**（reviewer 手推同樣可能錯，見 D22）。
+4. **假陰性結論 MUST NOT 留在 findings 裡當事實**——後續批次的作者會引用它。
+   本例已在 `batches.md` 的 Phase 18 段明文標記該句為錯誤結論。
+
+---
+
+## D24 · `Complexity` 段也不進 Discord 推播，把補救寫在那裡等於沒寫
+
+**狀態**：🟡 已知限制，處置已定（撰寫慣例）
+**嚴重度**：低—中——不產生錯誤內容，但會讓「已寫好的誠實揭露」對只讀推播的學員完全隱形。
+
+### 證據（Phase 18，T2 查出）
+
+`dp-string-edit-distance` 的示範碼沒做「交換讓短字串當欄」，空間是 `O(n)`，而 frontmatter 的
+`complexity_label` 是 `'O(m*n) / O(min(m, n))'`。作者已**誠實揭露**這個落差——但寫在 `Complexity` 段。
+
+**Discord 推播的組成是 Digest／TypeScript Tip／Python Tip／Takeaway／Today's Challenge／Exit Criteria
+——不含 `Complexity`。** 原 TS Tip prose 寫「要保證 `O(min(m, n))`，進入前把較短者換到 `b`」，
+對只讀推播的學員可能被讀成在描述**下方那段程式碼**的行為。已在 Tip prose 補上「示範碼沒做交換」。
+
+### 通則
+
+D18 與 addendum §E1 先前只點名 `Digest` 與 `Takeaway` 是「獨立推播單位」。
+本項把清單補完：**`Concept` / `Thinking` / `Pattern Recognition` / `Common Mistakes` / `Complexity`
+這些段落都不進推播**。凡是「補救、限定、誠實揭露」，若它修正的是某個**會被推播**的段落裡的說法，
+**MUST 寫在該推播段落自己身上**，MUST NOT 只寫在正文或 `Complexity`。
+
+（同一原則的既有實例：D19 的「D7 誠實定位 MUST 寫進正文、MUST NOT 只寫在會被難度帶濾掉的題目 `why` 裡」
+——兩者都是「寫了但讀者看不到」，只是隱形的機制不同：D19 是課表過濾，D24 是推播組成。）

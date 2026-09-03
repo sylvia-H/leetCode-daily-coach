@@ -10,55 +10,66 @@ exit_criteria:
 ---
 ## Concept
 
-Same Tree Validation 旨在於同時走訪兩棵二元樹，並在結構與節點數值上進行逐一比對。在平行二元樹走訪（Parallel Tree Traversal）的框架下，我們需要確保兩棵樹在每一個對應的位置上，其節點皆同時存在且數值相等，或者同時為空值（null）。這項技術是驗證二元樹對稱性、子樹結構相容性以及樹結構序列化比對的基礎。
+兩棵二元樹「完全相同」的定義是：每一個對應位置上，節點要嘛同時存在且數值相等，要嘛同時為空。要驗證這件事，我們讓同一個函式同時握著兩個指標 p 與 q，從兩棵樹的根出發、同步往下走——這就是 Parallel Tree Traversal：走訪的單位不是單一節點，而是「一對」位置對應的節點。它是後續驗證鏡像對稱、判斷子樹包含關係的共同基礎：前者改變配對方向，後者則從每個起點各跑一次同一套比對。
 
 ## Thinking
 
-在思考 Same Tree Validation 時，核心策略是採用遞迴（Recursion）或廣度優先搜尋（BFS）與深度優先搜尋（DFS）的疊代法，對兩棵樹進行平行走訪。我們必須首先定義基本情況（Base Cases）：若兩棵樹的當前根節點皆為 null，代表此分支完全相同，回傳 true；若其中一棵為 null 而另一棵不是，或兩者皆不為 null 但數值（.val）不相等，則代表結構或數值衝突，回傳 false。若基本情況通過，則同時對左子樹與右子樹進行遞迴驗證，並使用邏輯與（Logical AND）將左右子樹的結果結合，確保兩側皆完全吻合。
+站在任何一對 (p, q) 上，情況恰好有三種，互斥且窮盡：
+
+一、兩者皆為 null：這個分支雙方同時走到盡頭，沒有任何差異，回傳 true。
+二、恰有一方為 null：一邊有節點、另一邊沒有，形狀已經分歧，回傳 false。
+三、兩者皆非 null：此時才能安全讀取 .val。若數值不等，回傳 false；若相等，剩下的問題就縮小成「p 與 q 的左子樹是否相同」與「右子樹是否相同」兩個形式一模一樣、但規模更小的子問題。
+
+為什麼這樣遞迴是對的？因為「相同」的定義本身就是遞迴的：根值相等、左子樹相同、右子樹相同，三者同時成立才叫相同。演算法只是把定義逐字翻譯成程式，用邏輯 AND 串接三個條件；AND 的短路特性還附帶了提前終止——任一處失配，false 會立刻一路傳回頂層，不做多餘的走訪。
+
+不想用遞迴，也可以用佇列改寫成疊代版：把 (p, q) 成對入列，每次取出一對做上述三段判斷，皆非 null 且值相等時再把 (p.left, q.left) 與 (p.right, q.right) 各自成對入列。判斷邏輯完全一致，只是把呼叫堆疊換成顯式佇列。
 
 ## Pattern Recognition
 
-當題目要求『比較兩個獨立的樹狀結構是否完全相同』、『驗證鏡像對稱性』或『檢查一棵樹是否為另一棵樹的子結構』時，即可辨識出 Parallel Tree Traversal 的 Pattern。此 Pattern 的特徵在於函式或走訪迴圈中會同時接受兩個指標（例如 p 與 q），並同步推進其狀態。
+看到「比較兩個獨立的樹狀結構是否一致」「判斷一棵樹是否為另一棵樹的子樹」這類題目，就是 Parallel Tree Traversal 的訊號。它的具體特徵是：函式簽名同時收兩個節點指標，且每次遞迴同步推進兩者。單指標走訪處理的是「一棵樹自身的性質」，雙指標走訪處理的是「兩棵樹（或同一棵樹兩個部位）之間的關係」。明天的 Symmetric Tree 就是把配對方式從「左對左、右對右」改成交叉配對的變形。
 
 ## Common Mistakes
 
-最常見的錯誤是在存取節點的數值（.val）之前，沒有完整檢查該節點是否為 null，導致在空節點上存取屬性而引發執行期例外（Runtime Exception）。另一個常見錯誤是只檢查了數值相等，卻遺漏了結構上的空值檢查，導致在不對稱的樹結構中產生錯誤的結果。
+第一個常見錯誤是判斷順序不對：還沒確認兩者皆非 null 就讀取 .val，會在空節點上觸發執行期例外；三個基本情況必須照「同空、單空、比值」的順序寫，後面的判斷才站得住。第二個錯誤是想繞開雙指標：各自做一次走訪再比對序列——不帶 null 標記的走訪序列無法唯一決定樹形，結構不同的兩棵樹可能產生相同序列而被誤判。第三個錯誤是直接拿節點物件做相等比較，比到的是參考（記憶體位址）而非內容，兩棵內容相同的獨立樹會被誤判為不同。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 為兩棵樹中節點數較少者的節點總數，因為我們最多需要走訪完所有對應節點。空間複雜度在最壞情況下為 O(h)，其中 h 為樹的高度，由遞迴呼叫堆疊（Call Stack）的深度所決定；在完全不平衡的樹中空間複雜度為 O(n)，在平衡樹中則為 O(log n)。
+時間複雜度 O(n)：每一對節點至多被比較一次，實際比較數值的節點對數不超過兩棵樹中較小那棵的節點數，失配時還會因短路提前結束。空間複雜度 O(h)，h 為樹高，來自遞迴呼叫堆疊：平衡樹約為 O(log n)，完全歪斜的樹退化為 O(n)。
 
 ## Digest
 
-Same Tree Validation 透過平行遞迴走訪兩棵二元樹，同步檢查結構與數值。核心在於正確處理 null 邊界條件並結合邏輯運算子。
+Same Tree Validation 用一個函式同時握住兩棵樹的對應節點 (p, q) 平行下降。每一對節點只有三種情況：同為 null 回傳 true、恰一方為 null 回傳 false、皆非 null 則比較數值並以邏輯 AND 串接左右子樹的遞迴結果。正確性直接來自「相同」的遞迴定義；短路使失配時提前終止。時間 O(n)、空間 O(h)。
 
 ## TypeScript Tip
 
+以 `TreeNode | null` 聯集型別表達空節點；前兩個 if 完成 narrowing 後，編譯器即可保證後續 `.val` 存取安全。
+
 ```typescript
-class TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-    this.val = (val===undefined ? 0 : val);
-    this.left = (left===undefined ? null : left);
-    this.right = (right===undefined ? null : right);
-  }
-}
-
-function isSameTree(p: TreeNode | null, q: TreeNode | null): boolean {
-  if (!p && !q) return true;
-  if (!p || !q) return false;
-  return p.val === q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
-}
-
 import assert from "node:assert";
-const t1 = new TreeNode(1, new TreeNode(2));
-const t2 = new TreeNode(1, null, new TreeNode(2));
-assert.strictEqual(isSameTree(t1, t2), false);
+class TreeNode {
+  constructor(
+    public val: number,
+    public left: TreeNode | null = null,
+    public right: TreeNode | null = null,
+  ) {}
+}
+function isSameTree(p: TreeNode | null, q: TreeNode | null): boolean {
+  if (p === null && q === null) return true;
+  if (p === null || q === null) return false;
+  return p.val === q.val
+    && isSameTree(p.left, q.left)
+    && isSameTree(p.right, q.right);
+}
+const a = new TreeNode(1, new TreeNode(2));
+const b = new TreeNode(1, new TreeNode(2));
+const c = new TreeNode(1, null, new TreeNode(2));
+assert.strictEqual(isSameTree(a, b), true);
+assert.strictEqual(isSameTree(a, c), false);
 ```
 
 ## Python Tip
+
+用 `is None` 判空比 truthiness 更精確；`and` 的短路讓失配的分支不再往下遞迴。
 
 ```python
 class TreeNode:
@@ -67,27 +78,32 @@ class TreeNode:
         self.left = left
         self.right = right
 
-def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
-    if not p and not q:
+def is_same_tree(p: TreeNode | None, q: TreeNode | None) -> bool:
+    if p is None and q is None:
         return True
-    if not p or not q:
+    if p is None or q is None:
         return False
-    return p.val == q.val and isSameTree(p.left, q.left) and isSameTree(p.right, q.right)
+    return (p.val == q.val
+            and is_same_tree(p.left, q.left)
+            and is_same_tree(p.right, q.right))
 
-t1 = TreeNode(1, TreeNode(2))
-t2 = TreeNode(1, None, TreeNode(2))
-assert isSameTree(t1, t2) == False
+a = TreeNode(1, TreeNode(2))
+b = TreeNode(1, TreeNode(2))
+c = TreeNode(1, None, TreeNode(2))
+assert is_same_tree(a, b) is True
+assert is_same_tree(a, c) is False
+assert is_same_tree(a, TreeNode(1, TreeNode(3))) is False
 ```
 
 ## Takeaway
 
-平行走訪兩棵樹時，務必先確立完整的 null 邊界條件，再進行數值比對與子樹遞迴。
+先照「同空為真、單空為假」處理空值，再比較節點值，最後用 AND 串接左右子樹的遞迴結果。
 
 ## Tomorrow Preview
 
-明天我們將探討 Symmetric Tree，延伸今天的 Parallel Tree Traversal 概念，學習如何在單一樹中對稱地比對左右子樹。
+明天進入 Symmetric Tree Check：同樣是雙指標平行走訪，但把配對方式改成交叉——左子樹的 left 對右子樹的 right——用鏡像版的比對驗證一棵樹是否左右對稱。
 
 ## Today's Challenge
 
-- **100** · 題號 100 完美對應 Parallel Tree Traversal，需要同步走訪兩棵樹的對應節點以驗證結構與數值是否完全一致。
-  - Hint: 先處理雙方皆為 null 的情況，再處理其中一方為 null 或數值不等的情況，最後組合左右子樹的遞迴結果。
+- **100** · 要求逐節點判斷兩棵樹的結構與數值是否完全一致，是 Parallel Tree Traversal 最直接的應用，三種空值情境一次練齊。
+  - Hint: 先處理兩者皆空與單邊為空，再比較節點值，最後用 AND 串接左右子樹的遞迴呼叫。

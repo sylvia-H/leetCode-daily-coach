@@ -75,7 +75,7 @@
       "concepts": 10,
       "quiz": 75,
       "cumulative": 79,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 9,
@@ -84,7 +84,7 @@
       "concepts": 9,
       "quiz": 64,
       "cumulative": 88,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 10,
@@ -93,7 +93,7 @@
       "concepts": 9,
       "quiz": 64,
       "cumulative": 97,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 11,
@@ -102,7 +102,7 @@
       "concepts": 10,
       "quiz": 69,
       "cumulative": 107,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 12,
@@ -111,7 +111,7 @@
       "concepts": 9,
       "quiz": 57,
       "cumulative": 116,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 13,
@@ -120,7 +120,7 @@
       "concepts": 9,
       "quiz": 66,
       "cumulative": 125,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 14,
@@ -129,7 +129,7 @@
       "concepts": 10,
       "quiz": 69,
       "cumulative": 135,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 15,
@@ -138,7 +138,7 @@
       "concepts": 9,
       "quiz": 70,
       "cumulative": 144,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 16,
@@ -147,7 +147,7 @@
       "concepts": 9,
       "quiz": 71,
       "cumulative": 153,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 17,
@@ -156,7 +156,7 @@
       "concepts": 10,
       "quiz": 79,
       "cumulative": 163,
-      "status": "pending"
+      "status": "done"
     },
     {
       "phase": 18,
@@ -165,7 +165,7 @@
       "concepts": 2,
       "quiz": 17,
       "cumulative": 165,
-      "status": "pending"
+      "status": "done"
     }
   ]
 }

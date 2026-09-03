@@ -2,7 +2,7 @@
   "phase": 8,
   "window": "sessionIndex 98-111",
   "model": "fable",
-  "status": "pending",
+  "status": "done",
   "concepts": [
     {
       "conceptId": "sliding-window-minimum-window-substring",

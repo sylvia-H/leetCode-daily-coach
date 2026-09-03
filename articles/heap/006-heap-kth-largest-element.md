@@ -10,77 +10,102 @@ exit_criteria:
 ---
 ## Concept
 
-使用 Bounded Priority Queue 尋找第 K 個最大或最小的元素是資料結構中的經典技巧。當我們面對一個未排序的串流或陣列，需要找出第 K 大的元素時，如果將整個資料結構進行完整排序，時間複雜度會是 O(n log n)，這在資料量極大或即時串流處理時效率不佳。透過維持一個大小固定為 k 的 Min-Heap（最小堆積），我們可以在 O(n log k) 的時間複雜度內完成任務。核心作法是：遍歷所有元素，當 Heap 的大小小於 k 時，直接將元素推入 Heap；當 Heap 的大小達到 k 時，將當前元素與 Heap 的根節點（目前第 K 大的候選者）進行比較。如果當前元素大於根節點，則將根節點彈出（Pop），並將當前元素推入（Push）。這樣一來，Heap 中永遠只會保留當前掃描過所有元素中最大的 k 個元素，而這 k 個元素中的最小值（即根節點）就是我們要找的第 K 大元素。這種 bounded 策略避免了維護完整排序的昂貴開銷，將空間複雜度精準控制在 O(k)。
+找第 k 大元素的直覺解是排序後取 `nums[n - k]`，O(n log n)，而且必須把 n 個元素全部握在手上。Bounded Priority Queue 只留 k 個：走訪時維護一個大小不超過 k 的 Min-Heap，走完後 heap 裡就是全部元素中最大的 k 個，root 是這 k 個裡最小的——它正是第 k 大。
+
+為什麼找「最大的 k 個」卻用 Min-Heap？因為每一步要淘汰的是「目前保留的 k 個裡最小的」，Min-Heap 讓它永遠站在 root：O(1) 看得到、O(log k) 踢得掉。root 同時是門檻：新元素比 root 大才有資格進來；小於或等於 root 的元素不比保留的 k 個任何一個大，硬換進來被踢掉的也是它自己或同值的 root，第 k 大的值不變，直接略過。反過來，找第 k 小就維護大小 k 的 Max-Heap，root 是保留的 k 個裡最大的，規則完全對稱。
+
+這題你在 sift-down 那課已用「大小 k 的 Min-Heap」實作過一次，當時重點是 extraction 本身；今天把它抽象成「第 k 大／小 ⇒ 反方向的 k 元素 heap」這個 Pattern，把正確性講清楚，再延伸到資料一筆筆到來的串流版。
 
 ## Thinking
 
-在處理這類問題時，思考的切入點通常是：我是否需要記住所有的元素？答案是否定的。如果我們要求的是第 K 大的元素，那麼小於這 k 個最大元素的其餘資料其實都是不需要被完整追蹤的雜訊。因此，資料結構的選擇自然導向 Priority Queue。具體步驟為：第一，初始化一個空的 Min-Heap。第二，迭代輸入的數值集合。第三，將每個數值放入 Heap 中，並透過條件判斷確保 Heap 的長度不超過 k。如果長度超過 k，就必須移除堆積頂端的最小元素。第四，當迭代結束時，Heap 的頂端元素就是全局的第 K 大元素。這個思考過程的關鍵在於『反向思考』：利用 Min-Heap 來過濾掉比前 K 大還要小的元素，留下門檻值在根節點，完美契合串流資料（Streaming Data）與大型陣列的查詢需求。
+用不變式來論證：處理完前 i 個元素後，heap 裡恰好是這 i 個當中最大的 min(i, k) 個。初始為空，成立。來了第 i + 1 個元素 x：若 heap 未滿，直接 push，heap 仍是目前全部；若已滿且 x > root，heap 裡有 k 個值都不小於 root，再加上 x 比 root 大，root 至少已被 k 個元素壓過，不可能再是前 k 大，pop 掉它、push x，不變式恢復；若 x ≤ root，x 比保留的 k 個都不大，heap 不需改動。走完 n 個元素，heap 就是全體前 k 大，root 即第 k 大。
+
+用 `[3, 2, 1, 5, 6, 4]`、k = 2 走一遍：3、2 進入，root 是 2；1 ≤ 2 略過；5 > 2，pop 2、push 5，heap 是 {3, 5}，root 3；6 > 3，pop 3、push 6，heap 是 {5, 6}，root 5；4 ≤ 5 略過。答案 5。
+
+串流版只是把「走訪陣列」換成「每次 add」：建構時把初始元素逐一 add（初始可能少於 k 個，此時 heap 只是還沒填滿，照 push 即可；多於 k 個則必須裁到 k），之後每次 add 先 push、超過 k 就 pop，回傳 root。每次 add 是 O(log k)，與至今看過幾筆無關。若整個陣列一開始就在手上，可先用先修課的 heapify 把前 k 個以 O(k) 建成 heap，剩下的 n − k 個再逐一過門檻。
 
 ## Pattern Recognition
 
-當題目明確要求在未排序的陣列、資料流或動態資料集中尋找『第 K 大（Kth Largest）』或『第 K 小（Kth Smallest）』的元素時，這就是 Bounded Priority Queue 的強烈訊號。與其將整個陣列排序 O(n log n)，維護一個大小為 k 的 Heap 可以將時間複雜度降為 O(n log k)。辨識此 Pattern 的另一個特徵是：資料是持續流入的（Streaming），或者資料量非常龐大（n 遠大於 k），導致無法一次性將所有資料載入記憶體進行全局排序。此時，藉由限制 Heap 的大小上限為 k，我們便能以極低的空間代價解決原本看似需要大量記憶體的極值尋找問題。
+訊號有三個：題目問「第 k 大／第 k 小」或「前 k 名」；資料是串流、或 n 遠大於 k 而不想把全部載入記憶體；每筆資料只需與門檻比一次就能決定去留。方向規則只有一條：找第 k 大用大小 k 的 Min-Heap，找第 k 小用大小 k 的 Max-Heap——heap 的方向永遠與要找的極值相反，因為 root 站的是「被淘汰的那一端」。若 k 接近 n，改找第 n − k + 1 小可讓 heap 保持小；k = 1 時 heap 退化成一個變數，掃一遍記錄最大值即可。Quickselect 平均 O(n) 但最壞 O(n^2)，且需要整個陣列可原地分割，串流用不上。
 
 ## Common Mistakes
 
-開發者在實作時最常犯的錯誤是：誤用 Max-Heap 來尋找第 K 大的元素。直覺上，大家可能會覺得『最大』就要用 Max-Heap。然而，如果使用完整的 Max-Heap 儲存所有元素，每次彈出最大值會把真正的第 K 大元素過早丟棄，無法有效率地保留局部極值。正確的做法是使用 Min-Heap 且大小限制為 k：利用 Min-Heap 的特性將較小的元素沈在根部並隨時淘汰，最終留在 Heap 頂端的剛好就是第 K 大的元素。另一個常見錯誤是忘記在每次插入新元素後檢查並維護 Heap 的大小，導致 Heap 的體積膨脹到與輸入陣列相同大小，失去限制容量以優化效能的意義。
+以下反例皆用 `[3, 2, 1, 5, 6, 4]`、k = 2（正解 5）。第一，用大小 k 的 Max-Heap，超過 k 就 pop root：每次丟掉的是最大值，最後留下 {1, 2}，root 是 2——那是第 k 小的鏡像。第二，只 push 不裁：heap 長到 6 個，root 是全域最小值 1。第三，串流版建構子只 heapify 不裁：初始 `[4, 5, 8, 2]`、k = 3 時 heap 留著 4 個，接著 add(3) 只 pop 一次，heap 變成 {3, 4, 5, 8}，回傳 3，正解是 4；建構子必須裁到 k，或直接呼叫 add 逐一放入。第四，先回傳 root 再裁：同一組初始，add(3) push 後 root 是 3，先回傳就拿到 3，pop 掉 3 之後 root 才是 4。第五，把「全部放進 Max-Heap 再 pop k − 1 次」當成錯誤：它是對的，O(n + k log n)，只是空間 O(n) 且串流無法用，是另一種取捨而不是 bug。
 
 ## Complexity
 
-Time Complexity: O(n log k)，其中 n 是陣列或串流中的元素總數，k 是需要尋找的極值排名。因為我們隨時維持 Heap 的大小不超過 k，每一次插入與彈出操作的時間複雜度為 O(log k)，總共執行 n 次。Space Complexity: O(k)，因為 Heap 內最多只會儲存 k 個元素，空間消耗與輸入規模 n 無關，僅取決於參數 k 的大小。
+時間 O(n log k)：每個元素最多一次 push 與一次 pop，heap 大小不超過 k。空間 O(k)。整個陣列可用時，先 heapify 前 k 個是 O(k)，其餘 n − k 個各 O(log k)。對照：排序 O(n log n)；全部放進 heap 再 pop k − 1 次是 O(n + k log n)、空間 O(n)；Quickselect 平均 O(n)、最壞 O(n^2)、空間 O(1)，但必須整個陣列在手。串流版每次 add 是 O(log k)。
 
 ## Digest
 
-本篇教材深入探討 Bounded Priority Queue 樣板，針對尋找第 K 大或第 K 小元素的經典場景進行解構。我們學習了如何利用大小固定為 k 的 Min-Heap 來過濾掉不必要的資料，將時間複雜度從全局排序的 O(n log n) 優化至 O(n log k)，同時將空間複雜度壓低至 O(k)。透過明確的步驟拆解與常見陷阱避雷，開發者能更穩健地處理資料流與大規模陣列的極值查詢。
+找第 k 大不必排序：走訪時維護大小 k 的 Min-Heap，heap 裡永遠是目前為止最大的 k 個，root 是其中最小的，也就是第 k 大的候選門檻。新元素比 root 大才 push 並 pop 掉 root（root 已被 k 個元素壓過，不可能再是前 k 大），否則略過；走完 root 即答案。找第 k 小則對稱地用大小 k 的 Max-Heap——heap 方向永遠與要找的極值相反。時間 O(n log k)、空間 O(k)。串流版每次 add 先 push、超過 k 就 pop、回傳 root；初始少於 k 個時先填滿即可，建構子拿到多於 k 個時必須裁到 k。常見錯法：用 Max-Heap 裁大小會得到第 k 小的鏡像、只 push 不裁讓 root 變成全域最小、先回傳再裁會拿到剛 push 進去的值。
 
 ## TypeScript Tip
 
+TS 沒有內建 heap，此處以排序陣列模擬大小 k 的 Min-Heap（`h[0]` 即 root），每次 add 是 O(k log k) 而非 O(log k)，僅示範 Pattern；建構子沿用 add，初始多於或少於 k 個都能處理。
+
 ```typescript
-import assert from "node:assert";
-
-function solveWithBoundedHeap(nums: number[], k: number): number {
-  const heap: number[] = [];
-  for (const num of nums) {
-    heap.push(num);
-    heap.sort((a, b) => a - b);
-    if (heap.length > k) {
-      heap.shift();
-    }
+class KthLargest {
+  private h: number[] = [];
+  constructor(private k: number, nums: number[]) {
+    for (const x of nums) this.add(x);
   }
-  const ans = heap[0];
-  assert.strictEqual(ans, 5);
-  return ans;
+  add(x: number): number {
+    if (this.h.length < this.k || x > this.h[0]!) {
+      this.h.push(x);
+      this.h.sort((a, b) => a - b);
+      if (this.h.length > this.k) this.h.shift();
+    }
+    return this.h[0]!;
+  }
 }
-
-solveWithBoundedHeap([3, 2, 1, 5, 6, 4], 2);
+const kl = new KthLargest(3, [4, 5, 8, 2]);
+const got = [3, 5, 10, 9, 4].map((x) => kl.add(x));
+if (got.join() !== "4,5,5,8,8") throw new Error(`stream ${got}`);
+const few = new KthLargest(2, []); // 初始少於 k 個
+few.add(1);
+if (few.add(7) !== 1 || few.add(3) !== 3) throw new Error("fill-up");
 ```
 
 ## Python Tip
 
+`heappushpop` 一步完成 push 與淘汰最小者；建構子必須裁到 k。斷言涵蓋初始多於 k、少於 k 與離線版（建構完讀 root）；`heapq.nlargest(k, nums)[-1]` 做的正是同一件事。
+
 ```python
-import heapq
+from heapq import heapify, heappop, heappush, heappushpop
 
-def solve_with_nlargest(nums: list[int], k: int) -> int:
-    # Python 的 heapq 模組提供了便捷的 nlargest 封裝
-    # 但在演習面試時，手動維護大小為 k 的 min_heap 更能展現基本功
-    top_k = heapq.nlargest(k, nums)
-    result = top_k[-1]
-    assert result == 5, "assertion failed"
-    return result
+class KthLargest:
+    def __init__(self, k: int, nums: list[int]):
+        self.k, self.h = k, nums[:]
+        heapify(self.h)
+        while len(self.h) > k:  # 裁到 k
+            heappop(self.h)
+    def add(self, val: int) -> int:
+        if len(self.h) < self.k:
+            heappush(self.h, val)
+        else:
+            heappushpop(self.h, val)  # O(log k)
+        return self.h[0]
 
-solve_with_nlargest([3, 2, 1, 5, 6, 4], 2)
+kl = KthLargest(3, [4, 5, 8, 2])
+assert [kl.add(x) for x in [3, 5, 10, 9, 4]] == [4, 5, 5, 8, 8]
+few = KthLargest(2, [])
+few.add(1)
+assert few.add(7) == 1 and few.add(3) == 3
+assert KthLargest(2, [3, 2, 1, 5, 6, 4]).h[0] == 5
 ```
 
 ## Takeaway
 
-固定大小的 Min-Heap 是解決 Kth 極值問題的利器，維持 O(n log k) 時間與 O(k) 空間的平衡。
+第 k 大＝大小 k 的 Min-Heap：root 是保留 k 個裡最小的、正是門檻，比它大才進、進了就踢 root；找第 k 小則反向。
 
 ## Tomorrow Preview
 
-明天我們將探討 Two Pointers 技巧在區間與滑動視窗問題中的應用，學習如何有效率地在線性時間內縮減搜尋空間，敬請期待。
+明天把同一副骨架套到「出現次數最多的前 k 個元素」：先用 hash map 計數，再讓 heap 比較的量從元素值換成次數。
 
 ## Today's Challenge
 
-- **215** · 題目要求在未排序陣列中尋找第 K 大的元素，利用大小為 k 的 Min-Heap 可以完美的將時間複雜度控制在 O(n log k)，且根節點即為答案。
-  - Hint: 遍歷陣列，維持一個容量為 k 的最小堆積，當元素大於堆積頂端時進行置換。
-- **703** · 串流資料持續動態加入，每次加入後都需要即時查詢第 K 大的分數。Bounded Priority Queue 能夠在每次插入時維持固定大小的 Heap，確保動態查詢的高效性。
-  - Hint: 在建構子中初始化 Min-Heap 並限制大小，add 方法中持續進行 push 與 pop 維護。
+- **215** · 這題你在 sift-down 那課已用大小 k 的 Min-Heap 解過；今天再解一次，差別在把它當成 Pattern：先論證 root 為何是第 k 大的門檻，再確認自己說得出「找第 k 小時 heap 要反向」。
+  - Hint: 走訪陣列維護大小 k 的 Min-Heap，元素大於 root 才 push 並 pop 掉 root；走完回傳 root。整個陣列在手時可先 heapify 前 k 個。
+- **703** · 串流版：每次 add 都要回傳當前第 k 大，正是「heap 大小維持 k、root 是門檻」的直接應用，每次只花 O(log k)。
+  - Hint: 建構子把初始元素逐一 add 並把 heap 裁到 k（初始可能少於 k 個，先填滿即可）；add 先 push、超過 k 就 pop，最後回傳 root。

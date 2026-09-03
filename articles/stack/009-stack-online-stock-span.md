@@ -11,86 +11,86 @@ exit_criteria:
 ---
 ## Concept
 
-Stack Online Stock Span 是利用 Monotonic Stack 解決連續小於或等於目前元素數量問題的典型架構。在處理即時資料流（Online Stream Queries）時，若每次查詢都需要向回遍歷歷史資料，時間複雜度將會退化。透過維護一個單調遞減的堆疊（Monotonic Decreasing Stack），我們能夠以 O(1) 的均攤時間複雜度（Amortized Time Complexity）高效率計算出每一筆資料的 span（即包含自身在內、連續小於或等於該值的最大連續天數）。這種架構的核心在於將先前元素的累積 span 與當前元素進行合併，省去重複掃描的時間。
+先釘死 span 的定義：對今天的價格，從今天往前數，價格連續小於或等於今天的天數（含今天）就是今天的 span。Online 代表資料逐筆到達——每收到一筆價格就要立刻回答它的 span，而且看不到未來。若每次都向左回掃歷史陣列，單次查詢最壞 O(n)，n 筆資料合計 O(n^2)。Monotonic Stack with Accumulation 的解法：維護一個由底到頂價格嚴格遞減的堆疊，每個元素存 (price, span) 成對資料——price 是當時的價格，span 是它目前「代表」的天數。新價格進來時，把頂端所有小於或等於它的元素依序彈出，並把它們的 span 累加到自己身上，最後壓入 (price, 累計 span) 並回傳累計值。每筆價格最多進出堆疊各一次，均攤 O(1)。
 
 ## Thinking
 
-當我們面對即時資料流（Online Stream）並需要查詢連續小於或等於當前值的元素個數時，直覺的做法是使用一個陣列儲存所有歷史數值，每來一個新數值就從當前位置向左逐一檢查。然而，這種暴力解法在最壞情況下的時間複雜度會達到 O(N) 每筆查詢，總體時間複雜度高達 O(N^2)。為了優化此過程，我們思考如何利用堆疊（Stack）來維護歷史資訊。當我們處理一個新價格時，所有小於或等於該價格的歷史價格，其 span 都可以被當前價格『吞併』並累積起來。因此，我們可以在堆疊中儲存二元組（Tuple）如 (price, span)。當新價格進來時，我們持續從堆疊頂部彈出小於或等於該價格的元素，並將其 span 累加到當前的 span 中，直到遇到大於該價格的元素或堆疊清空為止。最後，將合併後的 (price, totalSpan) 壓入堆疊中，並回傳 totalSpan。此過程確保每個元素最多被壓入與彈出堆疊一次，從而實現高效的均攤 O(1) 時間複雜度。
+先看暴力解浪費在哪：同一段連續較小的歷史，會被之後每一個更高的價格反覆回掃。要省掉重掃，關鍵是回答一個問題——價格 p 一旦被較大的新價格 q（p ≤ q）蓋過，未來還有誰需要它？分兩種情況論證。未來某天價格為 r：若 r ≥ q，回掃只要能走到 q（中間沒有更高的價格先擋住），因 p ≤ q ≤ r 也一定走得過 p，p 貢獻的整段天數都會被算進去——而這段天數已經累加在 q 的 span 裡，直接取用即可；若中途被更高的價格擋住，那連 q 都到不了，更走不到 p。若 r < q，回掃在 q 就停了，同樣永遠走不到 p。兩種情況 p 都不再需要以「價格」的身分被比較，需要留下的只有它代表的天數，所以彈出 p 時把 span 轉移給 q，資訊零遺失——這就是「彈出即丟棄」安全的正確性論證。由此得到迴圈不變式：每次 next 結束時，堆疊由底到頂價格嚴格遞減，且所有 span 的總和恰等於至今處理的總天數，每一天恰好被堆疊中的一個元素代表。以 100, 80, 60, 70, 60, 75, 85 為例：處理 75 時依序彈出 60（span 1）與 70（span 2），span = 1 + 1 + 2 = 4，堆疊剩 100、80，再壓入 (75, 4)。最後注意邊界：彈出條件必須是「小於或等於」，因為定義把等價的日子也算進連續天數；寫成嚴格小於，等價的那天會留在堆疊裡被漏算。
 
 ## Pattern Recognition
 
-辨識此 Pattern 的關鍵線索在於題目要求『即時查詢（Online Queries）』且牽涉到『尋找連續小於或等於目前數值的歷史個數』或『計算包含當前元素的最大有效區間』。當問題可以轉化為『當前元素會終結或吞併哪些左側較小的元素』時，通常就是 Monotonic Stack with Accumulation 的最佳施展場景。與傳統的單調堆疊僅用來尋找下一個更大或更小元素（Next Greater/Smaller Element）不同，此處的堆疊元素必須攜帶累積的權重（Span），在彈出時將權重轉移給新進的元素，以維護歷史資料的累積效應。
+兩個訊號同時出現時優先考慮此 Pattern：一是查詢為 online、資料逐筆到達且要即時回答；二是問題可以改寫成「當前元素能往左吞併多長的連續區間」或「連續往前小於或等於當前值的個數」。對照 prerequisite：Daily Temperatures 的堆疊存 index，答案是距離，彈出時算索引差；Next Greater Element II 的堆疊存 value，答案是值本身，彈出代表候選被擋住、永久丟棄——兩者的堆疊元素都不攜帶需要合併的計數。本課的分歧點在於元素帶著權重（span），彈出時必須把權重轉移給吞併它的元素。凡是「被彈出者的某種計數必須併入彈出者」的題型，就是 Accumulation 變形。
 
 ## Common Mistakes
 
-最常見的錯誤是在彈出較小元素時，忘記將其 span 累加到當前元素的總 span 當中，導致計算出的 span 僅包含當前元素本身與直接前一個元素，遺漏了被跨越的歷史區間。另一個常見錯誤是錯誤維護單調性，例如使用單調遞增堆疊（Monotonic Increasing Stack）而非單調遞減堆疊，導致無法正確吞併較小的歷史價格。此外，在實作類別（Class）時，若未能在物件的狀態中妥善保存堆疊，每次呼叫查詢方法時重新初始化堆疊，將會徹底破壞動態累積的歷史紀錄。
+一、彈出時忘記累加被彈出者的 span：算出來的 span 只剩自己或相鄰一格，整段被吞併的歷史憑空消失。二、彈出條件寫成嚴格小於：等價的價格留在堆疊頂端，依定義本該計入的等價日被漏算。三、類別實作把堆疊宣告在 next 方法內部：每次呼叫都重建空堆疊，歷史全失，永遠回傳 1——堆疊必須在建構式初始化為實例屬性，跨呼叫保存。四、單調方向弄反：維護成遞增堆疊，較大的新價格進來時彈不出任何東西，吞併邏輯完全失效。
 
 ## Complexity
 
-時間複雜度：每次 next 操作的均攤時間複雜度為 O(1)。雖然單次操作可能因為迴圈彈出多個元素而達到 O(N) 的最壞情況，但在整個資料流的生命週期中，每個元素最多被壓入堆疊一次、彈出一次，因此 N 次操作的總時間複雜度為 O(N)。空間複雜度：O(N)，在最壞情況下（例如價格持續遞減），堆疊需要儲存所有的歷史元素及其對應的 span。
+時間複雜度：單次 next 最壞可能彈出 O(n) 個元素，但每筆價格整個生命週期最多被壓入一次、彈出一次，n 次呼叫的總工作量為 O(n)，均攤每次 O(1)——這是最壞情況下的均攤保證，不是機率上的平均。空間複雜度：O(n)，價格嚴格遞減時沒有任何元素會被彈出，堆疊存下全部歷史。
 
 ## Digest
 
-本篇探討使用 Monotonic Stack with Accumulation 解決線上股價跨度問題。核心在於維護一個單調遞減堆疊，儲存 (price, span) 二元組。當新價格進入時，彈出所有小於或等於該價格的歷史元素，並將其 span 進行累加，實現均攤 O(1) 的高效率查詢。TypeScript 與 Python 實作均透過類別封裝狀態，確保跨呼叫的資料連續性。
+Online Stock Span 用單調遞減堆疊解決線上資料流的 span 查詢：堆疊儲存 (price, span) 成對資料，新價格彈出所有小於或等於它的元素並累加其 span，再壓入合併後的結果。彈出安全的理由：被蓋過的價格對未來查詢要嘛整段被吞併、要嘛根本掃不到，只需保留它代表的天數。每筆價格進出堆疊各至多一次，均攤 O(1)、空間 O(n)。實作上以類別把堆疊封裝為實例狀態，讓歷史跨呼叫延續；彈出條件含等號，等價日才不會漏算。
 
 ## TypeScript Tip
 
+用 tuple 陣列存成對資料，`pop()` 的回傳值直接取 span 累加；`noUncheckedIndexedAccess` 下，已確認長度的索引與 `pop()` 用 `!` 收斂型別。
+
 ```typescript
-class StockSpannerOptimized {
-  private stack: number[] = [];
-  private spans: number[] = [];
+import assert from "node:assert";
+
+class StockSpanner {
+  private stack: [price: number, span: number][] = [];
 
   next(price: number): number {
     let span = 1;
     while (
       this.stack.length > 0 &&
-      this.stack[this.stack.length - 1] <= price
+      this.stack[this.stack.length - 1]![0] <= price
     ) {
-      this.stack.pop();
-      span += this.spans.pop()!;
+      span += this.stack.pop()![1];
     }
-    this.stack.push(price);
-    this.spans.push(span);
+    this.stack.push([price, span]);
     return span;
   }
 }
 
-const opt = new StockSpannerOptimized();
-if (opt.next(100) !== 1) throw new Error("assertion failed");
-if (opt.next(80) !== 1) throw new Error("assertion failed");
+const s = new StockSpanner();
+const spans = [100, 80, 60, 70, 60, 75, 85, 85].map((p) => s.next(p));
+assert.deepStrictEqual(spans, [1, 1, 1, 2, 1, 4, 6, 7]);
 ```
 
 ## Python Tip
 
+堆疊放 tuple，`while self.stack and self.stack[-1][0] <= price` 一行同時處理空堆疊與比較；狀態在 `__init__` 初始化，跨 `next` 呼叫保存。
+
 ```python
-class StockSpannerOptimized:
-    def __init__(self):
-        self.prices: list[int] = []
-        self.spans: list[int] = []
+class StockSpanner:
+    def __init__(self) -> None:
+        self.stack: list[tuple[int, int]] = []  # (price, span)
 
     def next(self, price: int) -> int:
         span = 1
-        while self.prices and self.prices[-1] <= price:
-            self.prices.pop()
-            span += self.spans.pop()
-        self.prices.append(price)
-        self.spans.append(span)
+        while self.stack and self.stack[-1][0] <= price:
+            span += self.stack.pop()[1]
+        self.stack.append((price, span))
         return span
 
-opt = StockSpannerOptimized()
-assert opt.next(100) == 1, "assertion failed"
-assert opt.next(80) == 1, "assertion failed"
+s = StockSpanner()
+spans = [s.next(p) for p in [100, 80, 60, 70, 60, 75, 85, 85]]
+assert spans == [1, 1, 1, 2, 1, 4, 6, 7], "span accumulation failed"
 ```
 
 ## Takeaway
 
-掌握 Monotonic Stack 結合 Span 累積的技巧，將歷史碎片的計數進行動態吞併，是解開線上資料流區間統計題目的關鍵。
+彈出時把被吞併者的 span 轉移給吞併者，天數零遺失，均攤 O(1) 回答每筆線上 span 查詢。
 
 ## Tomorrow Preview
 
-明天我們將探討 Monotonic Queue 的進階應用，學習如何在滑動視窗中以 O(1) 時間維護最大值或最小值，進一步擴展堆疊與佇列在陣列區間問題中的威力。
+明天進入 Sum of Subarray Minimums：同樣是 monotonic stack，但改為替每個元素找出它作為最小值時能延伸的左右邊界，計算它對所有 subarray 的總貢獻——把「累計」從一維的天數推廣到區間計數。
 
 ## Today's Challenge
 
-- **901** · 典型的線上資料流查詢問題，需要計算連續小於或等於當前價格的天數，完美對應 Monotonic Stack with Accumulation 架構。
-  - Hint: 在堆疊中同時保存價格與對應的 span，遇到小於等於當前價格的元素時持續彈出並累加 span。
+- **901** · 標準的線上 span 查詢：每天收到一個價格，立刻回答連續往前小於或等於它的天數，正是 (price, span) 成對累計的 Monotonic Stack with Accumulation 原型題。
+  - Hint: 堆疊存 (price, span)；只要頂端價格小於或等於新價格就彈出並累加其 span，最後壓入合併後的成對資料並回傳 span。

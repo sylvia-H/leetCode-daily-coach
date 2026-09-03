@@ -11,88 +11,101 @@ exit_criteria:
 ---
 ## Concept
 
-Backtracking Subset with Duplicates 是處理含有重複元素的集合時，生成所有不重複子集的核心技術。當輸入陣列中包含重複數字，而題目要求輸出的子集不能重複時，若直接使用標準的 Backtracking 組合生成方式，會產生大量結構相同但元素來源索引不同的重複子集。為了根治這個問題，必須引入 Duplicate Skip Pattern，透過預先排序與同層級跳過機制（Duplicate Skip Pattern），確保相同的元素在同一個遞迴深度下只被選擇一次。
+昨天的 Challenge 已經列過 90 Subsets II，今天正式處理它唯一的新東西：**輸入含重複值，輸出的子集不能重複**。先看重複從哪來：`[1, 2, 2]` 丟進昨天任一棵樹，兩個 2 在索引上是不同元素，`[1, 2]` 會被生成兩次（取索引 1 的 2、或取索引 2 的 2），`[2]` 也是。昨天的不重複證明靠的是**索引序列**唯一，而題目要的是**值的多重集合**唯一——同一個多重集合對應多條索引序列，這就是重複的來源。昨天提示的 Set 去重是「生成後再丟掉」，樹仍有 2^n 片葉子；今天要做的是在生成之前就不走那條分支。
+
+做法是把「多條索引序列」收斂成唯一的**標準形**。先排序，讓相等的值連成一段（下稱 run）。用 `start` 樹，迴圈裡加一條規則：**`i > start` 且 `nums[i] === nums[i - 1]` 就跳過**。意思是：在同一個節點（同一個迴圈）裡，同一個值只讓第一次出現的那個索引往下走。
+
+為什麼對？看 `i > start` 的反面：一個與前一個相等的 `nums[i]` 能通過檢查，只有在 `i === start` 時——而 `start` 是上一層選走的索引加一，代表 `i - 1` 剛剛被選。所以**索引 `i` 被選且 `nums[i - 1] === nums[i]`，則 `i - 1` 必也被選**：每個 run 裡被選的索引一定是從 run 開頭數起的連續前綴。於是「這個值取 c 份」只剩一種寫法——取該 run 的前 c 個索引。多重集合與標準索引序列因此一一對應：不同路徑的多重集合必不同（不重複）；任何合法多重集合都有它的標準路徑，且沿著標準路徑走的每一步都是「`i === start`」或「值與前一個不同」，沒有一步會被跳掉（不遺漏）。
 
 ## Thinking
 
-在設計帶有重複元素的 Subsets 演算法時，核心思考邏輯在於如何避免在同一層遞迴中重複使用數值相同的元素。首先必須將輸入陣列進行排序，使相同的元素緊鄰排列。在遞迴迴圈中迭代選擇元素時，檢查當前元素是否與前一個元素相同。若 `i > startIndex` 且 `nums[i] == nums[i-1]`，則代表此元素在當前層級已經被前一個相同的元素代表探索過了，因此可以直接跳過（continue）。這樣做能夠確保我們只會走訪「首次出現」該數值的路徑，從而精準地排除所有重複的子集分支。
+`[1, 2, 2]` 排序後不變。`bt(0)` 存 `[]`；`i = 0` 取 1 → `bt(1)` 存 `[1]`；`i = 1` 取 2 → `bt(2)` 存 `[1, 2]`；`i = 2` 等於這層的 `start`，不跳，取 2 → `bt(3)` 存 `[1, 2, 2]`。退回 `bt(1)`，`i = 2`：`2 > 1` 且 `nums[2] === nums[1]`，**跳過**——第二個 `[1, 2]` 就是在這裡被擋掉。退回 `bt(0)`，`i = 1` 取 2 → `bt(2)` 存 `[2]`，`i = 2` 是這層的 `start`，不跳，存 `[2, 2]`；最後 `bt(0)` 的 `i = 2` 被跳過。共 6 筆，正好等於 1 取 0 或 1 份（2 種）乘以 2 取 0、1、2 份（3 種）。這個乘積公式也是自我檢查的工具：結果數應等於每個相異值的（出現次數 + 1）連乘。
+
+判斷「同一層」的訣竅：**同一層 = 同一個迴圈**。`i > start` 綁的是這個迴圈的起點，不是全域的 `i > 0`；上一層選了 `nums[i - 1]` 進到下一層時 `start` 正好等於 `i`，所以「再取一份 2」永遠放行，被擋的只有「跳過前一份 2 卻想取這一份」的分支。
+
+同一條規則換到取／不取樹怎麼寫？決定「不取 `nums[i]`」時，要連同後面整段相等的值一起不取，直接跳到 run 的尾端之後；取則照常 `i + 1`。兩種寫法產生的標準形完全相同，只是 `start` 樹一行判斷就寫完，實務上多半用它。
 
 ## Pattern Recognition
 
-當題目具備以下特徵時，即可明確辨識出應使用 Backtracking Subset with Duplicates Pattern：第一，輸入的陣列或集合包含重複的數字；第二，要求的輸出結果為所有可能的子集或組合，且結果集內部不能包含重複的組合（Unique Subsets）；第三，問題本質需要窮舉所有的選擇可能性，但又必須在生成過程中進行剪枝以去除對稱的重複狀態。
+輸入含重複值、且題目說「結果不能有重複的組合／子集」，就是這個 Pattern：先排序，再在同一層迴圈用 `i > start && nums[i] === nums[i - 1]` 跳過。它不改變樹的形狀，只剪掉會生成重複多重集合的分支，所以能和 `start` 樹上的其他剪枝（目標和、長度上限）疊加。若題目要的是排列而不是子集，「同一個值的第一次出現」要改用 used 標記來界定，不能靠 `start`。
 
 ## Common Mistakes
 
-最常見的錯誤是搞錯跳過重複元素的層級條件，將「同層級跳過」誤寫成「跨層級跳過」。如果在遞迴時錯誤地限制了不同深度的相同元素（例如限制整個分支不能包含重複值，而非僅限制同一個遞迴調用層級中的相鄰重複值），將會導致正確的合法多重實例子集（例如包含多個相同數值的子集，視題目要求而定）被錯誤地剪除。另一個常見錯誤是忘記在演算法啟動前對輸入陣列進行排序，導致相鄰元素判斷失效。
+第一，**跨層跳過**：寫成 `i > 0 && nums[i] === nums[i - 1]`。run 裡第二個索引在任何層都被擋，`[1, 2, 2]` 只剩 `[]、[1]、[1, 2]、[2]` 四筆，`[1, 2, 2]` 與 `[2, 2]` 全漏——凡是需要同一個值多份的子集都消失。第二，**忘記排序**：`[2, 1, 2]` 直接套規則，兩個 2 不相鄰，`nums[2] === nums[1]` 永遠不成立，`[2]` 出現兩次、`[2, 1]` 與 `[1, 2]` 是同一個子集，得到 8 筆而非 6 筆。第三，**比較對象寫成下一個**，整個條件變成 `nums[i] === nums[i + 1]`：跳掉的是 run 的第一份而不是後面的份，TypeScript 會安靜給 `[]、[1]、[1, 2]、[2]` 四筆，Python 則在尾端 `i + 1` 越界直接 IndexError。第四，**改成「`path` 裡已經有這個值就跳過」**：這是縱向限制，`[1, 2, 2]` 得到 `[]、[1]、[1, 2]、[1, 2]、[2]、[2]`——不但漏掉 `[2, 2]`，`[1, 2]` 與 `[2]` 仍各出現兩次，因為橫向（同一層兩個 2）的重複它根本沒碰到。
 
 ## Complexity
 
-時間複雜度為 O(2^n)，其中 n 是輸入陣列的長度，因為在最壞情況下（所有元素皆不重複）會生成 2^n 個子集，且排序需要 O(n log n) 的時間。空間複雜度為 O(n)，主要取決於遞迴呼叫堆疊的最大深度以及儲存當前路徑所需的記憶體空間。
+排序 O(n log n)。樹的節點數是每個相異值（出現次數 + 1）的連乘，全部相異時最多 2^n，所以最壞時間 O(n · 2^n)（每個節點存拷貝 O(n)）；重複越多，剪掉的分支越多。額外空間 O(n)：遞迴深度最多 n + 1、`path` 最長 n，輸出不計入。
 
 ## Digest
 
-本單元聚焦於 Backtracking Subset with Duplicates。當輸入集合包含重複元素而輸出結果不可重複時，必須透過排序與同層級跳過機制（Duplicate Skip Pattern）來避免生成對稱的重複子集。在 TypeScript 與 Python 的實作中，關鍵在於迴圈內透過 `i > startIndex` 檢查當前元素是否與前一個元素相等，若相等則跳過。此 Pattern 能有效將時間複雜度控制在 O(2^n)，並確保解題的正確性與效能。
+輸入含重複值時，子集的重複來自「同一個多重集合對應多條索引序列」。解法是先排序讓相等值相鄰，再在 `start` 樹的迴圈裡加一條規則：`i > start && nums[i] === nums[i - 1]` 就跳過——同一層只放行同一個值的第一份。它保證每個 run 裡被選的索引一定是從 run 開頭數起的連續前綴，所以「某值取 c 份」只剩一種寫法，多重集合與路徑一一對應，不重不漏。同一層 = 同一個迴圈：上一層剛選了 `nums[i - 1]` 時 `start === i`，再取一份永遠放行。常見錯誤：寫成全域的 `i > 0`（漏掉 `[2, 2]`）、忘記排序（重複殘留）、比較 `i + 1`（跳錯份）。結果數 = 各相異值（次數 + 1）連乘，可用來自檢。時間 O(n · 2^n)、額外空間 O(n)。
 
 ## TypeScript Tip
 
-```typescript
-import assert from "node:assert";
+拷貝後再排序、用數值比較器；測資用未排序輸入，所以少了排序、把 `i > start` 寫成 `i > 0`、或拿掉跳過那一行都會被斷言抓到。
 
-function verifyUniqueSubsets(): void {
-  const nums = [1, 2, 2];
-  nums.sort((a, b) => a - b);
-  const results = new Set<string>();
-  
-  function backtrack(start: number, current: number[]) {
-    results.add(JSON.stringify(current));
-    for (let i = start; i < nums.length; i++) {
-      if (i > start && nums[i] === nums[i - 1]) continue;
-      current.push(nums[i]);
-      backtrack(i + 1, current);
-      current.pop();
+```typescript
+import { strict as assert } from 'node:assert';
+
+function subsetsWithDup(nums: number[]): number[][] {
+  const a = [...nums].sort((x, y) => x - y); // 相等值才會相鄰
+  const res: number[][] = [];
+  const path: number[] = [];
+  const bt = (start: number): void => {
+    res.push([...path]);
+    for (let i = start; i < a.length; i++) {
+      if (i > start && a[i] === a[i - 1]) continue; // 同層只放行第一份
+      path.push(a[i]!);
+      bt(i + 1);
+      path.pop();
     }
-  }
-  backtrack(0, []);
-  assert.strictEqual(results.size, 6);
+  };
+  bt(0);
+  return res;
 }
 
-verifyUniqueSubsets();
+assert.deepEqual(subsetsWithDup([2, 1, 2]),
+  [[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]);
+assert.equal(subsetsWithDup([4, 4, 4, 1, 4]).length, 10); // 2 × 5
 ```
 
 ## Python Tip
 
+`sorted(nums)` 回傳新 list，不動呼叫端的資料；結果數用（次數 + 1）連乘自檢。
+
 ```python
-import json
+def subsets_with_dup(nums: list[int]) -> list[list[int]]:
+    a = sorted(nums)  # 相等值才會相鄰
+    res: list[list[int]] = []
+    path: list[int] = []
 
-def verify_unique_subsets() -> None:
-    nums = [1, 2, 2]
-    nums.sort()
-    results = set()
-    
-    def backtrack(start: int, current: list[int]) -> None:
-        results.add(json.dumps(current))
-        for i in range(start, len(nums)):
-            if i > start and nums[i] == nums[i - 1]:
-                continue
-            current.append(nums[i])
-            backtrack(i + 1, current)
-            current.pop()
-            
-    backtrack(0, [])
-    assert len(results) == 6
+    def bt(start: int) -> None:
+        res.append(path[:])
+        for i in range(start, len(a)):
+            if i > start and a[i] == a[i - 1]:
+                continue  # 同層只放行第一份
+            path.append(a[i])
+            bt(i + 1)
+            path.pop()
 
-verify_unique_subsets()
+    bt(0)
+    return res
+
+assert subsets_with_dup([2, 1, 2]) == [[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]
+assert len(subsets_with_dup([4, 4, 4, 1, 4])) == 10  # 2 * 5
+assert subsets_with_dup([]) == [[]]
 ```
 
 ## Takeaway
 
-排序陣列並在同層級迴圈中檢查 i > startIndex 且 nums[i] == nums[i-1]，是解決重複子集問題的黃金法則。
+排序後，同一個迴圈裡 `i > start && nums[i] === nums[i - 1]` 就跳過：同一層只放行同一個值的第一份。
 
 ## Tomorrow Preview
 
-明天我們將深入探討 Backtracking Combination Sum 系列的變化題型，學習如何在允許重複選取同一個元素的情況下求解特定總和，並掌握動態邊界與剪枝的最佳化技巧。
+明天在同一棵 `start` 樹上加「目標和」：Combination Sum 讓元素可以無限次重複使用，遞迴時把 `i` 原樣傳回、並沿途扣減目標。再之後的 Combination Sum II 會把今天的同層跳過與目標和扣減合在一起；Permutation with Duplicates 則把「同一個值的第一份」改用 used 標記來界定。
 
 ## Today's Challenge
 
-- **90** · 題目要求尋找含有重複數字的整數集合的所有不重複子集，完美對應 Duplicate Skip Pattern 的核心應用場景。
-  - Hint: 務必先對輸入陣列進行排序，並在遞迴迴圈中透過 i > startIndex 與 nums[i] == nums[i-1] 來正確略過同層重複分支。
+- **90** · 昨天已列過（提示用 Set 去重）；今天改在樹上剪：排序後在同一層迴圈跳過與前一個相等的值，不生成重複就不必事後丟。
+  - Hint: `const a = [...nums].sort((x, y) => x - y)`；`bt(start)` 進入就存拷貝；迴圈裡 `i > start && a[i] === a[i - 1]` 就 `continue`。用（次數 + 1）連乘核對筆數。

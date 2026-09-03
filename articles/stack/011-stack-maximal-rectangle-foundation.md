@@ -11,61 +11,81 @@ exit_criteria:
 ---
 ## Concept
 
-Stack Maximal Rectangle Foundation 是解決柱狀圖中最大矩形面積問題的核心技術。在包含多個不同高度直方柱的序列中，要找出任一柱子能擴展的最大矩形面積，關鍵在於尋找該柱子左右兩側第一個比它矮的柱子位置。這決定了以當前柱子高度為高的最大橫向寬度。傳統暴力解法需要對每一根柱子向左右掃描，時間複雜度高達 O(n^2)。透過 Monotonic Stack 維持單調遞增的柱子索引序列，我們可以在 O(n) 的線性時間內一次完成所有邊界的確定與面積計算。
+Largest Rectangle in Histogram：給定等寬直方柱的高度序列，求能完整放進直方圖的最大矩形面積。第一步是把無窮多種候選矩形收斂成 n 種：任何矩形的高度都受限於它覆蓋區間內最矮的柱子，而高度沒貼到這個上限的矩形，直接拉高就能變大——所以最大矩形必然可以寫成「以某根柱 j 的高度為高、向兩側撐到第一根嚴格更矮的柱子為止」。設 L 是 j 左側最近的嚴格更矮者（不存在則 -1）、R 是右側最近的嚴格更矮者（不存在則 n），開區間 (L, R) 內共 R - L - 1 根柱都不比 j 矮，候選面積為 heights[j] * (R - L - 1)。逐柱枚舉這 n 個候選、取最大即為答案。這與昨天是同一副 previous / next less 邊界骨架：昨天用邊界數區間個數，今天用邊界量最大寬度。
 
 ## Thinking
 
-思考這個問題時，核心挑戰在於如何有效率地為每個長條柱（bar）決定其左右邊界。若使用 Monotonic Stack（單調遞增堆疊），我們可以在遍歷直方圖時，將柱子的索引依對應高度遞增的順序存入堆疊中。當遇到一個高度小於堆疊頂端高度的新柱子時，這意味著堆疊頂端柱子的右邊界已經確切找到（即當前新柱子的索引）。此時我們可以將堆疊頂端元素彈出，並計算以該被彈出柱子高度為高的矩形面積。此時，被彈出柱子彈出後的新堆疊頂端元素，即為該柱子左側第一個小於它的柱子索引。透過這種方式，每個柱子最多進出堆疊一次，實現了高效能的邊界掃描。
+邊界仍由單調堆疊一趟求出：堆疊存索引、對應高度由底至頂遞增。掃到 i 時，只要頂端 j 的高度 ≥ heights[i] 就彈出結算：R = i、L = 彈出後的新頂端（堆疊空則 -1），面積 heights[j] * (i - L - 1)。彈出條件沿用昨天的「≥ 就彈」，去重效果也一致：同高並列的柱子中，只有最右那根結算時左界能跨越所有同高同伴、量到完整寬度；先被彈出的同伴右界停在同高鄰居上，量到的寬度偏小。這在昨天是正確性要件（每個子陣列恰計一次），在今天卻只是無害的慣例——我們要的是最大值，完整矩形已被最右那根算進候選，偏小的候選不影響取 max。收尾用哨兵：掃描結束時堆疊仍殘留一段高度遞增的柱子（右側始終沒有更矮者），在尾端補一根高度 0 的虛擬柱，把它們全部彈出、R 統一取 n。以 [2, 1, 5, 6, 2, 3] 走一遍：索引 1 的高度 1 先彈出索引 0（高 2、寬 1、面積 2）；掃到索引 4 的高度 2 時連彈 6（寬 1、面積 6）與 5（寬 2、面積 10）；哨兵階段再依序結算 3、2、1，答案 10。
 
 ## Pattern Recognition
 
-當題目要求在柱狀圖（Histogram）或二維網格（Grid）中尋找最大矩形面積、最大子矩形或尋找左右第一個小於（或大於）特定元素的邊界時，應立即聯想並套用 Monotonic Stack Pattern。這類問題的共同特徵是：元素向兩側擴展的有效範圍取決於遇到的第一個障礙物（即比自身矮的元素）。透過維護一個單調堆疊，我們能夠在常數均攤時間內確定每個元素的生命週期邊界。
+訊號：在直方圖或可壓成直方圖的結構中求最大矩形；更一般地，凡是「以每個元素為高度瓶頸向兩側擴張，範圍受第一個更小元素阻擋」的最值問題都適用。二維網格的最大矩形常見化法正是逐列把上方連續的格子累積成柱高，再對每列的直方圖重複套用本課。反例：求最大正方形（DP 遞推更直接）、或矩形高度不受最矮柱限制的問題，不要硬套。
 
 ## Common Mistakes
 
-最常見的錯誤包含忘記在直方圖陣列前後加入哨兵值（Sentinel Value，例如高度為 0 的柱子），導致堆疊中剩餘的元素無法在迴圈結束後被正確彈出並計算面積。另一個常見錯誤是混淆了堆疊中儲存的是「柱子的高度」還是「柱子的索引」。為了有效計算寬度，堆疊必須儲存索引（Index），否則無法精確計算左右邊界之間的距離差。此外，未正確處理所有柱子高度均相同或嚴格遞增的邊界情況，也容易引發索引越界錯誤。
+一、堆疊存高度而非索引：比較夠用，寬度算不出來——答案與位置或寬度相關就存索引，這個判準與先前的距離結算課一脈相承。二、忘記哨兵或收尾：嚴格遞增的輸入整趟零彈出，不清堆疊會回傳 0。三、寬度公式寫成 i - j：被彈出者的左牆不是它自己，而是彈出後的新頂端 L，正確寬度是 i - L - 1；寫成 i - j 會把左側較高或同高、本可納入矩形的柱子切掉。四、在等號上過度糾結：彈出條件改成嚴格小於也能得到正確最大值（換成最左那根同高柱量到完整寬度），但堆疊會殘留同高柱，且與昨天的慣例分裂——統一「≥ 就彈」讓兩課共用同一副骨架與同一套心智模型。
 
 ## Complexity
 
-時間複雜度為 O(n)，因為陣列中的每個元素最多被壓入堆疊一次、彈出一次。空間複雜度為 O(n)，用於儲存單調堆疊以及可能需要進行邊界填充的修改後陣列。
+時間 O(n)：每根柱至多壓入一次、彈出一次，含哨兵共 n + 1 輪，while 的彈出總量受壓入總量限制，攤銷後線性。空間 O(n)：高度遞增的輸入讓掃描階段零彈出，堆疊存滿全部索引。
 
 ## Digest
 
-Stack Maximal Rectangle Foundation 是利用 Monotonic Stack 解決直方圖最大矩形面積的核心方法。透過維持遞增堆疊，我們能在 O(n) 時間內找出每根柱子左右兩側第一個較矮的邊界。TypeScript 與 Python 實作時，常在陣列前後補 0 作為哨兵值，簡化堆疊清理邏輯。
+直方圖最大矩形：最大解必以某柱 j 為高度瓶頸，寬度撐到左右第一根嚴格更矮者之間，面積 heights[j] * (R - L - 1)。單調遞增堆疊（存索引）一趟求邊界：高度 ≥ 當前者即彈出結算，R 是當前索引、L 是新頂端（空則 -1）；尾端補高度 0 的哨兵，把殘留的遞增柱全部以 R = n 結清。同高柱由最右那根量到完整寬度，與昨天的去重慣例一致；因為只取最大值，其餘偏小候選無害。時間 O(n)、空間 O(n)。
 
 ## TypeScript Tip
 
+哨兵用「迴圈多走一輪、當前高度視為 0」實作，不必真的複製陣列；`noUncheckedIndexedAccess` 下已驗證的索引用 `!` 收斂。
+
 ```typescript
-function tsTipExample(): void {
-  const heights = [2, 1, 5];
-  const padded = [0, ...heights, 0];
-  if (padded.length !== 5) {
-    throw new Error("Sentinel padding failed");
+function largestRectangleArea(heights: number[]): number {
+  let best = 0;
+  const stack: number[] = []; // 存索引，對應高度由底至頂遞增
+  for (let i = 0; i <= heights.length; i++) {
+    const cur = i < heights.length ? heights[i]! : 0; // 尾端哨兵 0
+    while (stack.length > 0 && heights[stack[stack.length - 1]!]! >= cur) {
+      const h = heights[stack.pop()!]!;
+      const left = stack.length > 0 ? stack[stack.length - 1]! : -1;
+      best = Math.max(best, h * (i - left - 1));
+    }
+    stack.push(i);
   }
+  return best;
 }
-tsTipExample();
+if (largestRectangleArea([2, 1, 5, 6, 2, 3]) !== 10) throw new Error("assertion failed");
+if (largestRectangleArea([5, 5]) !== 10) throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
-```python
-def py_tip_example() -> None:
-    heights = [2, 1, 5]
-    padded = [0] + heights + [0]
-    assert len(padded) == 5, "Sentinel padding failed"
+`range(len(heights) + 1)` 多走的最後一輪就是哨兵；條件運算式把越界的那一輪高度視為 0。
 
-py_tip_example()
+```python
+def largest_rectangle_area(heights: list[int]) -> int:
+    best = 0
+    stack: list[int] = []  # 存索引，對應高度由底至頂遞增
+    for i in range(len(heights) + 1):
+        cur = heights[i] if i < len(heights) else 0  # 尾端哨兵 0
+        while stack and heights[stack[-1]] >= cur:
+            h = heights[stack.pop()]
+            left = stack[-1] if stack else -1
+            best = max(best, h * (i - left - 1))
+        stack.append(i)
+    return best
+
+assert largest_rectangle_area([2, 1, 5, 6, 2, 3]) == 10
+assert largest_rectangle_area([5, 5]) == 10  # 同高：最右那根量到完整寬度 2
 ```
 
 ## Takeaway
 
-運用單調堆疊與哨兵技巧，在 O(n) 時間內搞定柱狀圖左右邊界與最大矩形面積！
+每根柱當高度瓶頸：左右第一根更矮者界定寬度 R - L - 1，單調堆疊加哨兵一趟 O(n) 取得最大矩形面積。
 
 ## Tomorrow Preview
 
-明天我們將基於今日的 Stack Maximal Rectangle Foundation，進一步將一維的柱狀圖延伸應用至二維矩陣中，探討 LeetCode 85. Maximal Rectangle。我們將學習如何將二維網格轉化為每一層的累積直方圖，並重複運用單調堆疊高效求解矩陣內的最大矩形。
+stack 模組到此收官——從 LIFO 與陣列實作、括號配對、碰撞與求值模擬，一路走到單調堆疊的距離結算、環狀走訪、span 累計與左右邊界貢獻法，「彈出即結算」的骨架已經完整。明天起進入新的模組，用同樣的節奏繼續推進。
 
 ## Today's Challenge
 
-- **84** · LeetCode 84 正是求直方圖中最大矩形面積的標準題型，完美對應使用 Monotonic Stack 來尋找左右第一小元素的經典場景。
-  - Hint: 在陣列前後各補一個 0 可以自動觸發堆疊的結算清理，避免遺漏最高或最後的長條柱。
+- **84** · 直方圖最大矩形的正典：把「每柱當高度瓶頸」的收斂論證與單調堆疊的邊界結算合成一題，哨兵與寬度公式的坑全在這裡。
+  - Hint: 堆疊存索引，高度 ≥ 當前者就彈出；面積為 heights[j] * (i - L - 1)，L 是彈出後的新頂端；尾端補 0 清空堆疊。

@@ -11,70 +11,85 @@ exit_criteria:
 ---
 ## Concept
 
-Stack Array Implementation 是一種透過封裝底層動態陣列（Dynamic Array），將操作限制在線性結構末端以實現 LIFO（Last-In, First-Out）特性的資料結構。Stack 的核心精神在於僅允許對堆疊頂端（Top）進行存取，所有插入（push）與刪除（pop）操作皆發生於陣列尾端，藉此維持高效能表現。在記憶體管理中，利用動態陣列實作 Stack 能夠以 O(1) 的均攤時間複雜度（Amortized Time Complexity）完成常數級別的元素增刪，是理解更階層資料結構與演算法設計的基礎。
+用動態陣列實作 stack，本質是一層「限制介面」的封裝（Dynamic Array Wrapper）：陣列本來什麼位置都能讀寫，我們刻意只暴露對**尾端**的操作，讓尾端扮演堆疊頂端。對應關係很直接——push 是在尾端附加一個元素，pop 是移除尾端元素，top 是讀取索引 `length - 1`，isEmpty 是檢查 `length === 0`。為什麼選尾端而不是開頭？陣列元素在記憶體中連續排列，在開頭插入或刪除，必須把後面**全部**元素搬移一格，成本 O(n)；在尾端操作則什麼都不用搬，直接讀寫最後一格即可。這裡的封裝重點不是「增加功能」，而是「**拿走功能**」——把隨機寫入、中段插入都藏起來，呼叫端就不可能不小心破壞 LIFO 的結構約束。
 
 ## Thinking
 
-當我們需要從頭打造一個 Stack 資料結構時，首要任務是決定資料的儲存媒介與堆疊頂端（Top）的對應關係。在思考過程中，我們應將陣列的尾端（Tail）視為 Stack 的頂端。如此一來，新增元素（push）與移除元素（pop）皆直接對應到陣列尾端的操作，避免動態陣列因在前端或中間插入、刪除元素所需進行的大規模記憶體搬移。同時，我們需要維護一個指標或追蹤變數來記錄當前堆疊的大小或頂端索引，確保 isEmpty、top 等基本操作能在正確的時間與空間限制內完成。
+從零設計時依序回答三個問題。一、頂端對應到哪裡？答：陣列尾端，頂端索引恆為 `length - 1`，這個不變式讓四個操作都變成一行。二、pop 實際上做了什麼？只是把有效長度減一——被移除的那格不需要真的清空或歸還記憶體，之後的 push 直接覆寫它。三、陣列滿了怎麼辦？動態陣列採**倍增策略**：容量不足時配置一塊兩倍大的新空間，把 n 個元素搬過去。單次擴容是 O(n)，但從容量 1 開始倍增，做完 n 次 push 的擴容總搬移量是 1 + 2 + 4 + … + n，這個等比級數合計小於 2n——把總帳攤平到 n 次 push，**每次平均成本仍是常數**，這就是「攤銷 O(1)」的完整論證。在 TypeScript 與 Python 裡，內建的 array / list 已經替你做完容量管理，wrapper 只需要負責介面約束。
 
 ## Pattern Recognition
 
-當題目要求我們從零開始實作一個受限制的線性資料結構，或是需要自訂具備特定行為的堆疊容器（例如要求在常數時間內取得最小值、限制容量等），我們即可辨識出此時適用 Dynamic Array Wrapper 模式。此 Pattern 的關鍵特徵在於不需要複雜的指標節點連結，而是透過現有的動態陣列進行邊界與存取行為的約束，將一般的陣列操作包裝成符合 LIFO 規範的介面。
+當題目要求「設計／實作」一個有特定介面與複雜度保證的容器，就是 Dynamic Array Wrapper 出場的時機：例如要求常數時間取得最小值、限制容量上限、或統計歷史狀態。辨識關鍵：不需要節點與指標的鏈結結構，只需要在現成動態陣列外面包一層存取規則。延伸思考：若介面要多支援一種 O(1) 查詢（如目前最小值），常見解法是**同步維護一個輔助陣列**，與主堆疊一起 push、一起 pop，讓額外資訊也遵守 LIFO 節奏。
 
 ## Common Mistakes
 
-最常見的錯誤是將 Stack 的頂端誤設為陣列的開頭（Index 0）。若在陣列開頭進行 push 或 pop 操作，每次新增或移除元素都會迫使後續的所有元素向右或向左平移，導致時間複雜度從 O(1) 惡化為 O(n)。另一個常見錯誤則是未妥善處理邊界條件，例如在堆疊為空時執行 pop 或 top 操作卻未進行防禦性檢查，導致系統拋出索引超出範圍的例外錯誤。
+一、把頂端設在陣列開頭：用 `unshift`/`shift`（Python 的 `insert(0, x)`/`pop(0)`）進出，邏輯仍是 LIFO，但每次操作都搬移全部元素，O(1) 惡化成 O(n)。二、空堆疊防禦缺席：pop 與 top 在空堆疊上，JavaScript 安靜回傳 `undefined`、Python 拋 `IndexError`；介面要嘛回傳 `undefined`/`None`、要嘛拋錯，但必須挑一種並讓呼叫端知道。三、封裝後又繞過封裝：外部直接對內部陣列 `splice` 或改索引，不變式立刻失效——TypeScript 的 `private` 只在編譯期擋誤用，執行期仍可存取；要真正的執行期私有，得改用 `#` 開頭的私有欄位。四、誤解攤銷：攤銷 O(1) 不等於每次都 O(1)，觸發擴容的那一次仍是 O(n)；對單次延遲敏感的場景，應預先配置足夠容量。
 
 ## Complexity
 
-時間複雜度：push、pop、top 與 isEmpty 操作在均攤情況下皆為 O(1)。雖然動態陣列在容量不足時需要進行擴容並重新配置記憶體（此時單次操作為 O(n)），但透過倍增策略（Doubling Strategy），擴容的成本可以被均攤到後續的多次 push 操作中，因此均攤時間複雜度維持 O(1)。空間複雜度：O(n)，其中 n 為堆疊中儲存的元素數量。
+push 為攤銷 O(1)：擴容雖是 O(n)，但倍增策略讓 n 次 push 的總搬移量小於 2n。pop、top、isEmpty 為嚴格 O(1)：各只讀寫尾端一格或長度變數。空間為 O(n)：倍增最多預留一倍閒置容量，仍是線性。
 
 ## Digest
 
-本篇探討了 Stack Array Implementation 的核心概念，學習如何利用 Dynamic Array Wrapper 建立符合 LIFO 特性的堆疊。重點在於將陣列尾端作為堆疊頂端，確保 push 與 pop 操作能達到 O(1) 的均攤時間複雜度。透過 TypeScript 與 Python 的實作演練，我們掌握了基本的邊界處理與類別封裝技巧。
+把陣列尾端當堆疊頂端：push 附加尾端、pop 長度減一、top 讀 `length - 1`、isEmpty 檢查長度為零，全部免搬移。選尾端的理由：開頭插入刪除要位移全部元素（O(n)），尾端什麼都不用動。攤銷論證：倍增擴容下，n 次 push 的總搬移量是等比級數 1 + 2 + 4 + … + n < 2n，攤平每次 O(1)；但單次擴容仍是 O(n)，攤銷不是「每次都快」。封裝的意義是拿走功能——只露出四個操作，LIFO 不變式就不可能被呼叫端破壞。防禦邊界：空堆疊 pop/top，JavaScript 回 undefined、Python 拋 IndexError，介面要明確選一種行為。
 
 ## TypeScript Tip
 
+用 `private` 藏住內部陣列，介面只露出四個操作；空堆疊時 `pop`/`top` 一致地回傳 `undefined`：
+
 ```typescript
-class SafeStack<T> {
+import assert from "node:assert";
+class Stack<T> {
   private data: T[] = [];
-  push(val: T): void { this.data.push(val); }
+  push(v: T): void { this.data.push(v); }
   pop(): T | undefined { return this.data.pop(); }
-  peek(): T | undefined { return this.data[this.data.length - 1]; }
-  get size(): number { return this.data.length; }
+  top(): T | undefined { return this.data[this.data.length - 1]; }
+  isEmpty(): boolean { return this.data.length === 0; }
 }
-const st = new SafeStack<string>();
-st.push("hello");
-if (st.size !== 1) throw new Error("assertion failed");
+const s = new Stack<number>();
+assert.strictEqual(s.pop(), undefined); // 空堆疊：一致回傳 undefined
+s.push(1);
+s.push(2);
+assert.strictEqual(s.top(), 2);
+assert.strictEqual(s.pop(), 2);
+assert.strictEqual(s.pop(), 1);
+assert.ok(s.isEmpty());
 ```
 
 ## Python Tip
 
+Python 以底線慣例標示內部 list，空堆疊時 `pop`/`top` 一致地回傳 `None` 而非拋錯：
+
 ```python
-class SafeStack:
+class Stack:
     def __init__(self) -> None:
         self._data: list[int] = []
-    def push(self, val: int) -> None:
-        self._data.append(val)
+    def push(self, v: int) -> None:
+        self._data.append(v)
     def pop(self) -> int | None:
         return self._data.pop() if self._data else None
-    def peek(self) -> int | None:
+    def top(self) -> int | None:
         return self._data[-1] if self._data else None
+    def is_empty(self) -> bool:
+        return not self._data
 
-st = SafeStack()
-st.push(42)
-assert st.peek() == 42, "assertion failed"
+s = Stack()
+assert s.pop() is None  # 空堆疊：一致回傳 None
+s.push(1)
+s.push(2)
+assert s.top() == 2 and s.pop() == 2
+assert s.pop() == 1 and s.is_empty()
 ```
 
 ## Takeaway
 
-Stack Array Implementation 以陣列尾端作為頂端，封裝出 O(1) 均攤時間複雜度的 LIFO 結構。
+陣列尾端當頂端，push/pop 免搬移；倍增擴容的總量是等比級數，攤平後 push 仍是攤銷 O(1)。
 
 ## Tomorrow Preview
 
-明天我們將探討經典的 Monotonic Stack（單調堆疊）樣式，學習如何在維持堆疊單調性的同時，於 O(n) 時間內解決尋找下一個更大或更小元素的高階問題。
+明天把 stack 用在第一個經典應用——括號匹配：最晚打開的括號必須最先閉合，正是 LIFO 的天然舞台。
 
 ## Today's Challenge
 
-- **155** · Min Stack 需要在標準的 Stack Array Implementation 基礎上額外維護一個輔助追蹤結構，以確保取得最小值時的時間複雜度為 O(1)，完美契合 Dynamic Array Wrapper 的設計哲學。
-  - Hint: 可以考慮使用兩個獨立的動態陣列，一個用於儲存所有元素，另一個用於同步追蹤當前堆疊中的最小值。
+- **155** · 要在標準 stack 介面之外再提供 O(1) 取得最小值，考驗你如何在不破壞 LIFO 介面的前提下同步維護輔助資訊。
+  - Hint: 用第二個陣列同步記錄「每一層當下的最小值」：push 時存入 min(新值, 目前最小)（堆疊為空時直接存新值），pop 時一起彈出，最小值永遠在輔助陣列頂端。

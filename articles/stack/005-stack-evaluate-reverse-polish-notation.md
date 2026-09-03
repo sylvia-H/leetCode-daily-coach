@@ -11,58 +11,83 @@ exit_criteria:
 ---
 ## Concept
 
-Stack Evaluate Reverse Polish Notation 是一種利用 Stack 資料結構來計算後綴表達式（Postfix Expression，又稱 Reverse Polish Notation, RPN）數值的核心演算法。在 RPN 表達式中，運算子會置於運算元的後面（例如 3 4 + 代表 3 + 4），這項特性消除了對括號的需求，並使電腦能夠透過單一線性掃描與 Stack 來精確地執行運算。
+後綴表達式（Postfix Expression，又稱 Reverse Polish Notation，RPN）把運算子寫在它的兩個運算元之後：中綴的 `(3 + 4) * 5` 寫成 `3 4 + 5 *`。這種寫法把「先算哪裡」完整編碼進符號的排列順序——運算子一出現，它需要的運算元必定已經就緒，因此不需要括號，也不需要優先級規則。求值只要一趟線性掃描搭配一個 stack：數字進來就推入，運算子進來就取出最近的兩個值計算、把結果推回。stack 在這裡扮演「等待被使用的值」的暫存區：每個還沒遇到自己運算子的運算元（或已折疊完成的子結果）都排隊在裡面，LIFO 的順序恰好對應「最近完成的值最先被使用」。
 
 ## Thinking
 
-當我們面對表達式求值問題時，傳統的中綴表達式（Infix Expression）需要處理複雜的運算子優先級與括號配對。然而，在 RPN 中，運算子的出現順序即代表了執行的順序。因此，我們可以將 Stack 視為一個暫存尚未處理之運算元的容器。當我們從左到右掃描表達式時：若遇到數字（運算元），則直接將其 Push 進 Stack 中；若遇到運算子，則從 Stack 中 Pop 出兩個運算元，進行運算後再將結果 Push 回 Stack 中。當掃描結束時，Stack 頂端留下的唯一數值即為最終的計算結果。
+流程本身很短：由左而右掃描 token，遇到數字就推入 stack；遇到運算子，先彈出的是右運算元 r、後彈出的是左運算元 l，計算 `l op r` 後把結果推回；掃描結束時 stack 剩下的唯一值就是答案。
+
+為什麼這樣是對的？關鍵不變式：掃描到任何位置時，stack 由底到頂存放的，正是已讀前綴中「尚未被使用的子運算式的值」，順序與它們完成的先後一致。RPN 的定義保證每個運算子緊跟在它的兩個運算元（各自可能是一段已完成的子表達式）之後，所以運算子出現的那一刻，右運算元是最近完成的值——正好在頂端；左運算元是次近完成的值——正好在頂端下方。彈出兩個、推回一個，不變式繼續成立。
+
+再看結束狀態：合法的 RPN 裡，運算元個數恰比運算子多一，而每個運算子淨消耗一個值（彈二推一），因此掃描完畢時 stack 恰好剩一個值，這也說明了為什麼答案就是最後留在裡面的那個。
 
 ## Pattern Recognition
 
-當題目描述涉及「後綴表達式」、「逆波蘭表達式」、或任何「運算子緊跟在運算元之後」的求值情境時，應立即識別出 Expression Evaluation 的 Pattern。此 Pattern 的核心特徵在於不需要考慮運算子優先級（Precedence），因為表達式的順序已經明確界定了計算次序，透過 Stack 的 LIFO（Last-In, First-Out）特性剛好能夠完美對應運算元與運算子的消耗關係。
+三個訊號指向 Expression Evaluation：輸入是被線性化的運算序列（後綴，或需改由右至左掃描的前綴）；運算子與它的運算元在序列中緊鄰（緊跟其後或緊接其前）；每一步只依賴「最近完成的值」。這正是 stack 的 LIFO 能直接對應的結構。反過來說，若輸入是帶括號與優先級的中綴表達式，單一運算元 stack 不夠用——那需要再配一個運算子 stack 的進階解法；本課先把最乾淨的後綴版本練熟，讓「彈二推一」成為反射動作。
 
 ## Common Mistakes
 
-在實作此演算法時，最常見的錯誤是混淆了 Pop 出來的前後運算元順序。對於非交換律運算（Non-commutative Operations）如減法（-）與除法（/），從 Stack 中彈出的第一個元素實際上是右運算元（Right Operand），而彈出的第二個元素才是左運算元（Left Operand）。若順序顛倒，會導致運算結果錯誤。此外，未正確處理整數除法向零截斷（Truncation towards Zero）也是常見的細節失誤。
+一、非交換律運算的順序顛倒：先彈出的是右運算元，減法與除法必須寫成「後彈出減（除以）先彈出」。寫反的話 `6 2 -` 會算成 -4 而不是 4。二、截斷方向錯誤：題目通常要求除法向零截斷。JavaScript 的 `/` 是浮點除法，要套 `Math.trunc`；Python 的 `//` 是向負無限大的地板除，`-5 // 2` 得 -3 而非 -2，必須改用 `int(a / b)`。三、把負數 token 誤判成運算子：判斷減號必須用「整個 token 恰等於 `-`」，而不是「開頭是減號」——`-5` 是數字。四、忘記把運算結果推回 stack：結果是折疊後的子運算式的值，之後可能再被別的運算子當成運算元，不推回，運算鏈就斷了。
 
 ## Complexity
 
-時間複雜度為 O(n)，其中 n 為表達式中的元素數量。我們對陣列進行了一次線性掃描，每個元素最多被 Push 與 Pop 各一次，因此時間開銷是線性的。空間複雜度亦為 O(n)，在最壞的情況下（例如全部都是運算元），Stack 需要儲存所有的數字。
+時間複雜度 O(n)：每個 token 恰被處理一次，數字至多推入、彈出各一次，運算子只做常數次操作。空間複雜度 O(n)：最壞情況（例如所有運算元都排在前面）stack 需同時容納約 (n + 1) / 2 個值。
 
 ## Digest
 
-Stack Evaluate Reverse Polish Notation 是利用 Stack 解決後綴表達式求值的經典演算法。透過線性掃描，遇數字則入棧，遇運算子則彈出兩個運算元計算並將結果推回棧中。此方法巧妙地利用 LIFO 特性解決了計算順序問題，時間與空間複雜度均為 O(n)。
+RPN 求值：數字推入 stack，運算子彈出兩值（先出為右、後出為左）計算後推回。以 `3 4 + 5 *` 為例：推 3、推 4，遇 `+` 彈出 4 與 3 得 7 推回，推 5，遇 `*` 彈出 5 與 7 得 35，結束時 stack 恰剩一值即答案。正確性來自不變式：stack 存的是所有尚未被使用的子運算式的值，運算子出現時它的兩個運算元剛好在頂端。實作上注意除法向零截斷（JS 用 `Math.trunc`、Python 用 `int(a / b)`），且負數 token 不是減號。O(n) 時間、O(n) 空間。
 
 ## TypeScript Tip
 
+JS 的 `/` 是浮點除法，向零截斷用 `Math.trunc`；`pop()` 回傳 `number | undefined`，確定非空時用 `!` 收斂型別。
+
 ```typescript
-// JavaScript/TypeScript 中的除法預設為浮點數運算，整數除法需使用 Math.trunc() 來實現向零截斷。
-const a = -5;
-const b = 2;
-const result = Math.trunc(a / b); // -2
-if (result !== -2) throw new Error("Assertion failed");
+function evalRPN(tokens: string[]): number {
+  const st: number[] = [];
+  for (const t of tokens) {
+    if (t === "+" || t === "-" || t === "*" || t === "/") {
+      const r = st.pop()!, l = st.pop()!;
+      st.push(t === "+" ? l + r : t === "-" ? l - r : t === "*" ? l * r : Math.trunc(l / r));
+    } else {
+      st.push(Number(t));
+    }
+  }
+  return st.pop()!;
+}
+if (evalRPN(["4", "13", "5", "/", "+"]) !== 6) throw new Error("assertion failed");
+if (evalRPN(["-5", "2", "/"]) !== -2) throw new Error("assertion failed");
 ```
 
 ## Python Tip
 
+Python 的 `//` 向負無限大取整（`-5 // 2 == -3`），向零截斷要用 `int(a / b)`；運算子表用字典配 lambda 最簡潔。
+
 ```python
-# Python 的地板除法 // 會向負無限大靠攏（例如 -5 // 2 為 -3），
-# 為了符合題目要求的向零截斷（Truncation towards Zero），應使用 int(a / b)。
-a = -5
-b = 2
-result = int(a / b) # -2
-assert result == -2, "Assertion failed"
+def eval_rpn(tokens: list[str]) -> int:
+    ops = {"+": lambda a, b: a + b, "-": lambda a, b: a - b,
+           "*": lambda a, b: a * b, "/": lambda a, b: int(a / b)}
+    stack: list[int] = []
+    for t in tokens:
+        if t in ops:
+            r = stack.pop()
+            stack.append(ops[t](stack.pop(), r))
+        else:
+            stack.append(int(t))
+    return stack.pop()
+
+assert eval_rpn(["4", "13", "5", "/", "+"]) == 6, "assertion failed"
+assert eval_rpn(["-5", "2", "/"]) == -2, "assertion failed"
 ```
 
 ## Takeaway
 
-運用 Stack 暫存運算元，遇到運算子即時彈出計算，注意非交換律運算的左右運算元順序及截斷方向。
+數字推入、運算子彈二推一；先彈出的是右運算元，除法向零截斷——順序與截斷是最容易踩的兩個坑。
 
 ## Tomorrow Preview
 
-明天我們將探討 Stack 在單調性質（Monotonic Stack）上的應用，學習如何在線性時間內尋找陣列中下一個更大或更小的元素。
+明天進入 Remove Adjacent Duplicates：同樣是「目前元素與 stack 頂端互動」，但規則從「運算子消耗運算元」變成「相同字元互相抵銷」，並觀察消除後新相鄰對自動浮現的連鎖效應。
 
 ## Today's Challenge
 
-- **150** · RPN 表達式的結構天然契合 Stack 的運作邏輯，運算子總是緊隨其所需的兩個運算元之後，透過 Stack 能夠完美模擬這一求值過程。
-  - Hint: 注意當從 Stack 彈出兩個數字進行減法或除法時，先彈出的為右運算元，後彈出的為左運算元。
+- **150** · 原型題：運算子緊跟運算元之後，stack 頂端永遠就是它需要的兩個值，是 Expression Evaluation 最乾淨的展示。
+  - Hint: 先彈出的是右運算元；除法向零截斷（Math.trunc 或 int(a / b)），並以整個 token 等於 "-" 來區分減號與負數。

@@ -11,69 +11,85 @@ exit_criteria:
 ---
 ## Concept
 
-Matrix Multi-Source BFS 是一種針對網格（Grid）圖形結構的廣度優先搜尋演算法延伸。傳統的 Breadth-First Search（BFS）通常從單一源點出發，逐層向外擴展以計算最短距離；然而，當問題涉及多個初始源點，且要求計算網格中每一個節點到「最近」某個源點的最短距離時，若對每個節點各自執行一次單源 BFS，會導致時間複雜度過高。Multi-Source BFS 的核心思想是將所有初始源點在演算法啟動前同時放入佇列（Queue）中，並將其初始距離設為 0，讓多個波前（Wavefronts）同步向外擴展。透過這種方式，演算法能夠在單次走訪中，自動利用最短路徑的性質，求出每個格子到任意最近源點的最短距離。
+Matrix Multi-Source BFS 是單源 BFS 在網格（Grid）上的直接延伸。單源 BFS 從一個起點逐層向外走，第 k 層恰好是距離起點 k 步的所有格子；但許多題目問的是「每個格子到最近的某類源點有多遠」，而源點可能成百上千個。若對每個源點各跑一次單源 BFS 再逐格取最小值，源點數最壞與格子數同階，總時間會劣化到 `O((m*n)^2)`。Multi-Source BFS 的改動只有一處：啟動前把「所有」源點一次放入 Queue、距離設為 0，之後執行與單源完全相同的迴圈。為什麼這樣是對的？想像在網格外加一個虛擬超級源點（Virtual Super Source），用長度 0 的邊連向每個真實源點——從它出發的單源 BFS，走一步後的狀態恰好就是「所有源點同時在第 0 層」。於是單源 BFS 的層級性質原封不動繼承過來：Queue 內的距離值任何時刻只有 d 與 d+1 兩種、單調不減；任一格子第一次被觸及時寫下的距離，必然就是它到最近源點的最短距離，之後永遠不需要回頭修正。
 
 ## Thinking
 
-在處理 Multi-Source BFS 問題時，思考流程通常包含以下幾個步驟：首先，掃描整個 Matrix，找出所有符合條件的初始源點（例如數值為 0 的格子、或是腐爛的橘子）。將這些源點的座標全數塞入 Queue 中，並建立一個與 Matrix 大小相同的距離矩陣（Distance Matrix），將這些源點的位置初始化為 0，其餘位置初始化為一個代表未訪問的特殊值（如 -1 或 Infinity）。接著，啟動標準的 BFS 迴圈：從 Queue 中彈出當前座標，並檢查其上下左右四個相鄰方向。如果相鄰格子越界或是已經被訪問過（即距離不為未訪問狀態），則跳過；否則，更新該相鄰格子的距離為當前格子距離加一，並將其推入 Queue 中。重複此過程直到 Queue 為空，此時距離矩陣即記錄了所有格子到最近源點的最短距離。
+拿到題目後分四步。第一步，掃過整個 Matrix 找出所有源點（值為 0 的格子、初始腐爛的橘子），全部推入 Queue；同時建一個同尺寸的距離矩陣，源點位置填 0，其餘填 -1 代表未訪問——這個 -1 讓距離矩陣同時兼任 visited 標記，不必另外維護 Set。第二步，跑標準 BFS 迴圈：取出佇列頭的座標，檢查上下左右四個鄰居；越界或距離不是 -1 就跳過，否則把鄰居距離設為當前距離加一，並在入隊的當下就完成寫入。第三步，Queue 清空後距離矩陣即為答案；若題目問「全部擴散完成要多久」，答案就是距離矩陣的最大值——同層格子會在同一輪被觸及，層數即時間。第四步，收尾檢查：若「應被擴散到的目標格」仍停留在 -1（障礙與空格本來就不在擴散對象內），代表它被隔開、任何源點都到不了，依題意回報無法完成。
 
 ## Pattern Recognition
 
-要辨識一個題目是否適合使用 Multi-Source BFS，可以觀察幾個關鍵特徵：題目通常給定一個二維網格（Matrix），要求計算網格中「每一個點」到「最近的某種特定狀態（如 0、水域、腐爛源頭）」的最短距離或擴散時間。題目場景常涉及擴散、傳染、流動、最短距離等概念。如果問題敘述中暗示有多個起點同時向外影響周遭環境，且求的是最少步數或最早時間，這就是典型的 Multi-Source BFS 模式。常見的特徵還包括網格中的每個空位最終會被距離它最近的某個源點率先到達。
+三個訊號指向 Multi-Source BFS。一、輸入是二維網格，問「每個格子」到「最近的某種狀態」的距離，而不是特定兩點之間的路徑。二、情境帶有擴散、傳染、淹沒的意象：多個起點同時向外影響周遭，問最少步數或最早完成時間。三、每走一格的成本都相同。第三點是分水嶺——格子間移動成本若不相等，BFS 的層級性質就失效，得改用 Dijkstra。反過來說，若題目只有單一起點，那就是前一課的單源最短路；Multi-Source 只是把初始化從一個點換成一批點，迴圈本體完全共用。
 
 ## Common Mistakes
 
-最常見的錯誤是對於每一個源點分別執行一次單獨的 BFS，這會導致時間複雜度劣化至 O(M^2 * N^2)，在測資較大時必然會逾時（Time Limit Exceeded）。另一個常見錯誤是忘記在將初始源點放入 Queue 時，將對應的距離矩陣或標記狀態設定為 0，或者在走訪相鄰格子時漏掉邊界檢查，導致陣列存取越界（Index Out of Bounds）。此外，有些實作會使用一個 Visited Set，但對於多源點來說，直接在原矩陣或專屬的 Distance Matrix 上記錄已訪問狀態與距離，往往比額外維護一個 Set 更有效率且直觀。
+第一個錯誤是對每個源點各跑一次 BFS 再取最小值——結果正確但時間爆炸，最壞 `O((m*n)^2)`，大測資必然逾時；正解是一次全部入隊。第二個是標記時機：等到出隊時才標記已訪問，同一格會被多個鄰居搶先重複入隊——隨機網格實測入隊次數約放大近兩倍，最壞可達每格被其每一個鄰居各推一次（棋盤式源點實測放大約 2.5 倍）——答案仍然正確，但白白多做工；入隊當下就把距離寫進矩陣才是正確做法。第三個是初始化與邊界疏漏：忘記把源點距離設為 0；漏掉邊界檢查時，TypeScript 讀到 undefined 會當場拋錯，Python 的負索引卻會靜默回繞到另一側（dist[-1] 是最後一列），拿到錯的距離而不報錯，更難察覺。第四個發生在擴散類題目：迴圈結束不代表任務完成，被障礙包圍的目標格從頭到尾不會入隊，必須再確認「應被擴散到的目標格」是否仍有 -1（障礙與空格不計）；用層數當時間時也要記得源點本身在第 0 層，別多算一輪。
 
 ## Complexity
 
-時間複雜度為 O(m * n)，其中 m 為矩陣的列數（Rows），n 為矩陣的行數（Cols）。因為每個格子在 BFS 過程中最多被加入 Queue 一次並被訪問一次，總操作次數與網格的總格子數成線性關係。空間複雜度為 O(m * n)，主要用於儲存 Queue 中的座標以及用來記錄距離與訪問狀態的 Distance Matrix，在最壞情況下，Queue 需要容納網格邊界上所有的格子。
+時間複雜度為 O(m * n)：每個格子至多入隊一次、出隊一次，每次出隊只檢查四個鄰居，總操作次數與格子數成正比；把所有源點一次入隊並不改變這個上界，因為源點也只是「入隊一次」的格子。空間複雜度為 O(m * n)：距離矩陣佔 m * n，Queue 在最壞情況（幾乎所有格子同層）也可能同時容納與格子數同階的座標。
 
 ## Digest
 
-Multi-Source BFS 是處理網格最短路徑問題的高效演算法。當問題要求計算所有節點到多個已知源點的最短距離時，切勿對每個源點重複執行獨立的 BFS。正確的做法是將所有初始源點同時初始化進 Queue 中，並將距離設為 0，讓波前同步向外擴展。在實作上，使用一個 Distance Matrix 既能記錄最短距離，又能兼顧訪問標記（Visited Flag）。TypeScript 與 Python 實作時，應注意 Queue 的效能，TypeScript 可使用陣列搭配指標模擬，Python 則建議使用 collections.deque 以確保每次彈出操作為 O(1)。透過掌握這項技巧，能夠有效解決諸如 01 矩陣更新與橘子腐爛擴散等經典網格問題。
+Multi-Source BFS 解決「網格中每格到最近源點的距離」：啟動前把所有源點以距離 0 一次放入 Queue，其餘格子設 -1，之後跑與單源完全相同的 BFS。正確性來自一個等價視角——想像一個以長度 0 的邊連向所有源點的虛擬超級源點，多源 BFS 就是從它出發的單源 BFS，「首次觸及即最短」的性質完全繼承。距離矩陣同時兼任 visited 標記，入隊當下就寫入距離，可避免同格重複入隊。整體時間與空間皆為 O(m * n)。實作時注意佇列效能：TypeScript 用陣列搭配 head 指標模擬出隊，Python 用 collections.deque 的 popleft()，兩者皆為 O(1)。擴散類題目最後記得確認應被擴散到的目標格是否仍是 -1——到不了就依題意回報無法完成。
 
 ## TypeScript Tip
 
-在 TypeScript 中實作 BFS 時，若使用 shift() 進行陣列頭部彈出，其時間複雜度為 O(N)，容易導致效能瓶頸。建議使用指標（Pointer）搭配標準陣列來模擬 Queue，將彈出操作優化為 O(1)。
+別用 shift() 出隊——成本與佇列長度成正比。改用 head 指標配陣列，出隊 O(1)。
+
 ```typescript
-function queueTipExample(): void {
-    const queue: [number, number][] = [[0, 0]];
-    let head = 0;
-    while (head < queue.length) {
-        const curr = queue[head++];
-        if (!curr) throw new Error("assertion failed");
-        break;
+function bfs(g: number[][]): number[][] {
+  const m = g.length, n = g[0]!.length, q: [number, number][] = [];
+  const d: number[][] = g.map(r => r.map(v => v === 0 ? 0 : -1));
+  let head = 0;
+  for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) if (g[r]![c] === 0) q.push([r, c]);
+  while (head < q.length) {
+    const [r, c] = q[head++]!;
+    for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]] as const) {
+      const nr = r + dr, nc = c + dc;
+      if (nr < 0 || nr >= m || nc < 0 || nc >= n || d[nr]![nc] !== -1) continue;
+      d[nr]![nc] = d[r]![c]! + 1; q.push([nr, nc]);
     }
+  }
+  return d;
 }
-queueTipExample();
+if (JSON.stringify(bfs([[0,1,1],[1,1,1],[1,1,0]])) !== "[[0,1,2],[1,2,1],[2,1,0]]")
+  throw new Error("bad");
 ```
 
 ## Python Tip
 
-在 Python 中實作 Queue 時，切勿使用標準的 list.pop(0)，因為這會觸發整串元素的搬移，時間複雜度為 O(N)。務必使用 collections.deque，其 popleft() 操作能保持 O(1) 的高效能。
+切勿用 list.pop(0) 出隊——它搬移整串元素，成本與佇列長度成正比。務必用 collections.deque，popleft() 維持 O(1)；產生器一行即可完成多源入隊。
+
 ```python
 from collections import deque
 
-def py_tip_example() -> None:
-    q = deque([(0, 0)])
-    curr = q.popleft()
-    assert curr == (0, 0), "assertion failed"
+def nearest_zero(g: list[list[int]]) -> list[list[int]]:
+    m, n = len(g), len(g[0])
+    dist = [[0 if v == 0 else -1 for v in row] for row in g]
+    q = deque((r, c) for r in range(m) for c in range(n) if g[r][c] == 0)
+    while q:
+        r, c = q.popleft()
+        for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+            if 0 <= nr < m and 0 <= nc < n and dist[nr][nc] == -1:
+                dist[nr][nc] = dist[r][c] + 1
+                q.append((nr, nc))
+    return dist
 
-py_tip_example()
+assert nearest_zero([[0, 1, 1], [1, 1, 1], [1, 1, 0]]) == [[0, 1, 2], [1, 2, 1], [2, 1, 0]]
 ```
 
 ## Takeaway
 
-Multi-Source BFS 的核心在於將所有起點同時入隊並將距離歸零，以 O(m * n) 的線性時間同步計算網格中所有點到最近源點的最短距離。
+多源最短距離不必多次 BFS：所有源點以距離 0 同時入隊，等價於從虛擬超級源點出發的單源 BFS，一趟 O(m * n) 完成。
 
 ## Tomorrow Preview
 
-明天我們將探討圖論中的 Topological Sort（拓撲排序），學習如何處理有向無環圖（DAG）中的相依性順序問題，並掌握 Kahn's Algorithm 與深度優先搜尋實作的應用場景。
+明天是 queue 模組的收官課：Sliding Window Maximum with Monotonic Queue。我們會維護一個值單調遞減的 Monotonic Queue，讓每個固定大小的 Sliding Window 都能以攤銷 O(1) 取得最大值，整體以 O(n) 解決區間極值問題。
 
 ## Today's Challenge
 
-- **542** · 題目要求計算矩陣中每一個格子到最近的 0 的距離，這正是多個 0 同時作為源點向外擴散的典型 Multi-Source BFS 應用。
-  - Hint: 將所有數值為 0 的格子作為初始源點放入 Queue，其餘未訪問格子設為 -1，然後同步進行 BFS。
-- **994** · 橘子腐爛的過程是從所有初始腐爛的橘子同時向四周新鮮橘子蔓延，求出所有新鮮橘子完全腐爛所需的最短時間，符合多源同步擴展的特徵。
-  - Hint: 先統計新鮮橘子的總數並將所有腐爛橘子入隊，在 BFS 擴散過程中記錄經過的分鐘數並遞減新鮮橘子數。
+- **542** · 求每個格子到最近的 0 的距離，所有 0 同時作為源點向外擴散，一次 BFS 取代逐格搜尋，是 Multi-Source BFS 的教科書應用。
+  - Hint: 把所有 0 入隊、其餘格子設 -1，首次觸及即最短距離。
+- **994** · 腐爛從所有初始腐爛的橘子同時向四周蔓延，求全部腐爛的最短時間，即多源 BFS 的最大層數。
+  - Hint: 先數新鮮橘子並把腐爛者全部入隊；擴散中遞減計數，結束後仍有新鮮橘子就回報 -1。
