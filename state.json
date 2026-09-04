@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 34,
-      "lastPushAt": "2026-09-04T00:01:15.268Z",
+      "currentSessionIndex": 35,
+      "lastPushAt": "2026-09-04T23:57:09.980Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -27,10 +27,6 @@
         "hash-table-concept-introduction"
       ],
       "history": [
-        {
-          "sessionIndex": 4,
-          "pushedAt": "2026-08-05T23:12:47.436Z"
-        },
         {
           "sessionIndex": 5,
           "pushedAt": "2026-08-07T01:32:35.160Z",
@@ -164,12 +160,16 @@
           "sessionIndex": 33,
           "pushedAt": "2026-09-04T00:01:15.268Z",
           "conceptId": "hash-table-concept-introduction"
+        },
+        {
+          "sessionIndex": 34,
+          "pushedAt": "2026-09-04T23:57:09.980Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 34,
-      "lastPushAt": "2026-09-04T00:01:15.523Z",
+      "currentSessionIndex": 35,
+      "lastPushAt": "2026-09-04T23:57:10.202Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -197,11 +197,6 @@
         "hash-table-existence-tracking"
       ],
       "history": [
-        {
-          "sessionIndex": 4,
-          "pushedAt": "2026-08-05T23:12:47.570Z",
-          "conceptId": "tracing-execution-flow"
-        },
         {
           "sessionIndex": 5,
           "pushedAt": "2026-08-07T01:32:35.323Z"
@@ -337,12 +332,16 @@
         {
           "sessionIndex": 33,
           "pushedAt": "2026-09-04T00:01:15.523Z"
+        },
+        {
+          "sessionIndex": 34,
+          "pushedAt": "2026-09-04T23:57:10.202Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 34,
-      "lastPushAt": "2026-09-04T00:01:15.713Z",
+      "currentSessionIndex": 35,
+      "lastPushAt": "2026-09-04T23:57:10.498Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -370,14 +369,10 @@
         "hash-table-existence-tracking",
         "hash-table-sliding-window-distinct",
         "hash-table-sliding-window-frequency",
-        "hash-table-grouping-anagrams"
+        "hash-table-grouping-anagrams",
+        "hash-table-prefix-sum-frequency"
       ],
       "history": [
-        {
-          "sessionIndex": 4,
-          "pushedAt": "2026-08-05T23:12:47.677Z",
-          "conceptId": "tracing-execution-flow"
-        },
         {
           "sessionIndex": 5,
           "pushedAt": "2026-08-07T01:32:35.521Z"
@@ -516,6 +511,11 @@
           "sessionIndex": 33,
           "pushedAt": "2026-09-04T00:01:15.713Z",
           "conceptId": "hash-table-grouping-anagrams"
+        },
+        {
+          "sessionIndex": 34,
+          "pushedAt": "2026-09-04T23:57:10.498Z",
+          "conceptId": "hash-table-prefix-sum-frequency"
         }
       ]
     }
