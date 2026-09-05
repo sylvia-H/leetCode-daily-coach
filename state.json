@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 35,
-      "lastPushAt": "2026-09-04T23:57:09.980Z",
+      "currentSessionIndex": 36,
+      "lastPushAt": "2026-09-05T23:47:29.330Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -27,11 +27,6 @@
         "hash-table-concept-introduction"
       ],
       "history": [
-        {
-          "sessionIndex": 5,
-          "pushedAt": "2026-08-07T01:32:35.160Z",
-          "conceptId": "tracing-execution-flow"
-        },
         {
           "sessionIndex": 6,
           "pushedAt": "2026-08-07T22:49:24.970Z",
@@ -164,12 +159,16 @@
         {
           "sessionIndex": 34,
           "pushedAt": "2026-09-04T23:57:09.980Z"
+        },
+        {
+          "sessionIndex": 35,
+          "pushedAt": "2026-09-05T23:47:29.330Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 35,
-      "lastPushAt": "2026-09-04T23:57:10.202Z",
+      "currentSessionIndex": 36,
+      "lastPushAt": "2026-09-05T23:47:29.842Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -194,13 +193,10 @@
         "hash-table-concept-introduction",
         "hash-table-frequency-counting",
         "hash-table-complement-lookup",
-        "hash-table-existence-tracking"
+        "hash-table-existence-tracking",
+        "hash-table-sliding-window-distinct"
       ],
       "history": [
-        {
-          "sessionIndex": 5,
-          "pushedAt": "2026-08-07T01:32:35.323Z"
-        },
         {
           "sessionIndex": 6,
           "pushedAt": "2026-08-07T22:49:25.290Z",
@@ -336,12 +332,17 @@
         {
           "sessionIndex": 34,
           "pushedAt": "2026-09-04T23:57:10.202Z"
+        },
+        {
+          "sessionIndex": 35,
+          "pushedAt": "2026-09-05T23:47:29.842Z",
+          "conceptId": "hash-table-sliding-window-distinct"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 35,
-      "lastPushAt": "2026-09-04T23:57:10.498Z",
+      "currentSessionIndex": 36,
+      "lastPushAt": "2026-09-05T23:47:29.981Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -373,10 +374,6 @@
         "hash-table-prefix-sum-frequency"
       ],
       "history": [
-        {
-          "sessionIndex": 5,
-          "pushedAt": "2026-08-07T01:32:35.521Z"
-        },
         {
           "sessionIndex": 6,
           "pushedAt": "2026-08-07T22:49:25.648Z",
@@ -516,6 +513,10 @@
           "sessionIndex": 34,
           "pushedAt": "2026-09-04T23:57:10.498Z",
           "conceptId": "hash-table-prefix-sum-frequency"
+        },
+        {
+          "sessionIndex": 35,
+          "pushedAt": "2026-09-05T23:47:29.981Z"
         }
       ]
     }
