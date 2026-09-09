@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 38,
-      "lastPushAt": "2026-09-08T00:13:11.831Z",
+      "currentSessionIndex": 39,
+      "lastPushAt": "2026-09-09T00:05:00.583Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -29,10 +29,6 @@
         "hash-table-complement-lookup"
       ],
       "history": [
-        {
-          "sessionIndex": 8,
-          "pushedAt": "2026-08-09T22:42:31.289Z"
-        },
         {
           "sessionIndex": 9,
           "pushedAt": "2026-08-10T22:50:45.646Z",
@@ -165,12 +161,16 @@
           "sessionIndex": 37,
           "pushedAt": "2026-09-08T00:13:11.831Z",
           "conceptId": "hash-table-complement-lookup"
+        },
+        {
+          "sessionIndex": 38,
+          "pushedAt": "2026-09-09T00:05:00.583Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 38,
-      "lastPushAt": "2026-09-08T00:13:12.261Z",
+      "currentSessionIndex": 39,
+      "lastPushAt": "2026-09-09T00:05:00.841Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -198,14 +198,10 @@
         "hash-table-existence-tracking",
         "hash-table-sliding-window-distinct",
         "hash-table-sliding-window-frequency",
-        "hash-table-grouping-anagrams"
+        "hash-table-grouping-anagrams",
+        "hash-table-prefix-sum-frequency"
       ],
       "history": [
-        {
-          "sessionIndex": 8,
-          "pushedAt": "2026-08-09T22:42:31.578Z",
-          "conceptId": "problem-simplification-strategy"
-        },
         {
           "sessionIndex": 9,
           "pushedAt": "2026-08-10T22:50:45.823Z",
@@ -341,12 +337,17 @@
           "sessionIndex": 37,
           "pushedAt": "2026-09-08T00:13:12.261Z",
           "conceptId": "hash-table-grouping-anagrams"
+        },
+        {
+          "sessionIndex": 38,
+          "pushedAt": "2026-09-09T00:05:00.841Z",
+          "conceptId": "hash-table-prefix-sum-frequency"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 38,
-      "lastPushAt": "2026-09-08T00:13:12.570Z",
+      "currentSessionIndex": 39,
+      "lastPushAt": "2026-09-09T00:05:01.182Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -376,14 +377,10 @@
         "hash-table-sliding-window-frequency",
         "hash-table-grouping-anagrams",
         "hash-table-prefix-sum-frequency",
-        "hash-table-longest-consecutive-sequence"
+        "hash-table-longest-consecutive-sequence",
+        "hash-table-design-lru-cache"
       ],
       "history": [
-        {
-          "sessionIndex": 8,
-          "pushedAt": "2026-08-09T22:42:31.780Z",
-          "conceptId": "problem-simplification-strategy"
-        },
         {
           "sessionIndex": 9,
           "pushedAt": "2026-08-10T22:50:45.986Z",
@@ -521,6 +518,11 @@
           "sessionIndex": 37,
           "pushedAt": "2026-09-08T00:13:12.570Z",
           "conceptId": "hash-table-longest-consecutive-sequence"
+        },
+        {
+          "sessionIndex": 38,
+          "pushedAt": "2026-09-09T00:05:01.182Z",
+          "conceptId": "hash-table-design-lru-cache"
         }
       ]
     }
