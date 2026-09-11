@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 40,
-      "lastPushAt": "2026-09-10T00:06:32.019Z",
+      "currentSessionIndex": 41,
+      "lastPushAt": "2026-09-11T00:01:35.007Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -30,11 +30,6 @@
         "hash-table-existence-tracking"
       ],
       "history": [
-        {
-          "sessionIndex": 10,
-          "pushedAt": "2026-08-11T22:55:44.656Z",
-          "conceptId": "edge-case-enumeration"
-        },
         {
           "sessionIndex": 11,
           "pushedAt": "2026-08-12T22:53:26.183Z",
@@ -166,12 +161,16 @@
           "sessionIndex": 39,
           "pushedAt": "2026-09-10T00:06:32.019Z",
           "conceptId": "hash-table-existence-tracking"
+        },
+        {
+          "sessionIndex": 40,
+          "pushedAt": "2026-09-11T00:01:35.007Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 40,
-      "lastPushAt": "2026-09-10T00:06:32.581Z",
+      "currentSessionIndex": 41,
+      "lastPushAt": "2026-09-11T00:01:35.393Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -203,10 +202,6 @@
         "hash-table-prefix-sum-frequency"
       ],
       "history": [
-        {
-          "sessionIndex": 10,
-          "pushedAt": "2026-08-11T22:55:44.966Z"
-        },
         {
           "sessionIndex": 11,
           "pushedAt": "2026-08-12T22:53:26.726Z",
@@ -342,12 +337,16 @@
         {
           "sessionIndex": 39,
           "pushedAt": "2026-09-10T00:06:32.581Z"
+        },
+        {
+          "sessionIndex": 40,
+          "pushedAt": "2026-09-11T00:01:35.393Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 40,
-      "lastPushAt": "2026-09-10T00:06:32.814Z",
+      "currentSessionIndex": 41,
+      "lastPushAt": "2026-09-11T00:01:35.592Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -379,13 +378,10 @@
         "hash-table-prefix-sum-frequency",
         "hash-table-longest-consecutive-sequence",
         "hash-table-design-lru-cache",
-        "string-ascii-representation"
+        "string-ascii-representation",
+        "string-linear-scan"
       ],
       "history": [
-        {
-          "sessionIndex": 10,
-          "pushedAt": "2026-08-11T22:55:45.079Z"
-        },
         {
           "sessionIndex": 11,
           "pushedAt": "2026-08-12T22:53:27.004Z",
@@ -524,6 +520,11 @@
           "sessionIndex": 39,
           "pushedAt": "2026-09-10T00:06:32.814Z",
           "conceptId": "string-ascii-representation"
+        },
+        {
+          "sessionIndex": 40,
+          "pushedAt": "2026-09-11T00:01:35.592Z",
+          "conceptId": "string-linear-scan"
         }
       ]
     }
