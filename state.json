@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 41,
-      "lastPushAt": "2026-09-11T00:01:35.007Z",
+      "currentSessionIndex": 42,
+      "lastPushAt": "2026-09-12T00:09:50.136Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -30,11 +30,6 @@
         "hash-table-existence-tracking"
       ],
       "history": [
-        {
-          "sessionIndex": 11,
-          "pushedAt": "2026-08-12T22:53:26.183Z",
-          "conceptId": "spacetime-tradeoff-awareness"
-        },
         {
           "sessionIndex": 12,
           "pushedAt": "2026-08-13T22:55:33.609Z"
@@ -165,12 +160,16 @@
         {
           "sessionIndex": 40,
           "pushedAt": "2026-09-11T00:01:35.007Z"
+        },
+        {
+          "sessionIndex": 41,
+          "pushedAt": "2026-09-12T00:09:50.136Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 41,
-      "lastPushAt": "2026-09-11T00:01:35.393Z",
+      "currentSessionIndex": 42,
+      "lastPushAt": "2026-09-12T00:09:50.400Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -199,14 +198,10 @@
         "hash-table-sliding-window-distinct",
         "hash-table-sliding-window-frequency",
         "hash-table-grouping-anagrams",
-        "hash-table-prefix-sum-frequency"
+        "hash-table-prefix-sum-frequency",
+        "hash-table-longest-consecutive-sequence"
       ],
       "history": [
-        {
-          "sessionIndex": 11,
-          "pushedAt": "2026-08-12T22:53:26.726Z",
-          "conceptId": "spacetime-tradeoff-awareness"
-        },
         {
           "sessionIndex": 12,
           "pushedAt": "2026-08-13T22:55:33.822Z",
@@ -341,12 +336,17 @@
         {
           "sessionIndex": 40,
           "pushedAt": "2026-09-11T00:01:35.393Z"
+        },
+        {
+          "sessionIndex": 41,
+          "pushedAt": "2026-09-12T00:09:50.400Z",
+          "conceptId": "hash-table-longest-consecutive-sequence"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 41,
-      "lastPushAt": "2026-09-11T00:01:35.592Z",
+      "currentSessionIndex": 42,
+      "lastPushAt": "2026-09-12T00:09:50.767Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -382,11 +382,6 @@
         "string-linear-scan"
       ],
       "history": [
-        {
-          "sessionIndex": 11,
-          "pushedAt": "2026-08-12T22:53:27.004Z",
-          "conceptId": "spacetime-tradeoff-awareness"
-        },
         {
           "sessionIndex": 12,
           "pushedAt": "2026-08-13T22:55:34.118Z",
@@ -525,6 +520,10 @@
           "sessionIndex": 40,
           "pushedAt": "2026-09-11T00:01:35.592Z",
           "conceptId": "string-linear-scan"
+        },
+        {
+          "sessionIndex": 41,
+          "pushedAt": "2026-09-12T00:09:50.767Z"
         }
       ]
     }
