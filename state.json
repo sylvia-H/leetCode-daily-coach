@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 44,
-      "lastPushAt": "2026-09-14T00:05:11.813Z",
+      "currentSessionIndex": 45,
+      "lastPushAt": "2026-09-15T00:29:34.504Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -32,11 +32,6 @@
         "hash-table-sliding-window-frequency"
       ],
       "history": [
-        {
-          "sessionIndex": 14,
-          "pushedAt": "2026-08-15T22:32:38.158Z",
-          "conceptId": "array-memory-layout"
-        },
         {
           "sessionIndex": 15,
           "pushedAt": "2026-08-16T22:31:42.183Z",
@@ -167,12 +162,16 @@
           "sessionIndex": 43,
           "pushedAt": "2026-09-14T00:05:11.813Z",
           "conceptId": "hash-table-sliding-window-frequency"
+        },
+        {
+          "sessionIndex": 44,
+          "pushedAt": "2026-09-15T00:29:34.504Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 44,
-      "lastPushAt": "2026-09-14T00:05:12.391Z",
+      "currentSessionIndex": 45,
+      "lastPushAt": "2026-09-15T00:29:34.828Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -204,14 +203,10 @@
         "hash-table-prefix-sum-frequency",
         "hash-table-longest-consecutive-sequence",
         "hash-table-design-lru-cache",
-        "string-ascii-representation"
+        "string-ascii-representation",
+        "string-linear-scan"
       ],
       "history": [
-        {
-          "sessionIndex": 14,
-          "pushedAt": "2026-08-15T22:32:38.389Z",
-          "conceptId": "array-linear-scan"
-        },
         {
           "sessionIndex": 15,
           "pushedAt": "2026-08-16T22:31:42.388Z"
@@ -346,12 +341,17 @@
           "sessionIndex": 43,
           "pushedAt": "2026-09-14T00:05:12.391Z",
           "conceptId": "string-ascii-representation"
+        },
+        {
+          "sessionIndex": 44,
+          "pushedAt": "2026-09-15T00:29:34.828Z",
+          "conceptId": "string-linear-scan"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 44,
-      "lastPushAt": "2026-09-14T00:05:12.630Z",
+      "currentSessionIndex": 45,
+      "lastPushAt": "2026-09-15T00:29:36.210Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -385,14 +385,10 @@
         "hash-table-design-lru-cache",
         "string-ascii-representation",
         "string-linear-scan",
-        "string-two-pointers-opposite"
+        "string-two-pointers-opposite",
+        "string-two-pointers-filtering"
       ],
       "history": [
-        {
-          "sessionIndex": 14,
-          "pushedAt": "2026-08-15T22:32:38.602Z",
-          "conceptId": "array-linear-scan"
-        },
         {
           "sessionIndex": 15,
           "pushedAt": "2026-08-16T22:31:42.589Z"
@@ -529,6 +525,11 @@
           "sessionIndex": 43,
           "pushedAt": "2026-09-14T00:05:12.630Z",
           "conceptId": "string-two-pointers-opposite"
+        },
+        {
+          "sessionIndex": 44,
+          "pushedAt": "2026-09-15T00:29:36.210Z",
+          "conceptId": "string-two-pointers-filtering"
         }
       ]
     }
