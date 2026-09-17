@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 46,
-      "lastPushAt": "2026-09-16T00:10:23.951Z",
+      "currentSessionIndex": 47,
+      "lastPushAt": "2026-09-17T00:20:36.613Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -33,10 +33,6 @@
         "hash-table-grouping-anagrams"
       ],
       "history": [
-        {
-          "sessionIndex": 16,
-          "pushedAt": "2026-08-17T22:34:26.339Z"
-        },
         {
           "sessionIndex": 17,
           "pushedAt": "2026-08-18T22:34:45.338Z"
@@ -167,12 +163,16 @@
           "sessionIndex": 45,
           "pushedAt": "2026-09-16T00:10:23.951Z",
           "conceptId": "hash-table-grouping-anagrams"
+        },
+        {
+          "sessionIndex": 46,
+          "pushedAt": "2026-09-17T00:20:36.613Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 46,
-      "lastPushAt": "2026-09-16T00:10:24.231Z",
+      "currentSessionIndex": 47,
+      "lastPushAt": "2026-09-17T00:20:37.052Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -208,10 +208,6 @@
         "string-linear-scan"
       ],
       "history": [
-        {
-          "sessionIndex": 16,
-          "pushedAt": "2026-08-17T22:34:26.486Z"
-        },
         {
           "sessionIndex": 17,
           "pushedAt": "2026-08-18T22:34:45.552Z",
@@ -347,12 +343,16 @@
         {
           "sessionIndex": 45,
           "pushedAt": "2026-09-16T00:10:24.231Z"
+        },
+        {
+          "sessionIndex": 46,
+          "pushedAt": "2026-09-17T00:20:37.052Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 46,
-      "lastPushAt": "2026-09-16T00:10:24.510Z",
+      "currentSessionIndex": 47,
+      "lastPushAt": "2026-09-17T00:20:37.360Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -388,14 +388,10 @@
         "string-linear-scan",
         "string-two-pointers-opposite",
         "string-two-pointers-filtering",
-        "string-sliding-window-fixed"
+        "string-sliding-window-fixed",
+        "string-sliding-window-variable"
       ],
       "history": [
-        {
-          "sessionIndex": 16,
-          "pushedAt": "2026-08-17T22:34:26.733Z",
-          "conceptId": "array-prefix-sum-basic"
-        },
         {
           "sessionIndex": 17,
           "pushedAt": "2026-08-18T22:34:45.807Z",
@@ -533,6 +529,11 @@
           "sessionIndex": 45,
           "pushedAt": "2026-09-16T00:10:24.510Z",
           "conceptId": "string-sliding-window-fixed"
+        },
+        {
+          "sessionIndex": 46,
+          "pushedAt": "2026-09-17T00:20:37.360Z",
+          "conceptId": "string-sliding-window-variable"
         }
       ]
     }
