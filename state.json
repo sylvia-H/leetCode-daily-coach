@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 52,
-      "lastPushAt": "2026-09-22T00:43:56.707Z",
+      "currentSessionIndex": 53,
+      "lastPushAt": "2026-09-23T00:21:11.372Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -36,10 +36,6 @@
         "hash-table-design-lru-cache"
       ],
       "history": [
-        {
-          "sessionIndex": 22,
-          "pushedAt": "2026-08-23T22:32:27.183Z"
-        },
         {
           "sessionIndex": 23,
           "pushedAt": "2026-08-24T22:37:25.388Z"
@@ -170,12 +166,16 @@
           "sessionIndex": 51,
           "pushedAt": "2026-09-22T00:43:56.707Z",
           "conceptId": "hash-table-design-lru-cache"
+        },
+        {
+          "sessionIndex": 52,
+          "pushedAt": "2026-09-23T00:21:11.372Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 52,
-      "lastPushAt": "2026-09-22T00:43:56.931Z",
+      "currentSessionIndex": 53,
+      "lastPushAt": "2026-09-23T00:21:11.623Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -215,10 +215,6 @@
         "string-sliding-window-variable"
       ],
       "history": [
-        {
-          "sessionIndex": 22,
-          "pushedAt": "2026-08-23T22:32:27.326Z"
-        },
         {
           "sessionIndex": 23,
           "pushedAt": "2026-08-24T22:37:25.580Z",
@@ -354,12 +350,16 @@
         {
           "sessionIndex": 51,
           "pushedAt": "2026-09-22T00:43:56.931Z"
+        },
+        {
+          "sessionIndex": 52,
+          "pushedAt": "2026-09-23T00:21:11.623Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 52,
-      "lastPushAt": "2026-09-22T00:43:57.177Z",
+      "currentSessionIndex": 53,
+      "lastPushAt": "2026-09-23T00:21:11.955Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -399,14 +399,10 @@
         "string-sliding-window-variable",
         "string-anagram-grouping",
         "string-palindrome-expansion",
-        "string-pattern-matching-basic"
+        "string-pattern-matching-basic",
+        "string-parsing-simulation"
       ],
       "history": [
-        {
-          "sessionIndex": 22,
-          "pushedAt": "2026-08-23T22:32:27.529Z",
-          "conceptId": "array-in-place-removal"
-        },
         {
           "sessionIndex": 23,
           "pushedAt": "2026-08-24T22:37:25.687Z",
@@ -543,6 +539,11 @@
           "sessionIndex": 51,
           "pushedAt": "2026-09-22T00:43:57.177Z",
           "conceptId": "string-pattern-matching-basic"
+        },
+        {
+          "sessionIndex": 52,
+          "pushedAt": "2026-09-23T00:21:11.955Z",
+          "conceptId": "string-parsing-simulation"
         }
       ]
     }
