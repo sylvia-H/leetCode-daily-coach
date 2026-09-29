@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 58,
-      "lastPushAt": "2026-09-28T00:34:25.168Z",
+      "currentSessionIndex": 59,
+      "lastPushAt": "2026-09-29T01:48:06.568Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -39,10 +39,6 @@
         "string-two-pointers-opposite"
       ],
       "history": [
-        {
-          "sessionIndex": 28,
-          "pushedAt": "2026-08-30T00:09:44.264Z"
-        },
         {
           "sessionIndex": 29,
           "pushedAt": "2026-08-31T00:26:35.842Z"
@@ -173,12 +169,16 @@
           "sessionIndex": 57,
           "pushedAt": "2026-09-28T00:34:25.168Z",
           "conceptId": "string-two-pointers-opposite"
+        },
+        {
+          "sessionIndex": 58,
+          "pushedAt": "2026-09-29T01:48:06.568Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 58,
-      "lastPushAt": "2026-09-28T00:34:25.367Z",
+      "currentSessionIndex": 59,
+      "lastPushAt": "2026-09-29T01:48:06.784Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -222,10 +222,6 @@
         "string-parsing-simulation"
       ],
       "history": [
-        {
-          "sessionIndex": 28,
-          "pushedAt": "2026-08-30T00:09:44.568Z"
-        },
         {
           "sessionIndex": 29,
           "pushedAt": "2026-08-31T00:26:36.239Z",
@@ -361,12 +357,16 @@
         {
           "sessionIndex": 57,
           "pushedAt": "2026-09-28T00:34:25.367Z"
+        },
+        {
+          "sessionIndex": 58,
+          "pushedAt": "2026-09-29T01:48:06.784Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 58,
-      "lastPushAt": "2026-09-28T00:34:25.601Z",
+      "currentSessionIndex": 59,
+      "lastPushAt": "2026-09-29T01:48:06.969Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -410,14 +410,10 @@
         "string-parsing-simulation",
         "two-pointer-three-sum-basic",
         "two-pointer-three-sum-closest",
-        "two-pointer-four-sum-extension"
+        "two-pointer-four-sum-extension",
+        "two-pointer-container-water"
       ],
       "history": [
-        {
-          "sessionIndex": 28,
-          "pushedAt": "2026-08-30T00:09:44.783Z",
-          "conceptId": "hash-table-complement-lookup"
-        },
         {
           "sessionIndex": 29,
           "pushedAt": "2026-08-31T00:26:36.518Z",
@@ -553,6 +549,11 @@
           "sessionIndex": 57,
           "pushedAt": "2026-09-28T00:34:25.601Z",
           "conceptId": "two-pointer-four-sum-extension"
+        },
+        {
+          "sessionIndex": 58,
+          "pushedAt": "2026-09-29T01:48:06.969Z",
+          "conceptId": "two-pointer-container-water"
         }
       ]
     }
