@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 60,
-      "lastPushAt": "2026-09-30T01:13:49.953Z",
+      "currentSessionIndex": 61,
+      "lastPushAt": "2026-10-01T01:13:10.172Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -36,14 +36,10 @@
         "hash-table-design-lru-cache",
         "string-ascii-representation",
         "string-linear-scan",
-        "string-two-pointers-opposite"
+        "string-two-pointers-opposite",
+        "string-two-pointers-filtering"
       ],
       "history": [
-        {
-          "sessionIndex": 30,
-          "pushedAt": "2026-09-01T01:13:34.043Z",
-          "conceptId": "array-in-place-deduplication"
-        },
         {
           "sessionIndex": 31,
           "pushedAt": "2026-09-02T00:00:29.750Z",
@@ -173,12 +169,17 @@
         {
           "sessionIndex": 59,
           "pushedAt": "2026-09-30T01:13:49.953Z"
+        },
+        {
+          "sessionIndex": 60,
+          "pushedAt": "2026-10-01T01:13:10.172Z",
+          "conceptId": "string-two-pointers-filtering"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 60,
-      "lastPushAt": "2026-09-30T01:13:50.619Z",
+      "currentSessionIndex": 61,
+      "lastPushAt": "2026-10-01T01:13:10.379Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -220,14 +221,10 @@
         "string-palindrome-expansion",
         "string-pattern-matching-basic",
         "string-parsing-simulation",
-        "two-pointer-three-sum-basic"
+        "two-pointer-three-sum-basic",
+        "two-pointer-three-sum-closest"
       ],
       "history": [
-        {
-          "sessionIndex": 30,
-          "pushedAt": "2026-09-01T01:13:35.986Z",
-          "conceptId": "hash-table-frequency-counting"
-        },
         {
           "sessionIndex": 31,
           "pushedAt": "2026-09-02T00:00:29.950Z",
@@ -362,12 +359,17 @@
           "sessionIndex": 59,
           "pushedAt": "2026-09-30T01:13:50.619Z",
           "conceptId": "two-pointer-three-sum-basic"
+        },
+        {
+          "sessionIndex": 60,
+          "pushedAt": "2026-10-01T01:13:10.379Z",
+          "conceptId": "two-pointer-three-sum-closest"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 60,
-      "lastPushAt": "2026-09-30T01:13:50.880Z",
+      "currentSessionIndex": 61,
+      "lastPushAt": "2026-10-01T01:13:10.529Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -415,10 +417,6 @@
         "two-pointer-container-water"
       ],
       "history": [
-        {
-          "sessionIndex": 30,
-          "pushedAt": "2026-09-01T01:13:36.497Z"
-        },
         {
           "sessionIndex": 31,
           "pushedAt": "2026-09-02T00:00:30.135Z",
@@ -554,6 +552,10 @@
         {
           "sessionIndex": 59,
           "pushedAt": "2026-09-30T01:13:50.880Z"
+        },
+        {
+          "sessionIndex": 60,
+          "pushedAt": "2026-10-01T01:13:10.529Z"
         }
       ]
     }
