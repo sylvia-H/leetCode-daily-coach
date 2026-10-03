@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 62,
-      "lastPushAt": "2026-10-02T01:35:39.962Z",
+      "currentSessionIndex": 63,
+      "lastPushAt": "2026-10-03T01:04:54.162Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -41,10 +41,6 @@
         "string-sliding-window-fixed"
       ],
       "history": [
-        {
-          "sessionIndex": 32,
-          "pushedAt": "2026-09-03T00:04:54.808Z"
-        },
         {
           "sessionIndex": 33,
           "pushedAt": "2026-09-04T00:01:15.268Z",
@@ -175,12 +171,16 @@
           "sessionIndex": 61,
           "pushedAt": "2026-10-02T01:35:39.962Z",
           "conceptId": "string-sliding-window-fixed"
+        },
+        {
+          "sessionIndex": 62,
+          "pushedAt": "2026-10-03T01:04:54.162Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 62,
-      "lastPushAt": "2026-10-02T01:35:40.148Z",
+      "currentSessionIndex": 63,
+      "lastPushAt": "2026-10-03T01:04:54.429Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -224,14 +224,10 @@
         "string-parsing-simulation",
         "two-pointer-three-sum-basic",
         "two-pointer-three-sum-closest",
-        "two-pointer-four-sum-extension"
+        "two-pointer-four-sum-extension",
+        "two-pointer-container-water"
       ],
       "history": [
-        {
-          "sessionIndex": 32,
-          "pushedAt": "2026-09-03T00:04:55.060Z",
-          "conceptId": "hash-table-existence-tracking"
-        },
         {
           "sessionIndex": 33,
           "pushedAt": "2026-09-04T00:01:15.523Z"
@@ -366,12 +362,17 @@
           "sessionIndex": 61,
           "pushedAt": "2026-10-02T01:35:40.148Z",
           "conceptId": "two-pointer-four-sum-extension"
+        },
+        {
+          "sessionIndex": 62,
+          "pushedAt": "2026-10-03T01:04:54.429Z",
+          "conceptId": "two-pointer-container-water"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 62,
-      "lastPushAt": "2026-10-02T01:35:40.313Z",
+      "currentSessionIndex": 63,
+      "lastPushAt": "2026-10-03T01:04:54.666Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -417,14 +418,10 @@
         "two-pointer-three-sum-closest",
         "two-pointer-four-sum-extension",
         "two-pointer-container-water",
-        "two-pointer-trapping-rain-water"
+        "two-pointer-trapping-rain-water",
+        "two-pointer-boats-to-save-people"
       ],
       "history": [
-        {
-          "sessionIndex": 32,
-          "pushedAt": "2026-09-03T00:04:55.483Z",
-          "conceptId": "hash-table-sliding-window-frequency"
-        },
         {
           "sessionIndex": 33,
           "pushedAt": "2026-09-04T00:01:15.713Z",
@@ -559,6 +556,11 @@
           "sessionIndex": 61,
           "pushedAt": "2026-10-02T01:35:40.313Z",
           "conceptId": "two-pointer-trapping-rain-water"
+        },
+        {
+          "sessionIndex": 62,
+          "pushedAt": "2026-10-03T01:04:54.666Z",
+          "conceptId": "two-pointer-boats-to-save-people"
         }
       ]
     }
