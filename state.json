@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 64,
-      "lastPushAt": "2026-10-04T00:30:27.959Z",
+      "currentSessionIndex": 65,
+      "lastPushAt": "2026-10-05T00:47:05.839Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -42,10 +42,6 @@
         "string-sliding-window-variable"
       ],
       "history": [
-        {
-          "sessionIndex": 34,
-          "pushedAt": "2026-09-04T23:57:09.980Z"
-        },
         {
           "sessionIndex": 35,
           "pushedAt": "2026-09-05T23:47:29.330Z"
@@ -176,12 +172,16 @@
           "sessionIndex": 63,
           "pushedAt": "2026-10-04T00:30:27.959Z",
           "conceptId": "string-sliding-window-variable"
+        },
+        {
+          "sessionIndex": 64,
+          "pushedAt": "2026-10-05T00:47:05.839Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 64,
-      "lastPushAt": "2026-10-04T00:30:28.200Z",
+      "currentSessionIndex": 65,
+      "lastPushAt": "2026-10-05T00:47:06.070Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -229,10 +229,6 @@
         "two-pointer-container-water"
       ],
       "history": [
-        {
-          "sessionIndex": 34,
-          "pushedAt": "2026-09-04T23:57:10.202Z"
-        },
         {
           "sessionIndex": 35,
           "pushedAt": "2026-09-05T23:47:29.842Z",
@@ -368,12 +364,16 @@
         {
           "sessionIndex": 63,
           "pushedAt": "2026-10-04T00:30:28.200Z"
+        },
+        {
+          "sessionIndex": 64,
+          "pushedAt": "2026-10-05T00:47:06.070Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 64,
-      "lastPushAt": "2026-10-04T00:30:28.353Z",
+      "currentSessionIndex": 65,
+      "lastPushAt": "2026-10-05T00:47:06.322Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -421,14 +421,10 @@
         "two-pointer-container-water",
         "two-pointer-trapping-rain-water",
         "two-pointer-boats-to-save-people",
-        "two-pointer-interval-merging-check"
+        "two-pointer-interval-merging-check",
+        "two-pointer-backspace-string-compare"
       ],
       "history": [
-        {
-          "sessionIndex": 34,
-          "pushedAt": "2026-09-04T23:57:10.498Z",
-          "conceptId": "hash-table-prefix-sum-frequency"
-        },
         {
           "sessionIndex": 35,
           "pushedAt": "2026-09-05T23:47:29.981Z"
@@ -563,6 +559,11 @@
           "sessionIndex": 63,
           "pushedAt": "2026-10-04T00:30:28.353Z",
           "conceptId": "two-pointer-interval-merging-check"
+        },
+        {
+          "sessionIndex": 64,
+          "pushedAt": "2026-10-05T00:47:06.322Z",
+          "conceptId": "two-pointer-backspace-string-compare"
         }
       ]
     }
