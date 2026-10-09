@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 68,
-      "lastPushAt": "2026-10-08T01:49:02.075Z",
+      "currentSessionIndex": 69,
+      "lastPushAt": "2026-10-09T02:01:22.052Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -44,10 +44,6 @@
         "string-palindrome-expansion"
       ],
       "history": [
-        {
-          "sessionIndex": 38,
-          "pushedAt": "2026-09-09T00:05:00.583Z"
-        },
         {
           "sessionIndex": 39,
           "pushedAt": "2026-09-10T00:06:32.019Z",
@@ -178,12 +174,16 @@
           "sessionIndex": 67,
           "pushedAt": "2026-10-08T01:49:02.075Z",
           "conceptId": "string-palindrome-expansion"
+        },
+        {
+          "sessionIndex": 68,
+          "pushedAt": "2026-10-09T02:01:22.052Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 68,
-      "lastPushAt": "2026-10-08T01:49:02.719Z",
+      "currentSessionIndex": 69,
+      "lastPushAt": "2026-10-09T02:01:22.301Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -231,14 +231,10 @@
         "two-pointer-container-water",
         "two-pointer-trapping-rain-water",
         "two-pointer-boats-to-save-people",
-        "two-pointer-interval-merging-check"
+        "two-pointer-interval-merging-check",
+        "two-pointer-backspace-string-compare"
       ],
       "history": [
-        {
-          "sessionIndex": 38,
-          "pushedAt": "2026-09-09T00:05:00.841Z",
-          "conceptId": "hash-table-prefix-sum-frequency"
-        },
         {
           "sessionIndex": 39,
           "pushedAt": "2026-09-10T00:06:32.581Z"
@@ -373,12 +369,17 @@
           "sessionIndex": 67,
           "pushedAt": "2026-10-08T01:49:02.719Z",
           "conceptId": "two-pointer-interval-merging-check"
+        },
+        {
+          "sessionIndex": 68,
+          "pushedAt": "2026-10-09T02:01:22.301Z",
+          "conceptId": "two-pointer-backspace-string-compare"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 68,
-      "lastPushAt": "2026-10-08T01:49:02.894Z",
+      "currentSessionIndex": 69,
+      "lastPushAt": "2026-10-09T02:01:22.685Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -428,14 +429,10 @@
         "two-pointer-boats-to-save-people",
         "two-pointer-interval-merging-check",
         "two-pointer-backspace-string-compare",
-        "two-pointer-valid-palindrome-ii"
+        "two-pointer-valid-palindrome-ii",
+        "two-pointer-sort-array-by-parity"
       ],
       "history": [
-        {
-          "sessionIndex": 38,
-          "pushedAt": "2026-09-09T00:05:01.182Z",
-          "conceptId": "hash-table-design-lru-cache"
-        },
         {
           "sessionIndex": 39,
           "pushedAt": "2026-09-10T00:06:32.814Z",
@@ -570,6 +567,11 @@
           "sessionIndex": 67,
           "pushedAt": "2026-10-08T01:49:02.894Z",
           "conceptId": "two-pointer-valid-palindrome-ii"
+        },
+        {
+          "sessionIndex": 68,
+          "pushedAt": "2026-10-09T02:01:22.685Z",
+          "conceptId": "two-pointer-sort-array-by-parity"
         }
       ]
     }
