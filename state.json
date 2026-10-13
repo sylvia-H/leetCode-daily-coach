@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 72,
-      "lastPushAt": "2026-10-12T01:12:32.702Z",
+      "currentSessionIndex": 73,
+      "lastPushAt": "2026-10-13T02:58:51.525Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -42,14 +42,10 @@
         "string-sliding-window-variable",
         "string-anagram-grouping",
         "string-palindrome-expansion",
-        "string-pattern-matching-basic"
+        "string-pattern-matching-basic",
+        "string-parsing-simulation"
       ],
       "history": [
-        {
-          "sessionIndex": 42,
-          "pushedAt": "2026-09-12T23:57:00.431Z",
-          "conceptId": "hash-table-sliding-window-distinct"
-        },
         {
           "sessionIndex": 43,
           "pushedAt": "2026-09-14T00:05:11.813Z",
@@ -179,12 +175,17 @@
         {
           "sessionIndex": 71,
           "pushedAt": "2026-10-12T01:12:32.702Z"
+        },
+        {
+          "sessionIndex": 72,
+          "pushedAt": "2026-10-13T02:58:51.525Z",
+          "conceptId": "string-parsing-simulation"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 72,
-      "lastPushAt": "2026-10-12T01:12:32.932Z",
+      "currentSessionIndex": 73,
+      "lastPushAt": "2026-10-13T02:58:51.749Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -234,14 +235,10 @@
         "two-pointer-boats-to-save-people",
         "two-pointer-interval-merging-check",
         "two-pointer-backspace-string-compare",
-        "two-pointer-valid-palindrome-ii"
+        "two-pointer-valid-palindrome-ii",
+        "two-pointer-sort-array-by-parity"
       ],
       "history": [
-        {
-          "sessionIndex": 42,
-          "pushedAt": "2026-09-12T23:57:00.658Z",
-          "conceptId": "hash-table-design-lru-cache"
-        },
         {
           "sessionIndex": 43,
           "pushedAt": "2026-09-14T00:05:12.391Z",
@@ -376,12 +373,17 @@
           "sessionIndex": 71,
           "pushedAt": "2026-10-12T01:12:32.932Z",
           "conceptId": "two-pointer-valid-palindrome-ii"
+        },
+        {
+          "sessionIndex": 72,
+          "pushedAt": "2026-10-13T02:58:51.749Z",
+          "conceptId": "two-pointer-sort-array-by-parity"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 72,
-      "lastPushAt": "2026-10-12T01:12:33.172Z",
+      "currentSessionIndex": 73,
+      "lastPushAt": "2026-10-13T02:58:51.883Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -437,10 +439,6 @@
         "binary-search-inclusive-bounds"
       ],
       "history": [
-        {
-          "sessionIndex": 42,
-          "pushedAt": "2026-09-12T23:57:01.204Z"
-        },
         {
           "sessionIndex": 43,
           "pushedAt": "2026-09-14T00:05:12.630Z",
@@ -576,6 +574,10 @@
         {
           "sessionIndex": 71,
           "pushedAt": "2026-10-12T01:12:33.172Z"
+        },
+        {
+          "sessionIndex": 72,
+          "pushedAt": "2026-10-13T02:58:51.883Z"
         }
       ]
     }
