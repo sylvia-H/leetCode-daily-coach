@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 76,
-      "lastPushAt": "2026-10-16T00:17:38.371Z",
+      "currentSessionIndex": 77,
+      "lastPushAt": "2026-10-17T00:19:56.680Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -48,10 +48,6 @@
         "two-pointer-three-sum-closest"
       ],
       "history": [
-        {
-          "sessionIndex": 46,
-          "pushedAt": "2026-09-17T00:20:36.613Z"
-        },
         {
           "sessionIndex": 47,
           "pushedAt": "2026-09-18T00:06:42.577Z"
@@ -182,12 +178,16 @@
           "sessionIndex": 75,
           "pushedAt": "2026-10-16T00:17:38.371Z",
           "conceptId": "two-pointer-three-sum-closest"
+        },
+        {
+          "sessionIndex": 76,
+          "pushedAt": "2026-10-17T00:19:56.680Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 76,
-      "lastPushAt": "2026-10-16T00:17:38.732Z",
+      "currentSessionIndex": 77,
+      "lastPushAt": "2026-10-17T00:19:57.464Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -243,10 +243,6 @@
         "binary-search-inclusive-bounds"
       ],
       "history": [
-        {
-          "sessionIndex": 46,
-          "pushedAt": "2026-09-17T00:20:37.052Z"
-        },
         {
           "sessionIndex": 47,
           "pushedAt": "2026-09-18T00:06:42.743Z",
@@ -382,12 +378,16 @@
         {
           "sessionIndex": 75,
           "pushedAt": "2026-10-16T00:17:38.732Z"
+        },
+        {
+          "sessionIndex": 76,
+          "pushedAt": "2026-10-17T00:19:57.464Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 76,
-      "lastPushAt": "2026-10-16T00:17:38.943Z",
+      "currentSessionIndex": 77,
+      "lastPushAt": "2026-10-17T00:19:57.653Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -443,14 +443,10 @@
         "binary-search-inclusive-bounds",
         "binary-search-overflow-prevention",
         "binary-search-exclusive-bounds",
-        "binary-search-lower-bound"
+        "binary-search-lower-bound",
+        "binary-search-upper-bound"
       ],
       "history": [
-        {
-          "sessionIndex": 46,
-          "pushedAt": "2026-09-17T00:20:37.360Z",
-          "conceptId": "string-sliding-window-variable"
-        },
         {
           "sessionIndex": 47,
           "pushedAt": "2026-09-18T00:06:43.374Z"
@@ -585,6 +581,11 @@
           "sessionIndex": 75,
           "pushedAt": "2026-10-16T00:17:38.943Z",
           "conceptId": "binary-search-lower-bound"
+        },
+        {
+          "sessionIndex": 76,
+          "pushedAt": "2026-10-17T00:19:57.653Z",
+          "conceptId": "binary-search-upper-bound"
         }
       ]
     }
