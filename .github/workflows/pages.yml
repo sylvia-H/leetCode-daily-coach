@@ -34,11 +34,11 @@ jobs:
       # MUST NOT 加 `ref:`——不加則 checkout 觸發此次 workflow 的那個 ref，
       # 使用者因此可在 Actions UI 選擇要部署哪個分支的內容（與 daily.yml 的理由一致）。
       - name: Checkout selected branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # state 是唯一權威進度來源，且**只讀**：本 workflow MUST NOT 寫回 state 分支。
       - name: Checkout state branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: state
           path: .state
