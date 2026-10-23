@@ -61,7 +61,7 @@ npm run validate:content
 | 項目 | 值 |
 | --- | --- |
 | 觸發 | `pull_request` 與 `push`，`paths`：`concepts/**`、`articles/**`、`data/**`、`schedules/**`、`overlays/**`、`curriculum/**`、`src/**`（另含本 workflow 自身） |
-| Node | `actions/setup-node@v4`，`node-version: 24` |
+| Node | `actions/setup-node@v7`，`node-version: 24` |
 | 步驟 | `npm ci` → `npm run build` → `npm test` → `npm run validate:content` |
 | 失敗 | 任一步非零 ⇒ workflow 失敗 ⇒ 阻擋合併 |
 | Secrets | **無**（MUST NOT 引用任何 secret，含 `GEMINI_API_KEY` 與 webhook） |
