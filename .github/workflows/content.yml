@@ -37,11 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # 本 job 持有 GEMINI_API_KEY：不用 npm 快取（同 daily.yml 的 push job；明確的 cache input 會蓋過 package-manager-cache）。
       - name: Setup Node.js 24
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          package-manager-cache: false
 
       - name: Setup Python 3
         uses: actions/setup-python@v7
