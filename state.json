@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 82,
-      "lastPushAt": "2026-10-22T00:36:12.849Z",
+      "currentSessionIndex": 83,
+      "lastPushAt": "2026-10-23T00:33:47.908Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -51,10 +51,6 @@
         "two-pointer-trapping-rain-water"
       ],
       "history": [
-        {
-          "sessionIndex": 52,
-          "pushedAt": "2026-09-23T00:21:11.372Z"
-        },
         {
           "sessionIndex": 53,
           "pushedAt": "2026-09-24T00:25:12.287Z"
@@ -185,12 +181,16 @@
           "sessionIndex": 81,
           "pushedAt": "2026-10-22T00:36:12.849Z",
           "conceptId": "two-pointer-trapping-rain-water"
+        },
+        {
+          "sessionIndex": 82,
+          "pushedAt": "2026-10-23T00:33:47.908Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 82,
-      "lastPushAt": "2026-10-22T00:36:12.988Z",
+      "currentSessionIndex": 83,
+      "lastPushAt": "2026-10-23T00:33:48.255Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -250,10 +250,6 @@
         "binary-search-upper-bound"
       ],
       "history": [
-        {
-          "sessionIndex": 52,
-          "pushedAt": "2026-09-23T00:21:11.623Z"
-        },
         {
           "sessionIndex": 53,
           "pushedAt": "2026-09-24T00:25:13.137Z",
@@ -389,12 +385,16 @@
         {
           "sessionIndex": 81,
           "pushedAt": "2026-10-22T00:36:12.988Z"
+        },
+        {
+          "sessionIndex": 82,
+          "pushedAt": "2026-10-23T00:33:48.255Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 82,
-      "lastPushAt": "2026-10-22T00:36:13.113Z",
+      "currentSessionIndex": 83,
+      "lastPushAt": "2026-10-23T00:33:48.506Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -454,14 +454,10 @@
         "binary-search-upper-bound",
         "binary-search-rotated-array",
         "binary-search-rotated-duplicates",
-        "binary-search-find-minimum-rotated"
+        "binary-search-find-minimum-rotated",
+        "binary-search-matrix-search"
       ],
       "history": [
-        {
-          "sessionIndex": 52,
-          "pushedAt": "2026-09-23T00:21:11.955Z",
-          "conceptId": "string-parsing-simulation"
-        },
         {
           "sessionIndex": 53,
           "pushedAt": "2026-09-24T00:25:13.306Z"
@@ -596,6 +592,11 @@
           "sessionIndex": 81,
           "pushedAt": "2026-10-22T00:36:13.113Z",
           "conceptId": "binary-search-find-minimum-rotated"
+        },
+        {
+          "sessionIndex": 82,
+          "pushedAt": "2026-10-23T00:33:48.506Z",
+          "conceptId": "binary-search-matrix-search"
         }
       ]
     }
