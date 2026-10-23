@@ -422,6 +422,8 @@ Secrets 一律走 GitHub Actions Secrets，**MUST NOT** 進 repo 或任何發佈
 - **內容 Gate（`content-gate.yml`）**：`validate.ts`（全 Track × 全 Session 完整編譯 +
   Discord 限制檢查）+ 教材內 TS / Python 程式碼實測（`pytest` / Node），任何一筆失敗即擋下
   PR，不進 `main`。
+- **相依更新（`.github/dependabot.yml`）**：npm 與 GitHub Actions 每月各合成一份 PR、送到
+  `develop`，過 CI 後再合併（npm 更新動到 `package*.json`，也會觸發內容 Gate）。
 - **關鍵邏輯 MUST 有單元測試**（詳見 [`docs/spec.md`](docs/spec.md) §22.2）：DAG 驗證、Full
   Article 固定區塊解析與 frontmatter schema、課表生成器 determinism（byte-identical）、
   Lesson Compiler determinism、per-track idempotency guard（含跨日 / UTC 邊界）、狀態推進

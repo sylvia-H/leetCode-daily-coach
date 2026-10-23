@@ -13,6 +13,8 @@ on:
       - "overlays/**"
       - "curriculum/**"
       - "src/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/content-gate.yml"
   pull_request:
     paths:
@@ -23,16 +25,22 @@ on:
       - "overlays/**"
       - "curriculum/**"
       - "src/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/content-gate.yml"
+
+permissions:
+  contents: read
 
 jobs:
   content-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
+      # 本 job 無 secrets、token 唯讀，故可用快取（判準見 content.yml）。
       - name: Setup Node.js 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -40,7 +48,7 @@ jobs:
       # F7：run-code-blocks.ts 的程式碼實測需要 python 執行 Python Tip 的斷言（關卡 3，
       # contracts/content-quality-gate.md §1）。本步驟只裝直譯器，不需 GEMINI_API_KEY（憲章 VIII）。
       - name: Setup Python 3
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.x"
 

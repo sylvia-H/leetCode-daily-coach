@@ -8,10 +8,35 @@
 // （本 repo 於 run-code-blocks.ts 已踩過並記錄），故一律以 process.execPath 直呼 tsx/vitest 進入點。
 import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 
 const require_ = createRequire(import.meta.url);
-const TSX = require_.resolve("tsx/cli");
-const VITEST = require_.resolve("vitest/vitest.mjs");
+
+/**
+ * 依套件 `package.json` 的 `bin` 欄位找出 CLI 進入點的絕對路徑。
+ *
+ * 為何不直接 resolve 子路徑（例如 `vitest/vitest.mjs`）：vitest 4 起 `exports` 拿掉了 `"./*"` 萬用匯出，
+ * 未列在 `exports` 的子路徑一律 ERR_PACKAGE_PATH_NOT_EXPORTED；而這行在模組頂層，連 `--skip-full`
+ * 都跑不起來。`package.json` 本身仍有匯出，`bin` 欄位又是套件對外承諾的 CLI 位置，升版不易漂移。
+ */
+export function resolveBinEntry(pkg: string, binName: string = pkg): string {
+  const manifestPath = require_.resolve(`${pkg}/package.json`);
+  const manifest = require_(manifestPath) as { bin?: string | Record<string, string> };
+  // 字串形式的 bin 依 npm 規則以套件名稱為指令名；scoped 套件（`@scope/name`）則是去掉 scope 的 `name`。
+  // 故只在 binName 為完整套件名或該指令名時採用，其餘一律視為沒有此 bin。
+  const cmd = pkg.startsWith("@") ? pkg.slice(pkg.indexOf("/") + 1) : pkg;
+  const rel =
+    typeof manifest.bin === "string"
+      ? binName === pkg || binName === cmd
+        ? manifest.bin
+        : undefined
+      : manifest.bin?.[binName];
+  if (!rel) throw new Error(`${pkg}/package.json 沒有 bin.${binName}`);
+  return join(dirname(manifestPath), rel);
+}
+
+export const TSX = require_.resolve("tsx/cli");
+export const VITEST = resolveBinEntry("vitest");
 
 interface Step {
   name: string;

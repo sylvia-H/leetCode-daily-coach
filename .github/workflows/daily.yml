@@ -31,19 +31,22 @@ jobs:
       # 固定抓 `develop`，使測試分支與正式行為分歧；不加 `ref:` 則 checkout 觸發此次 workflow 的
       # 那個 ref，兩種觸發方式（schedule／workflow_dispatch）皆行為一致。
       - name: Checkout default branch (develop)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout state branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: state
           path: .state
 
+      # 本 job 持有 contents: write 與三個 Discord webhook secret，且會推送 state 分支：不使用 npm 快取，
+      # 避免被其他 workflow 寫入的快取污染（setup-node v7 README 對高權限 workflow 的建議）。
+      # 明確的 `cache:` input 會蓋過 package-manager-cache，故兩者都要處理：不設 cache、並關閉自動快取。
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
@@ -136,19 +139,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout default branch (develop)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout state branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: state
           path: .state
 
+      # 本 job 持有 pages: write／id-token: write 與 webhook secrets：不用 npm 快取（同 push job，見該處說明）。
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
@@ -179,18 +183,18 @@ jobs:
 
       - name: Configure Pages
         if: steps.visibility.outputs.is_public == 'true'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
         if: steps.visibility.outputs.is_public == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: pages-dist
 
       - name: Deploy to GitHub Pages
         if: steps.visibility.outputs.is_public == 'true'
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: 失敗通知（FR-017）
         if: failure()
