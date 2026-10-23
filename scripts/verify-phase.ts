@@ -22,8 +22,15 @@ const require_ = createRequire(import.meta.url);
 export function resolveBinEntry(pkg: string, binName: string = pkg): string {
   const manifestPath = require_.resolve(`${pkg}/package.json`);
   const manifest = require_(manifestPath) as { bin?: string | Record<string, string> };
-  // 字串形式的 bin 依 npm 規則以套件名稱為指令名，故只在 binName === pkg 時採用。
-  const rel = typeof manifest.bin === "string" ? (binName === pkg ? manifest.bin : undefined) : manifest.bin?.[binName];
+  // 字串形式的 bin 依 npm 規則以套件名稱為指令名；scoped 套件（`@scope/name`）則是去掉 scope 的 `name`。
+  // 故只在 binName 為完整套件名或該指令名時採用，其餘一律視為沒有此 bin。
+  const cmd = pkg.startsWith("@") ? pkg.slice(pkg.indexOf("/") + 1) : pkg;
+  const rel =
+    typeof manifest.bin === "string"
+      ? binName === pkg || binName === cmd
+        ? manifest.bin
+        : undefined
+      : manifest.bin?.[binName];
   if (!rel) throw new Error(`${pkg}/package.json 沒有 bin.${binName}`);
   return join(dirname(manifestPath), rel);
 }
