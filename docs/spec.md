@@ -1585,12 +1585,12 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    steps:
+    steps: # action 版號僅示意，以 .github/workflows/*.yml 為準
       - uses: actions/checkout@v7 # 預設分支（develop）：程式與凍結內容；schedule 事件本就跑此分支
       - uses: actions/checkout@v7 # state 分支：僅 state.json
         with: { ref: state, path: .state }
       - uses: actions/setup-node@v7
-        with: { node-version: "24", cache: "npm" }
+        with: { node-version: "24", package-manager-cache: false } # 高權限 job 不用 npm 快取
       - run: npm ci
       - run: npm run build
       - run: node dist/main.js
