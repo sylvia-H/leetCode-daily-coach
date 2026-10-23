@@ -1586,10 +1586,10 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # 預設分支（develop）：程式與凍結內容；schedule 事件本就跑此分支
-      - uses: actions/checkout@v4 # state 分支：僅 state.json
+      - uses: actions/checkout@v7 # 預設分支（develop）：程式與凍結內容；schedule 事件本就跑此分支
+      - uses: actions/checkout@v7 # state 分支：僅 state.json
         with: { ref: state, path: .state }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: "24", cache: "npm" }
       - run: npm ci
       - run: npm run build

@@ -59,7 +59,7 @@ Discord 推播**一則解題觀念（Concept）＋ 1～3 題對應 LeetCode 題*
   `Remove-Item -Recurse -Force`，不要用 `cp` / `mkdir -p` / `rm -rf`）。Bash 工具是 POSIX sh，
   **兩者語法不可混用**。
 - 套件管理用 **npm**（非 pnpm、非 monorepo）：`npm ci`、`npm run build`（`tsc`）、`npm test`（**vitest**）。
-- **Node.js 24**（本機建議 nvm `24.x`；CI 用 `actions/setup-node@v4` `node-version: 24`）。
+- **Node.js 24**（本機建議 nvm `24.x`；CI 用 `actions/setup-node@v7` `node-version: 24`）。
 - 全程 **strict TypeScript**，避免 `any` 逃逸。
 - **無本機 infra**（無 docker / DB / 常駐服務）：本專案是一支跟完即退的一次性 CLI（`node dist/main.js`）。
 - 本機執行需要的機密以環境變數提供，**勿寫入檔案**；缺任一必要項須 fail-fast 且不推播。
