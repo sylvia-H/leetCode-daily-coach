@@ -1,0 +1,29 @@
+# 相依更新：每月一次、每個 ecosystem 合成一份 PR，送到整合分支 develop（feature 從 develop 開、合併回 develop）。
+# 只管「版本更新」；安全性更新另由 Dependabot security updates 依公告即時開 PR，不受 schedule 限制。
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "build"
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

@@ -13,6 +13,8 @@ on:
       - "overlays/**"
       - "curriculum/**"
       - "src/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/content-gate.yml"
   pull_request:
     paths:
@@ -23,6 +25,8 @@ on:
       - "overlays/**"
       - "curriculum/**"
       - "src/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/content-gate.yml"
 
 jobs:

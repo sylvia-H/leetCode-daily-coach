@@ -39,11 +39,14 @@ jobs:
           ref: state
           path: .state
 
+      # 本 job 持有 contents: write 與三個 Discord webhook secret，且會推送 state 分支：不使用 npm 快取，
+      # 避免被其他 workflow 寫入的快取污染（setup-node v7 README 對高權限 workflow 的建議）。
+      # 明確的 `cache:` input 會蓋過 package-manager-cache，故兩者都要處理：不設 cache、並關閉自動快取。
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
