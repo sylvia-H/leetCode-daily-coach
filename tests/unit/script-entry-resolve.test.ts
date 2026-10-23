@@ -22,4 +22,10 @@ describe("scripts 的 CLI 進入點解析（相依升級 smoke test）", () => {
   it("套件沒有對應的 bin 時明確報錯，不回傳不存在的路徑", () => {
     expect(() => resolveBinEntry("vitest", "no-such-bin")).toThrow(/bin\.no-such-bin/);
   });
+
+  // tsx 的 bin 是字串形式（"./dist/cli.mjs"），依 npm 規則指令名即套件名稱。
+  it("字串形式的 bin 只對應套件名稱本身，其他 binName 同樣報錯", () => {
+    expect(existsSync(resolveBinEntry("tsx"))).toBe(true);
+    expect(() => resolveBinEntry("tsx", "no-such-bin")).toThrow(/bin\.no-such-bin/);
+  });
 });
