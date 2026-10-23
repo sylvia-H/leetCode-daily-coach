@@ -37,6 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # npm 快取判準：持有 secrets 或寫入權限的 job 不用快取（避免讀到被污染的共用快取）；無 secrets 且 token 唯讀者可用。
       # 本 job 持有 GEMINI_API_KEY：不用 npm 快取（同 daily.yml 的 push job；明確的 cache input 會蓋過 package-manager-cache）。
       - name: Setup Node.js 24
         uses: actions/setup-node@v7

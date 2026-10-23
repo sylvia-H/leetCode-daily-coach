@@ -29,12 +29,16 @@ on:
       - "package-lock.json"
       - ".github/workflows/content-gate.yml"
 
+permissions:
+  contents: read
+
 jobs:
   content-gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
+      # 本 job 無 secrets、token 唯讀，故可用快取（判準見 content.yml）。
       - name: Setup Node.js 24
         uses: actions/setup-node@v7
         with:

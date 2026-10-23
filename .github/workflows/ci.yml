@@ -6,12 +6,16 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build-test-validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
+      # 本 job 無 secrets、token 唯讀，故可用快取（判準見 content.yml）。
       - name: Setup Node.js 24
         uses: actions/setup-node@v7
         with:
