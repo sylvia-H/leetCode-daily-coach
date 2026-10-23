@@ -44,7 +44,7 @@ jobs:
           cache: npm
 
       - name: Setup Python 3
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.x"
 
@@ -78,7 +78,7 @@ jobs:
       # 產線只產出檔案，不代表已核可/凍結——outline.md 定稿與最終 commit 仍是唯一人工檢查點
       # （憲章 XVII），本 workflow MUST NOT 自動 commit 或推送產線輸出。
       - name: 上傳產線輸出供人工檢視
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: content-pipeline-output
           path: |

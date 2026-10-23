@@ -80,18 +80,18 @@ jobs:
 
       - name: Configure Pages
         if: steps.visibility.outputs.is_public == 'true'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
         if: steps.visibility.outputs.is_public == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: pages-dist
 
       - name: Deploy to GitHub Pages
         if: steps.visibility.outputs.is_public == 'true'
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       # 刻意**不**發 Discord 失敗告警（與 daily.yml 的 pages job 不同）：
       # daily.yml 在台北 06:07 自動執行、沒有人在看，故 MUST 主動告警；
