@@ -51,7 +51,7 @@ jobs:
 | --- | --- | --- | --- |
 | 1 | `actions/checkout`（版號見 `.github/workflows/*.yml`） | 無 | 取得程式碼與已凍結的 `concepts/`／`articles/`／`schedules/` |
 | 2 | 同 `push` job 的「Checkout state branch」 | 無 | 讀取剛 commit（或未變更）的 `state.json`；`ref: state`, `path: .state` |
-| 3 | `actions/setup-node`（版號見 `.github/workflows/*.yml`）（Node 24）+ `npm ci` + `npm run build` | 無 | 與既有 job 一致 |
+| 3 | `actions/setup-node`（版號見 `.github/workflows/*.yml`）（Node 24，不使用 npm 快取：`package-manager-cache: false`、不設 `cache`）+ `npm ci` + `npm run build` | 無 | 與既有 job 一致；本 job 持有 `pages: write`／`id-token: write` 與 webhook secrets |
 | 4 | **偵測 repo 可見性**（research R5） | 無 | `gh api repos/${{ github.repository }} --jq .private`，輸出 `steps.visibility.outputs.is_public`（`'true'` 僅當呼叫成功且欄位為 `false`；呼叫失敗或欄位為 `true` 時該 step 視為未產出 `'true'`）。此 step **MUST** 設定 `env: GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`——GitHub Actions 內的 `gh` CLI 未取得 `GH_TOKEN` 即直接報錯，將使可見性永遠無法確認、依 R5 的安全預設**永不發佈**並每日發出琥珀色通知 |
 | 5 | `npm run build:pages` | `steps.visibility.outputs.is_public == 'true'` | 執行 `scripts/build-pages.ts`，見 §3 |
 | 6 | `actions/configure-pages`（版號見 `.github/workflows/*.yml`） | 同上 | 官方標準步驟 |

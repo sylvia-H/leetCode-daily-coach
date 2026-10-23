@@ -43,11 +43,12 @@ jobs:
           ref: state
           path: .state
 
+      # 本 job 持有 pages: write／id-token: write 與 webhook secrets：不用 npm 快取（同 daily.yml 的 push job）。
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
