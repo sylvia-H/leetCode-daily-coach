@@ -178,8 +178,8 @@ function runCommand(command: string, args: string[]): ExecResult {
 // 改為以 `process.execPath`（node 本身，跨平台皆為真正的執行檔）直接跑 node_modules 內已安裝的
 // 進入點：不經 shell、無引號跳脫問題、也不會在 CI 觸發額外的套件下載。
 const require_ = createRequire(import.meta.url);
-const TSC_ENTRY = require_.resolve("typescript/bin/tsc");
-const TSX_ENTRY = require_.resolve("tsx/cli");
+export const TSC_ENTRY = require_.resolve("typescript/bin/tsc");
+export const TSX_ENTRY = require_.resolve("tsx/cli");
 
 /**
  * 教材片段的型別檢查參數 MUST 與專案 `tsconfig.json` 對齊。片段被寫進系統暫存目錄成為獨立檔案，

@@ -152,7 +152,7 @@ npm run build; if ($?) { npm start }
 | `permissions` | `contents: write`（push `state` 分支） |
 | `concurrency` | group 固定、`cancel-in-progress: false`（避免兩個 cron 搶 `state` 分支） |
 | checkout | 兩個 ref：主分支（程式與內容）+ `state` 分支（`path: .state`） |
-| Node | `actions/setup-node@v4`、`node-version: 24`、`cache: npm` |
+| Node | `actions/setup-node`（版號見 `.github/workflows/*.yml`）、`node-version: 24`、不使用 npm 快取（`package-manager-cache: false`、不設 `cache`；本 job 持有 `contents: write` 與 webhook secrets） |
 | **MUST NOT** | 使用 matrix 平行跑多 Track（會搶 `state` 分支）；傳入 `GEMINI_API_KEY` |
 
 **state 提交責任**（research R5）：CLI **只寫檔**；`git add / commit / pull --rebase --autostash / push`

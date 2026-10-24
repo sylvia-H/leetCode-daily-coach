@@ -311,6 +311,7 @@ SC-006 更以「替身數僅 1」為可量測結果。故測試任務為**必要
       且原 `state.json` **未被覆寫**（FR-021 / FR-021a **【驗證既有】**，main.ts 已實作，本任務只補回歸測試）。
       **cwd 是行程全域狀態**：MUST 在 `afterEach`（或 `try/finally`）還原原始 cwd，避免污染同檔其他案例；
       並確認 vitest 執行於 `pool: "forks"`（vitest 2.x 預設值——`worker_threads` 下 `process.chdir()` 不可用）
+      > **補註（2026-10-23，vitest 2 → 5）**：不再仰賴預設值；`vitest.config.ts` 已明寫 `pool: "forks"`。
 - [x] T029b [US4] 於 `tests/e2e/isolation.test.ts` 補另兩種全域性失敗情境：
       ① **存檔失敗**（FR-013a／FR-021）——令 `STATE_FILE` 指向不可寫路徑，斷言 exit 1、發出全域告警、
       且**已成功推播的 Track 進度未落盤**（揭露「下次執行會重推同一課」的既定後果，MUST NOT 為此加入

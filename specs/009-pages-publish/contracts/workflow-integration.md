@@ -49,14 +49,14 @@ jobs:
 
 | # | Step | 條件 | 說明 |
 | --- | --- | --- | --- |
-| 1 | `actions/checkout@v4` | 無 | 取得程式碼與已凍結的 `concepts/`／`articles/`／`schedules/` |
+| 1 | `actions/checkout`（版號見 `.github/workflows/*.yml`） | 無 | 取得程式碼與已凍結的 `concepts/`／`articles/`／`schedules/` |
 | 2 | 同 `push` job 的「Checkout state branch」 | 無 | 讀取剛 commit（或未變更）的 `state.json`；`ref: state`, `path: .state` |
-| 3 | `actions/setup-node@v4`（Node 24）+ `npm ci` + `npm run build` | 無 | 與既有 job 一致 |
+| 3 | `actions/setup-node`（版號見 `.github/workflows/*.yml`）（Node 24，不使用 npm 快取：`package-manager-cache: false`、不設 `cache`）+ `npm ci` + `npm run build` | 無 | 與既有 job 一致；本 job 持有 `pages: write`／`id-token: write` 與 webhook secrets |
 | 4 | **偵測 repo 可見性**（research R5） | 無 | `gh api repos/${{ github.repository }} --jq .private`，輸出 `steps.visibility.outputs.is_public`（`'true'` 僅當呼叫成功且欄位為 `false`；呼叫失敗或欄位為 `true` 時該 step 視為未產出 `'true'`）。此 step **MUST** 設定 `env: GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`——GitHub Actions 內的 `gh` CLI 未取得 `GH_TOKEN` 即直接報錯，將使可見性永遠無法確認、依 R5 的安全預設**永不發佈**並每日發出琥珀色通知 |
 | 5 | `npm run build:pages` | `steps.visibility.outputs.is_public == 'true'` | 執行 `scripts/build-pages.ts`，見 §3 |
-| 6 | `actions/configure-pages@v5` | 同上 | 官方標準步驟 |
-| 7 | `actions/upload-pages-artifact@v3`（`path: pages-dist`） | 同上 | 上傳建置產物 |
-| 8 | `actions/deploy-pages@v4`（`id: deployment`） | 同上 | 實際部署。`id` MUST 為 `deployment`，供 §1 的 `environment.url` 引用 `steps.deployment.outputs.page_url` |
+| 6 | `actions/configure-pages`（版號見 `.github/workflows/*.yml`） | 同上 | 官方標準步驟 |
+| 7 | `actions/upload-pages-artifact`（版號見 `.github/workflows/*.yml`）（`path: pages-dist`） | 同上 | 上傳建置產物 |
+| 8 | `actions/deploy-pages`（版號見 `.github/workflows/*.yml`）（`id: deployment`） | 同上 | 實際部署。`id` MUST 為 `deployment`，供 §1 的 `environment.url` 引用 `steps.deployment.outputs.page_url` |
 | 9 | **失敗通知**（FR-017） | `if: failure()`（僅在本 job 內先前 step 失敗時觸發；`is_public != 'true'` 造成的 skip 不算失敗，不觸發） | `npx tsx scripts/notify-pages-failure.ts`，見 §4。對第一個已設定的 webhook 發送琥珀色 Discord 通知，內容明示「Pages 未更新、當日核心推播與 state 不受影響」 |
 
 ## 3. `scripts/build-pages.ts` 的執行環境

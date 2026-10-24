@@ -34,20 +34,21 @@ jobs:
       # MUST NOT 加 `ref:`——不加則 checkout 觸發此次 workflow 的那個 ref，
       # 使用者因此可在 Actions UI 選擇要部署哪個分支的內容（與 daily.yml 的理由一致）。
       - name: Checkout selected branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # state 是唯一權威進度來源，且**只讀**：本 workflow MUST NOT 寫回 state 分支。
       - name: Checkout state branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: state
           path: .state
 
+      # 本 job 持有 pages: write／id-token: write 與 webhook secrets：不用 npm 快取（同 daily.yml 的 push job）。
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
@@ -80,18 +81,18 @@ jobs:
 
       - name: Configure Pages
         if: steps.visibility.outputs.is_public == 'true'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
         if: steps.visibility.outputs.is_public == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: pages-dist
 
       - name: Deploy to GitHub Pages
         if: steps.visibility.outputs.is_public == 'true'
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       # 刻意**不**發 Discord 失敗告警（與 daily.yml 的 pages job 不同）：
       # daily.yml 在台北 06:07 自動執行、沒有人在看，故 MUST 主動告警；
