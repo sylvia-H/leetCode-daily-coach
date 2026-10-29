@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 88,
-      "lastPushAt": "2026-10-28T01:11:21.282Z",
+      "currentSessionIndex": 89,
+      "lastPushAt": "2026-10-29T01:43:22.255Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -54,10 +54,6 @@
         "two-pointer-backspace-string-compare"
       ],
       "history": [
-        {
-          "sessionIndex": 58,
-          "pushedAt": "2026-09-29T01:48:06.568Z"
-        },
         {
           "sessionIndex": 59,
           "pushedAt": "2026-09-30T01:13:49.953Z"
@@ -188,12 +184,16 @@
           "sessionIndex": 87,
           "pushedAt": "2026-10-28T01:11:21.282Z",
           "conceptId": "two-pointer-backspace-string-compare"
+        },
+        {
+          "sessionIndex": 88,
+          "pushedAt": "2026-10-29T01:43:22.255Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 88,
-      "lastPushAt": "2026-10-28T01:11:21.482Z",
+      "currentSessionIndex": 89,
+      "lastPushAt": "2026-10-29T01:43:22.415Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -257,10 +257,6 @@
         "binary-search-matrix-search"
       ],
       "history": [
-        {
-          "sessionIndex": 58,
-          "pushedAt": "2026-09-29T01:48:06.784Z"
-        },
         {
           "sessionIndex": 59,
           "pushedAt": "2026-09-30T01:13:50.619Z",
@@ -396,12 +392,16 @@
         {
           "sessionIndex": 87,
           "pushedAt": "2026-10-28T01:11:21.482Z"
+        },
+        {
+          "sessionIndex": 88,
+          "pushedAt": "2026-10-29T01:43:22.415Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 88,
-      "lastPushAt": "2026-10-28T01:11:21.888Z",
+      "currentSessionIndex": 89,
+      "lastPushAt": "2026-10-29T01:43:22.555Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -465,14 +465,10 @@
         "binary-search-matrix-search",
         "sliding-window-concept-intro",
         "sliding-window-fixed-size",
-        "sliding-window-variable-size-expansion"
+        "sliding-window-variable-size-expansion",
+        "sliding-window-variable-size-contraction"
       ],
       "history": [
-        {
-          "sessionIndex": 58,
-          "pushedAt": "2026-09-29T01:48:06.969Z",
-          "conceptId": "two-pointer-container-water"
-        },
         {
           "sessionIndex": 59,
           "pushedAt": "2026-09-30T01:13:50.880Z"
@@ -607,6 +603,11 @@
           "sessionIndex": 87,
           "pushedAt": "2026-10-28T01:11:21.888Z",
           "conceptId": "sliding-window-variable-size-expansion"
+        },
+        {
+          "sessionIndex": 88,
+          "pushedAt": "2026-10-29T01:43:22.555Z",
+          "conceptId": "sliding-window-variable-size-contraction"
         }
       ]
     }
