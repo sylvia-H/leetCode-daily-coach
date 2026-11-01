@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 91,
-      "lastPushAt": "2026-10-31T01:30:27.991Z",
+      "currentSessionIndex": 92,
+      "lastPushAt": "2026-11-01T00:59:39.726Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -52,14 +52,10 @@
         "two-pointer-boats-to-save-people",
         "two-pointer-interval-merging-check",
         "two-pointer-backspace-string-compare",
-        "two-pointer-valid-palindrome-ii"
+        "two-pointer-valid-palindrome-ii",
+        "two-pointer-sort-array-by-parity"
       ],
       "history": [
-        {
-          "sessionIndex": 61,
-          "pushedAt": "2026-10-02T01:35:39.962Z",
-          "conceptId": "string-sliding-window-fixed"
-        },
         {
           "sessionIndex": 62,
           "pushedAt": "2026-10-03T01:04:54.162Z"
@@ -189,12 +185,17 @@
           "sessionIndex": 90,
           "pushedAt": "2026-10-31T01:30:27.991Z",
           "conceptId": "two-pointer-valid-palindrome-ii"
+        },
+        {
+          "sessionIndex": 91,
+          "pushedAt": "2026-11-01T00:59:39.726Z",
+          "conceptId": "two-pointer-sort-array-by-parity"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 91,
-      "lastPushAt": "2026-10-31T01:30:28.247Z",
+      "currentSessionIndex": 92,
+      "lastPushAt": "2026-11-01T00:59:40.203Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -257,14 +258,10 @@
         "binary-search-find-minimum-rotated",
         "binary-search-matrix-search",
         "sliding-window-concept-intro",
-        "sliding-window-fixed-size"
+        "sliding-window-fixed-size",
+        "sliding-window-variable-size-expansion"
       ],
       "history": [
-        {
-          "sessionIndex": 61,
-          "pushedAt": "2026-10-02T01:35:40.148Z",
-          "conceptId": "two-pointer-four-sum-extension"
-        },
         {
           "sessionIndex": 62,
           "pushedAt": "2026-10-03T01:04:54.429Z",
@@ -399,12 +396,17 @@
           "sessionIndex": 90,
           "pushedAt": "2026-10-31T01:30:28.247Z",
           "conceptId": "sliding-window-fixed-size"
+        },
+        {
+          "sessionIndex": 91,
+          "pushedAt": "2026-11-01T00:59:40.203Z",
+          "conceptId": "sliding-window-variable-size-expansion"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 91,
-      "lastPushAt": "2026-10-31T01:30:28.427Z",
+      "currentSessionIndex": 92,
+      "lastPushAt": "2026-11-01T00:59:40.495Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -469,14 +471,10 @@
         "sliding-window-concept-intro",
         "sliding-window-fixed-size",
         "sliding-window-variable-size-expansion",
-        "sliding-window-variable-size-contraction"
+        "sliding-window-variable-size-contraction",
+        "sliding-window-longest-substring-no-repeat"
       ],
       "history": [
-        {
-          "sessionIndex": 61,
-          "pushedAt": "2026-10-02T01:35:40.313Z",
-          "conceptId": "two-pointer-trapping-rain-water"
-        },
         {
           "sessionIndex": 62,
           "pushedAt": "2026-10-03T01:04:54.666Z",
@@ -611,6 +609,11 @@
         {
           "sessionIndex": 90,
           "pushedAt": "2026-10-31T01:30:28.427Z"
+        },
+        {
+          "sessionIndex": 91,
+          "pushedAt": "2026-11-01T00:59:40.495Z",
+          "conceptId": "sliding-window-longest-substring-no-repeat"
         }
       ]
     }
