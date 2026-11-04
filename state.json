@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 94,
-      "lastPushAt": "2026-11-03T03:26:07.946Z",
+      "currentSessionIndex": 95,
+      "lastPushAt": "2026-11-04T02:09:45.130Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -57,10 +57,6 @@
         "binary-search-core-concept"
       ],
       "history": [
-        {
-          "sessionIndex": 64,
-          "pushedAt": "2026-10-05T00:47:05.839Z"
-        },
         {
           "sessionIndex": 65,
           "pushedAt": "2026-10-06T02:12:13.984Z"
@@ -191,12 +187,16 @@
           "sessionIndex": 93,
           "pushedAt": "2026-11-03T03:26:07.946Z",
           "conceptId": "binary-search-core-concept"
+        },
+        {
+          "sessionIndex": 94,
+          "pushedAt": "2026-11-04T02:09:45.130Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 94,
-      "lastPushAt": "2026-11-03T03:26:08.189Z",
+      "currentSessionIndex": 95,
+      "lastPushAt": "2026-11-04T02:09:45.387Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -264,10 +264,6 @@
         "sliding-window-variable-size-contraction"
       ],
       "history": [
-        {
-          "sessionIndex": 64,
-          "pushedAt": "2026-10-05T00:47:06.070Z"
-        },
         {
           "sessionIndex": 65,
           "pushedAt": "2026-10-06T02:12:14.297Z",
@@ -403,12 +399,16 @@
         {
           "sessionIndex": 93,
           "pushedAt": "2026-11-03T03:26:08.189Z"
+        },
+        {
+          "sessionIndex": 94,
+          "pushedAt": "2026-11-04T02:09:45.387Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 94,
-      "lastPushAt": "2026-11-03T03:26:08.358Z",
+      "currentSessionIndex": 95,
+      "lastPushAt": "2026-11-04T02:09:45.820Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -476,14 +476,10 @@
         "sliding-window-variable-size-contraction",
         "sliding-window-longest-substring-no-repeat",
         "sliding-window-max-consecutive-ones",
-        "sliding-window-fruit-into-baskets"
+        "sliding-window-fruit-into-baskets",
+        "sliding-window-permutation-in-string"
       ],
       "history": [
-        {
-          "sessionIndex": 64,
-          "pushedAt": "2026-10-05T00:47:06.322Z",
-          "conceptId": "two-pointer-backspace-string-compare"
-        },
         {
           "sessionIndex": 65,
           "pushedAt": "2026-10-06T02:12:14.537Z"
@@ -618,6 +614,11 @@
           "sessionIndex": 93,
           "pushedAt": "2026-11-03T03:26:08.358Z",
           "conceptId": "sliding-window-fruit-into-baskets"
+        },
+        {
+          "sessionIndex": 94,
+          "pushedAt": "2026-11-04T02:09:45.820Z",
+          "conceptId": "sliding-window-permutation-in-string"
         }
       ]
     }
