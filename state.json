@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 95,
-      "lastPushAt": "2026-11-04T02:09:45.130Z",
+      "currentSessionIndex": 96,
+      "lastPushAt": "2026-11-05T02:16:40.793Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -57,10 +57,6 @@
         "binary-search-core-concept"
       ],
       "history": [
-        {
-          "sessionIndex": 65,
-          "pushedAt": "2026-10-06T02:12:13.984Z"
-        },
         {
           "sessionIndex": 66,
           "pushedAt": "2026-10-07T01:26:06.668Z",
@@ -191,12 +187,16 @@
         {
           "sessionIndex": 94,
           "pushedAt": "2026-11-04T02:09:45.130Z"
+        },
+        {
+          "sessionIndex": 95,
+          "pushedAt": "2026-11-05T02:16:40.793Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 95,
-      "lastPushAt": "2026-11-04T02:09:45.387Z",
+      "currentSessionIndex": 96,
+      "lastPushAt": "2026-11-05T02:16:41.004Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -261,14 +261,10 @@
         "sliding-window-concept-intro",
         "sliding-window-fixed-size",
         "sliding-window-variable-size-expansion",
-        "sliding-window-variable-size-contraction"
+        "sliding-window-variable-size-contraction",
+        "sliding-window-longest-substring-no-repeat"
       ],
       "history": [
-        {
-          "sessionIndex": 65,
-          "pushedAt": "2026-10-06T02:12:14.297Z",
-          "conceptId": "two-pointer-trapping-rain-water"
-        },
         {
           "sessionIndex": 66,
           "pushedAt": "2026-10-07T01:26:06.840Z",
@@ -403,12 +399,17 @@
         {
           "sessionIndex": 94,
           "pushedAt": "2026-11-04T02:09:45.387Z"
+        },
+        {
+          "sessionIndex": 95,
+          "pushedAt": "2026-11-05T02:16:41.004Z",
+          "conceptId": "sliding-window-longest-substring-no-repeat"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 95,
-      "lastPushAt": "2026-11-04T02:09:45.820Z",
+      "currentSessionIndex": 96,
+      "lastPushAt": "2026-11-05T02:16:41.163Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -480,10 +481,6 @@
         "sliding-window-permutation-in-string"
       ],
       "history": [
-        {
-          "sessionIndex": 65,
-          "pushedAt": "2026-10-06T02:12:14.537Z"
-        },
         {
           "sessionIndex": 66,
           "pushedAt": "2026-10-07T01:26:07.001Z"
@@ -619,6 +616,10 @@
           "sessionIndex": 94,
           "pushedAt": "2026-11-04T02:09:45.820Z",
           "conceptId": "sliding-window-permutation-in-string"
+        },
+        {
+          "sessionIndex": 95,
+          "pushedAt": "2026-11-05T02:16:41.163Z"
         }
       ]
     }
