@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 97,
-      "lastPushAt": "2026-11-06T02:14:57.228Z",
+      "currentSessionIndex": 98,
+      "lastPushAt": "2026-11-07T01:48:04.085Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -55,14 +55,10 @@
         "two-pointer-valid-palindrome-ii",
         "two-pointer-sort-array-by-parity",
         "binary-search-core-concept",
-        "binary-search-inclusive-bounds"
+        "binary-search-inclusive-bounds",
+        "binary-search-overflow-prevention"
       ],
       "history": [
-        {
-          "sessionIndex": 67,
-          "pushedAt": "2026-10-08T01:49:02.075Z",
-          "conceptId": "string-palindrome-expansion"
-        },
         {
           "sessionIndex": 68,
           "pushedAt": "2026-10-09T02:01:22.052Z"
@@ -192,12 +188,17 @@
           "sessionIndex": 96,
           "pushedAt": "2026-11-06T02:14:57.228Z",
           "conceptId": "binary-search-inclusive-bounds"
+        },
+        {
+          "sessionIndex": 97,
+          "pushedAt": "2026-11-07T01:48:04.085Z",
+          "conceptId": "binary-search-overflow-prevention"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 97,
-      "lastPushAt": "2026-11-06T02:14:57.522Z",
+      "currentSessionIndex": 98,
+      "lastPushAt": "2026-11-07T01:48:04.317Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -264,14 +265,10 @@
         "sliding-window-variable-size-expansion",
         "sliding-window-variable-size-contraction",
         "sliding-window-longest-substring-no-repeat",
-        "sliding-window-max-consecutive-ones"
+        "sliding-window-max-consecutive-ones",
+        "sliding-window-fruit-into-baskets"
       ],
       "history": [
-        {
-          "sessionIndex": 67,
-          "pushedAt": "2026-10-08T01:49:02.719Z",
-          "conceptId": "two-pointer-interval-merging-check"
-        },
         {
           "sessionIndex": 68,
           "pushedAt": "2026-10-09T02:01:22.301Z",
@@ -406,12 +403,17 @@
           "sessionIndex": 96,
           "pushedAt": "2026-11-06T02:14:57.522Z",
           "conceptId": "sliding-window-max-consecutive-ones"
+        },
+        {
+          "sessionIndex": 97,
+          "pushedAt": "2026-11-07T01:48:04.317Z",
+          "conceptId": "sliding-window-fruit-into-baskets"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 97,
-      "lastPushAt": "2026-11-06T02:14:57.871Z",
+      "currentSessionIndex": 98,
+      "lastPushAt": "2026-11-07T01:48:04.590Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -480,14 +482,10 @@
         "sliding-window-longest-substring-no-repeat",
         "sliding-window-max-consecutive-ones",
         "sliding-window-fruit-into-baskets",
-        "sliding-window-permutation-in-string"
+        "sliding-window-permutation-in-string",
+        "sliding-window-find-all-anagrams"
       ],
       "history": [
-        {
-          "sessionIndex": 67,
-          "pushedAt": "2026-10-08T01:49:02.894Z",
-          "conceptId": "two-pointer-valid-palindrome-ii"
-        },
         {
           "sessionIndex": 68,
           "pushedAt": "2026-10-09T02:01:22.685Z",
@@ -622,6 +620,11 @@
         {
           "sessionIndex": 96,
           "pushedAt": "2026-11-06T02:14:57.871Z"
+        },
+        {
+          "sessionIndex": 97,
+          "pushedAt": "2026-11-07T01:48:04.590Z",
+          "conceptId": "sliding-window-find-all-anagrams"
         }
       ]
     }
