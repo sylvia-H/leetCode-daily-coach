@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 100,
-      "lastPushAt": "2026-11-09T01:39:02.769Z",
+      "currentSessionIndex": 101,
+      "lastPushAt": "2026-11-10T04:03:12.022Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -60,10 +60,6 @@
         "binary-search-exclusive-bounds"
       ],
       "history": [
-        {
-          "sessionIndex": 70,
-          "pushedAt": "2026-10-11T00:52:05.687Z"
-        },
         {
           "sessionIndex": 71,
           "pushedAt": "2026-10-12T01:12:32.702Z"
@@ -194,12 +190,16 @@
           "sessionIndex": 99,
           "pushedAt": "2026-11-09T01:39:02.769Z",
           "conceptId": "binary-search-exclusive-bounds"
+        },
+        {
+          "sessionIndex": 100,
+          "pushedAt": "2026-11-10T04:03:12.022Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 100,
-      "lastPushAt": "2026-11-09T01:39:03.130Z",
+      "currentSessionIndex": 101,
+      "lastPushAt": "2026-11-10T04:03:12.193Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -271,10 +271,6 @@
         "sliding-window-permutation-in-string"
       ],
       "history": [
-        {
-          "sessionIndex": 70,
-          "pushedAt": "2026-10-11T00:52:06.039Z"
-        },
         {
           "sessionIndex": 71,
           "pushedAt": "2026-10-12T01:12:32.932Z",
@@ -410,12 +406,16 @@
         {
           "sessionIndex": 99,
           "pushedAt": "2026-11-09T01:39:03.130Z"
+        },
+        {
+          "sessionIndex": 100,
+          "pushedAt": "2026-11-10T04:03:12.193Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 100,
-      "lastPushAt": "2026-11-09T01:39:03.309Z",
+      "currentSessionIndex": 101,
+      "lastPushAt": "2026-11-10T04:03:12.358Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -487,14 +487,10 @@
         "sliding-window-permutation-in-string",
         "sliding-window-find-all-anagrams",
         "sliding-window-minimum-window-substring",
-        "stack-core-concept-introduction"
+        "stack-core-concept-introduction",
+        "stack-array-implementation"
       ],
       "history": [
-        {
-          "sessionIndex": 70,
-          "pushedAt": "2026-10-11T00:52:06.252Z",
-          "conceptId": "binary-search-inclusive-bounds"
-        },
         {
           "sessionIndex": 71,
           "pushedAt": "2026-10-12T01:12:33.172Z"
@@ -629,6 +625,11 @@
           "sessionIndex": 99,
           "pushedAt": "2026-11-09T01:39:03.309Z",
           "conceptId": "stack-core-concept-introduction"
+        },
+        {
+          "sessionIndex": 100,
+          "pushedAt": "2026-11-10T04:03:12.358Z",
+          "conceptId": "stack-array-implementation"
         }
       ]
     }
