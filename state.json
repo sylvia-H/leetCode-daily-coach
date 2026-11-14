@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 104,
-      "lastPushAt": "2026-11-13T02:32:40.690Z",
+      "currentSessionIndex": 105,
+      "lastPushAt": "2026-11-14T02:16:03.956Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -62,10 +62,6 @@
         "binary-search-upper-bound"
       ],
       "history": [
-        {
-          "sessionIndex": 74,
-          "pushedAt": "2026-10-15T00:27:12.773Z"
-        },
         {
           "sessionIndex": 75,
           "pushedAt": "2026-10-16T00:17:38.371Z",
@@ -196,12 +192,16 @@
           "sessionIndex": 103,
           "pushedAt": "2026-11-13T02:32:40.690Z",
           "conceptId": "binary-search-upper-bound"
+        },
+        {
+          "sessionIndex": 104,
+          "pushedAt": "2026-11-14T02:16:03.956Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 104,
-      "lastPushAt": "2026-11-13T02:32:40.923Z",
+      "currentSessionIndex": 105,
+      "lastPushAt": "2026-11-14T02:16:04.241Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -273,14 +273,10 @@
         "sliding-window-permutation-in-string",
         "sliding-window-find-all-anagrams",
         "sliding-window-minimum-window-substring",
-        "stack-core-concept-introduction"
+        "stack-core-concept-introduction",
+        "stack-array-implementation"
       ],
       "history": [
-        {
-          "sessionIndex": 74,
-          "pushedAt": "2026-10-15T00:27:13.043Z",
-          "conceptId": "binary-search-inclusive-bounds"
-        },
         {
           "sessionIndex": 75,
           "pushedAt": "2026-10-16T00:17:38.732Z"
@@ -415,12 +411,17 @@
           "sessionIndex": 103,
           "pushedAt": "2026-11-13T02:32:40.923Z",
           "conceptId": "stack-core-concept-introduction"
+        },
+        {
+          "sessionIndex": 104,
+          "pushedAt": "2026-11-14T02:16:04.241Z",
+          "conceptId": "stack-array-implementation"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 104,
-      "lastPushAt": "2026-11-13T02:32:41.095Z",
+      "currentSessionIndex": 105,
+      "lastPushAt": "2026-11-14T02:16:04.480Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -494,14 +495,10 @@
         "sliding-window-minimum-window-substring",
         "stack-core-concept-introduction",
         "stack-array-implementation",
-        "stack-valid-parentheses"
+        "stack-valid-parentheses",
+        "stack-asteroid-collision"
       ],
       "history": [
-        {
-          "sessionIndex": 74,
-          "pushedAt": "2026-10-15T00:27:13.224Z",
-          "conceptId": "binary-search-exclusive-bounds"
-        },
         {
           "sessionIndex": 75,
           "pushedAt": "2026-10-16T00:17:38.943Z",
@@ -636,6 +633,11 @@
           "sessionIndex": 103,
           "pushedAt": "2026-11-13T02:32:41.095Z",
           "conceptId": "stack-valid-parentheses"
+        },
+        {
+          "sessionIndex": 104,
+          "pushedAt": "2026-11-14T02:16:04.480Z",
+          "conceptId": "stack-asteroid-collision"
         }
       ]
     }
