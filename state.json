@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 105,
-      "lastPushAt": "2026-11-14T02:16:03.956Z",
+      "currentSessionIndex": 106,
+      "lastPushAt": "2026-11-15T01:45:56.653Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -59,14 +59,10 @@
         "binary-search-overflow-prevention",
         "binary-search-exclusive-bounds",
         "binary-search-lower-bound",
-        "binary-search-upper-bound"
+        "binary-search-upper-bound",
+        "binary-search-rotated-array"
       ],
       "history": [
-        {
-          "sessionIndex": 75,
-          "pushedAt": "2026-10-16T00:17:38.371Z",
-          "conceptId": "two-pointer-three-sum-closest"
-        },
         {
           "sessionIndex": 76,
           "pushedAt": "2026-10-17T00:19:56.680Z"
@@ -196,12 +192,17 @@
         {
           "sessionIndex": 104,
           "pushedAt": "2026-11-14T02:16:03.956Z"
+        },
+        {
+          "sessionIndex": 105,
+          "pushedAt": "2026-11-15T01:45:56.653Z",
+          "conceptId": "binary-search-rotated-array"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 105,
-      "lastPushAt": "2026-11-14T02:16:04.241Z",
+      "currentSessionIndex": 106,
+      "lastPushAt": "2026-11-15T01:45:56.874Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -277,10 +278,6 @@
         "stack-array-implementation"
       ],
       "history": [
-        {
-          "sessionIndex": 75,
-          "pushedAt": "2026-10-16T00:17:38.732Z"
-        },
         {
           "sessionIndex": 76,
           "pushedAt": "2026-10-17T00:19:57.464Z"
@@ -416,12 +413,16 @@
           "sessionIndex": 104,
           "pushedAt": "2026-11-14T02:16:04.241Z",
           "conceptId": "stack-array-implementation"
+        },
+        {
+          "sessionIndex": 105,
+          "pushedAt": "2026-11-15T01:45:56.874Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 105,
-      "lastPushAt": "2026-11-14T02:16:04.480Z",
+      "currentSessionIndex": 106,
+      "lastPushAt": "2026-11-15T01:45:57.123Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -496,14 +497,10 @@
         "stack-core-concept-introduction",
         "stack-array-implementation",
         "stack-valid-parentheses",
-        "stack-asteroid-collision"
+        "stack-asteroid-collision",
+        "stack-evaluate-reverse-polish-notation"
       ],
       "history": [
-        {
-          "sessionIndex": 75,
-          "pushedAt": "2026-10-16T00:17:38.943Z",
-          "conceptId": "binary-search-lower-bound"
-        },
         {
           "sessionIndex": 76,
           "pushedAt": "2026-10-17T00:19:57.653Z",
@@ -638,6 +635,11 @@
           "sessionIndex": 104,
           "pushedAt": "2026-11-14T02:16:04.480Z",
           "conceptId": "stack-asteroid-collision"
+        },
+        {
+          "sessionIndex": 105,
+          "pushedAt": "2026-11-15T01:45:57.123Z",
+          "conceptId": "stack-evaluate-reverse-polish-notation"
         }
       ]
     }
