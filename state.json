@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 106,
-      "lastPushAt": "2026-11-15T01:45:56.653Z",
+      "currentSessionIndex": 107,
+      "lastPushAt": "2026-11-16T01:52:15.043Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -63,10 +63,6 @@
         "binary-search-rotated-array"
       ],
       "history": [
-        {
-          "sessionIndex": 76,
-          "pushedAt": "2026-10-17T00:19:56.680Z"
-        },
         {
           "sessionIndex": 77,
           "pushedAt": "2026-10-17T23:57:20.118Z"
@@ -197,12 +193,16 @@
           "sessionIndex": 105,
           "pushedAt": "2026-11-15T01:45:56.653Z",
           "conceptId": "binary-search-rotated-array"
+        },
+        {
+          "sessionIndex": 106,
+          "pushedAt": "2026-11-16T01:52:15.043Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 106,
-      "lastPushAt": "2026-11-15T01:45:56.874Z",
+      "currentSessionIndex": 107,
+      "lastPushAt": "2026-11-16T01:52:15.355Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -278,10 +278,6 @@
         "stack-array-implementation"
       ],
       "history": [
-        {
-          "sessionIndex": 76,
-          "pushedAt": "2026-10-17T00:19:57.464Z"
-        },
         {
           "sessionIndex": 77,
           "pushedAt": "2026-10-17T23:57:20.460Z",
@@ -417,12 +413,16 @@
         {
           "sessionIndex": 105,
           "pushedAt": "2026-11-15T01:45:56.874Z"
+        },
+        {
+          "sessionIndex": 106,
+          "pushedAt": "2026-11-16T01:52:15.355Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 106,
-      "lastPushAt": "2026-11-15T01:45:57.123Z",
+      "currentSessionIndex": 107,
+      "lastPushAt": "2026-11-16T01:52:15.578Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -498,14 +498,10 @@
         "stack-array-implementation",
         "stack-valid-parentheses",
         "stack-asteroid-collision",
-        "stack-evaluate-reverse-polish-notation"
+        "stack-evaluate-reverse-polish-notation",
+        "stack-remove-adjacent-duplicates"
       ],
       "history": [
-        {
-          "sessionIndex": 76,
-          "pushedAt": "2026-10-17T00:19:57.653Z",
-          "conceptId": "binary-search-upper-bound"
-        },
         {
           "sessionIndex": 77,
           "pushedAt": "2026-10-17T23:57:20.678Z"
@@ -640,6 +636,11 @@
           "sessionIndex": 105,
           "pushedAt": "2026-11-15T01:45:57.123Z",
           "conceptId": "stack-evaluate-reverse-polish-notation"
+        },
+        {
+          "sessionIndex": 106,
+          "pushedAt": "2026-11-16T01:52:15.578Z",
+          "conceptId": "stack-remove-adjacent-duplicates"
         }
       ]
     }
