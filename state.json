@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 109,
-      "lastPushAt": "2026-11-18T03:38:08.475Z",
+      "currentSessionIndex": 110,
+      "lastPushAt": "2026-11-19T03:12:17.336Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -61,14 +61,10 @@
         "binary-search-lower-bound",
         "binary-search-upper-bound",
         "binary-search-rotated-array",
-        "binary-search-rotated-duplicates"
+        "binary-search-rotated-duplicates",
+        "binary-search-find-minimum-rotated"
       ],
       "history": [
-        {
-          "sessionIndex": 79,
-          "pushedAt": "2026-10-20T01:02:07.713Z",
-          "conceptId": "two-pointer-container-water"
-        },
         {
           "sessionIndex": 80,
           "pushedAt": "2026-10-21T00:32:27.934Z"
@@ -198,12 +194,17 @@
           "sessionIndex": 108,
           "pushedAt": "2026-11-18T03:38:08.475Z",
           "conceptId": "binary-search-rotated-duplicates"
+        },
+        {
+          "sessionIndex": 109,
+          "pushedAt": "2026-11-19T03:12:17.336Z",
+          "conceptId": "binary-search-find-minimum-rotated"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 109,
-      "lastPushAt": "2026-11-18T03:38:08.671Z",
+      "currentSessionIndex": 110,
+      "lastPushAt": "2026-11-19T03:12:17.595Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -278,14 +279,10 @@
         "stack-core-concept-introduction",
         "stack-array-implementation",
         "stack-valid-parentheses",
-        "stack-asteroid-collision"
+        "stack-asteroid-collision",
+        "stack-evaluate-reverse-polish-notation"
       ],
       "history": [
-        {
-          "sessionIndex": 79,
-          "pushedAt": "2026-10-20T01:02:07.861Z",
-          "conceptId": "binary-search-lower-bound"
-        },
         {
           "sessionIndex": 80,
           "pushedAt": "2026-10-21T00:32:28.151Z",
@@ -420,12 +417,17 @@
           "sessionIndex": 108,
           "pushedAt": "2026-11-18T03:38:08.671Z",
           "conceptId": "stack-asteroid-collision"
+        },
+        {
+          "sessionIndex": 109,
+          "pushedAt": "2026-11-19T03:12:17.595Z",
+          "conceptId": "stack-evaluate-reverse-polish-notation"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 109,
-      "lastPushAt": "2026-11-18T03:38:08.888Z",
+      "currentSessionIndex": 110,
+      "lastPushAt": "2026-11-19T03:12:17.822Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -502,14 +504,10 @@
         "stack-valid-parentheses",
         "stack-asteroid-collision",
         "stack-evaluate-reverse-polish-notation",
-        "stack-remove-adjacent-duplicates"
+        "stack-remove-adjacent-duplicates",
+        "stack-daily-temperatures"
       ],
       "history": [
-        {
-          "sessionIndex": 79,
-          "pushedAt": "2026-10-20T01:02:08.122Z",
-          "conceptId": "binary-search-rotated-array"
-        },
         {
           "sessionIndex": 80,
           "pushedAt": "2026-10-21T00:32:28.435Z",
@@ -644,6 +642,11 @@
         {
           "sessionIndex": 108,
           "pushedAt": "2026-11-18T03:38:08.888Z"
+        },
+        {
+          "sessionIndex": 109,
+          "pushedAt": "2026-11-19T03:12:17.822Z",
+          "conceptId": "stack-daily-temperatures"
         }
       ]
     }
