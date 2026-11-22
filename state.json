@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 112,
-      "lastPushAt": "2026-11-21T03:06:52.648Z",
+      "currentSessionIndex": 113,
+      "lastPushAt": "2026-11-22T02:05:25.314Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -66,10 +66,6 @@
         "binary-search-matrix-search"
       ],
       "history": [
-        {
-          "sessionIndex": 82,
-          "pushedAt": "2026-10-23T00:33:47.908Z"
-        },
         {
           "sessionIndex": 83,
           "pushedAt": "2026-10-24T00:30:51.260Z"
@@ -200,12 +196,16 @@
           "sessionIndex": 111,
           "pushedAt": "2026-11-21T03:06:52.648Z",
           "conceptId": "binary-search-matrix-search"
+        },
+        {
+          "sessionIndex": 112,
+          "pushedAt": "2026-11-22T02:05:25.314Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 112,
-      "lastPushAt": "2026-11-21T03:06:52.832Z",
+      "currentSessionIndex": 113,
+      "lastPushAt": "2026-11-22T02:05:25.507Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -285,10 +285,6 @@
         "stack-remove-adjacent-duplicates"
       ],
       "history": [
-        {
-          "sessionIndex": 82,
-          "pushedAt": "2026-10-23T00:33:48.255Z"
-        },
         {
           "sessionIndex": 83,
           "pushedAt": "2026-10-24T00:30:51.560Z",
@@ -424,12 +420,16 @@
         {
           "sessionIndex": 111,
           "pushedAt": "2026-11-21T03:06:52.832Z"
+        },
+        {
+          "sessionIndex": 112,
+          "pushedAt": "2026-11-22T02:05:25.507Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 112,
-      "lastPushAt": "2026-11-21T03:06:52.992Z",
+      "currentSessionIndex": 113,
+      "lastPushAt": "2026-11-22T02:05:25.649Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -509,14 +509,10 @@
         "stack-remove-adjacent-duplicates",
         "stack-daily-temperatures",
         "stack-next-greater-element-ii",
-        "stack-online-stock-span"
+        "stack-online-stock-span",
+        "stack-sum-of-subarray-minimums"
       ],
       "history": [
-        {
-          "sessionIndex": 82,
-          "pushedAt": "2026-10-23T00:33:48.506Z",
-          "conceptId": "binary-search-matrix-search"
-        },
         {
           "sessionIndex": 83,
           "pushedAt": "2026-10-24T00:30:51.733Z"
@@ -651,6 +647,11 @@
           "sessionIndex": 111,
           "pushedAt": "2026-11-21T03:06:52.992Z",
           "conceptId": "stack-online-stock-span"
+        },
+        {
+          "sessionIndex": 112,
+          "pushedAt": "2026-11-22T02:05:25.649Z",
+          "conceptId": "stack-sum-of-subarray-minimums"
         }
       ]
     }
