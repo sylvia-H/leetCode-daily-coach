@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 114,
-      "lastPushAt": "2026-11-23T02:32:10.802Z",
+      "currentSessionIndex": 115,
+      "lastPushAt": "2026-11-24T05:55:03.882Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -63,14 +63,10 @@
         "binary-search-rotated-array",
         "binary-search-rotated-duplicates",
         "binary-search-find-minimum-rotated",
-        "binary-search-matrix-search"
+        "binary-search-matrix-search",
+        "sliding-window-concept-intro"
       ],
       "history": [
-        {
-          "sessionIndex": 84,
-          "pushedAt": "2026-10-25T00:14:28.894Z",
-          "conceptId": "two-pointer-boats-to-save-people"
-        },
         {
           "sessionIndex": 85,
           "pushedAt": "2026-10-26T00:08:52.793Z",
@@ -200,12 +196,17 @@
         {
           "sessionIndex": 113,
           "pushedAt": "2026-11-23T02:32:10.802Z"
+        },
+        {
+          "sessionIndex": 114,
+          "pushedAt": "2026-11-24T05:55:03.882Z",
+          "conceptId": "sliding-window-concept-intro"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 114,
-      "lastPushAt": "2026-11-23T02:32:11.017Z",
+      "currentSessionIndex": 115,
+      "lastPushAt": "2026-11-24T05:55:04.065Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -283,14 +284,10 @@
         "stack-asteroid-collision",
         "stack-evaluate-reverse-polish-notation",
         "stack-remove-adjacent-duplicates",
-        "stack-daily-temperatures"
+        "stack-daily-temperatures",
+        "stack-next-greater-element-ii"
       ],
       "history": [
-        {
-          "sessionIndex": 84,
-          "pushedAt": "2026-10-25T00:14:29.101Z",
-          "conceptId": "binary-search-rotated-duplicates"
-        },
         {
           "sessionIndex": 85,
           "pushedAt": "2026-10-26T00:08:53.008Z",
@@ -425,12 +422,17 @@
           "sessionIndex": 113,
           "pushedAt": "2026-11-23T02:32:11.017Z",
           "conceptId": "stack-daily-temperatures"
+        },
+        {
+          "sessionIndex": 114,
+          "pushedAt": "2026-11-24T05:55:04.065Z",
+          "conceptId": "stack-next-greater-element-ii"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 114,
-      "lastPushAt": "2026-11-23T02:32:11.195Z",
+      "currentSessionIndex": 115,
+      "lastPushAt": "2026-11-24T05:55:04.201Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -514,10 +516,6 @@
         "stack-sum-of-subarray-minimums"
       ],
       "history": [
-        {
-          "sessionIndex": 84,
-          "pushedAt": "2026-10-25T00:14:29.404Z"
-        },
         {
           "sessionIndex": 85,
           "pushedAt": "2026-10-26T00:08:53.190Z",
@@ -653,6 +651,10 @@
         {
           "sessionIndex": 113,
           "pushedAt": "2026-11-23T02:32:11.195Z"
+        },
+        {
+          "sessionIndex": 114,
+          "pushedAt": "2026-11-24T05:55:04.201Z"
         }
       ]
     }
