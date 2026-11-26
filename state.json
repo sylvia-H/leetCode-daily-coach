@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 116,
-      "lastPushAt": "2026-11-25T04:51:32.270Z",
+      "currentSessionIndex": 117,
+      "lastPushAt": "2026-11-26T04:05:15.263Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -68,10 +68,6 @@
         "sliding-window-fixed-size"
       ],
       "history": [
-        {
-          "sessionIndex": 86,
-          "pushedAt": "2026-10-27T01:24:42.101Z"
-        },
         {
           "sessionIndex": 87,
           "pushedAt": "2026-10-28T01:11:21.282Z",
@@ -202,12 +198,16 @@
           "sessionIndex": 115,
           "pushedAt": "2026-11-25T04:51:32.270Z",
           "conceptId": "sliding-window-fixed-size"
+        },
+        {
+          "sessionIndex": 116,
+          "pushedAt": "2026-11-26T04:05:15.263Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 116,
-      "lastPushAt": "2026-11-25T04:51:32.513Z",
+      "currentSessionIndex": 117,
+      "lastPushAt": "2026-11-26T04:05:15.716Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -287,14 +287,10 @@
         "stack-remove-adjacent-duplicates",
         "stack-daily-temperatures",
         "stack-next-greater-element-ii",
-        "stack-online-stock-span"
+        "stack-online-stock-span",
+        "stack-sum-of-subarray-minimums"
       ],
       "history": [
-        {
-          "sessionIndex": 86,
-          "pushedAt": "2026-10-27T01:24:42.327Z",
-          "conceptId": "binary-search-matrix-search"
-        },
         {
           "sessionIndex": 87,
           "pushedAt": "2026-10-28T01:11:21.482Z"
@@ -429,12 +425,17 @@
           "sessionIndex": 115,
           "pushedAt": "2026-11-25T04:51:32.513Z",
           "conceptId": "stack-online-stock-span"
+        },
+        {
+          "sessionIndex": 116,
+          "pushedAt": "2026-11-26T04:05:15.716Z",
+          "conceptId": "stack-sum-of-subarray-minimums"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 116,
-      "lastPushAt": "2026-11-25T04:51:32.971Z",
+      "currentSessionIndex": 117,
+      "lastPushAt": "2026-11-26T04:05:15.829Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -516,14 +517,10 @@
         "stack-next-greater-element-ii",
         "stack-online-stock-span",
         "stack-sum-of-subarray-minimums",
-        "stack-maximal-rectangle-foundation"
+        "stack-maximal-rectangle-foundation",
+        "queue-core-concept-introduction"
       ],
       "history": [
-        {
-          "sessionIndex": 86,
-          "pushedAt": "2026-10-27T01:24:42.539Z",
-          "conceptId": "sliding-window-fixed-size"
-        },
         {
           "sessionIndex": 87,
           "pushedAt": "2026-10-28T01:11:21.888Z",
@@ -658,6 +655,11 @@
           "sessionIndex": 115,
           "pushedAt": "2026-11-25T04:51:32.971Z",
           "conceptId": "stack-maximal-rectangle-foundation"
+        },
+        {
+          "sessionIndex": 116,
+          "pushedAt": "2026-11-26T04:05:15.829Z",
+          "conceptId": "queue-core-concept-introduction"
         }
       ]
     }
