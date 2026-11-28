@@ -1,8 +1,8 @@
 {
   "tracks": {
     "foundation": {
-      "currentSessionIndex": 118,
-      "lastPushAt": "2026-11-27T04:07:22.678Z",
+      "currentSessionIndex": 119,
+      "lastPushAt": "2026-11-28T03:50:07.292Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -69,10 +69,6 @@
         "sliding-window-variable-size-expansion"
       ],
       "history": [
-        {
-          "sessionIndex": 88,
-          "pushedAt": "2026-10-29T01:43:22.255Z"
-        },
         {
           "sessionIndex": 89,
           "pushedAt": "2026-10-30T01:52:40.433Z"
@@ -203,12 +199,16 @@
           "sessionIndex": 117,
           "pushedAt": "2026-11-27T04:07:22.678Z",
           "conceptId": "sliding-window-variable-size-expansion"
+        },
+        {
+          "sessionIndex": 118,
+          "pushedAt": "2026-11-28T03:50:07.292Z"
         }
       ]
     },
     "interviewReady": {
-      "currentSessionIndex": 118,
-      "lastPushAt": "2026-11-27T04:07:22.916Z",
+      "currentSessionIndex": 119,
+      "lastPushAt": "2026-11-28T03:50:07.493Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -292,10 +292,6 @@
         "stack-sum-of-subarray-minimums"
       ],
       "history": [
-        {
-          "sessionIndex": 88,
-          "pushedAt": "2026-10-29T01:43:22.415Z"
-        },
         {
           "sessionIndex": 89,
           "pushedAt": "2026-10-30T01:52:40.690Z",
@@ -431,12 +427,16 @@
         {
           "sessionIndex": 117,
           "pushedAt": "2026-11-27T04:07:22.916Z"
+        },
+        {
+          "sessionIndex": 118,
+          "pushedAt": "2026-11-28T03:50:07.493Z"
         }
       ]
     },
     "interviewMastery": {
-      "currentSessionIndex": 118,
-      "lastPushAt": "2026-11-27T04:07:23.095Z",
+      "currentSessionIndex": 119,
+      "lastPushAt": "2026-11-28T03:50:07.615Z",
       "completedConceptIds": [
         "computational-thinking-basics",
         "input-output-contract",
@@ -520,14 +520,10 @@
         "stack-sum-of-subarray-minimums",
         "stack-maximal-rectangle-foundation",
         "queue-core-concept-introduction",
-        "queue-array-implementation"
+        "queue-array-implementation",
+        "queue-linked-list-implementation"
       ],
       "history": [
-        {
-          "sessionIndex": 88,
-          "pushedAt": "2026-10-29T01:43:22.555Z",
-          "conceptId": "sliding-window-variable-size-contraction"
-        },
         {
           "sessionIndex": 89,
           "pushedAt": "2026-10-30T01:52:40.968Z"
@@ -662,6 +658,11 @@
           "sessionIndex": 117,
           "pushedAt": "2026-11-27T04:07:23.095Z",
           "conceptId": "queue-array-implementation"
+        },
+        {
+          "sessionIndex": 118,
+          "pushedAt": "2026-11-28T03:50:07.615Z",
+          "conceptId": "queue-linked-list-implementation"
         }
       ]
     }
